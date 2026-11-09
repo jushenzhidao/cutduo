@@ -442,3 +442,59 @@ DELETE /v1/assets/{asset_id}          # 释放引用；最后一个引用消失�
 不再有可预测的默认值。未设置 `RENDERD_SECRET` 时，服务在 `data_dir` 生成
 `.signing_key`（32 字节随机、0600）。多实例部署要么共享该目录，要么显式设置
 `RENDERD_SECRET`；已知占位值（`change-me` 等）会导致启动失败。
+
+---
+
+## MCP over Streamable HTTP（`POST /mcp`）
+
+面向「服务端部署、客户端跨网络接入」的场景。**与 stdio 共用同一份业务分发**
+（`MCPServer.handle()`），因此工具集、参数、错误码没有第二套定义。
+
+### 传输契约
+
+| 项 | 值 |
+|---|---|
+| 路径 | `POST /mcp`（GET 返回 405 + `Allow: POST`，本服务不做 SSE 推流） |
+| 鉴权 | 与 REST 相同：`Authorization: Bearer <token>` → 租户 |
+| 请求体 | 单个 JSON-RPC 2.0 对象，或对象数组（批量，上限 32 条） |
+| 响应体 | `application/json`：单请求回对象，批量回数组；**纯通知回 202 且无体** |
+| 协议版本 | 客户端在 `initialize.params.protocolVersion` 指定；支持 `2025-03-26`、`2024-11-05`，其它值回落 `2024-11-05` |
+
+### 租户来源（安全边界）
+
+stdio 模式允许 `RENDERD_MCP_TENANT` 环境变量兜底，因为「谁 spawn 进程，谁就是谁」。
+**HTTP 模式显式关闭该兜底**（`MCPServer(..., from_env=False)`）：租户只能来自 Bearer token。
+否则部署侧一个环境变量就能让所有客户变成同一个租户，或冒充任意租户。
+
+### 错误语义分层
+
+| 失败点 | HTTP | JSON-RPC `error.code` |
+|---|---|---|
+| 无/错 token | 401 | —（走 REST 错误信封） |
+| body 不是合法 JSON | 400 | `-32700` Parse error |
+| body 为空 / 非对象 | 200 | `-32600` Invalid Request |
+| 方法不存在 | 200 | `-32601` Method not found |
+| 工具内业务错误 | 200 | 无 error 字段，`result.isError=true` 且 content 里带 `code/hint/field` |
+
+业务错误**不进 HTTP 状态码**：Agent 靠 `result.isError` 与内部 `code` 决策，
+这层如果换成 500，客户端就只能靠猜。
+
+### 客户端配置示例
+
+```json
+{
+  "mcpServers": {
+    "renderd": {
+      "type": "streamable-http",
+      "url": "https://render.example.com/mcp",
+      "headers": { "Authorization": "Bearer <token>" }
+    }
+  }
+}
+```
+
+### 验收
+
+```bash
+make test-mcp-http     # 16 项：协议协商 / 工具 / 通知 202 / 批量 / 错误语义 / 租户来源
+```

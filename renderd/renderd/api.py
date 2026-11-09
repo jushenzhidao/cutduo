@@ -24,6 +24,7 @@ from urllib.parse import parse_qs, urlparse
 from . import auth, __version__
 from .config import Config, load_config
 from .errors import JobError
+from .mcp_stdio import MCPServer
 from .service import Service
 from .worker import Worker, start_reaper
 
@@ -48,6 +49,9 @@ ROUTES = [
     ("GET", re.compile(r"^/v1/queue$"), "queue"),
     ("GET", re.compile(r"^/v1/dlq$"), "dlq"),
     ("GET", re.compile(r"^/v1/usage$"), "usage"),
+    # MCP over Streamable HTTP：与 stdio 共用 MCPServer.handle()，只是换了传输
+    ("POST", re.compile(r"^/mcp$"), "mcp"),
+    ("GET", re.compile(r"^/mcp$"), "mcp_probe"),
 ]
 
 
@@ -72,12 +76,14 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt: str, *args) -> None:
         log(f"{self.address_string()} {fmt % args}")
 
-    def _json(self, status: int, obj) -> None:
+    def _json(self, status: int, obj, extra_headers: dict | None = None) -> None:
         body = json.dumps(obj, ensure_ascii=False).encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("X-Renderd-Version", __version__)
+        for k, v in (extra_headers or {}).items():
+            self.send_header(k, v)
         if self.close_connection:
             self.send_header("Connection", "close")
         try:
@@ -324,6 +330,69 @@ class Handler(BaseHTTPRequestHandler):
         tenant = self._tenant()
         limit = int((qs.get("limit") or ["50"])[0])
         self._json(200, self.service.dlq(tenant, min(limit, 200)))
+
+    # ── MCP over Streamable HTTP ─────────────────────────
+    def h_mcp(self, **_) -> None:
+        """JSON-RPC 2.0 over HTTP，单请求-单响应（不做 SSE 服务端推流）。
+
+        传输层只做四件事：定租户、取 body、逐条分发、打包回包。
+        业务分发全在 MCPServer.handle() —— 与 stdio 共用同一份，不存在两套契约。
+
+        安全边界：租户**只能**来自 Bearer token。stdio 那种 `RENDERD_MCP_TENANT`
+        兜底在这里被显式关掉（from_env=False），否则一个环境变量就能冒充任意租户。
+        """
+        tenant = self._tenant()          # 鉴权 + 限流 + 配额，与 REST 走同一条路径
+        try:
+            payload = self._read_json()
+        except JobError as exc:
+            # JSON 解析失败属于 JSON-RPC 的 Parse error，用 400 + -32700 回，
+            # 让客户端能按协议纠错，而不是收到一个自家错误码。
+            self._json(400, {"jsonrpc": "2.0", "id": None,
+                             "error": {"code": -32700, "message": f"Parse error: {exc.message}"}})
+            return
+
+        if not payload:
+            self._json(200, {"jsonrpc": "2.0", "id": None,
+                             "error": {"code": -32600, "message": "Invalid Request：请求体为空"}})
+            return
+
+        batch = isinstance(payload, list)
+        msgs = payload if batch else [payload]
+        if not all(isinstance(m, dict) for m in msgs):
+            self._json(200, {"jsonrpc": "2.0", "id": None,
+                             "error": {"code": -32600,
+                                       "message": "Invalid Request：需要 JSON-RPC 对象或对象数组"}})
+            return
+        if len(msgs) > 32:
+            self._json(200, {"jsonrpc": "2.0", "id": None,
+                             "error": {"code": -32600, "message": "批量上限 32 条"}})
+            return
+
+        srv = MCPServer(self.service, tenant, from_env=False)
+        out = [r for r in (srv.handle(m) for m in msgs) if r is not None]
+        if not out:
+            # 全是通知（无 id）→ 规范要求 202 且无响应体
+            self.send_response(202)
+            self.send_header("Content-Length", "0")
+            self.send_header("X-Renderd-Version", __version__)
+            self.end_headers()
+            return
+        self._json(200, out if batch else out[0])
+
+    def h_mcp_probe(self, **_) -> None:
+        """GET /mcp：明确拒绝，而不是 404。
+
+        MCP 客户端会先试 SSE 流；这里回 405 + Allow，比 404 更快让它回落到 POST 模式，
+        也不会让运维误以为路径写错。
+        """
+        self.close_connection = True
+        self._json(405, {
+            "error": {
+                "code": "E_METHOD_NOT_ALLOWED",
+                "message": "本服务不提供服务端推流（SSE），只支持 POST /mcp 的单请求-单响应模式",
+                "hint": "客户端按 streamable-http 的 JSON 响应模式配置；本机嵌入请改用 `renderd mcp`（stdio）",
+            }
+        }, extra_headers={"Allow": "POST"})
 
     def h_replay(self, job_id: str, **_) -> None:
         tenant = self._tenant()

@@ -19,6 +19,9 @@ from .errors import JobError, ERROR_SPECS
 from .service import Service
 
 PROTOCOL_VERSION = "2024-11-05"
+# 2025-03-26 就是 Streamable HTTP 那一版：stdio 与 HTTP 共用同一套分发，
+# 但版本号要能按客户端请求协商，否则新客户端会认为服务端版本不支持。
+SUPPORTED_PROTOCOLS = ("2024-11-05", "2025-03-26")
 
 TOOLS = [
     {
@@ -105,9 +108,13 @@ TOOLS = [
 
 
 class MCPServer:
-    def __init__(self, service: Service | None = None, tenant: str = "mcp"):
+    def __init__(self, service: Service | None = None, tenant: str = "mcp",
+                 *, from_env: bool = True):
         self.service = service or Service()
-        self.tenant = os.environ.get("RENDERD_MCP_TENANT", tenant)
+        # 只有 stdio 允许用环境变量兜底租户 —— 那是「谁 spawn，谁就是谁」的模型：
+        # 进程由调用方创建，环境变量也由调用方给。
+        # HTTP 传输下租户**必须**来自 Bearer token，否则一个环境变量就能冒充任意租户。
+        self.tenant = os.environ.get("RENDERD_MCP_TENANT", tenant) if from_env else tenant
         self.service.ensure_tenant(self.tenant)
 
     # ── JSON-RPC ──────────────────────────────────────
@@ -118,8 +125,10 @@ class MCPServer:
 
         try:
             if method == "initialize":
+                want = str((msg.get("params") or {}).get("protocolVersion") or "")
                 result = {
-                    "protocolVersion": PROTOCOL_VERSION,
+                    # 客户端要的版本我们支持就照办，否则回自己的默认版本（由客户端决定是否断开）
+                    "protocolVersion": want if want in SUPPORTED_PROTOCOLS else PROTOCOL_VERSION,
                     "capabilities": {"tools": {"listChanged": False}},
                     "serverInfo": {"name": "renderd", "version": __version__},
                     "instructions": "提交模板+素材即可渲染；成功后会返回证据回执。"

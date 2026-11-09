@@ -54,9 +54,13 @@ api-doc:  ## 生成单页接口文档（deliverables/接口文档.html）
 assets:   ## 列出租户素材引用与占用（make assets TENANT=acme）
 	$(PY) -m renderd --data-dir $(DATA) assets --tenant $(or $(TENANT),acme)
 
-smoke:    ## 接口冒烟（REST + MCP stdio）
+smoke:    ## 接口冒烟（REST + MCP stdio + MCP over HTTP）
 	./tests/api_smoke.sh
 	$(PY) tests/mcp_smoke.py
+	./tests/mcp_http_smoke.sh
+
+test-mcp-http: ## MCP over Streamable HTTP 冒烟（16 项，无需 Pillow）
+	./tests/mcp_http_smoke.sh
 
 attack:   ## 对抗测试 61 项（需先起服务，见 docs/SECURITY.md）
 	$(PY) tests/attack.py --base $(BASE) --token $(TOKEN) \

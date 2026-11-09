@@ -170,9 +170,15 @@ REST（`docs/API.md` 文字版；`make api-doc` 生成可浏览的 `deliverables
 MLT 后端（可选）：`make docker-build-mlt` 得到 `renderd:0.1.0-mlt`，
 提交时带 `"backend": "mlt"` 即可走 MLT 出片；默认镜像不含 melt，会明确报错而不是降级。
 
-MCP（stdio）：`list_templates` / `validate_render` / `submit_render` / `get_job_status` / `get_receipt`。
+MCP 工具：`list_templates` / `validate_render` / `submit_render` / `get_job_status` / `get_receipt`。
+两条传输，**共用同一份业务分发**，工具集与错误码只有一套：
 
-接入 Claude Code / Cursor 等：
+| 传输 | 适用 | 租户来源 |
+|---|---|---|
+| stdio（`renderd mcp`） | Agent 与服务同机 | token 或 `RENDERD_MCP_TENANT` |
+| Streamable HTTP（`POST /mcp`） | **服务端部署、跨网络接入** | **只能** Bearer token |
+
+同机嵌入（Claude Code / Cursor）：
 
 ```json
 {
@@ -185,6 +191,22 @@ MCP（stdio）：`list_templates` / `validate_render` / `submit_render` / `get_j
   }
 }
 ```
+
+服务端部署（多客户）：
+
+```json
+{
+  "mcpServers": {
+    "renderd": {
+      "type": "streamable-http",
+      "url": "https://render.example.com/mcp",
+      "headers": { "Authorization": "Bearer <token>" }
+    }
+  }
+}
+```
+
+契约细节见 `docs/API.md` 的「MCP over Streamable HTTP」；验收 `make test-mcp-http`（16 项）。
 
 同一个服务也可以用 REST 给人类前端用——两条入口共用 `service.py` 一套语义，不存在「两个版本的系统」。
 
@@ -224,7 +246,7 @@ renderd/
 │   ├── worker.py          拉取式 worker
 │   ├── service.py         业务门面（REST 与 MCP 共用）
 │   ├── api.py             HTTP 服务
-│   ├── mcp_stdio.py       MCP server
+│   ├── mcp_stdio.py       MCP 分发（stdio 与 HTTP 共用）
 │   ├── auth.py            Bearer / 限流 / 签名 URL
 │   └── cli.py             命令行
 ├── tests/                 58 个用例 + REST/MCP 冒烟脚本
