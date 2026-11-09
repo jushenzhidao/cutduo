@@ -100,8 +100,9 @@ STOPSIGNAL SIGTERM
 VOLUME ["/data"]
 EXPOSE 8787
 
+# 探针按角色分流：api 打 /healthz，worker 只判进程存活。
+# 若统一打 HTTP，worker（不监听端口）会被永久判成 unhealthy —— 见 renderd/healthcheck.py。
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD python -c "import urllib.request,sys; \
-sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8787/healthz',timeout=3).status==200 else 1)"
+  CMD ["python", "-m", "renderd.healthcheck"]
 
 CMD ["python", "-m", "renderd", "serve", "--workers", "2"]
