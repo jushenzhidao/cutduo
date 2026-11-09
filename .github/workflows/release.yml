@@ -36,8 +36,10 @@ concurrency:
 
 jobs:
   release:
-    # 逃生阀 + 自我触发兜底。workflow_dispatch 没有 head_commit，用 || '' 兜住。
-    if: ${{ github.actor != 'github-actions[bot]' && !contains(github.event.head_commit.message || '', '[skip release]') }}
+    # 只保留「自我触发兜底」在 if 里：**tag push 时 `github.event.head_commit` 是 null**，
+    # 任何依赖 `head_commit.message` 的条件都会把 job 判成 skipped（实测 tag 路径整个被跳过）。
+    # 所以「[skip release] 逃生阀」下沉到脚本里，用 `git log -1 %B` 判断 —— 那里永远拿得到。
+    if: ${{ github.actor != 'github-actions[bot]' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -55,6 +57,17 @@ jobs:
           set -euo pipefail
           INPUT='${{ inputs.tag }}'
           REF='${{ github.ref }}'
+
+          # ── 逃生阀：提交信息含 [skip release] ⇒ 本次不切版本、不发版 ──
+          # 用 git log 读 HEAD 的完整 message（subject + body）。
+          # ⚠️ 它匹配**整条 message**，所以"描述这个逃生阀"的那次提交自己也会被跳过 ——
+          #    那类提交要么紧跟着真正要发的提交一起进主干，要么用 ③ 补发。
+          if git log -1 --no-merges --pretty=%B | grep -qF '[skip release]'; then
+            echo "::notice::提交信息含 [skip release] —— 本次不切版本、不发版"
+            echo "mode=skip" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           if [ -n "$INPUT" ]; then
             MODE=tag; TAG="$INPUT"                 # ③ 补发指定 tag
           elif [ "${REF#refs/tags/}" != "$REF" ]; then
@@ -69,14 +82,20 @@ jobs:
           PREV="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1)"
 
           if [ "$MODE" = "auto" ]; then
-            BASE="${PREV:-v0.0.0}"        # 零 tag 仓库的冷启动
-            CORE="${BASE#v}"
-            MAJOR="${CORE%%.*}"
-            REST="${CORE#*.}"
-            MINOR="${REST%%.*}"
-            PATCH="${REST#*.}"
-            PATCH="${PATCH%%[-+]*}"        # 预发布后缀会打断 $(( )) 算术，先剥掉
-            TAG="v${MAJOR}.${MINOR}.$((PATCH + 1))"
+            if [ -z "$PREV" ]; then
+              # 零 tag 仓库的冷启动：首个版本直接 v0.1.0（与组织内 jimeng / video-adapter
+              # 的 v0.1.x 起点一致）。若沿用基准 v0.0.0，首版会变成 v0.0.1，与惯例不符。
+              TAG="v0.1.0"
+            else
+              BASE="$PREV"
+              CORE="${BASE#v}"
+              MAJOR="${CORE%%.*}"
+              REST="${CORE#*.}"
+              MINOR="${REST%%.*}"
+              PATCH="${REST#*.}"
+              PATCH="${PATCH%%[-+]*}"        # 预发布后缀会打断 $(( )) 算术，先剥掉
+              TAG="v${MAJOR}.${MINOR}.$((PATCH + 1))"
+            fi
             END=HEAD
           else
             END="$TAG"
@@ -97,6 +116,7 @@ jobs:
           echo "mode=${MODE} prev=${PREV:-<none>} -> ${TAG}"
 
       - name: Build changelog
+        if: ${{ steps.ver.outputs.mode != 'skip' }}
         run: |
           set -euo pipefail
           PREV='${{ steps.ver.outputs.prev }}'
@@ -136,6 +156,7 @@ jobs:
           git push origin "$TAG"
 
       - name: Create GitHub Release
+        if: ${{ steps.ver.outputs.mode != 'skip' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

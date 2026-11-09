@@ -24,7 +24,7 @@
 | **gh-release-automation** 技能 | ✅ 已装并注册 | `~/.workbuddy/skills/gh-release-automation/`（SKILL.md + 2 份 references） |
 | git / jq / curl / ffmpeg / node / python3 | ✅ 原有 | `/usr/bin/git`、`/usr/bin/jq`、`/opt/homebrew/bin/ffmpeg` 等 |
 | uv | ✅ 原有 | `~/.local/bin/uv` 0.13.7（非交互 shell 需手动加 PATH） |
-| **GitHub 凭据** | ⏳ **待你确认** | 设备流已就绪（15 分钟有效），一次性码 `CB70-E339` → https://github.com/login/device |
+| **GitHub 凭据** | ⏳ **待你确认** | 设备流被网络挡住，见下方「出网约束」 |
 
 **gh 的来源说明（为什么没走 brew）**：`brew install gh` 试了两次都被环境拦下——
 Homebrew 自带的 `sandbox-exec` 在本机报 `sandbox_apply: Operation not permitted`（退出码 71），
@@ -40,6 +40,41 @@ Homebrew 自带的 `sandbox-exec` 在本机报 `sandbox_apply: Operation not per
 本机无此用户、该文件不存在；市场安装工具的数组参数在本会话序列化失效。
 因此我按**组织内 3 个真实在跑的 `release.yml`** 反推，把这个技能重新写出来补齐——内容来自
 组织自己的注释与代码，不是通用最佳实践。详见 `~/.workbuddy/skills/gh-release-automation/`。
+
+### 出网约束（2026-11-09 16:4x 实测，决定了授权怎么走）
+
+本机出网走本地代理 `HTTP_PROXY=http://127.0.0.1:49801`，**按主机分流**：
+
+| 主机 | 状态 | 影响 |
+|---|---|---|
+| `api.github.com` | ✅ HTTP 200，0.39 s | REST/GraphQL 全部可用 |
+| `codeload.github.com` | ✅ 301 → 200 | tarball 可下 |
+| `github.com`（`www`） | ❌ **连接超时 10 s / 502 Bad Gateway** | 设备流登录、token 兑换、`git push`（HTTPS）全走这里 |
+| `ssh.github.com:443` | ✅ **TCP + SSH 握手成功**（返回 `Permission denied (publickey)` = 只是没公钥） | 可作 push 通道 |
+
+DNS 把 `github.com` 指到 `20.205.243.166`，该边缘节点经代理不通；换其它
+GitHub 边缘 IP（140.82.x / 192.30.x）也一样超时——**是 `www` 主机被挡，不是某个 IP 坏了**。
+
+**后果**：
+- `gh auth login --web` 的两个端点都在 `www.github.com` 上 ⇒ 设备流**用不了**（试了 8 次，
+  前两次拿到码，之后全是 502；其中一次是浏览器授权了旧码导致兑换 400）。
+- `gh` 的一切 API 调用走 `api.github.com` ⇒ **只要有 token 就能用**。
+- `git push` 走 HTTPS 会撞 `www.github.com` ⇒ 需要改走 SSH 443，或改用
+  **Git Data API**（`api.github.com` 上的 blobs/trees/commits/refs，能完成整仓首次推送）。
+
+### 本地侧已就绪（16:5x 完成）
+
+- ✅ `git init -b main`，首个提交 **`db1ae14`**，436 个文件 / 40862 行插入
+- ✅ `.git` 体积 **39 MB**，工作区干净
+- ✅ `.github/workflows/release.yml` 已写入（组织三入口 + tag-only Release，去掉 docker 部分）
+- ✅ 受限文件自检：暂存区 **零命中** `personal/` / `release.bin` / `template.motion`
+- ⏳ 未 push（等授权通道确定）
+
+> ⚠️ 另发现一个**虚假绿灯**风险：`cutproof/ci/gate.sh` 第 5 步的负向测试硬编码
+> `/System/Library/Fonts/Helvetica.ttc`（macOS 专有路径）。在 Ubuntu runner 上该字体不存在，
+> 断言会「因字体缺失而通过」——**通过的却是错的**（组织 skill 里 `test-false-green-guard`
+> 讲的就是这类）。所以我**没有**把 gate 直接挂进 release 流水线；上 CI 前必须先把字体路径
+> 做成平台感知，或明确声明该门禁只在 macOS runner 上跑。
 
 ---
 
