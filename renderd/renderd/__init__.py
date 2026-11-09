@@ -7,6 +7,11 @@
   4. 每次成功都产出证据回执，不能只返回 URL。
 """
 
-__version__ = "0.1.0"
+import os
+
+# 版本号的单一事实源是 git tag：CI 用 `--build-arg RENDERD_VERSION` 注入，
+# 本地未注入时回落到这里的默认值。这样镜像标签、/healthz、日志里的版本
+# 永远说的是同一件事 —— 否则「线上跑的是哪个版本」只能靠猜。
+__version__ = os.environ.get("RENDERD_VERSION") or "0.2.1"
 IR_VERSION = "0.1"
 RECEIPT_SCHEMA = "cutproof/receipt/v1"

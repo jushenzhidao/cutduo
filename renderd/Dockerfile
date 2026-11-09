@@ -88,6 +88,10 @@ RUN ln -sf /opt/ffmpeg/bin/ffmpeg /usr/local/bin/ffmpeg \
  && ln -sf /opt/ffmpeg/bin/ffprobe /usr/local/bin/ffprobe \
  && /opt/ffmpeg/bin/ffmpeg -version | head -1
 
+# 版本号由 CI 按 git tag 注入；本地 docker build 未注入时为 dev
+ARG RENDERD_VERSION=dev
+ENV RENDERD_VERSION=${RENDERD_VERSION}
+
 WORKDIR /app
 COPY requirements.txt requirements-pg.txt ./
 RUN pip install --no-cache-dir -r requirements.txt -r requirements-pg.txt

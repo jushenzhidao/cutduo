@@ -55,6 +55,12 @@ jobs:
               refs/heads/main) echo "${IMAGE}:main" ;;
             esac
             echo "EOF"
+            # 版本号注入镜像：tag 构建用纯版本号，分支构建用 0.0.0+sha。
+            # 保证 /healthz 自报的版本与镜像标签一致。
+            case "${GITHUB_REF}" in
+              refs/tags/v*) echo "version=${GITHUB_REF_NAME#v}" ;;
+              *) echo "version=0.0.0+${SHA}" ;;
+            esac
           } >> "$GITHUB_OUTPUT"
           echo "本次将推送："; cat "$GITHUB_OUTPUT"
 
@@ -64,5 +70,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.tags.outputs.tags }}
+          build-args: |
+            RENDERD_VERSION=${{ steps.tags.outputs.version }}
           cache-from: type=gha,scope=renderd
           cache-to: type=gha,mode=max,scope=renderd
