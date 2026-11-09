@@ -398,7 +398,13 @@ class Handler(BaseHTTPRequestHandler):
                "client": "-", "job": "-", "outcome": "ok", "code": "-",
                "msgs": 0, "mode": "json"}
         try:
-            tenant = self._tenant()      # 鉴权 + 限流 + 配额，与 REST 走同一条路径
+            try:
+                tenant = self._tenant()  # 鉴权 + 限流 + 配额，与 REST 走同一条路径
+            except JobError:
+                # 准入失败（401/429/413）也由 `_error` 打了 req-fail，
+                # 这里只把 outcome 标对，避免出现「同时 401 又 ok」的自相矛盾日志。
+                obs["outcome"] = "denied"
+                raise
             obs["tenant"] = tenant
             try:
                 payload = self._read_json()
