@@ -6,3 +6,6 @@
 __pycache__/
 deploy/certs/
 var/
+
+# ffmpeg 静态包的离线缓存（构建用，不入库）
+.vendor/*.tar.xz

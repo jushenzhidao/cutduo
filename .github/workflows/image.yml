@@ -1,0 +1,82 @@
+name: Image
+
+# 只做一件事：把 renderd 打成多架构镜像推到 ghcr。
+#
+# 为什么不和 release.yml 合并：发版是「承诺」，打镜像是「产线」。分开后
+# 镜像可以按 commit 随时出（sha-xxxxxxx），而版本号仍然只由 tag 决定。
+#
+# 为什么在 CI 打而不是在服务器上打：
+#   · 服务器上构建实测会卡死在 apt 大包与 GitHub 大文件上（容器内网络挂死），
+#     单次构建 2–5 分钟且不可预测；
+#   · CI 有 gha 缓存，改一行 Python 的重建只要几十秒；
+#   · 生产机只 pull，不装编译依赖，也不占用它的 CPU 去构建。
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'renderd/**'
+      - '.github/workflows/image.yml'
+    tags: ['v[0-9]*.[0-9]*.[0-9]*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write      # 推 ghcr
+
+# 同一 ref 上新的提交应当**取代**旧的构建（镜像不像发版，没有不可中断的半成品）
+concurrency:
+  group: image-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/renderd
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-qemu-action@v3      # arm64 靠 qemu 模拟
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            # 每个 commit 一个不可变标签：生产按 sha 部署，回滚就是换 sha
+            type=sha,prefix=sha-,format=short
+            # 打 tag 时同时产出 v0.2.0
+            type=ref,event=tag
+            # latest 只跟随默认分支与版本 tag，避免被任意分支覆盖
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || startsWith(github.ref, 'refs/tags/v') }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: renderd
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # 缓存分 scope，避免和别的镜像互相污染；mode=max 让中间层也进缓存
+          cache-from: type=gha,scope=renderd
+          cache-to: type=gha,mode=max,scope=renderd
+
+      - name: Summary
+        run: |
+          {
+            echo "### 镜像已推送"
+            echo ""
+            echo '```'
+            echo "${{ steps.meta.outputs.tags }}"
+            echo '```'
+            echo "- 架构：linux/amd64, linux/arm64"
+            echo "- 部署：\`docker pull <上面任一标签>\`"
+          } >> "$GITHUB_STEP_SUMMARY"

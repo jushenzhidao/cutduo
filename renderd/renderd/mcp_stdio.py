@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import time
 import traceback
 from typing import Any
 
@@ -18,10 +19,12 @@ from . import __version__
 from .errors import JobError, ERROR_SPECS
 from .service import Service
 
-PROTOCOL_VERSION = "2024-11-05"
-# 2025-03-26 就是 Streamable HTTP 那一版：stdio 与 HTTP 共用同一套分发，
-# 但版本号要能按客户端请求协商，否则新客户端会认为服务端版本不支持。
-SUPPORTED_PROTOCOLS = ("2024-11-05", "2025-03-26")
+PROTOCOL_VERSION = "2025-06-18"
+# 我们只声明「legacy 通道」的版本集合。WorkBuddy / SDK 的 modern 通道是 2026-07-28+
+# 且**取消了 initialize 握手**，本服务端是 legacy 形态，按老协议协商即可。
+# 2025-06-18 对我们是纯增量（structuredContent / elicitation 都是可选能力，我们只广告 tools），
+# 而 2025-11-25 的 tasks 语义我们没实现，故不声明，让客户端按最高可实现版本协商。
+SUPPORTED_PROTOCOLS = ("2025-06-18", "2025-03-26", "2024-11-05", "2024-10-07")
 
 TOOLS = [
     {
@@ -213,14 +216,42 @@ class MCPServer:
             line = line.strip()
             if not line:
                 continue
+            t0 = time.monotonic()
             try:
                 msg = json.loads(line)
             except json.JSONDecodeError:
+                self._note(msg=None, outcome="rejected", code="-32700", t0=t0)
                 self._write(self._err(None, -32700, "Parse error"))
                 continue
             resp = self.handle(msg)
+            self._note(msg=msg, resp=resp, t0=t0)
             if resp is not None:
                 self._write(resp)
+
+    def _note(self, *, msg, resp=None, outcome=None, code=None, t0=None) -> None:
+        """本地嵌入时的一行观测日志，写 stderr。
+
+        为什么是 stderr：stdout 是 JSON-RPC 的传输通道，往里混一行文本会直接
+        破坏协议。stderr 在 stdio 模式下由调用方（编辑器/Agent）收走，正好用来
+        看「刚才那步为什么失败」。
+        """
+        ms = int((time.monotonic() - t0) * 1000) if t0 else 0
+        method = (msg or {}).get("method") or "-"
+        params = (msg or {}).get("params") or {}
+        tool = params.get("name", "-") if method == "tools/call" else "-"
+        kind = outcome or "ok"
+        if outcome is None and resp is not None:
+            if "error" in resp:
+                kind = "rpc_error"
+                code = (resp.get("error") or {}).get("code")
+            elif (resp.get("result") or {}).get("isError"):
+                kind = "iserror"
+        sys.stderr.write(
+            f"mcp-stdio tenant={self.tenant} method={method} tool={tool} "
+            f"outcome={kind}" + (f" code={code}" if code not in (None, "-") else "") +
+            f" ms={ms}\n"
+        )
+        sys.stderr.flush()
 
     def _write(self, obj: dict) -> None:
         sys.stdout.write(json.dumps(obj, ensure_ascii=False) + "\n")

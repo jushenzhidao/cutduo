@@ -97,6 +97,12 @@ docker-run:   ## 起单容器（端口 8788）
 test-container: ## 容器内端到端（需 docker-run）
 	./tests/container_e2e.sh
 
+wb-serve: ## 起服务供 WorkBuddy / 其他 MCP 客户端连（127.0.0.1:8799）
+	@echo "token: $(or $(WB_TOKEN),wb-token-00000001)  tenant: acme  endpoint: http://127.0.0.1:8799/mcp"
+	@echo "含文字模板需要 Pillow：make wb-serve PY=\"uv run --with pillow --python 3.13 python\""
+	RENDERD_TOKENS="$(or $(WB_TOKEN),wb-token-00000001):acme" RENDERD_SECRET="wb-test-secret" \
+	  $(PY) -m renderd --data-dir var/wbtest serve --port 8799 --workers 1 --host 127.0.0.1
+
 test-compose: ## Compose 端到端 + 崩溃恢复（约 90s）
 	./tests/compose_e2e.sh
 

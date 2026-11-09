@@ -457,8 +457,9 @@ DELETE /v1/assets/{asset_id}          # 释放引用；最后一个引用消失�
 | 路径 | `POST /mcp`（GET 返回 405 + `Allow: POST`，本服务不做 SSE 推流） |
 | 鉴权 | 与 REST 相同：`Authorization: Bearer <token>` → 租户 |
 | 请求体 | 单个 JSON-RPC 2.0 对象，或对象数组（批量，上限 32 条） |
-| 响应体 | `application/json`：单请求回对象，批量回数组；**纯通知回 202 且无体** |
-| 协议版本 | 客户端在 `initialize.params.protocolVersion` 指定；支持 `2025-03-26`、`2024-11-05`，其它值回落 `2024-11-05` |
+| 响应体 | 由 `Accept` 协商：含 `text/event-stream` → `text/event-stream`（每条 JSON-RPC 一帧 `event: message` / `data: {...}`，发完关流）；否则 `application/json`。**纯通知一律 202 且无体** |
+| 会话 | 不下发 `Mcp-Session-Id`（无状态设计，多副本无需共享会话）；客户端因此也不会回传 |
+| 协议版本 | 客户端在 `initialize.params.protocolVersion` 指定；支持 `2025-06-18` / `2025-03-26` / `2024-11-05` / `2024-10-07`；其它值回落到本服务最高可实现版本 `2025-06-18`（**不是**最老的版本） |
 
 ### 租户来源（安全边界）
 
@@ -498,3 +499,28 @@ stdio 模式允许 `RENDERD_MCP_TENANT` 环境变量兜底，因为「谁 spawn 
 ```bash
 make test-mcp-http     # 16 项：协议协商 / 工具 / 通知 202 / 批量 / 错误语义 / 租户来源
 ```
+
+### 两种响应模式（JSON / SSE）
+
+同一个端点，同一份内容，差别只在分帧：
+
+| 客户端 `Accept` | 服务端回 | 适用 |
+|---|---|---|
+| `application/json` | 一次性 JSON（单请求回对象、批量回数组） | 绝大多数 Agent 客户端 |
+| `application/json, text/event-stream` | **SSE 流**（每条一帧，发完关流） | 需要流式处理的客户端 |
+| `text/event-stream` | SSE 流 | 同上 |
+
+SSE 帧格式：
+
+```
+event: message
+data: {"jsonrpc":"2.0","id":31,"result":{...}}
+
+```
+
+**不做「先推通知、再给结果」的交错流**：本服务的工具要么立即返回任务句柄（`submit_render`），
+要么是毫秒级（`list_templates` / `validate_render`），流里没有中间事件可发。
+等将来实现 `notifications/progress` 才需要。
+
+`GET /mcp` 仍返回 `405 + Allow: POST`：本服务不提供服务端发起的通知通道，
+开一条长期 SSE 连接等于每客户端占一个线程，与当前无状态多副本模型冲突。

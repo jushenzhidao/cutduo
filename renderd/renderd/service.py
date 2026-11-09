@@ -15,7 +15,8 @@ import time
 from pathlib import Path
 from typing import Any
 
-from . import IR_VERSION, __version__, auth, delivery, ir as IR, netguard, render
+from . import (IR_VERSION, __version__, auth, capabilities, delivery, ir as IR,
+               netguard, render)
 from .config import Config, load_config
 from .errors import JobError
 from .runner import Runner, estimate
@@ -482,6 +483,12 @@ class Service:
                 "attempts": row["attempts"], "replayed": True}
 
     def health(self) -> dict:
+        caps = capabilities.summary(self.cfg.ffmpeg)
+        # 后端列表是「这台机器实际能跑什么」，不是「代码支持什么」。
+        # 缺 melt 时 backend=mlt 会在执行阶段报错，提前声明能省掉一次必然失败的渲染。
+        backends = ["ffmpeg"]
+        if shutil.which(self.cfg.melt):
+            backends.append("mlt")
         return {
             "ok": True,
             "version": __version__,
@@ -489,6 +496,8 @@ class Service:
             "engine": self.runner.engine,
             "uptime_s": round(time.time() - self.started_at, 1),
             "backend_default": "ffmpeg",
+            "backends": backends,
+            "capabilities": caps,
             "fonts_available": len([k for k in __import__(
                 "renderd.fonts", fromlist=["x"]).font_index() if "/" not in k]),
         }

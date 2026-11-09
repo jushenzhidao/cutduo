@@ -59,6 +59,21 @@ def log(msg: str, *extra) -> None:
     print(f"[{time.strftime('%H:%M:%S')}] {msg}", *extra, flush=True)
 
 
+_KV_SAFE = re.compile(r"^[A-Za-z0-9._:/+@-]+$")
+
+
+def _kv(key: str, value) -> str:
+    """logfmt 字段。值里有空格/引号就加引号，保证一行一条、可直接 grep。
+
+    选 logfmt 而不是 JSON：人用眼睛能读，Agent 用正则能切，日志采集器也都认。
+    JSON 行虽然更规范，但在这类"一行一次调用"的场景里噪音更大。
+    """
+    s = "-" if value is None or value == "" else str(value)
+    if _KV_SAFE.match(s):
+        return f"{key}={s}"
+    return f'{key}="{s.replace(chr(34), chr(39))}"'
+
+
 def _valid_net(c: str) -> bool:
     try:
         ipaddress.ip_network(c, strict=False)
@@ -82,6 +97,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("X-Renderd-Version", __version__)
+        # 回给客户端的关联 ID：报障时对方贴出这个值，运维直接 grep 就能定位到那一行。
+        self.send_header("X-Request-Id", self._rid())
         for k, v in (extra_headers or {}).items():
             self.send_header(k, v)
         if self.close_connection:
@@ -93,6 +110,34 @@ class Handler(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError):
             pass
 
+    def _sse(self, items: list) -> None:
+        """按 Streamable HTTP 的 SSE 模式回包：每条 JSON-RPC 一帧，发完即关流。
+
+        不做「先发通知、再发结果」的交错流 —— 本服务的工具要么立刻返回句柄
+        （submit_render），要么本身就是毫秒级（list_templates / validate_render），
+        流里没有中间事件可发。等将来加 `notifications/progress` 才需要。
+
+        json.dumps 会把换行转义成 \\n，所以每帧的 data 一定是单行，
+        不需要按 SSE 规范做多行 data: 前缀。
+        """
+        self.close_connection = True
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "close")
+        # 反代默认会缓冲响应，SSE 必须显式关掉，否则客户端等到流结束才收到内容
+        self.send_header("X-Accel-Buffering", "no")
+        self.send_header("X-Renderd-Version", __version__)
+        self.send_header("X-Request-Id", self._rid())
+        self.end_headers()
+        try:
+            for item in items:
+                payload = json.dumps(item, ensure_ascii=False)
+                self.wfile.write(f"event: message\ndata: {payload}\n\n".encode())
+            self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+
     def _error(self, err: JobError) -> None:
         # 401/413 往往发生在读 body 之前。HTTP/1.1 长连接下，未消费的请求体
         # 会被当成下一个请求的起始行来解析（实测容器里出现 "Bad request version"）。
@@ -101,6 +146,12 @@ class Handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length") or 0)
             if length > 0:
                 self.close_connection = True
+        # 统一出口的失败也要留痕：401/429/413 这些最常被客户问到的问题，
+        # 只有一行工作日志的话根本查不到租户和来源 IP。
+        log(" ".join(["req-fail", _kv("rid", self._rid()),
+                      _kv("path", urlparse(self.path).path),
+                      _kv("status", err.http_status), _kv("code", err.code),
+                      _kv("peer", self._client_ip())]))
         self._json(err.http_status, {"error": err.to_dict(), "request_id": self._rid()})
 
     def _rid(self) -> str:
@@ -341,43 +392,129 @@ class Handler(BaseHTTPRequestHandler):
         安全边界：租户**只能**来自 Bearer token。stdio 那种 `RENDERD_MCP_TENANT`
         兜底在这里被显式关掉（from_env=False），否则一个环境变量就能冒充任意租户。
         """
-        tenant = self._tenant()          # 鉴权 + 限流 + 配额，与 REST 走同一条路径
+        t0 = time.monotonic()
+        # 观测位：请求结束时无条件打一行，哪怕中途抛异常 —— 失败恰恰是最需要日志的时候。
+        obs = {"rid": self._rid(), "tenant": "-", "method": "-", "tool": "-",
+               "client": "-", "job": "-", "outcome": "ok", "code": "-",
+               "msgs": 0, "mode": "json"}
         try:
-            payload = self._read_json()
-        except JobError as exc:
-            # JSON 解析失败属于 JSON-RPC 的 Parse error，用 400 + -32700 回，
-            # 让客户端能按协议纠错，而不是收到一个自家错误码。
-            self._json(400, {"jsonrpc": "2.0", "id": None,
-                             "error": {"code": -32700, "message": f"Parse error: {exc.message}"}})
-            return
+            tenant = self._tenant()      # 鉴权 + 限流 + 配额，与 REST 走同一条路径
+            obs["tenant"] = tenant
+            try:
+                payload = self._read_json()
+            except JobError as exc:
+                # JSON 解析失败属于 JSON-RPC 的 Parse error，用 400 + -32700 回，
+                # 让客户端能按协议纠错，而不是收到一个自家错误码。
+                obs["outcome"], obs["code"] = "rejected", "-32700"
+                self._json(400, {"jsonrpc": "2.0", "id": None,
+                                 "error": {"code": -32700, "message": f"Parse error: {exc.message}"}})
+                return
 
-        if not payload:
-            self._json(200, {"jsonrpc": "2.0", "id": None,
-                             "error": {"code": -32600, "message": "Invalid Request：请求体为空"}})
-            return
+            if not payload:
+                obs["outcome"], obs["code"] = "rejected", "-32600"
+                self._json(200, {"jsonrpc": "2.0", "id": None,
+                                 "error": {"code": -32600, "message": "Invalid Request：请求体为空"}})
+                return
 
-        batch = isinstance(payload, list)
-        msgs = payload if batch else [payload]
-        if not all(isinstance(m, dict) for m in msgs):
-            self._json(200, {"jsonrpc": "2.0", "id": None,
-                             "error": {"code": -32600,
-                                       "message": "Invalid Request：需要 JSON-RPC 对象或对象数组"}})
-            return
-        if len(msgs) > 32:
-            self._json(200, {"jsonrpc": "2.0", "id": None,
-                             "error": {"code": -32600, "message": "批量上限 32 条"}})
-            return
+            batch = isinstance(payload, list)
+            msgs = payload if batch else [payload]
+            if not all(isinstance(m, dict) for m in msgs):
+                obs["outcome"], obs["code"] = "rejected", "-32600"
+                self._json(200, {"jsonrpc": "2.0", "id": None,
+                                 "error": {"code": -32600,
+                                           "message": "Invalid Request：需要 JSON-RPC 对象或对象数组"}})
+                return
+            if len(msgs) > 32:
+                obs["outcome"], obs["code"] = "rejected", "-32600"
+                self._json(200, {"jsonrpc": "2.0", "id": None,
+                                 "error": {"code": -32600, "message": "批量上限 32 条"}})
+                return
 
-        srv = MCPServer(self.service, tenant, from_env=False)
-        out = [r for r in (srv.handle(m) for m in msgs) if r is not None]
-        if not out:
-            # 全是通知（无 id）→ 规范要求 202 且无响应体
-            self.send_response(202)
-            self.send_header("Content-Length", "0")
-            self.send_header("X-Renderd-Version", __version__)
-            self.end_headers()
-            return
-        self._json(200, out if batch else out[0])
+            obs["msgs"] = len(msgs)
+            first = msgs[0]
+            obs["method"] = first.get("method") or "-"
+            params = first.get("params") or {}
+            if obs["method"] == "tools/call":
+                obs["tool"] = params.get("name") or "-"
+            elif obs["method"] == "initialize":
+                # 记录谁在连：出问题时第一个要回答的问题就是「哪个客户端、什么版本」。
+                ci = params.get("clientInfo") or {}
+                obs["client"] = f"{ci.get('name', '?')}/{ci.get('version', '?')}"
+                obs["proto"] = params.get("protocolVersion") or "-"
+
+            srv = MCPServer(self.service, tenant, from_env=False)
+            out = [r for r in (srv.handle(m) for m in msgs) if r is not None]
+            if not out:
+                # 全是通知（无 id）→ 规范要求 202 且无响应体
+                obs["outcome"] = "notification"
+                self.send_response(202)
+                self.send_header("Content-Length", "0")
+                self.send_header("X-Renderd-Version", __version__)
+                self.send_header("X-Request-Id", obs["rid"])
+                self.end_headers()
+                return
+
+            # 结果分类：JSON-RPC 层错误 / 工具内业务错误 / 正常
+            # 这三者对人的意义完全不同，日志里必须能一眼分开。
+            for r in out:
+                if "error" in r:
+                    obs["outcome"] = "rpc_error"
+                    obs["code"] = (r.get("error") or {}).get("code", "-")
+                    break
+                res = r.get("result") or {}
+                if res.get("isError"):
+                    obs["outcome"] = "iserror"
+                    txt = ""
+                    try:
+                        txt = json.dumps(res.get("content"), ensure_ascii=False)
+                    except Exception:      # noqa: BLE001
+                        pass
+                    m = re.search(r'"code"\s*:\s*"([A-Z_]+)"', txt)
+                    obs["code"] = m.group(1) if m else "-"
+                    break
+            # job_id 抽出来：这样一行日志就能把「MCP 调用」和「后续渲染任务」串起来
+            blob = json.dumps(out, ensure_ascii=False)
+            mj = re.search(r'job_[0-9a-f]{12}', blob)
+            if mj:
+                obs["job"] = mj.group(0)
+
+            # 传输模式由客户端 Accept 协商：要流就给 SSE，否则给一次性 JSON。
+            # 两者都是规范允许的，内容完全一致 —— 差别只在分帧方式。
+            accept = (self.headers.get("Accept") or "").lower()
+            if "text/event-stream" in accept:
+                obs["mode"] = "sse"
+                self._sse(out)
+                return
+            self._json(200, out if batch else out[0])
+        finally:
+            self._mcp_log(obs, t0)
+
+    def _mcp_log(self, obs: dict, t0: float) -> None:
+        """一次 MCP 调用一行。字段固定，便于 grep / 采集 / Agent 解析。
+
+        不记录 token，也不记录工具参数全文 —— 素材 URI 与文案属于客户内容，
+        日志里只留「谁、调了什么、结果如何、多久」。需要细查时用 rid 关联
+        `job_events` 或 `audit` 表，而不是把业务数据抄进日志。
+        """
+        ms = int((time.monotonic() - t0) * 1000)
+        parts = ["mcp"] + [_kv(k, obs.get(k)) for k in
+                           ("rid", "tenant", "method", "tool", "client")]
+        parts.append(_kv("outcome", obs.get("outcome")))
+        if obs.get("code") not in ("-", None):
+            parts.append(_kv("code", obs["code"]))
+        if obs.get("job") not in ("-", None):
+            parts.append(_kv("job", obs["job"]))
+        if obs.get("proto") not in (None, "-"):
+            parts.append(_kv("proto", obs["proto"]))
+        parts.append(_kv("mode", obs.get("mode")))
+        if obs.get("msgs", 0) > 1:
+            parts.append(_kv("msgs", obs["msgs"]))
+        parts.append(_kv("ms", ms))
+        # 慢调用单独标出来：MCP 客户端通常有超时，先于客户端报警发现才是运维的价值
+        slow_ms = int(os.environ.get("RENDERD_SLOW_MS", "1000") or 1000)
+        if ms >= slow_ms:
+            parts.append("slow=1")
+        log(" ".join(parts))
 
     def h_mcp_probe(self, **_) -> None:
         """GET /mcp：明确拒绝，而不是 404。
@@ -386,6 +523,10 @@ class Handler(BaseHTTPRequestHandler):
         也不会让运维误以为路径写错。
         """
         self.close_connection = True
+        # 客户端探 SSE 是很常见的一步：记下来，才能区分「配错 transport」和「服务挂了」。
+        log(" ".join(["mcp-probe", _kv("rid", self._rid()),
+                      _kv("tenant", "-"), _kv("outcome", "rejected"),
+                      _kv("code", "405"), _kv("peer", self._client_ip())]))
         self._json(405, {
             "error": {
                 "code": "E_METHOD_NOT_ALLOWED",
