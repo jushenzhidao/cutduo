@@ -5,6 +5,9 @@ name: Cleanup stray v0.0.1
 # 背景：首版首次推送时，release.yml 的冷启动逻辑写错了（基准取了 v0.0.0 → 首个 tag 成了
 # v0.0.1 而不是约定的 v0.1.0）。修正逻辑需要「零 tag」的起点，所以先把这个残留清掉。
 #
+# 诊断产物写回仓库（ci/cleanup-report.txt），这样**不依赖 API 配额**也能读到真实响应体。
+# 该文件已存在时不再提交 ⇒ 不会自触发成环。
+#
 # 这个 workflow 是一次性的：清理完成后它会被下一笔提交删除。
 on:
   push:
@@ -20,60 +23,68 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: true
 
-      - name: Diagnose
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -uo pipefail
-          echo "### gh auth status"
-          gh auth status 2>&1 || true
-          echo "### gh repo view"
-          gh repo view --json nameWithOwner 2>&1 || true
-          echo "### releases (raw)"
-          curl -sS -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases" \
-            | python3 -c 'import json,sys; d=json.load(sys.stdin); print([(r["id"], r["tag_name"]) for r in d])' 2>&1 || true
-          echo "### tags (raw)"
-          git ls-remote --tags origin || true
-
-      - name: Delete stray release and tag
+      - name: Diagnose and delete
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -uo pipefail
           TAG=v0.0.1
-          RID=$(curl -sS -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases" \
-            | python3 -c "import json,sys; d=json.load(sys.stdin); print(next((r['id'] for r in d if r['tag_name']=='$TAG'), ''))" 2>/dev/null)
-          echo "release id for $TAG = '${RID}'"
+          API="https://api.github.com/repos/${GITHUB_REPOSITORY}"
+          REPORT=ci/cleanup-report.txt
+          mkdir -p ci
+
+          {
+            echo "# cleanup report"
+            echo
+            echo "- run: ${GITHUB_RUN_ID}"
+            echo "- repository: ${GITHUB_REPOSITORY}"
+            echo "- actor: ${GITHUB_ACTOR}"
+            echo
+            echo "## token identity"
+            curl -sS -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" \
+              "${API}" | python3 -c 'import json,sys; d=json.load(sys.stdin); print("permissions:", json.dumps(d.get("permissions"), ensure_ascii=False)); print("viewer_permission:", d.get("viewer_permission"))' 2>&1 || true
+            echo
+            echo "## releases before"
+            curl -sS -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" \
+              "${API}/releases" | python3 -c 'import json,sys; d=json.load(sys.stdin); print([(r["id"], r["tag_name"]) for r in d])' 2>&1 || true
+          } > "$REPORT"
+
+          RID=$(curl -sS -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" \
+            "${API}/releases" | python3 -c "import json,sys; d=json.load(sys.stdin); print(next((r['id'] for r in d if r['tag_name']=='$TAG'), ''))" 2>/dev/null)
+          echo "release id for ${TAG} = '${RID}'" >> "$REPORT"
+
           if [ -n "$RID" ]; then
             code=$(curl -sS -o /tmp/del.out -w '%{http_code}' -X DELETE \
-              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-              -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/${RID}")
-            echo "DELETE release -> HTTP ${code}"; head -c 300 /tmp/del.out; echo
-          else
-            echo "no release id found for $TAG"
+              -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" \
+              "${API}/releases/${RID}")
+            { echo; echo "## DELETE release -> HTTP ${code}"; echo '```'; cat /tmp/del.out; echo; echo '```'; } >> "$REPORT"
           fi
-          # tag 单独删（Release 删除不会连带删 tag）
-          code=$(curl -sS -o /tmp/deltag.out -w '%{http_code}' -X DELETE \
-            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/git/refs/tags/${TAG}")
-          echo "DELETE tag -> HTTP ${code}"; head -c 300 /tmp/deltag.out; echo
 
-      - name: Verify
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          code=$(curl -sS -o /tmp/deltag.out -w '%{http_code}' -X DELETE \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" \
+            "${API}/git/refs/tags/${TAG}")
+          { echo; echo "## DELETE tag -> HTTP ${code}"; echo '```'; cat /tmp/deltag.out; echo; echo '```'; } >> "$REPORT"
+
+          { echo; echo "## releases after"; curl -sS -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" "${API}/releases" | python3 -c 'import json,sys; d=json.load(sys.stdin); print([(r["id"], r["tag_name"]) for r in d])' 2>&1 || true; } >> "$REPORT"
+          { echo; echo "## tags after"; git ls-remote --tags origin || true; } >> "$REPORT"
+
+          cat "$REPORT"
+
+      - name: Publish report to repo
         run: |
           set -uo pipefail
-          echo "### remaining releases"
-          curl -sS -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases" \
-            | python3 -c 'import json,sys; d=json.load(sys.stdin); print([(r["id"], r["tag_name"]) for r in d])' 2>&1 || true
-          echo "### remaining tags"
-          git ls-remote --tags origin || true
+          REPORT=ci/cleanup-report.txt
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          if git cat-file -e "origin/main:${REPORT}" 2>/dev/null; then
+            echo "report already exists on origin/main -- 不再提交，避免自触发成环"
+            exit 0
+          fi
+          git fetch origin main --depth=1 || true
+          git checkout -B cleanup-report origin/main 2>/dev/null || git checkout -B cleanup-report
+          mkdir -p ci && cp "${REPORT}" "ci/cleanup-report.txt"
+          git add ci/cleanup-report.txt
+          git commit -q -m "ci: 记录 v0.0.1 清理诊断报告" -m "[skip release]"
+          git push origin HEAD:main
