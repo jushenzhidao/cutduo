@@ -1,0 +1,45 @@
+name: Cleanup stray v0.0.1
+
+# 一次性清理：删掉首版试跑时误产出的 v0.0.1 Release 与 tag。
+#
+# 背景：首版首次推送时，release.yml 的冷启动逻辑写错了（基准取了 v0.0.0 → 首个 tag 成了
+# v0.0.1 而不是约定的 v0.1.0）。修正逻辑需要「零 tag」的起点，所以先把这个残留清掉。
+#
+# 这个 workflow 是一次性的：清理完成后它会被下一笔提交删除。
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write    # 删 Release 与 tag 都要 contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete stray release and tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+          TAG=v0.0.1
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release delete "$TAG" --yes --cleanup-tag
+            echo "deleted release $TAG (and its tag)"
+          else
+            echo "release $TAG not found -- nothing to do"
+            # tag 可能还在（Release 已被手工删过）
+            if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+              git push origin ":refs/tags/$TAG"
+              echo "deleted tag $TAG"
+            fi
+          fi
+
+      - name: Verify
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "--- remaining releases ---"
+          gh release list || true
+          echo "--- remaining tags ---"
+          git ls-remote --tags origin || true
