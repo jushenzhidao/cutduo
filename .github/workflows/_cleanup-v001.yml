@@ -17,29 +17,63 @@ jobs:
   cleanup:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Diagnose
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+          echo "### gh auth status"
+          gh auth status 2>&1 || true
+          echo "### gh repo view"
+          gh repo view --json nameWithOwner 2>&1 || true
+          echo "### releases (raw)"
+          curl -sS -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases" \
+            | python3 -c 'import json,sys; d=json.load(sys.stdin); print([(r["id"], r["tag_name"]) for r in d])' 2>&1 || true
+          echo "### tags (raw)"
+          git ls-remote --tags origin || true
+
       - name: Delete stray release and tag
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -uo pipefail
           TAG=v0.0.1
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release delete "$TAG" --yes --cleanup-tag
-            echo "deleted release $TAG (and its tag)"
+          RID=$(curl -sS -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases" \
+            | python3 -c "import json,sys; d=json.load(sys.stdin); print(next((r['id'] for r in d if r['tag_name']=='$TAG'), ''))" 2>/dev/null)
+          echo "release id for $TAG = '${RID}'"
+          if [ -n "$RID" ]; then
+            code=$(curl -sS -o /tmp/del.out -w '%{http_code}' -X DELETE \
+              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/${RID}")
+            echo "DELETE release -> HTTP ${code}"; head -c 300 /tmp/del.out; echo
           else
-            echo "release $TAG not found -- nothing to do"
-            # tag 可能还在（Release 已被手工删过）
-            if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
-              git push origin ":refs/tags/$TAG"
-              echo "deleted tag $TAG"
-            fi
+            echo "no release id found for $TAG"
           fi
+          # tag 单独删（Release 删除不会连带删 tag）
+          code=$(curl -sS -o /tmp/deltag.out -w '%{http_code}' -X DELETE \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/git/refs/tags/${TAG}")
+          echo "DELETE tag -> HTTP ${code}"; head -c 300 /tmp/deltag.out; echo
 
       - name: Verify
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "--- remaining releases ---"
-          gh release list || true
-          echo "--- remaining tags ---"
+          set -uo pipefail
+          echo "### remaining releases"
+          curl -sS -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases" \
+            | python3 -c 'import json,sys; d=json.load(sys.stdin); print([(r["id"], r["tag_name"]) for r in d])' 2>&1 || true
+          echo "### remaining tags"
           git ls-remote --tags origin || true
