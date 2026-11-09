@@ -1,0 +1,5 @@
+WorkBuddy · MotionGit 用法蒸馏演示模板
+本模板源码由本次工作区原创编写，仅用于演示 MotionGit .motion 开放格式的读取与渲染链路。
+可在本地自由修改与复用本演示模板；不含第三方图片、音频或字体文件。
+系统字体（PingFang SC / 系统等宽字体）遵循其各自许可，未随包分发。
+参考规范：MotionGit .motion specification 0.1.0-draft.1 (https://motiongit.com/spec)

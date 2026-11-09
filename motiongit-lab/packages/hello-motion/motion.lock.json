@@ -1,0 +1,11 @@
+{
+  "runtime": "html-canvas/1",
+  "tested": [
+    {
+      "os": "macOS 15",
+      "browser": "Chrome 141",
+      "ffmpeg": "7.1"
+    }
+  ],
+  "dependencies": {}
+}

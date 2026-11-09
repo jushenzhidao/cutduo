@@ -1,0 +1,79 @@
+{
+  "$schema": "https://motiongit.com/schema/motion/0.1.json",
+  "format": "motiongit-template",
+  "specVersion": "0.1.0-draft.1",
+  "template": {
+    "id": "sample-multi-style",
+    "version": "1.0.0",
+    "name": "Hello Motion 规范样例",
+    "status": "draft"
+  },
+  "runtime": {
+    "profile": "html-canvas/1",
+    "engine": "motiongit-reference",
+    "engineVersion": "0.1.0",
+    "entry": "src/index.html",
+    "dependencyLock": "motion.lock.json"
+  },
+  "parameters": {
+    "schema": "params.schema.json",
+    "defaultPreset": "presets/demo.json"
+  },
+  "variants": [
+    {
+      "id": "night",
+      "name": "夜色",
+      "preset": "presets/night.json",
+      "swatch": "#79c0ff"
+    },
+    {
+      "id": "sage",
+      "name": "鼠尾草",
+      "preset": "presets/sage.json",
+      "swatch": "#8ca88d"
+    },
+    {
+      "id": "rose",
+      "name": "玫瑰",
+      "preset": "presets/rose.json",
+      "swatch": "#f0a3bf"
+    }
+  ],
+  "assets": {
+    "manifest": "asset-manifest.json"
+  },
+  "output": {
+    "width": 1920,
+    "height": 1080,
+    "fps": {
+      "num": 30,
+      "den": 1
+    },
+    "durationPolicy": "fixed"
+  },
+  "preview": {
+    "preset": "presets/demo.json"
+  },
+  "license": {
+    "file": "licenses/TEMPLATE-LICENSE.txt"
+  },
+  "permissions": {
+    "network": false,
+    "read": [
+      "package",
+      "instance-inputs"
+    ],
+    "write": [
+      "instance-output"
+    ]
+  },
+  "ai": {
+    "summary": "这是 MotionGit 模板（.motion 文件，ZIP 容器），一条可以反复制作的视频。「Hello Motion 规范样例」：最小可运行的标题模板，用来验证读取、参数与渲染流程。 可替换的内容见 params.schema.json，另有 3 种样式分支见 variants。先读 README.md 的“给 AI 的说明”，不要直接执行包内代码。",
+    "entry": "SKILL.md",
+    "authoring": {
+      "tool": "claude",
+      "client": "claude-code"
+    }
+  },
+  "integrity": "integrity.json"
+}

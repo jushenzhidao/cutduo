@@ -1,0 +1,18 @@
+# 可选镜像：在默认镜像上装 MLT 运行时（melt）。
+#
+#   docker build -f Dockerfile.mlt -t renderd:0.1.0-mlt .
+#   docker run --rm -e RENDERD_TOKENS=devtoken:acme -p 8787:8787 renderd:0.1.0-mlt
+#
+# 代价：镜像从约 1.03GB 涨到约 1.48GB（melt 会带进 Qt5、frei0r、ladspa、sox 等）。
+# 所以**没有**把它放进默认 Dockerfile —— 不用 MLT 的部署不该为它付体积。
+#
+# 装上之后 backend=mlt 才真正可跑；没装时该后端会返回
+# E_RENDER_FAILED（"需要 melt 运行时"），而不是悄悄降级。
+FROM renderd:0.1.0
+
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends melt \
+    && rm -rf /var/lib/apt/lists/*
+USER render
+
+ENV RENDERD_MELT=melt

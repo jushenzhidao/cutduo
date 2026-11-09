@@ -1,0 +1,8 @@
+{
+  "assets": [],
+  "fonts": [
+    { "family": "-apple-system / PingFang SC / SF Pro Display", "bundled": false, "note": "系统字体，未随包分发" },
+    { "family": "ui-monospace / PingFang SC", "bundled": false }
+  ],
+  "note": "本期不使用真人卡、录屏、图片或音频；上游可选数据桩 talkmap.js / face.js / subs.js / wall.js 已从入口移除。"
+}

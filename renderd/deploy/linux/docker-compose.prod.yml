@@ -1,0 +1,168 @@
+# 生产部署：单机 Docker Compose（PG + api + worker，可选 Caddy TLS）
+#
+#   cp deploy/linux/.env.example deploy/linux/.env   # 或跑 install.sh 自动生成
+#   docker compose -f deploy/linux/docker-compose.prod.yml up -d --build
+#   docker compose -f deploy/linux/docker-compose.prod.yml --profile tls up -d
+#
+# 与 dev 用 docker-compose.pg.yml 的差别，每一条都是为了「出事故时能看见、能刹住」：
+#   · 探针用 /readyz 而不是 /healthz —— DB 断了必须摘掉，不能继续接流量
+#   · 日志轮转 —— 默认 json-file 不轮转会吃满磁盘，渲染服务日志量不小
+#   · 资源上限 —— 一个跑飞的 ffmpeg 不该把整台机器拖垮
+#   · 卷分离 —— PG 数据与素材分开，备份和扩容的粒度不同
+#   · 端口默认只绑 127.0.0.1 —— 公网入口只走 Caddy，别让 8787 裸奔
+
+name: renderd
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "5"
+
+x-renderd-env: &renderd-env
+  # 状态层：PG 是单机上的唯一事实来源。同机也走 PG，是为了让「以后加副本」
+  # 只是改部署，不是改代码。
+  RENDERD_DB_DSN: "postgresql://${POSTGRES_USER:-renderd}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD 未设置}@pg:5432/${POSTGRES_DB:-renderd}"
+  RENDERD_PG_SCHEMA: "renderd"
+  RENDERD_DATA_DIR: /data
+  # 租户令牌，格式 name:tenant，逗号分隔。泄漏一个不影响其他租户。
+  RENDERD_TOKENS: "${RENDERD_TOKENS:?RENDERD_TOKENS 未设置}"
+  # 签名密钥：必须显式给且各进程一致。不给会各自生成，重启后已发出的下载链接全失效。
+  RENDERD_SECRET: "${RENDERD_SECRET:?RENDERD_SECRET 未设置}"
+  # 管理令牌（/v1/queue 的 admin scope 等）
+  RENDERD_ADMIN_TOKENS: "${RENDERD_ADMIN_TOKENS:-}"
+  # 对外基址，用于回执里的绝对链接。留空则按请求 Host 推导。
+  RENDERD_PUBLIC_BASE_URL: "${RENDERD_PUBLIC_BASE_URL:-}"
+  # 配额与背压
+  RENDERD_QUOTA_QPS: "${RENDERD_QUOTA_QPS:-10}"
+  RENDERD_MAX_QUEUE_DEPTH: "${RENDERD_MAX_QUEUE_DEPTH:-2000}"
+  RENDERD_MAX_TENANT_INFLIGHT: "${RENDERD_MAX_TENANT_INFLIGHT:-8}"
+  RENDERD_STORAGE_QUOTA_MB: "${RENDERD_STORAGE_QUOTA_MB:-2048}"
+  # 就绪探针的磁盘闸：低于这个值不再接新任务
+  RENDERD_MIN_FREE_GB: "${RENDERD_MIN_FREE_GB:-5}"
+  # 生产禁止访问任意本地路径（默认已是关闭，这里显式钉死，防有人图省事打开）
+  RENDERD_ALLOW_ARBITRARY_PATHS: "0"
+  RENDERD_ALLOW_PRIVATE_CALLBACKS: "${RENDERD_ALLOW_PRIVATE_CALLBACKS:-0}"
+
+services:
+  pg:
+    image: postgres:${POSTGRES_VERSION:-16}-alpine
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER:-renderd}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD 未设置}"
+      POSTGRES_DB: "${POSTGRES_DB:-renderd}"
+      # 渲染任务的状态写入是短事务高频，默认的 fsync 策略在这里是瓶颈；
+      # 单机部署可以接受（掉电最多丢最近几秒的任务状态，坏掉的是可重放的队列）。
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    # PG 并行查询与 VACUUM 依赖 /dev/shm，默认 64MB 在大表上会报错
+    shm_size: "256mb"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-renderd} -d ${POSTGRES_DB:-renderd}"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+    logging: *logging
+
+  api:
+    image: "${RENDERD_IMAGE:-renderd:0.1.0}"
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    ports:
+      # 默认只绑回环：公网入口交给 Caddy。要直连就改 RENDERD_BIND=0.0.0.0，
+      # 但那意味着 8787 明文对公网开放，自己承担。
+      - "${RENDERD_BIND:-127.0.0.1}:${RENDERD_PORT:-8787}:8787"
+    environment:
+      <<: *renderd-env
+    volumes:
+      - renderd-data:/data
+    depends_on:
+      pg:
+        condition: service_healthy
+    # api 进程内不再跑 worker（--workers 0），渲染全交给 worker 容器：
+    # 这样 API 的 CPU 不会被 ffmpeg 抢走，扩容也各自独立。
+    command: ["python", "-m", "renderd", "serve", "--workers", "0"]
+    healthcheck:
+      # 用 readyz：DB 断了 curl 会拿到 503 并抛 HTTPError → 非零退出 → unhealthy
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys;sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8787/readyz',timeout=3).status==200 else 1)"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    stop_grace_period: 300s
+    restart: unless-stopped
+    logging: *logging
+    deploy:
+      resources:
+        limits:
+          cpus: "${API_CPUS:-2.0}"
+          memory: "${API_MEMORY:-2g}"
+
+  worker:
+    image: "${RENDERD_IMAGE:-renderd:0.1.0}"
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    environment:
+      <<: *renderd-env
+      RENDERD_WORKER_CONCURRENCY: "${RENDERD_WORKER_CONCURRENCY:-1}"
+    volumes:
+      # 与 api 共享同一个卷：单机形态下素材、成片、mezz 都在这里。
+      # 换成多机会失效，那时要接对象存储（见 docs/OPS.md「仍未解决的前提」）。
+      - renderd-data:/data
+    depends_on:
+      api:
+        condition: service_healthy
+    # 一个容器一个 worker 进程：崩溃只影响一份，日志也分得清。
+    # 要加并发：worker 扩副本（--scale worker=4），不是把 concurrency 调大。
+    command: ["python", "-m", "renderd", "worker", "--tenant", "${RENDERD_WORKER_TENANT:-acme}", "--name", "${RENDERD_WORKER_NAME:-w1}"]
+    stop_grace_period: 300s
+    restart: unless-stopped
+    logging: *logging
+    deploy:
+      resources:
+        limits:
+          # 渲染是 CPU 密集，这里给的是上限，不是预留
+          cpus: "${WORKER_CPUS:-4.0}"
+          memory: "${WORKER_MEMORY:-4g}"
+
+  # 可选：Caddy 反代 + 自动 TLS。需要域名已解析到本机，且 80/443 放通。
+  #   在 .env 里设 RENDERD_DOMAIN=render.example.com
+  #   docker compose -f ... --profile tls up -d
+  caddy:
+    image: caddy:2-alpine
+    profiles: ["tls"]
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      # 这里不能写 `:?`：compose 在解析阶段就做变量插值，哪怕 caddy 属于未激活的
+      # profile，缺变量也会让整个 `up` 失败——不启用 TLS 的人会被无辜拦下。
+      # 空值由 install.sh 提前拦（--tls 必须有 --domain），运行期由 Caddy 自身报错。
+      RENDERD_DOMAIN: "${RENDERD_DOMAIN:-}"
+      ACME_EMAIL: "${ACME_EMAIL:-}"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    logging: *logging
+
+volumes:
+  pg-data:
+    name: renderd_pg-data
+  renderd-data:
+    name: renderd_data
+  caddy-data:
+    name: renderd_caddy-data
+  caddy-config:
+    name: renderd_caddy-config

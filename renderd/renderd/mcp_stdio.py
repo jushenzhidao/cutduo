@@ -1,0 +1,226 @@
+"""MCP server（stdio，JSON-RPC 2.0，按行分隔）。
+
+这是 Agent 的入口。三条设计约束写在工具定义里而不是文档里：
+  · 只暴露「提交意图」的工具，不暴露执行计划
+  · 成功必须带 receipt，不能只给 URL —— Agent 看不见视频
+  · 错误必须带 code/hint/field/allowed_values，Agent 才能自我修正
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import sys
+import traceback
+from typing import Any
+
+from . import __version__
+from .errors import JobError, ERROR_SPECS
+from .service import Service
+
+PROTOCOL_VERSION = "2024-11-05"
+
+TOOLS = [
+    {
+        "name": "list_templates",
+        "description": "列出可用模板及其变量 schema。先调这个，再决定用哪个模板、填哪些变量。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "family": {"type": "string", "description": "按模板族过滤"},
+                "aspect": {"type": "string", "enum": ["9:16", "16:9", "1:1", "4:5"]},
+            },
+            "additionalProperties": False,
+        },
+    },
+    {
+        "name": "validate_render",
+        "description": "预检：不渲染，只校验 IR/素材/字体/安全区，并给出成本与耗时预估。"
+                       "返回的 fixes 可以直接照改再提交。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "template_id": {"type": "string"},
+                "variables": {"type": "object"},
+                "assets": {"type": "array", "items": {"$ref": "#/$defs/Asset"}},
+                "ir": {"type": "object", "description": "高级用法：直传 IR"},
+            },
+            "additionalProperties": False,
+        },
+    },
+    {
+        "name": "submit_render",
+        "description": "提交渲染。必须带 idempotency_key（同 key 重放返回同一 job_id，不重复计费）。"
+                       "dry_run=true 只返回估算，不入队。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "idempotency_key": {"type": "string", "minLength": 8},
+                "template_id": {"type": "string"},
+                "variables": {"type": "object"},
+                "assets": {"type": "array", "items": {"$ref": "#/$defs/Asset"}},
+                "ir": {"type": "object"},
+                "priority": {"enum": ["low", "normal", "high"]},
+                "callback_url": {"type": "string"},
+                "delivery": {
+                    "type": "object",
+                    "description": "成片交付。mode=local（默认）走本地签名 URL；"
+                                   "mode=put_url 直传客户自己的预签名 PUT 地址。",
+                    "properties": {
+                        "mode": {"enum": ["local", "put_url"]},
+                        "url": {"type": "string"},
+                        "headers": {"type": "object"},
+                    },
+                    "additionalProperties": False,
+                },
+                "dry_run": {"type": "boolean"},
+            },
+            "required": ["idempotency_key"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "name": "get_job_status",
+        "description": "查任务状态。返回阶段（stage）与进度；失败时返回可执行的错误契约。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"job_id": {"type": "string"}},
+            "required": ["job_id"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "name": "get_receipt",
+        "description": "取证据回执：L0_ingest（每个素材被怎么归一化的决策单）/ L1 结构断言 / "
+                       "L2 感知（若有 reference）/ L3 语义断言 + delivery 交付结果 + 首尾帧、"
+                       "接触表、波形图、响度。Agent 靠它判断成片对不对，而不是靠再渲一次。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"job_id": {"type": "string"}},
+            "required": ["job_id"],
+            "additionalProperties": False,
+        },
+    },
+]
+
+
+class MCPServer:
+    def __init__(self, service: Service | None = None, tenant: str = "mcp"):
+        self.service = service or Service()
+        self.tenant = os.environ.get("RENDERD_MCP_TENANT", tenant)
+        self.service.ensure_tenant(self.tenant)
+
+    # ── JSON-RPC ──────────────────────────────────────
+    def handle(self, msg: dict) -> dict | None:
+        method = msg.get("method")
+        mid = msg.get("id")
+        is_notification = "id" not in msg
+
+        try:
+            if method == "initialize":
+                result = {
+                    "protocolVersion": PROTOCOL_VERSION,
+                    "capabilities": {"tools": {"listChanged": False}},
+                    "serverInfo": {"name": "renderd", "version": __version__},
+                    "instructions": "提交模板+素材即可渲染；成功后会返回证据回执。"
+                                    "先用 list_templates 看有哪些模板。",
+                }
+            elif method in ("notifications/initialized", "initialized"):
+                return None
+            elif method == "ping":
+                result = {}
+            elif method == "tools/list":
+                result = {"tools": TOOLS}
+            elif method == "tools/call":
+                result = self.call_tool(msg.get("params") or {})
+            elif method in ("resources/list", "prompts/list"):
+                result = {"resources": []} if method.startswith("resources") else {"prompts": []}
+            else:
+                if is_notification:
+                    return None
+                return self._err(mid, -32601, f"Method not found: {method}")
+        except JobError as exc:
+            return {"jsonrpc": "2.0", "id": mid,
+                    "result": {"content": [{"type": "text",
+                                            "text": json.dumps({"error": exc.to_dict()},
+                                                               ensure_ascii=False)}],
+                               "isError": True}}
+        except Exception as exc:  # pragma: no cover
+            traceback.print_exc(file=sys.stderr)
+            if is_notification:
+                return None
+            return self._err(mid, -32603, f"{type(exc).__name__}: {exc}")
+
+        if is_notification:
+            return None
+        return {"jsonrpc": "2.0", "id": mid, "result": result}
+
+    def _err(self, mid, code: int, message: str) -> dict:
+        return {"jsonrpc": "2.0", "id": mid,
+                "error": {"code": code, "message": message}}
+
+    # ── 工具实现 ───────────────────────────────────────
+    def call_tool(self, params: dict) -> dict:
+        name = params.get("name")
+        args = params.get("arguments") or {}
+
+        if name == "list_templates":
+            tpls = self.service.templates()
+            family = args.get("family")
+            aspect = args.get("aspect")
+            if family:
+                tpls = [t for t in tpls if t["family"] == family]
+            if aspect:
+                tpls = [t for t in tpls if t["aspect"] == aspect]
+            return self._ok({"templates": tpls, "count": len(tpls)})
+
+        if name == "validate_render":
+            return self._ok(self.service.validate(args))
+
+        if name == "submit_render":
+            payload = {k: v for k, v in args.items()
+                       if k in ("template_id", "variables", "assets", "ir",
+                                "priority", "callback_url", "delivery", "dry_run")}
+            payload["idempotency_key"] = args.get("idempotency_key")
+            result = self.service.submit(payload, self.tenant)
+            return self._ok(result)
+
+        if name == "get_job_status":
+            return self._ok(self.service.status(args["job_id"], self.tenant))
+
+        if name == "get_receipt":
+            return self._ok(self.service.receipt(args["job_id"], self.tenant))
+
+        raise JobError("E_BAD_REQUEST", f"未知工具: {name}",
+                       allowed_values=[t["name"] for t in TOOLS])
+
+    def _ok(self, obj: Any) -> dict:
+        text = json.dumps(obj, ensure_ascii=False, indent=1)
+        return {"content": [{"type": "text", "text": text}], "isError": False}
+
+    # ── 主循环 ─────────────────────────────────────────
+    def serve_forever(self) -> None:
+        for line in sys.stdin:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                msg = json.loads(line)
+            except json.JSONDecodeError:
+                self._write(self._err(None, -32700, "Parse error"))
+                continue
+            resp = self.handle(msg)
+            if resp is not None:
+                self._write(resp)
+
+    def _write(self, obj: dict) -> None:
+        sys.stdout.write(json.dumps(obj, ensure_ascii=False) + "\n")
+        sys.stdout.flush()
+
+
+def main() -> None:
+    MCPServer().serve_forever()
+
+
+if __name__ == "__main__":
+    main()

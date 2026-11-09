@@ -1,0 +1,2 @@
+Hello Motion 规范样例 — MotionGit sample template.
+Licensed under the Apache License, Version 2.0.

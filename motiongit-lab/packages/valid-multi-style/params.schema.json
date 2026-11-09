@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "title"
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "标题",
+      "minLength": 1,
+      "maxLength": 24,
+      "default": "Hello Motion"
+    },
+    "accent": {
+      "type": "string",
+      "title": "强调色",
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "default": "#79c0ff"
+    },
+    "background": {
+      "type": "string",
+      "title": "背景色",
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "default": "#0d1117"
+    }
+  }
+}

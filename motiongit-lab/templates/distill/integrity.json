@@ -1,0 +1,16 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "README.md": "3e28c09d0350087b8a2bf90eb1bca1e7007ebf94f3a1f425000471044bee2fba",
+    "SKILL.md": "0dc28039c048d6f8d94905f9c3ffc9feb1a7bc97326e48718a9cb8a65282729f",
+    "asset-manifest.json": "89a8ea3700082f352c6b0c83bd2291e21eba001113b9e39ca7b259aabf6ca448",
+    "guide.json": "1c7e016eb76a9773102c0f2ff7ff44ae382a535ef51022ce96e21ef1177554bb",
+    "licenses/TEMPLATE-LICENSE.txt": "0dafb68f249708b973f0b084232bbf440fd81f12747cdb95cdc93f9cc35f1864",
+    "motion.json": "23f6991236a9de70a888031cb58535bfe784ad8c31e39d805be5a92a0d8cb219",
+    "motion.lock.json": "2811ac13dc084b57ddb3ca76fa844f924a37dd7ca390ea34cfc81d2301c379ce",
+    "params.schema.json": "7954a2b60a085dfbe6d4dddb464af21cdd88c6c8ed5151e34f510286cac3bbc6",
+    "presets/demo.json": "6362dc88b52f25b87a15c92d0152a7d66aaf237c3a7e28e0bfa83b2f98e4c70f",
+    "src/index.html": "1a00fa93d4a98cc5f6d9f45374a2a5cce6c5d8ca2891e934a05116d810ed4eea",
+    "src/main.js": "440cb1b3772af44dfae85f02887cf92e9a0ddb648d7434b867306fec7a7b16b0"
+  }
+}

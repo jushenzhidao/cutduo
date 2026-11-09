@@ -1,0 +1,7 @@
+{
+  "assets": [],
+  "fonts": [
+    { "family": "PingFang SC / system sans-serif", "bundled": false, "note": "系统字体，未随包分发；跨平台渲染请自行确认字体可用性" },
+    { "family": "system monospace", "bundled": false }
+  ]
+}

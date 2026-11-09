@@ -1,0 +1,14 @@
+本模板包含两部分：
+
+1) 上游引擎源码 src/{config.js,index.html(改编),lib.js,main.js,scenes.js(参考),style.css,subtitles.js,templates.js}
+   来源：https://github.com/aisovip/adu-motion-video  (template/)
+   许可：MIT，版权所有 (c) 2026 阿杜Next。完整许可文本见 UPSTREAM-LICENSE.txt。
+   已按 MIT 保留版权与许可声明；本包对其做了入口精简与参数化改造。
+
+2) 本次新增的封装与剪辑稿
+   src/scene-builder.js、src/bridge.js、motion.json、params.schema.json、guide.json、
+   presets/demo.json、README.md、SKILL.md、edits/inputs.json 为本次工作区原创，
+   可在本地自由修改与复用。
+
+本包不含第三方图片、音频、视频或字体文件；系统字体遵循各自许可。
+参考规范：MotionGit .motion specification 0.1.0-draft.1 (https://motiongit.com/spec)

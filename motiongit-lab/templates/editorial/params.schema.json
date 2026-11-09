@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["scenes", "durationSeconds"],
+  "properties": {
+    "brand": { "type": "string", "title": "品牌角标", "minLength": 1, "maxLength": 30, "default": "WORKBUDDY" },
+    "accent": { "type": "string", "title": "主强调色", "pattern": "^#[0-9a-fA-F]{6}$", "default": "#2462EA" },
+    "accent2": { "type": "string", "title": "次级强调色", "pattern": "^#[0-9a-fA-F]{6}$", "default": "#5B8CFF" },
+    "durationSeconds": { "type": "number", "title": "成片时长（秒）", "minimum": 8, "maximum": 120, "default": 28 },
+    "fps": { "type": "integer", "title": "帧率", "enum": [24, 30, 60], "default": 24 },
+    "captions": {
+      "type": "array",
+      "title": "字幕轨（每句 start/end 为全片绝对秒数，与旁白逐句对齐）",
+      "items": {
+        "type": "object",
+        "required": ["start", "end", "text"],
+        "properties": {
+          "start": { "type": "number", "minimum": 0 },
+          "end": { "type": "number", "minimum": 0 },
+          "text": { "type": "string", "minLength": 1, "maxLength": 120 }
+        }
+      }
+    },
+    "scenes": {
+      "type": "array",
+      "title": "分镜表（按时间顺序）",
+      "minItems": 1,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "required": ["type", "t0", "t1"],
+        "properties": {
+          "type": { "type": "string", "enum": ["hero", "point", "number", "compare", "steps", "quote", "demo", "checklist", "outro"] },
+          "t0": { "type": "number", "minimum": 0 },
+          "t1": { "type": "number", "minimum": 0 },
+          "args": { "type": "object", "title": "该场景的文案与时间锚点，原样传给 TPL.<type>" }
+        }
+      }
+    }
+  }
+}

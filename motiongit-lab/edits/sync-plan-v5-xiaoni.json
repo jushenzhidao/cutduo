@@ -1,0 +1,70 @@
+{
+  "totalSeconds": 38.85,
+  "fps": 24,
+  "segments": [
+    {
+      "i": 1,
+      "scene": "hero",
+      "t0": 0.35,
+      "t1": 6.592,
+      "voiceSeconds": 5.592,
+      "caption": "先讲清楚，再讲漂亮。一条视频，一个问题。"
+    },
+    {
+      "i": 2,
+      "scene": "point",
+      "t0": 6.592,
+      "t1": 11.988,
+      "voiceSeconds": 4.896,
+      "caption": "别堆信息，先搭结构：结论、证据、例子。"
+    },
+    {
+      "i": 3,
+      "scene": "number",
+      "t0": 11.988,
+      "t1": 15.128,
+      "voiceSeconds": 2.64,
+      "caption": "一页只讲一个观点。"
+    },
+    {
+      "i": 4,
+      "scene": "compare",
+      "t0": 15.128,
+      "t1": 19.564,
+      "voiceSeconds": 3.936,
+      "caption": "堆信息听完就忘，搭结构能复述。"
+    },
+    {
+      "i": 5,
+      "scene": "steps",
+      "t0": 19.564,
+      "t1": 25.416,
+      "voiceSeconds": 5.352,
+      "caption": "四步骨架：抛问题、给结论、摆证据、收行动。"
+    },
+    {
+      "i": 6,
+      "scene": "quote",
+      "t0": 25.416,
+      "t1": 29.396,
+      "voiceSeconds": 3.48,
+      "caption": "记住的不是信息量，是结构。"
+    },
+    {
+      "i": 7,
+      "scene": "checklist",
+      "t0": 29.396,
+      "t1": 34.984,
+      "voiceSeconds": 5.088,
+      "caption": "发布前三问：说得清吗，证据够吗，能照做吗。"
+    },
+    {
+      "i": 8,
+      "scene": "outro",
+      "t0": 34.984,
+      "t1": 38.85,
+      "voiceSeconds": 3.216,
+      "caption": "改一份文案，就能再做一期。"
+    }
+  ]
+}

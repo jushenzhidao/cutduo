@@ -1,0 +1,47 @@
+{
+  "purpose": "12 秒横屏知识短片，演示 MotionGit .motion 模板包的结构与生产流程；可用于产品/工具介绍的开场或说明片段。",
+  "duration": {
+    "policy": "fixed",
+    "seconds": 12,
+    "fps": { "num": 30, "den": 1 },
+    "adaptation": "四段场景节奏固定（0–3.35s / 3.35–6.65s / 6.65–9.7s / 9.7–12s）。文案过长时由渲染器按 maxW 缩字号；超出容量必须改写文案或另建模板版本，不得裁切信息。"
+  },
+  "materials": [
+    {
+      "role": "text.script",
+      "mappedParameters": ["title", "subtitle", "points", "steps", "outro"],
+      "required": true,
+      "ifMissing": "停止渲染，列出缺失字段；不得用旧稿或演示文案冒充本期内容。"
+    },
+    {
+      "role": "text.facts",
+      "mappedParameters": ["eyebrow"],
+      "required": false,
+      "ifMissing": "使用 preset 中的默认眉标。"
+    },
+    {
+      "role": "image.logo",
+      "mappedParameters": [],
+      "required": false,
+      "ifMissing": "保持纯文字落款，不插入占位图或虚构品牌标识。"
+    },
+    {
+      "role": "audio.music",
+      "mappedParameters": [],
+      "required": false,
+      "ifMissing": "导出无音轨视频；不静默复用 demo 音乐，需要音乐时由宿主以 --audio 显式传入。"
+    }
+  ],
+  "layout": {
+    "ratio": "16:9",
+    "pixels": "1280x720",
+    "safeArea": "四周 62px，正文右边界 1190px",
+    "notes": "仅支持横屏；字幕与标题均在安全区内。竖屏需求需另建 portrait 版本而不是直接裁切。"
+  },
+  "runtime": {
+    "profile": "html-canvas/1",
+    "entry": "src/index.html",
+    "dependencies": ["Node.js 22+", "Chromium headless (Playwright)", "FFmpeg"],
+    "network": false
+  }
+}

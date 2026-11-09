@@ -1,0 +1,15 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "asset-manifest.json": "5fb1aad33ef1d2cc0943d3efb0a9954944fe8693eca59775f109c12813b91866",
+    "licenses/TEMPLATE-LICENSE.txt": "ee447756ec7ddd8a07606340ac398a2f164d3a45f1604dd4c1239dbb2db68e76",
+    "motion.json": "b14c0f33b9d948e533c3382a65fb101ab1627181c3b4e971c1fa5034c6e3b717",
+    "motion.lock.json": "5b8e68d6d17e1f40ffac8328c4c6d2f215693f06580569aea3bf748c023fc1a4",
+    "params.schema.json": "b37f3d59b27c230de193e558f6bdcb6febf6627353b092c1428b144c1a0c2a16",
+    "presets/demo.json": "5469d7ce0033e73360494c95e455c6aedf22debc90f1dca9eddf3930b2826842",
+    "README.md": "5114b9df3eb837533489cd29cb18a7d53fd0040c1ff476af3ce1187a9ea71aa6",
+    "SKILL.md": "280f64404f490d4b1a798713d6b065d04571a873ba7ec7051f0d845c9a481552",
+    "src/index.html": "b7e3ad68f72051fb296519eefbc0f2e1681245852d0b3658fa1ef0e9ce8cc53b",
+    "src/main.js": "07699022e708e665c6f998ca5ad958f8c53a11c362ed9d50ea094991ec6d4f87"
+  }
+}

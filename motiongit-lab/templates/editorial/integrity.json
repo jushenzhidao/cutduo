@@ -1,0 +1,25 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "README.md": "a10f2d2eaecc425597adc5ead57481114429e17f88832df38e909da83ed07283",
+    "SKILL.md": "7afe7bb11330d1c0fda7f55015097906129103a58c1c7bfefb5a688bed554271",
+    "asset-manifest.json": "95b2f069cd72ed986561d743a57b7c53f316eb40078007c7a468bae613a55034",
+    "guide.json": "9d5d6d6454653411e08ebd62048588a9b037efdaeaf72c3e702fb6520def38de",
+    "licenses/TEMPLATE-LICENSE.txt": "8da92aabb29b1d0d3039b16f7e6690169c1cf8ac793d148050629b65e33806ae",
+    "licenses/UPSTREAM-LICENSE.txt": "0f1d5e25e1035cf4fb24809d66dff30642a2d4c5a33837ba7e0e8af4ff66fdfc",
+    "motion.json": "2623da4a672c840deeb24a9164fc11173585ddc8eac69a8ea04b26af7ed6adc7",
+    "motion.lock.json": "2fe0328698985e7572b6b24c2c7efe666ab656b8e096703916690a423f8610f0",
+    "params.schema.json": "f7f27eb979fcba72ade05d7a3dc7e5ba9a0717eff4686b6d394f0f657b6b6faa",
+    "presets/demo.json": "cb5c6b880a4c8c5dc20ceefddc2dc7510928204575c5f50353fbb705abe3c558",
+    "src/bridge.js": "164f051ed35ffd7a28fb76f40b392c03ecb8713c21184b3863a15d33574d0f0a",
+    "src/config.js": "14c4c9a10bea93780deb737ea9c8d8702f2bb08e3f9983da8943ec9fd9a5576b",
+    "src/index.html": "602a371ddc1564542a63aaa235a01cbb3451c81f190c2cb9683ff71d1337bbb9",
+    "src/lib.js": "9cbe9a44c94c6c45d20d5d8e85593e8312e746c0173577b57d6751f627008eb8",
+    "src/main.js": "584da71b2dbaa634d29f75185c7f96070186444ae821c8b51f373a9ceae72a10",
+    "src/scene-builder.js": "3b9169e32b1a6e880344c787c36f79b08991ece9d820a64cc3a5feb7b4ad2259",
+    "src/scenes.js": "caa0146ec085e7613a3fdd38659996a9540a2707559743d5df6140e596fcda54",
+    "src/style.css": "f4f9101ee7fb96133eb6bd80f8d4ec31d1640a32307852f29765abe012e78146",
+    "src/subtitles.js": "d750fb1ded7a6571f02902006d21b727bf9ed9e216f68f49be70e28fccbd88f9",
+    "src/templates.js": "ec3d34057c963a28b500a8cbebdd4c8ca8ae24e3c9a1629126f89ef46bfec79e"
+  }
+}

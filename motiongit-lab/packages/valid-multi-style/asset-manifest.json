@@ -1,0 +1,9 @@
+{
+  "assets": [],
+  "fonts": [
+    {
+      "family": "system sans-serif",
+      "bundled": false
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "subtitle", "points", "steps", "outro"],
+  "properties": {
+    "eyebrow": { "type": "string", "title": "眉标", "minLength": 1, "maxLength": 30, "default": ".motion 用法蒸馏" },
+    "title": { "type": "string", "title": "主标题（建议拉丁字母，逐字入场）", "minLength": 1, "maxLength": 24, "default": "MOTIONGIT" },
+    "subtitle": { "type": "string", "title": "副标题", "minLength": 1, "maxLength": 40, "default": "把视频写成可复用的代码" },
+    "points": {
+      "type": "array", "title": "三个要点（形如 '01  说明文字'）",
+      "minItems": 3, "maxItems": 3,
+      "items": { "type": "string", "minLength": 1, "maxLength": 60 }
+    },
+    "steps": {
+      "type": "array", "title": "流程四步",
+      "minItems": 4, "maxItems": 4,
+      "items": { "type": "string", "minLength": 1, "maxLength": 20 }
+    },
+    "outro": { "type": "string", "title": "结语", "minLength": 1, "maxLength": 24, "default": "一次蒸馏 · 反复出片" },
+    "accent": { "type": "string", "title": "主强调色", "pattern": "^#[0-9a-fA-F]{6}$", "default": "#8B7CFF" },
+    "accent2": { "type": "string", "title": "辅助色", "pattern": "^#[0-9a-fA-F]{6}$", "default": "#4FD1C5" }
+  }
+}

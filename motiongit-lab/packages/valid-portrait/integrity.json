@@ -1,0 +1,16 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "asset-manifest.json": "5fb1aad33ef1d2cc0943d3efb0a9954944fe8693eca59775f109c12813b91866",
+    "guide.json": "464a4fb7f12adf0ecc88649795de6b04fcbda618d766205127482f3fdfe9362b",
+    "licenses/TEMPLATE-LICENSE.txt": "ee447756ec7ddd8a07606340ac398a2f164d3a45f1604dd4c1239dbb2db68e76",
+    "motion.json": "edbb7a740401841b5d1d43c5d61a5f622e383fc922ad75bd4b3ae6b4c870df64",
+    "motion.lock.json": "8422c327d29ff4687f9674ae43668a53e5028dcb390d2519d507898e1b0894ee",
+    "params.schema.json": "b37f3d59b27c230de193e558f6bdcb6febf6627353b092c1428b144c1a0c2a16",
+    "presets/demo.json": "5469d7ce0033e73360494c95e455c6aedf22debc90f1dca9eddf3930b2826842",
+    "README.md": "69b417c9eb697f07643f7b905d55cd0ffcbd1ccffe9629d6233e0516b0f87ae7",
+    "SKILL.md": "b6edf78a5e6276f58e15db39964f849d4445e69f0c1ed128cd5d715af836f4f5",
+    "src/index.html": "8ea618f9f4c504a0f0b8fa5100139113986258a1c806f542f99a62a40b98942f",
+    "src/main.js": "07699022e708e665c6f998ca5ad958f8c53a11c362ed9d50ea094991ec6d4f87"
+  }
+}

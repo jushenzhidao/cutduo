@@ -1,0 +1,43 @@
+# 生产反代：自动申请并续期 Let's Encrypt 证书。
+# 域名由 compose 注入的 {$RENDERD_DOMAIN} 决定，同一份文件复用到不同环境。
+#
+# 前置：域名 A/AAAA 记录已指向本机，80 与 443 在安全组放通。
+
+{
+	email {$ACME_EMAIL}
+	# 证书与 ACME 账号存在 caddy-data 卷里，重建容器不会重新申请
+	# （Let's Encrypt 有每周签发上限，调试时反复重建很容易触顶）
+}
+
+{$RENDERD_DOMAIN} {
+	encode zstd gzip
+
+	# 上传上限对齐 RENDERD_MAX_UPLOAD_MB=512，留出 multipart 开销。
+	# 这里不设，超大请求会在 Caddy 全额缓冲后才被后端拒绝，白烧带宽。
+	request_body {
+		max_size 600MB
+	}
+
+	# /metrics 不对公网开放：暴露任务量、缓存命中率、租户数。
+	# 采集走 VPC 内直连 127.0.0.1:8787，或在这里改成 allow 内网段。
+	@metrics path /metrics
+	respond @metrics 404
+
+	reverse_proxy api:8787 {
+		# 上传大文件与下载成片都可能跨分钟，默认值偏紧
+		transport http {
+			read_timeout 300s
+			write_timeout 300s
+			dial_timeout 10s
+		}
+		# 保留真实客户端 IP：审计与「认证失败按 IP 限流」都依赖它
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+
+	log {
+		output stdout
+		format json
+		level INFO
+	}
+}

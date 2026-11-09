@@ -1,0 +1,53 @@
+# 带 TLS 终止 + /metrics 白名单的部署。
+# 先跑 deploy/make-dev-cert.sh 生成自签证书；生产换成 ACME 证书并改 Caddyfile 的 tls 行。
+services:
+  api:
+    build: .
+    image: renderd:0.1.0
+    environment: &env
+      RENDERD_TOKENS: "${RENDERD_TOKENS:-devtoken:acme}"
+      RENDERD_SECRET: "${RENDERD_SECRET:-}"
+      RENDERD_INGEST_NORMALIZE: "1"
+      RENDERD_QUOTA_QPS: "${RENDERD_QUOTA_QPS:-10}"
+      RENDERD_METRICS_CIDRS: "127.0.0.1/32,::1/128,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+    volumes: ["renderd-data:/data"]
+    command: ["python", "-m", "renderd", "serve", "--workers", "0"]
+    stop_grace_period: 300s
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys;sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8787/healthz',timeout=3).status==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  worker:
+    build: .
+    image: renderd:0.1.0
+    environment:
+      <<: *env
+      RENDERD_WORKER_CONCURRENCY: "${RENDERD_WORKER_CONCURRENCY:-1}"
+    volumes: ["renderd-data:/data"]
+    command: ["python", "-m", "renderd", "worker", "--tenant", "acme", "--name", "w1"]
+    stop_grace_period: 300s
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  gateway:
+    image: caddy:2-alpine
+    ports: ["${RENDERD_TLS_PORT:-8443}:8443"]
+    environment:
+      METRICS_ALLOW: "${METRICS_ALLOW:-127.0.0.1/32 ::1/128 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16}"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./deploy/certs:/etc/caddy/certs:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  renderd-data:

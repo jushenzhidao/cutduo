@@ -1,0 +1,18 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "asset-manifest.json": "5fb1aad33ef1d2cc0943d3efb0a9954944fe8693eca59775f109c12813b91866",
+    "licenses/TEMPLATE-LICENSE.txt": "ee447756ec7ddd8a07606340ac398a2f164d3a45f1604dd4c1239dbb2db68e76",
+    "motion.json": "88ef6a0ae6f41d38b40403bd41874eb08f95baee2a6d4a3990955ca41cc0b01a",
+    "motion.lock.json": "8422c327d29ff4687f9674ae43668a53e5028dcb390d2519d507898e1b0894ee",
+    "params.schema.json": "b37f3d59b27c230de193e558f6bdcb6febf6627353b092c1428b144c1a0c2a16",
+    "presets/demo.json": "5469d7ce0033e73360494c95e455c6aedf22debc90f1dca9eddf3930b2826842",
+    "presets/night.json": "5469d7ce0033e73360494c95e455c6aedf22debc90f1dca9eddf3930b2826842",
+    "presets/rose.json": "b90db9adac29b4c07d65a814c7f24f0557bed78fc0e8bdd787187b8f6fde4162",
+    "presets/sage.json": "f39ff0d1d0a3956bde2589f419a79c6adfc2730552fde118a5d1fc41902508ca",
+    "README.md": "5114b9df3eb837533489cd29cb18a7d53fd0040c1ff476af3ce1187a9ea71aa6",
+    "SKILL.md": "40de524d8952bb5e64441bfd60a5eaeefdad6a7db46551aa8335a4dc04718aee",
+    "src/index.html": "b7e3ad68f72051fb296519eefbc0f2e1681245852d0b3658fa1ef0e9ce8cc53b",
+    "src/main.js": "07699022e708e665c6f998ca5ad958f8c53a11c362ed9d50ea094991ec6d4f87"
+  }
+}

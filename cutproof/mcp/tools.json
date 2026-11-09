@@ -1,0 +1,776 @@
+{
+  "schema_version": "cutproof/mcp/v1",
+  "server": {
+    "name": "cutproof",
+    "version": "0.1.0",
+    "transport": [
+      "stdio",
+      "streamable-http"
+    ],
+    "design_notes": [
+      "Agent 不能生成 MLT XML、不能调 shell。它只能提交 IR —— 执行计划由服务端编译，这是安全边界。",
+      "成功响应必须携带 receipt（证据），不能只给 URL。Agent 看不见视频，只给 URL 它只会瞎试，烧的是你的 GPU 配额。",
+      "错误必须是可执行的：code + message + hint + field + allowed_values + retryable。LLM 靠这五件套自我修正。",
+      "submit 必须幂等：同一个 idempotency_key 重复提交返回同一个 job_id，不产生第二次渲染成本。",
+      "所有工具都有 dry_run 语义：先算账再花钱。"
+    ]
+  },
+  "tools": [
+    {
+      "name": "list_templates",
+      "description": "列出可用模板及其参数 schema。Agent 必须先调这个，再决定用哪个模板、填哪些变量——而不是自己猜字段。",
+      "input": {
+        "type": "object",
+        "properties": {
+          "family": {
+            "type": "string",
+            "description": "按模板族过滤，如 brand_vertical"
+          },
+          "aspect": {
+            "type": "string",
+            "enum": [
+              "9:16",
+              "16:9",
+              "1:1",
+              "4:5"
+            ]
+          },
+          "limit": {
+            "type": "integer",
+            "default": 20,
+            "maximum": 100
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "templates"
+        ],
+        "properties": {
+          "templates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "family",
+                "aspect",
+                "duration_frames",
+                "variables",
+                "preview"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "example": "tpl_brand_vertical_15s"
+                },
+                "family": {
+                  "type": "string"
+                },
+                "aspect": {
+                  "type": "string"
+                },
+                "duration_frames": {
+                  "type": "integer"
+                },
+                "variables": {
+                  "type": "array",
+                  "description": "模板可填的变量；每个变量自带类型与约束，Agent 不需要读文档",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type",
+                      "required"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "enum": [
+                          "string",
+                          "number",
+                          "asset_id",
+                          "enum"
+                        ]
+                      },
+                      "required": {
+                        "type": "boolean"
+                      },
+                      "max_chars": {
+                        "type": "integer"
+                      },
+                      "enum": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "default": {}
+                    }
+                  }
+                },
+                "preview": {
+                  "type": "object",
+                  "properties": {
+                    "contact_sheet": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "duration_s": {
+                      "type": "number"
+                    }
+                  }
+                },
+                "constraints": {
+                  "type": "object",
+                  "properties": {
+                    "max_text_chars_per_line": {
+                      "type": "integer"
+                    },
+                    "safe_area": {
+                      "type": "object"
+                    },
+                    "fonts": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "validate_render",
+      "description": "预检：不渲染，只校验 IR 合法性、素材可读性、字体覆盖、文本是否出安全区，并给出成本与耗时预估。Agent 应在 submit 之前调用，用返回的 fixes 自动修正。",
+      "input": {
+        "type": "object",
+        "required": [
+          "ir"
+        ],
+        "properties": {
+          "ir": {
+            "$ref": "#/$defs/IR"
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "valid",
+          "checks",
+          "estimate"
+        ],
+        "properties": {
+          "valid": {
+            "type": "boolean"
+          },
+          "checks": {
+            "type": "object",
+            "properties": {
+              "ir_schema": {
+                "$ref": "#/$defs/Check"
+              },
+              "assets_readable": {
+                "$ref": "#/$defs/Check"
+              },
+              "font_coverage": {
+                "$ref": "#/$defs/Check"
+              },
+              "text_safe_area": {
+                "$ref": "#/$defs/Check"
+              },
+              "audio_present": {
+                "$ref": "#/$defs/Check"
+              }
+            }
+          },
+          "fixes": {
+            "type": "array",
+            "description": "机器可执行的修正建议。Agent 照此改 IR 后重试，不需要人类介入。",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "example": "styles.s_title.font_family"
+                },
+                "action": {
+                  "enum": [
+                    "set",
+                    "replace_asset",
+                    "shorten_text",
+                    "pick_font"
+                  ]
+                },
+                "value": {},
+                "reason": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "estimate": {
+            "type": "object",
+            "properties": {
+              "cost_cny": {
+                "type": "number",
+                "example": 0.012
+              },
+              "wall_clock_s_p50": {
+                "type": "number",
+                "example": 48
+              },
+              "queue_position": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "submit_render",
+      "description": "提交渲染任务。必须带 idempotency_key：同 key 重复提交返回同一个 job_id，不重复计费。dry_run=true 时只返回估算，不入队。 delivery.put_url 可把成片直传客户自己的对象存储。",
+      "input": {
+        "type": "object",
+        "required": [
+          "idempotency_key",
+          "ir"
+        ],
+        "properties": {
+          "idempotency_key": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
+          },
+          "ir": {
+            "$ref": "#/$defs/IR"
+          },
+          "priority": {
+            "enum": [
+              "low",
+              "normal",
+              "high"
+            ],
+            "default": "normal"
+          },
+          "delivery": {
+            "type": "object",
+            "properties": {
+              "egress": {
+                "enum": [
+                  "platform",
+                  "customer_bucket"
+                ],
+                "default": "customer_bucket",
+                "description": "P0 契约别名；与 mode 二选一"
+              },
+              "mode": {
+                "enum": [
+                  "local",
+                  "put_url"
+                ],
+                "description": "local=我方签名 URL；put_url=直传客户预签名 PUT 地址"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "put_url 模式必填；受 SSRF 白名单与 IP 钉住约束"
+              },
+              "headers": {
+                "type": "object"
+              }
+            }
+          },
+          "dry_run": {
+            "type": "boolean",
+            "default": false
+          },
+          "callback_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "任务终态 webhook；提交期解析并钉住公网 IP"
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "job_id",
+          "status",
+          "idempotent_replay"
+        ],
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "example": "job_01J9Z8K2"
+          },
+          "status": {
+            "$ref": "#/$defs/JobStatus"
+          },
+          "idempotent_replay": {
+            "type": "boolean",
+            "description": "true 表示这个 key 之前提交过，本次没有产生新成本"
+          },
+          "estimate": {
+            "type": "object"
+          },
+          "poll_after_s": {
+            "type": "number",
+            "example": 5
+          }
+        }
+      }
+    },
+    {
+      "name": "get_job_status",
+      "description": "查任务状态。返回阶段而非百分比——阶段能被 Agent 用来判断'还要不要等'，百分比不能。",
+      "input": {
+        "type": "object",
+        "required": [
+          "job_id"
+        ],
+        "properties": {
+          "job_id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "job_id",
+          "status"
+        ],
+        "properties": {
+          "job_id": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/$defs/JobStatus"
+          },
+          "stage": {
+            "enum": [
+              "queued",
+              "ingesting",
+              "compiling",
+              "rendering",
+              "validating",
+              "delivering",
+              "done",
+              "failed"
+            ],
+            "description": "ingesting 阶段的失败是素材问题，rendering 阶段的失败是资源问题——Agent 据此决定重试还是换素材"
+          },
+          "frames_done": {
+            "type": "integer"
+          },
+          "frames_total": {
+            "type": "integer"
+          },
+          "eta_s": {
+            "type": "number"
+          },
+          "error": {
+            "$ref": "#/$defs/Error"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_receipt",
+      "description": "取证据回执。这是本服务与「只返回一个 URL 的渲染 API」的核心区别：回执里带结构断言、语义断言、首尾帧、接触表、波形图、响度。Agent 靠它判断成片对不对，而不是靠再渲染一次试试。 含 L0_ingest 与 delivery 结果。",
+      "input": {
+        "type": "object",
+        "required": [
+          "job_id"
+        ],
+        "properties": {
+          "job_id": {
+            "type": "string"
+          },
+          "include_evidence": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "$ref": "#/$defs/Receipt",
+        "properties": {
+          "L0_ingest": {
+            "type": "object",
+            "description": "每个素材的归一化决策单：flags / actions / warnings / post 规格"
+          },
+          "delivery": {
+            "type": "object",
+            "description": "成片交付结果：mode / egress / status / http_status"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "IR": {
+      "type": "object",
+      "description": "时间线中间表示。整数帧、内容寻址素材、引擎无关。绝不接受 MLT XML。",
+      "required": [
+        "ir_version",
+        "id",
+        "output",
+        "assets",
+        "tracks"
+      ],
+      "properties": {
+        "ir_version": {
+          "const": "0.1"
+        },
+        "id": {
+          "type": "string"
+        },
+        "output": {
+          "type": "object",
+          "required": [
+            "width",
+            "height",
+            "fps",
+            "duration_frames"
+          ],
+          "properties": {
+            "width": {
+              "type": "integer"
+            },
+            "height": {
+              "type": "integer"
+            },
+            "fps": {
+              "type": "object",
+              "required": [
+                "num",
+                "den"
+              ],
+              "properties": {
+                "num": {
+                  "type": "integer"
+                },
+                "den": {
+                  "type": "integer"
+                }
+              }
+            },
+            "duration_frames": {
+              "type": "integer"
+            }
+          }
+        },
+        "assets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "uri"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "uri": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "tracks": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "styles": {
+          "type": "object"
+        },
+        "delivery": {
+          "type": "object"
+        }
+      }
+    },
+    "Check": {
+      "type": "object",
+      "required": [
+        "pass"
+      ],
+      "properties": {
+        "pass": {
+          "type": "boolean"
+        },
+        "actual": {},
+        "expect": {},
+        "detail": {
+          "type": "string"
+        }
+      }
+    },
+    "JobStatus": {
+      "enum": [
+        "accepted",
+        "running",
+        "succeeded",
+        "failed",
+        "cancelled",
+        "expired"
+      ]
+    },
+    "Error": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "retryable"
+      ],
+      "properties": {
+        "code": {
+          "enum": [
+            "E_INPUT_UNREADABLE",
+            "E_INPUT_AUDIO_ONLY",
+            "E_INPUT_TRUNCATED",
+            "E_INPUT_OVERLONG",
+            "E_INPUT_HDR_UNSUPPORTED",
+            "E_INPUT_VFR",
+            "E_MEDIA_MISSING",
+            "E_IR_INVALID",
+            "E_IR_UNSUPPORTED",
+            "E_FONT_MISSING",
+            "E_TEXT_OVERFLOW",
+            "E_QUOTA_EXCEEDED",
+            "E_TIMEOUT",
+            "E_OOM",
+            "E_NVENC_SESSION",
+            "E_OUTPUT_INVALID",
+            "E_PUBLISH_FAILED",
+            "E_CANCELLED"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "description": "给人看的一句话"
+        },
+        "hint": {
+          "type": "string",
+          "description": "给 Agent 的下一步建议，必须是可执行动作"
+        },
+        "field": {
+          "type": "string",
+          "description": "出问题的字段路径，让 Agent 知道改哪里"
+        },
+        "allowed_values": {
+          "type": "array",
+          "items": {}
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "retry_after_s": {
+          "type": "number"
+        }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "required": [
+        "schema",
+        "ir_id",
+        "ir_hash",
+        "L1",
+        "L3",
+        "verdict",
+        "failures",
+        "evidence"
+      ],
+      "properties": {
+        "schema": {
+          "const": "cutproof/receipt/v1"
+        },
+        "ir_id": {
+          "type": "string"
+        },
+        "ir_hash": {
+          "type": "string",
+          "description": "IR 内容哈希；同 hash + 同引擎版本 → 可命中缓存，不重复计费"
+        },
+        "render_sha256": {
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "pass",
+            "warn",
+            "fail"
+          ]
+        },
+        "failures": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "失败项列表，元素是错误码或断言名；空数组表示可交付"
+        },
+        "L1": {
+          "type": "object",
+          "description": "结构层：必须 100% 可断言。同后端要求字节级一致，跨后端要求字段全等。",
+          "properties": {
+            "structural": {
+              "type": "object"
+            },
+            "assertions": {
+              "type": "object"
+            }
+          }
+        },
+        "L2": {
+          "type": "object",
+          "description": "感知层：只在有 reference 时有效（回归用）。首次渲染无法自证，故不能作为交付判据。",
+          "properties": {
+            "applicable": {
+              "type": "boolean"
+            },
+            "vmaf": {
+              "type": "number"
+            },
+            "gate": {
+              "type": "number"
+            },
+            "pass": {
+              "type": "boolean"
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        "L3": {
+          "type": "object",
+          "description": "语义层：唯一能判首次正确性的东西。编译期可算的项不应留到渲染后。",
+          "properties": {
+            "font_coverage": {
+              "type": "object",
+              "properties": {
+                "ok": {
+                  "type": "boolean"
+                },
+                "missing": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "missing_codepoints": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "safe_area": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "loudness": {
+              "type": "object",
+              "properties": {
+                "integrated_lufs": {
+                  "type": "number"
+                },
+                "true_peak_dbfs": {
+                  "type": "number"
+                },
+                "target_lufs": {
+                  "type": "number"
+                },
+                "ok": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "black_frames": {
+              "type": "object"
+            }
+          }
+        },
+        "evidence": {
+          "type": "object",
+          "description": "Agent 的'眼睛'。没有这些它就只能靠重试来试探。",
+          "properties": {
+            "contact_sheet": {
+              "type": "string",
+              "format": "uri"
+            },
+            "first_frame": {
+              "type": "string",
+              "format": "uri"
+            },
+            "last_frame": {
+              "type": "string",
+              "format": "uri"
+            },
+            "waveform": {
+              "type": "string",
+              "format": "uri"
+            },
+            "output_url": {
+              "type": "string",
+              "format": "uri"
+            }
+          }
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "resources": [
+    {
+      "uri": "cutproof://receipts/{job_id}",
+      "description": "把回执暴露成 MCP resource，Agent 可以直接读而不必调工具（省一轮往返）"
+    },
+    {
+      "uri": "cutproof://templates/{template_id}/preview.mp4",
+      "description": "模板预览片，让 Agent 在选模板前先看一眼"
+    }
+  ],
+  "error_semantics": {
+    "rule": "同一类错误必须给出同一个 code。code 是契约，message 是叙事，二者不可互换。",
+    "example": {
+      "code": "E_IR_INVALID",
+      "message": "时间线参数非法：tracks[1].clips[0].out_frame 早于 at_frame",
+      "hint": "out_frame 必须大于 at_frame；当前 at_frame=300, out_frame=150",
+      "field": "tracks[1].clips[0].out_frame",
+      "allowed_values": [
+        301,
+        450
+      ],
+      "retryable": false
+    }
+  }
+}

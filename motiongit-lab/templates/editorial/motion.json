@@ -1,0 +1,43 @@
+{
+  "$schema": "https://motiongit.com/schema/motion/0.1.json",
+  "format": "motiongit-template",
+  "specVersion": "0.1.0-draft.1",
+  "template": {
+    "id": "editorial-kinetic-cut",
+    "version": "1.1.0",
+    "name": "现代图文口播 · 参数化剪辑模板（逐句同步字幕）",
+    "status": "draft"
+  },
+  "runtime": {
+    "profile": "html-dom/1",
+    "engine": "adu-motion-video-template",
+    "engineVersion": "1.0.0",
+    "entry": "src/index.html",
+    "dependencyLock": "motion.lock.json"
+  },
+  "parameters": {
+    "schema": "params.schema.json",
+    "defaultPreset": "presets/demo.json"
+  },
+  "assets": { "manifest": "asset-manifest.json" },
+  "output": {
+    "width": 1920,
+    "height": 1080,
+    "fps": { "num": 24, "den": 1 },
+    "durationPolicy": "range",
+    "durationSeconds": 28
+  },
+  "preview": { "preset": "presets/demo.json" },
+  "license": { "file": "licenses/TEMPLATE-LICENSE.txt" },
+  "permissions": {
+    "network": false,
+    "read": ["package", "instance-inputs"],
+    "write": ["instance-output"]
+  },
+  "ai": {
+    "entry": "SKILL.md",
+    "guide": "guide.json",
+    "summary": "基于阿杜 adu-motion-video 开源模板引擎（MIT）参数化改造的剪辑模板。分镜由 inputs.json 的 scenes 数组驱动，宿主注入 window.MOTION_INPUTS 后由 src/scene-builder.js 调用 TPL 场景函数。无外部素材，全片离线渲染。"
+  },
+  "integrity": "integrity.json"
+}

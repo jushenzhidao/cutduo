@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>renderd 接口文档 v1</title>
+<style>
+:root{--paper:#f7f4ec;--card:#fffdf7;--ink:#1f1c17;--ink2:#4a453b;--ink3:#7d7668;
+--rule:#dcd6c8;--acc:#b23a2b;--accs:#f7e6e1;--teal:#1d6f5c;--amber:#a97a1e;--code:#eee9dd}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);
+font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",sans-serif;
+font-size:15.5px;line-height:1.78;-webkit-font-smoothing:antialiased}
+.layout{display:grid;grid-template-columns:266px minmax(0,1fr);max-width:1240px;margin:0 auto;
+gap:0;padding:0 24px 100px}
+nav{position:sticky;top:0;align-self:start;max-height:100vh;overflow:auto;padding:34px 18px 40px 0;
+border-right:1px solid var(--rule)}
+nav .brand{font-family:"Songti SC",Georgia,serif;font-size:19px;margin-bottom:4px}
+nav .ver{font-size:11.5px;color:var(--ink3);letter-spacing:.08em;margin-bottom:22px}
+nav .grp{font-size:11px;letter-spacing:.14em;color:var(--acc);font-weight:700;margin:20px 0 7px}
+nav a{display:block;color:var(--ink2);text-decoration:none;font-size:13.5px;padding:3px 0 3px 8px;
+border-left:2px solid transparent}
+nav a:hover{color:var(--ink);border-left-color:var(--rule)}
+nav a .m{font-family:ui-monospace,Menlo,monospace;font-size:10px;color:var(--ink3);margin-right:6px}
+main{padding:34px 0 0 40px;min-width:0}
+h1{font-family:"Songti SC",Georgia,serif;font-size:34px;line-height:1.24;margin:0 0 10px}
+.lede{color:var(--ink2);max-width:760px;margin:0 0 18px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.pill{font-size:12px;border:1px solid var(--rule);background:var(--card);padding:3px 9px;border-radius:999px;
+color:var(--ink2)}
+.pill b{color:var(--ink)}
+section{margin-top:46px;scroll-margin-top:16px}
+h2{font-size:23px;font-family:"Songti SC",Georgia,serif;margin:0 0 6px;padding-top:14px;
+border-top:2px solid var(--ink)}
+h2 .num{font-size:12px;letter-spacing:.1em;color:var(--acc);margin-right:10px;vertical-align:3px;
+font-family:-apple-system,sans-serif;font-weight:700}
+h3{font-size:17.5px;margin:26px 0 8px}
+p{margin:0 0 12px;color:var(--ink2)}
+code{font-family:ui-monospace,Menlo,monospace;font-size:.86em;background:var(--code);
+padding:1px 5px;border-radius:2px;color:#3a352c}
+pre{background:var(--code);padding:13px 15px;border-radius:3px;overflow-x:auto;font-size:12.5px;
+line-height:1.62;color:#3a352c;margin:0 0 14px}
+pre code{background:none;padding:0;font-size:inherit}
+table{border-collapse:collapse;width:100%;margin:6px 0 16px;font-size:13.5px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-size:11.5px;letter-spacing:.06em;color:var(--ink3);font-weight:700;white-space:nowrap}
+td code{white-space:nowrap}
+.ep{border:1px solid var(--rule);background:var(--card);margin:26px 0 0;scroll-margin-top:14px}
+.ep .hd{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--rule)}
+.ep .hd h3{margin:0;font-size:16.5px;flex:1}
+.mth{font-family:ui-monospace,Menlo,monospace;font-size:11px;font-weight:700;letter-spacing:.06em;
+padding:3px 7px;border-radius:3px;color:#fff;background:var(--ink2)}
+.mth.get{background:#2f6b5a}.mth.post{background:#8f5b1e}.mth.delete{background:#9c3225}
+.path{font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--ink)}
+.ep .bd{padding:14px 16px 4px}
+.scope{font-size:11.5px;color:var(--ink3)}
+.chg{margin-top:50px;padding-top:18px;border-top:1px solid var(--rule);font-size:13px;color:var(--ink3)}
+.note{background:var(--accs);border-left:3px solid var(--acc);padding:11px 14px;margin:14px 0;
+font-size:13.5px;color:var(--ink2)}
+@media(max-width:920px){.layout{grid-template-columns:1fr;padding:0 16px 60px}
+nav{position:static;max-height:none;border-right:none;border-bottom:1px solid var(--rule);padding:22px 0 10px}
+nav a{display:inline-block;margin-right:12px;border-left:none;border-bottom:2px solid transparent;padding:2px 0}
+main{padding:22px 0 0}}
+</style></head><body>
+<div class="layout">
+<nav><div class='brand'>renderd 接口文档</div><div class='ver'>API v1 · 0.1.0</div><div class='grp'>开始</div><a href='#base'>基础约定</a><a href='#quickstart'>三步跑通</a><a href='#errors'>错误码</a><div class='grp'>公开</div><a href='#health'><span class='m'>GET</span>健康检查</a><a href='#metrics'><span class='m'>GET</span>Prometheus 指标</a><div class='grp'>渲染主链路</div><a href='#templates'><span class='m'>GET</span>模板列表</a><a href='#validate'><span class='m'>POST</span>预检（不渲染）</a><a href='#submit'><span class='m'>POST</span>提交渲染</a><div class='grp'>素材</div><a href='#upload'><span class='m'>POST</span>上传素材</a><a href='#list_assets'><span class='m'>GET</span>素材列表</a><a href='#delete_asset'><span class='m'>DELETE</span>删除素材（释放配额）</a><div class='grp'>查询</div><a href='#list_jobs'><span class='m'>GET</span>任务列表</a><a href='#job'><span class='m'>GET</span>任务状态</a><a href='#events'><span class='m'>GET</span>阶段流水</a><a href='#receipt'><span class='m'>GET</span>证据回执</a><div class='grp'>文件</div><a href='#video'><span class='m'>GET</span>下载成片</a><a href='#evidence'><span class='m'>GET</span>下载证据文件</a><div class='grp'>运维</div><a href='#cancel'><span class='m'>POST</span>取消任务</a><a href='#replay'><span class='m'>POST</span>重放死信</a><a href='#queue'><span class='m'>GET</span>队列视图</a><a href='#dlq'><span class='m'>GET</span>死信列表</a><a href='#usage'><span class='m'>GET</span>用量与配额</a></nav>
+<main>
+<h1>渲染服务接口文档</h1>
+<p class="lede">面向调用方（Agent / 业务后端）的 REST 契约。所有示例都是真实请求与响应；
+错误码是契约，<code>message</code> 只是叙事 —— 请按 <code>code</code> 决策。</p>
+<div class="meta">
+  <span class="pill">Base URL <b>http://127.0.0.1:8787</b></span>
+  <span class="pill">版本 <b>v1</b></span>
+  <span class="pill">认证 <b>Bearer token</b></span>
+  <span class="pill">编码 <b>UTF-8 / JSON</b></span>
+</div>
+
+<section id="base"><h2><span class="num">00</span>基础约定</h2>
+<h3>鉴权</h3>
+<p><code>Authorization: Bearer &lt;token&gt;</code>，token 与租户一一映射
+（<code>RENDERD_TOKENS="token:tenant,token2:tenantB"</code>）。下载类端点额外支持签名 URL，
+便于 Agent 直接取。<b>鉴权失败也有限速</b>：同一 IP 的无效令牌超过 <code>RENDERD_AUTH_FAIL_QPS</code>
+（默认 10/s）返回 429。</p>
+
+<h3>幂等</h3>
+<p>提交必须带 <code>idempotency_key</code>（≥8 字符）。唯一约束是 <code>(tenant, key)</code>：
+同 key 重复提交返回同一 <code>job_id</code> 且不二次计费；不同租户用同一个 key 互不影响。</p>
+
+<h3>错误结构</h3>
+<pre><code>{"error": {"code": "E_MEDIA_TOO_SHORT", "message": "...", "retryable": false,
+          "stage": "ingesting", "field": "tracks[v1].clips",
+          "allowed_values": ["out_frame <= 200"]},
+ "request_id": "9f3d2a1c"}</code></pre>
+<p><code>retryable=true</code> 才重试；<code>field</code> 指出改哪里，<code>allowed_values</code> 给出可接受范围。
+完整列表见 <a href="#errors">错误码</a>。</p>
+
+<h3>限流与背压</h3>
+<table><tr><th>层</th><th>触发</th><th>返回</th></tr>
+<tr><td>租户 QPS</td><td>1 秒滑动窗口（20 × 50ms 子桶）</td><td><code>429 E_RATE_LIMITED</code></td></tr>
+<tr><td>认证失败</td><td>同 IP 无效令牌 &gt; 10/s</td><td><code>429 E_RATE_LIMITED</code></td></tr>
+<tr><td>队列深度</td><td>全局排队数 ≥ <code>RENDERD_MAX_QUEUE_DEPTH</code></td><td><code>429 E_QUEUE_FULL</code></td></tr>
+<tr><td>租户在途</td><td>该租户 accepted+running ≥ <code>RENDERD_MAX_TENANT_INFLIGHT</code></td><td><code>429 E_QUEUE_FULL</code></td></tr>
+</table>
+
+<h3>任务状态机</h3>
+<pre><code>accepted → running → succeeded
+    ↑          │
+    └──────────┴─→ failed（可 replay）    accepted → cancelled</code></pre>
+<p><code>stage</code>：<code>queued → ingesting → compiling → rendering → validating → delivering → done</code>。
+阶段比百分比有用：<code>ingesting</code> 失败是素材问题，<code>rendering</code> 失败是资源问题。</p>
+</section>
+
+<section id="quickstart"><h2><span class="num">00</span>三步跑通</h2>
+<pre><code># 1. 上传素材
+curl -X POST $BASE/v1/assets -H "Authorization: Bearer $TOKEN" \
+     -H "X-Filename: clip.mp4" --data-binary @clip.mp4
+
+# 2. 提交（idempotency_key 用你自己的任务号）
+curl -X POST $BASE/v1/render -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" -d '{
+       "idempotency_key": "order-001",
+       "template_id": "hook_vertical_6s",
+       "variables": {"clip": "a0", "hook": "第一性原理"},
+       "assets": [{"id": "a0", "uri": "upload:&lt;sha&gt;.mp4"}]}'
+
+# 3. 轮询（成功后 video_url 可直接打开）
+curl $BASE/v1/jobs/$JOB -H "Authorization: Bearer $TOKEN"</code></pre>
+<p>更多可运行示例见 <code>renderd/README.md</code>。</p>
+</section>
+
+<section id="index"><h2><span class="num">01</span>端点总览</h2>
+<p>下表由代码里的路由表生成 —— 不会漏，也不会多。</p>
+<table><tr><th>方法</th><th>路径</th><th>说明</th><th>权限</th></tr><tr><td><span class='mth get'>GET</span></td><td><a href='#health'><code>/healthz</code></a></td><td>健康检查</td><td class='scope'>公开</td></tr><tr><td><span class='mth get'>GET</span></td><td><a href='#metrics'><code>/metrics</code></a></td><td>Prometheus 指标</td><td class='scope'>公开</td></tr><tr><td><span class='mth get'>GET</span></td><td><a href='#templates'><code>/v1/templates</code></a></td><td>模板列表</td><td class='scope'>租户令牌</td></tr><tr><td><span class='mth post'>POST</span></td><td><a href='#validate'><code>/v1/validate</code></a></td><td>预检（不渲染）</td><td class='scope'>租户令牌</td></tr><tr><td><span class='mth post'>POST</span></td><td><a href='#submit'><code>/v1/render</code></a></td><td>提交渲染</td><td class='scope'>租户令牌</td></tr><tr><td><span class='mth post'>POST</span></td><td><a href='#upload'><code>/v1/assets</code></a></td><td>上传素材</td><td class='scope'>租户令牌</td></tr><tr><td><span class='mth get'>GET</span></td><td><a href='#list_assets'><code>/v1/assets</code></a></td><td>素材列表</td><td class='scope'>租户令牌</td></tr><tr><td><span class='mth delete'>DELETE</span></td><td><a href='#delete_asset'><code>/v1/assets/([A-Za-z0-9_.-]+)</code></a></td><td>删除素材（释放配额）</td><td class='scope'>租户令牌</td></tr><tr><td><span class='mth get'>GET</span></td><td><a href='#list_jobs'><code>/v1/jobs</code></a></td><td>任务列表</td><td class='scope'>租户令牌</td></tr><tr><td><span class='mth get'>GET</span></td><td><a href='#job'><code>/v1/jobs/([A-Za-z0-9_]+)</code></a></td><td>任务状态</td><td class='scope'>租户令牌</td></tr><tr><td><span class='mth get'>GET</span></td><td><a href='#events'><code>/v1/jobs/([A-Za-z0-9_]+)/events</code></a></td><td>阶段流水</td><td class='scope'>租户令牌</td></tr><tr><td><span class='mth get'>GET</span></td><td><a href='#receipt'><code>/v1/jobs/([A-Za-z0-9_]+)/receipt</code></a></td><td>证据回执</td><td class='scope'>租户令牌</td></tr><tr><td><span class='mth get'>GET</span></td><td><a href='#video'><code>/v1/jobs/([A-Za-z0-9_]+)/video</code></a></td><td>下载成片</td><td class='scope'>令牌或签名</td></tr><tr><td><span class='mth get'>GET</span></td><td><a href='#evidence'><code>/v1/jobs/([A-Za-z0-9_]+)/evidence/([A-Za-z0-9_.-]+)</code></a></td><td>下载证据文件</td><td class='scope'>令牌或签名</td></tr><tr><td><span class='mth post'>POST</span></td><td><a href='#cancel'><code>/v1/jobs/([A-Za-z0-9_]+)/cancel</code></a></td><td>取消任务</td><td class='scope'>租户令牌</td></tr><tr><td><span class='mth post'>POST</span></td><td><a href='#replay'><code>/v1/jobs/([A-Za-z0-9_]+)/replay</code></a></td><td>重放死信</td><td class='scope'>租户令牌</td></tr><tr><td><span class='mth get'>GET</span></td><td><a href='#queue'><code>/v1/queue</code></a></td><td>队列视图</td><td class='scope'>租户 / admin</td></tr><tr><td><span class='mth get'>GET</span></td><td><a href='#dlq'><code>/v1/dlq</code></a></td><td>死信列表</td><td class='scope'>租户令牌</td></tr><tr><td><span class='mth get'>GET</span></td><td><a href='#usage'><code>/v1/usage</code></a></td><td>用量与配额</td><td class='scope'>租户令牌</td></tr></table>
+</section>
+
+<section><h2><span class='num'>01</span>公开</h2><div class='ep' id='health'><div class='hd'><span class='mth get'>GET</span><span class='path'>/healthz</span><h3>健康检查</h3></div><div class='bd'><p>存活探针。返回引擎版本、字体族数量、运行时长。不鉴权，可用于负载均衡探活。</p><p style='font-size:12px;color:var(--ink3);margin-bottom:4px'>响应</p><pre><code>{&quot;ok&quot;: true, &quot;version&quot;: &quot;0.1.0&quot;, &quot;ir_version&quot;: &quot;0.1&quot;,
+ &quot;engine&quot;: &quot;ffmpeg version 7.1.5&quot;, &quot;uptime_s&quot;: 128.4,
+ &quot;backend_default&quot;: &quot;ffmpeg&quot;, &quot;fonts_available&quot;: 68}</code></pre></div></div><div class='ep' id='metrics'><div class='hd'><span class='mth get'>GET</span><span class='path'>/metrics</span><h3>Prometheus 指标</h3></div><div class='bd'><p>文本格式指标。默认只对回环与私网开放，来源不在 `RENDERD_METRICS_CIDRS` 内返回 403。</p><table><tr><th>参数</th><th>类型</th><th>说明</th></tr><tr><td><code>来源 IP</code></td><td>—</td><td>必须在 RENDERD_METRICS_CIDRS 内</td></tr></table><p style='font-size:12px;color:var(--ink3);margin-bottom:4px'>响应</p><pre><code>renderd_jobs_total 128
+renderd_queue_depth 3
+renderd_jobs_running 2
+renderd_clock_skew_seconds 0</code></pre><p style='font-size:12.5px;color:var(--ink3)'>可能的错误：<code>E_METRICS_FORBIDDEN</code></p></div></div></section><section><h2><span class='num'>02</span>渲染主链路</h2><div class='ep' id='templates'><div class='hd'><span class='mth get'>GET</span><span class='path'>/v1/templates</span><h3>模板列表</h3></div><div class='bd'><p>返回模板 id、画面比例、时长、分辨率，以及每个变量的 schema（必填、最大字数、可选值）。</p><p style='font-size:12px;color:var(--ink3);margin-bottom:4px'>响应</p><pre><code>{&quot;templates&quot;: [{&quot;id&quot;: &quot;hook_vertical_6s&quot;, &quot;aspect&quot;: &quot;9:16&quot;,
+  &quot;duration_s&quot;: 6.0, &quot;resolution&quot;: [1080, 1920],
+  &quot;variables&quot;: [{&quot;name&quot;: &quot;hook&quot;, &quot;type&quot;: &quot;text&quot;, &quot;required&quot;: true, &quot;max_chars&quot;: 14}]}]}</code></pre></div></div><div class='ep' id='validate'><div class='hd'><span class='mth post'>POST</span><span class='path'>/v1/validate</span><h3>预检（不渲染）</h3></div><div class='bd'><p>请求体与 `/v1/render` 相同（`idempotency_key` 可省）。返回逐项检查与**机器可执行**的 fixes，Agent 照改即可重试。不占队列、不计费。</p><table><tr><th>参数</th><th>类型</th><th>说明</th></tr><tr><td><code>body</code></td><td>object</td><td>见提交渲染；`dry_run` 无意义</td></tr></table><p style='font-size:12px;color:var(--ink3);margin-bottom:4px'>响应</p><pre><code>{&quot;valid&quot;: false,
+ &quot;checks&quot;: {
+   &quot;ir_schema&quot;: {&quot;pass&quot;: true},
+   &quot;assets_readable&quot;: {&quot;pass&quot;: true},
+   &quot;font_coverage&quot;: {&quot;pass&quot;: false, &quot;error&quot;: {&quot;code&quot;: &quot;E_FONT_MISSING&quot;}},
+   &quot;text_safe_area&quot;: {&quot;pass&quot;: true},
+   &quot;audio_present&quot;: {&quot;pass&quot;: true}},
+ &quot;fixes&quot;: [{&quot;field&quot;: &quot;styles.*.font_family&quot;, &quot;action&quot;: &quot;pick_font&quot;,
+            &quot;value&quot;: &quot;Noto Sans CJK SC&quot;}],
+ &quot;estimate&quot;: {&quot;cost_cny&quot;: 0.0049, &quot;render_s_p50&quot;: 3.0, &quot;wall_clock_s_p50&quot;: 9.0}}</code></pre><p style='font-size:12.5px;color:var(--ink3)'>可能的错误：<code>E_BAD_REQUEST</code> <code>E_IR_INVALID</code></p></div></div><div class='ep' id='submit'><div class='hd'><span class='mth post'>POST</span><span class='path'>/v1/render</span><h3>提交渲染</h3></div><div class='bd'><p>提交任务。同步完成预检（IR / 素材 / 字体 / 安全区 / 容量），预检不过直接返回错误码，不进队列。`dry_run=true` 只算成本、不入队。</p><table><tr><th>参数</th><th>类型</th><th>说明</th></tr><tr><td><code>idempotency_key</code></td><td>string，必填，≥8</td><td>调用方自己的任务号；同 key 重复提交返回同一 job，不二次计费</td></tr><tr><td><code>template_id</code></td><td>string</td><td>与 `ir` 二选一</td></tr><tr><td><code>variables</code></td><td>object</td><td>模板变量</td></tr><tr><td><code>assets</code></td><td>array</td><td>`[{id, uri}]`，uri 支持 `file://`（限 media 目录）与 `upload:&lt;name&gt;`</td></tr><tr><td><code>ir</code></td><td>object</td><td>直传 IR，跳过模板；见 docs/IR.md</td></tr><tr><td><code>priority</code></td><td>low / normal / high</td><td>默认 normal</td></tr><tr><td><code>callback_url</code></td><td>string</td><td>完成回调；提交期解析并钉住 IP，防 DNS rebinding</td></tr><tr><td><code>delivery</code></td><td>object</td><td>`put_url` 直传客户对象存储，见下</td></tr><tr><td><code>dry_run</code></td><td>bool</td><td>只算成本与 checks</td></tr><tr><td><code>backend</code></td><td>ffmpeg / mlt</td><td>默认 ffmpeg</td></tr></table><pre><code>{
+  &quot;idempotency_key&quot;: &quot;order-20261109-001&quot;,
+  &quot;template_id&quot;: &quot;brand_vertical_15s&quot;,
+  &quot;variables&quot;: {&quot;clip1&quot;: &quot;a1&quot;, &quot;clip2&quot;: &quot;a2&quot;, &quot;clip3&quot;: &quot;a3&quot;,
+                &quot;title&quot;: &quot;季度回顾&quot;, &quot;music&quot;: &quot;m1&quot;},
+  &quot;assets&quot;: [
+    {&quot;id&quot;: &quot;a1&quot;, &quot;uri&quot;: &quot;upload:9f3d....mp4&quot;},
+    {&quot;id&quot;: &quot;a2&quot;, &quot;uri&quot;: &quot;file:///data/media/b.mp4&quot;},
+    {&quot;id&quot;: &quot;a3&quot;, &quot;uri&quot;: &quot;upload:11ab....mp4&quot;},
+    {&quot;id&quot;: &quot;m1&quot;, &quot;uri&quot;: &quot;upload:77cd....m4a&quot;}
+  ],
+  &quot;priority&quot;: &quot;normal&quot;,
+  &quot;callback_url&quot;: &quot;https://example.com/hook&quot;
+}</code></pre><p style='font-size:12px;color:var(--ink3);margin-bottom:4px'>响应</p><pre><code>202 Accepted
+{&quot;job_id&quot;: &quot;job_35111bb1c430&quot;, &quot;status&quot;: &quot;accepted&quot;, &quot;stage&quot;: &quot;queued&quot;,
+ &quot;idempotent_replay&quot;: false, &quot;poll_after_s&quot;: 3,
+ &quot;estimate&quot;: {&quot;cost_cny&quot;: 0.0123, &quot;render_s_p50&quot;: 7.5, &quot;wall_clock_s_p50&quot;: 13.5}}</code></pre><p style='font-size:12.5px;color:var(--ink3)'>可能的错误：<code>E_BAD_REQUEST</code> <code>E_IR_INVALID</code> <code>E_TEMPLATE_NOT_FOUND</code> <code>E_TEMPLATE_VARS</code> <code>E_FONT_MISSING</code> <code>E_TEXT_OVERFLOW</code> <code>E_QUOTA_EXCEEDED</code> <code>E_QUEUE_FULL</code> <code>E_RATE_LIMITED</code> <code>E_CALLBACK_FORBIDDEN</code></p></div></div></section><section><h2><span class='num'>03</span>素材</h2><div class='ep' id='upload'><div class='hd'><span class='mth post'>POST</span><span class='path'>/v1/assets</span><h3>上传素材</h3></div><div class='bd'><p>原始字节上传，按 sha256 落盘与寻址，天然去重。重复上传同一内容不重复计费。</p><table><tr><th>参数</th><th>类型</th><th>说明</th></tr><tr><td><code>X-Filename</code></td><td>header</td><td>用于推断扩展名；非法扩展名会退化为 .bin</td></tr><tr><td><code>body</code></td><td>binary</td><td>原始字节，上限 RENDERD_MAX_UPLOAD_MB（默认 512）</td></tr></table><p style='font-size:12px;color:var(--ink3);margin-bottom:4px'>响应</p><pre><code>201 Created
+{&quot;asset_id&quot;: &quot;asset_8f3d9d13546e&quot;, &quot;sha256&quot;: &quot;8f3d...&quot;,
+ &quot;uri&quot;: &quot;upload:8f3d....mp4&quot;, &quot;bytes&quot;: 5033074, &quot;deduplicated&quot;: false}</code></pre><p style='font-size:12.5px;color:var(--ink3)'>可能的错误：<code>E_UPLOAD_TOO_LARGE</code> <code>E_QUOTA_STORAGE_EXCEEDED</code> <code>E_INPUT_UNREADABLE</code></p></div></div><div class='ep' id='list_assets'><div class='hd'><span class='mth get'>GET</span><span class='path'>/v1/assets</span><h3>素材列表</h3></div><div class='bd'><p>本租户引用的素材与占用。`charged_bytes=0` 表示命中去重：文件是别人写的，不收你的配额，但引用关系保留（否则对方删除会误删你在用的内容）。</p><table><tr><th>参数</th><th>类型</th><th>说明</th></tr><tr><td><code>limit</code></td><td>int，默认 100</td><td>上限 500</td></tr></table><p style='font-size:12px;color:var(--ink3);margin-bottom:4px'>响应</p><pre><code>{&quot;assets&quot;: [{&quot;asset_id&quot;: &quot;asset_8f3d9d13546e&quot;, &quot;sha256&quot;: &quot;8f3d...&quot;,
+   &quot;bytes&quot;: 5033074, &quot;charged_bytes&quot;: 5033074,
+   &quot;created_at&quot;: 1794192694.1, &quot;last_seen&quot;: 1794192694.1}],
+ &quot;count&quot;: 1, &quot;storage_used_bytes&quot;: 5033074, &quot;storage_quota_bytes&quot;: 2147483648}</code></pre></div></div><div class='ep' id='delete_asset'><div class='hd'><span class='mth delete'>DELETE</span><span class='path'>/v1/assets/([A-Za-z0-9_.-]+)</span><h3>删除素材（释放配额）</h3></div><div class='bd'><p>解除本租户对素材的引用；最后一个引用消失时才删文件并退回配额。仍被 `accepted/running` 任务引用时拒绝。</p><table><tr><th>参数</th><th>类型</th><th>说明</th></tr><tr><td><code>asset_id</code></td><td>path</td><td>`asset_&lt;sha12&gt;` 或完整 sha256 前缀；匹配多个返回 409</td></tr></table><p style='font-size:12px;color:var(--ink3);margin-bottom:4px'>响应</p><pre><code>{&quot;asset_id&quot;: &quot;asset_8f3d9d13546e&quot;, &quot;sha256&quot;: &quot;8f3d...&quot;,
+ &quot;refunded_bytes&quot;: 5033074, &quot;file_removed&quot;: true,
+ &quot;storage_used_bytes&quot;: 0}</code></pre><p style='font-size:12.5px;color:var(--ink3)'>可能的错误：<code>E_NOT_FOUND</code> <code>E_ASSET_IN_USE</code> <code>E_ASSET_AMBIGUOUS</code></p></div></div></section><section><h2><span class='num'>04</span>查询</h2><div class='ep' id='list_jobs'><div class='hd'><span class='mth get'>GET</span><span class='path'>/v1/jobs</span><h3>任务列表</h3></div><div class='bd'><p>按创建时间倒序，只返回本租户。</p><table><tr><th>参数</th><th>类型</th><th>说明</th></tr><tr><td><code>limit</code></td><td>int，默认 50</td><td>上限 200</td></tr><tr><td><code>status</code></td><td>string</td><td>按状态过滤</td></tr></table><p style='font-size:12px;color:var(--ink3);margin-bottom:4px'>响应</p><pre><code>{&quot;jobs&quot;: [{&quot;id&quot;: &quot;job_...&quot;, &quot;status&quot;: &quot;succeeded&quot;, &quot;stage&quot;: &quot;done&quot;,
+  &quot;attempts&quot;: 1, &quot;created_at&quot;: 1794192694.1, &quot;frames_total&quot;: 450,
+  &quot;cache_hit&quot;: 1, &quot;cost_seconds&quot;: 12.4}]}</code></pre></div></div><div class='ep' id='job'><div class='hd'><span class='mth get'>GET</span><span class='path'>/v1/jobs/([A-Za-z0-9_]+)</span><h3>任务状态</h3></div><div class='bd'><p>轮询主入口。`stage` 比百分比有用：`ingesting` 失败是素材问题，`rendering` 失败是资源问题。成功时返回可直接打开的已签名 `video_url`。</p><table><tr><th>参数</th><th>类型</th><th>说明</th></tr><tr><td><code>id</code></td><td>path</td><td>job_id</td></tr></table><p style='font-size:12px;color:var(--ink3);margin-bottom:4px'>响应</p><pre><code>{&quot;job_id&quot;: &quot;job_...&quot;, &quot;status&quot;: &quot;running&quot;, &quot;stage&quot;: &quot;rendering&quot;,
+ &quot;attempts&quot;: 1, &quot;max_attempts&quot;: 3, &quot;frames_done&quot;: 128, &quot;frames_total&quot;: 450,
+ &quot;progress&quot;: 0.2844, &quot;elapsed_s&quot;: 6.2, &quot;cache_hit&quot;: false,
+ &quot;video_url&quot;: &quot;/v1/jobs/job_.../video?exp=...&amp;sig=...&amp;t=acme&quot;}</code></pre><p style='font-size:12.5px;color:var(--ink3)'>可能的错误：<code>E_NOT_FOUND</code></p></div></div><div class='ep' id='events'><div class='hd'><span class='mth get'>GET</span><span class='path'>/v1/jobs/([A-Za-z0-9_]+)/events</span><h3>阶段流水</h3></div><div class='bd'><p>逐条事件：阶段、时间、消息，以及编译命令、缓存键、失败原因等细节。排障先看这里。</p><table><tr><th>参数</th><th>类型</th><th>说明</th></tr><tr><td><code>id</code></td><td>path</td><td>job_id</td></tr></table><p style='font-size:12px;color:var(--ink3);margin-bottom:4px'>响应</p><pre><code>{&quot;events&quot;: [{&quot;id&quot;: 12, &quot;ts&quot;: 1794192694.1, &quot;stage&quot;: &quot;rendering&quot;,
+  &quot;level&quot;: &quot;info&quot;, &quot;message&quot;: &quot;ffmpeg started&quot;}, ...]}</code></pre><p style='font-size:12.5px;color:var(--ink3)'>可能的错误：<code>E_NOT_FOUND</code></p></div></div><div class='ep' id='receipt'><div class='hd'><span class='mth get'>GET</span><span class='path'>/v1/jobs/([A-Za-z0-9_]+)/receipt</span><h3>证据回执</h3></div><div class='bd'><p>Agent 看不见视频，回执是它唯一的判断依据。包含 L0 归一化决策单、L1 结构断言、L3 语义检查、每个证据文件的 sha256，以及已签名的证据链接。</p><table><tr><th>参数</th><th>类型</th><th>说明</th></tr><tr><td><code>id</code></td><td>path</td><td>job_id</td></tr></table><p style='font-size:12px;color:var(--ink3);margin-bottom:4px'>响应</p><pre><code>{&quot;schema&quot;: &quot;cutproof/receipt/v1&quot;, &quot;verdict&quot;: &quot;pass&quot;, &quot;failures&quot;: [],
+ &quot;L0_ingest&quot;: {&quot;actions&quot;: [&quot;TONEMAP_HDR&quot;], &quot;note&quot;: &quot;预览级 tone mapping&quot;},
+ &quot;L1&quot;: {&quot;structural&quot;: {&quot;width&quot;: 1080, &quot;height&quot;: 1920, &quot;frames&quot;: 450}, &quot;assertions&quot;: {}},
+ &quot;L3&quot;: {&quot;font_coverage&quot;: {&quot;ok&quot;: true}, &quot;loudness&quot;: {&quot;integrated_lufs&quot;: -14.0}},
+ &quot;evidence_sha256&quot;: {&quot;contact_sheet&quot;: &quot;...&quot;, &quot;first_frame&quot;: &quot;...&quot;},
+ &quot;evidence&quot;: {&quot;contact_sheet&quot;: &quot;/v1/jobs/job_.../evidence/contact_sheet.jpg?exp=...&amp;sig=...&amp;t=acme&quot;},
+ &quot;video_url&quot;: &quot;/v1/jobs/job_.../video?exp=...&amp;sig=...&amp;t=acme&quot;}</code></pre><p style='font-size:12.5px;color:var(--ink3)'>可能的错误：<code>E_NOT_FOUND</code></p></div></div></section><section><h2><span class='num'>05</span>文件</h2><div class='ep' id='video'><div class='hd'><span class='mth get'>GET</span><span class='path'>/v1/jobs/([A-Za-z0-9_]+)/video</span><h3>下载成片</h3></div><div class='bd'><p>两种方式：`Authorization: Bearer &lt;token&gt;`，或签名 URL（`exp` / `sig` / `t`）。签名绑定租户与用途，换 `t=`、改 job_id、拿成片签名取证据文件都会 401。</p><table><tr><th>参数</th><th>类型</th><th>说明</th></tr><tr><td><code>id</code></td><td>path</td><td>job_id</td></tr><tr><td><code>exp</code></td><td>query</td><td>unix 秒，过期时间</td></tr><tr><td><code>sig</code></td><td>query</td><td>HMAC-SHA256(secret, JSON([&quot;v2&quot;,tenant,scope,job_id,exp]))[:32]</td></tr><tr><td><code>t</code></td><td>query</td><td>租户名，必须与任务 owner 一致</td></tr></table><p style='font-size:12px;color:var(--ink3);margin-bottom:4px'>响应</p><pre><code>200 OK, Content-Type: video/mp4（整文件下载，未实现 Range；需要断点续传请用 delivery.put_url 直传对象存储）</code></pre><p style='font-size:12.5px;color:var(--ink3)'>可能的错误：<code>E_AUTH_REQUIRED</code> <code>E_NOT_FOUND</code></p></div></div><div class='ep' id='evidence'><div class='hd'><span class='mth get'>GET</span><span class='path'>/v1/jobs/([A-Za-z0-9_]+)/evidence/([A-Za-z0-9_.-]+)</span><h3>下载证据文件</h3></div><div class='bd'><p>`scope` 是 `evidence:&lt;文件名&gt;`。成片签名不能用来取这里的文件。成功下载会写 `audit(action=download.signed)`。</p><table><tr><th>参数</th><th>类型</th><th>说明</th></tr><tr><td><code>id</code></td><td>path</td><td>job_id</td></tr><tr><td><code>name</code></td><td>path</td><td>文件名，路径穿越会被规范化丢弃</td></tr></table><p style='font-size:12px;color:var(--ink3);margin-bottom:4px'>响应</p><pre><code>200 OK, image/jpeg / image/png</code></pre><p style='font-size:12.5px;color:var(--ink3)'>可能的错误：<code>E_AUTH_REQUIRED</code> <code>E_NOT_FOUND</code></p></div></div></section><section><h2><span class='num'>06</span>运维</h2><div class='ep' id='cancel'><div class='hd'><span class='mth post'>POST</span><span class='path'>/v1/jobs/([A-Za-z0-9_]+)/cancel</span><h3>取消任务</h3></div><div class='bd'><p>仅 `accepted`（排队中）可取消。运行中的任务不支持取消 —— 需要先做进程组管理，否则自动归还 running 会造成双领。</p><table><tr><th>参数</th><th>类型</th><th>说明</th></tr><tr><td><code>id</code></td><td>path</td><td>job_id</td></tr></table><p style='font-size:12px;color:var(--ink3);margin-bottom:4px'>响应</p><pre><code>{&quot;job_id&quot;: &quot;job_...&quot;, &quot;status&quot;: &quot;cancelled&quot;}</code></pre><p style='font-size:12.5px;color:var(--ink3)'>可能的错误：<code>E_CANCELLED</code> <code>E_NOT_FOUND</code></p></div></div><div class='ep' id='replay'><div class='hd'><span class='mth post'>POST</span><span class='path'>/v1/jobs/([A-Za-z0-9_]+)/replay</span><h3>重放死信</h3></div><div class='bd'><p>把 `failed` 任务就地改回 `accepted`，重置 attempts 与错误，不新建任务。若素材已被删除，会以 `E_MEDIA_MISSING` 失败。</p><table><tr><th>参数</th><th>类型</th><th>说明</th></tr><tr><td><code>id</code></td><td>path</td><td>job_id</td></tr></table><p style='font-size:12px;color:var(--ink3);margin-bottom:4px'>响应</p><pre><code>{&quot;job_id&quot;: &quot;job_...&quot;, &quot;status&quot;: &quot;accepted&quot;, &quot;attempts&quot;: 0, &quot;replayed&quot;: true}</code></pre><p style='font-size:12.5px;color:var(--ink3)'>可能的错误：<code>E_NOT_FOUND</code></p></div></div><div class='ep' id='queue'><div class='hd'><span class='mth get'>GET</span><span class='path'>/v1/queue</span><h3>队列视图</h3></div><div class='bd'><p>容量信息对所有租户开放（判断要不要错峰需要它）；`inflight_by_tenant` 是运维视图 —— 普通租户只看到自己（`scope=tenant`），`RENDERD_ADMIN_TOKENS` 才返回全量。</p><p style='font-size:12px;color:var(--ink3);margin-bottom:4px'>响应</p><pre><code>{&quot;depth&quot;: 12, &quot;ready&quot;: 10, &quot;delayed&quot;: 2, &quot;running&quot;: 3,
+ &quot;oldest_wait_s&quot;: 8.2, &quot;failed_24h&quot;: 1, &quot;clock_skew_s&quot;: null,
+ &quot;inflight_by_tenant&quot;: {&quot;acme&quot;: 3}, &quot;scope&quot;: &quot;tenant&quot;,
+ &quot;max_queue_depth&quot;: 2000, &quot;max_tenant_inflight&quot;: 8}</code></pre></div></div><div class='ep' id='dlq'><div class='hd'><span class='mth get'>GET</span><span class='path'>/v1/dlq</span><h3>死信列表</h3></div><div class='bd'><p>本租户 `failed` 任务，按结束时间倒序。</p><table><tr><th>参数</th><th>类型</th><th>说明</th></tr><tr><td><code>limit</code></td><td>int，默认 50</td><td>上限 200</td></tr></table><p style='font-size:12px;color:var(--ink3);margin-bottom:4px'>响应</p><pre><code>{&quot;jobs&quot;: [{&quot;id&quot;: &quot;job_...&quot;, &quot;error_code&quot;: &quot;E_TIMEOUT&quot;, &quot;attempts&quot;: 3}]}</code></pre></div></div><div class='ep' id='usage'><div class='hd'><span class='mth get'>GET</span><span class='path'>/v1/usage</span><h3>用量与配额</h3></div><div class='bd'><p>本月渲染秒数、剩余分钟、QPS、素材数与存储占用。存储占用按**引用**求和：删素材即释放。</p><p style='font-size:12px;color:var(--ink3);margin-bottom:4px'>响应</p><pre><code>{&quot;tenant&quot;: &quot;acme&quot;, &quot;period&quot;: &quot;2026-11&quot;, &quot;rendered_seconds&quot;: 4210.5,
+ &quot;jobs&quot;: 128, &quot;monthly_quota_minutes&quot;: 1000, &quot;remaining_minutes&quot;: 929.8,
+ &quot;qps&quot;: 5, &quot;assets&quot;: 12, &quot;storage_used_bytes&quot;: 5033074,
+ &quot;storage_quota_mb&quot;: 2048, &quot;inflight&quot;: 2, &quot;inflight_limit&quot;: 8}</code></pre></div></div></section>
+
+<section id="errors"><h2><span class="num">99</span>错误码</h2>
+<p>这张表由 <code>errors.ERROR_SPECS</code> 生成，与代码同源。</p>
+<table><tr><th>code</th><th>HTTP</th><th>可重试</th><th>阶段</th><th>含义</th></tr>
+<tr><td><code>E_BAD_REQUEST</code></td><td>400</td><td>否</td><td>admission</td><td>请求格式不正确</td></tr><tr><td><code>E_CALLBACK_FORBIDDEN</code></td><td>400</td><td>否</td><td>admission</td><td>回调地址不允许（协议或目标地址非法）</td></tr><tr><td><code>E_IR_INVALID</code></td><td>400</td><td>否</td><td>compiling</td><td>时间线参数非法</td></tr><tr><td><code>E_IR_UNSUPPORTED</code></td><td>400</td><td>否</td><td>compiling</td><td>时间线使用了本版本不支持的结构</td></tr><tr><td><code>E_TEMPLATE_VARS</code></td><td>400</td><td>否</td><td>compiling</td><td>模板变量缺失或类型不对</td></tr><tr><td><code>E_AUTH_REQUIRED</code></td><td>401</td><td>否</td><td>admission</td><td>缺少或无效的访问令牌</td></tr><tr><td><code>E_MEDIA_FORBIDDEN</code></td><td>403</td><td>否</td><td>ingesting</td><td>素材路径不在允许范围内</td></tr><tr><td><code>E_METRICS_FORBIDDEN</code></td><td>403</td><td>否</td><td>admission</td><td>metrics 端点不对该来源开放</td></tr><tr><td><code>E_NOT_FOUND</code></td><td>404</td><td>否</td><td>admission</td><td>资源不存在</td></tr><tr><td><code>E_TEMPLATE_NOT_FOUND</code></td><td>404</td><td>否</td><td>compiling</td><td>模板不存在</td></tr><tr><td><code>E_METHOD_NOT_ALLOWED</code></td><td>405</td><td>否</td><td>admission</td><td>不支持的 HTTP 方法</td></tr><tr><td><code>E_ASSET_AMBIGUOUS</code></td><td>409</td><td>否</td><td>admission</td><td>素材前缀匹配到多个对象</td></tr><tr><td><code>E_ASSET_IN_USE</code></td><td>409</td><td>否</td><td>admission</td><td>素材仍被在途任务引用，暂不能删除</td></tr><tr><td><code>E_CANCELLED</code></td><td>409</td><td>否</td><td>cancelled</td><td>任务已取消</td></tr><tr><td><code>E_PAYLOAD_TOO_LARGE</code></td><td>413</td><td>否</td><td>admission</td><td>请求体超过大小上限</td></tr><tr><td><code>E_QUOTA_STORAGE_EXCEEDED</code></td><td>413</td><td>否</td><td>admission</td><td>租户存储空间配额不足</td></tr><tr><td><code>E_UPLOAD_TOO_LARGE</code></td><td>413</td><td>否</td><td>ingesting</td><td>上传超过大小上限</td></tr><tr><td><code>E_FONT_MISSING</code></td><td>422</td><td>否</td><td>compiling</td><td>模板字体缺少字符</td></tr><tr><td><code>E_INPUT_AUDIO_ONLY</code></td><td>422</td><td>否</td><td>ingesting</td><td>纯音频文件被投递到视频素材位</td></tr><tr><td><code>E_INPUT_OVERLONG</code></td><td>422</td><td>否</td><td>ingesting</td><td>素材时长超过上限，需人工确认</td></tr><tr><td><code>E_INPUT_TOO_LARGE</code></td><td>422</td><td>否</td><td>ingesting</td><td>素材分辨率超过解码上限</td></tr><tr><td><code>E_INPUT_TRUNCATED</code></td><td>422</td><td>否</td><td>ingesting</td><td>文件被截断或损坏</td></tr><tr><td><code>E_INPUT_UNREADABLE</code></td><td>422</td><td>否</td><td>ingesting</td><td>素材无法解析（编码或封装不支持）</td></tr><tr><td><code>E_MEDIA_MISSING</code></td><td>422</td><td>否</td><td>ingesting</td><td>引用的素材不存在</td></tr><tr><td><code>E_MEDIA_TOO_SHORT</code></td><td>422</td><td>否</td><td>ingesting</td><td>素材时长短于时间线需要</td></tr><tr><td><code>E_NORMALIZE_FAILED</code></td><td>422</td><td>否</td><td>ingesting</td><td>素材归一化失败</td></tr><tr><td><code>E_OUTPUT_TOO_LONG</code></td><td>422</td><td>否</td><td>compiling</td><td>成片时长超过单任务上限</td></tr><tr><td><code>E_TEXT_OVERFLOW</code></td><td>422</td><td>否</td><td>compiling</td><td>文本越出安全区</td></tr><tr><td><code>E_QUEUE_FULL</code></td><td>429</td><td>是</td><td>admission</td><td>队列已满或租户并发超限</td></tr><tr><td><code>E_QUOTA_EXCEEDED</code></td><td>429</td><td>否</td><td>admission</td><td>配额不足</td></tr><tr><td><code>E_RATE_LIMITED</code></td><td>429</td><td>是</td><td>admission</td><td>请求过于频繁</td></tr><tr><td><code>E_INTERNAL</code></td><td>500</td><td>是</td><td>internal</td><td>服务内部错误</td></tr><tr><td><code>E_OUTPUT_INVALID</code></td><td>500</td><td>否</td><td>validating</td><td>成片未通过断言</td></tr><tr><td><code>E_OUTPUT_MISSING</code></td><td>500</td><td>是</td><td>validating</td><td>成片文件缺失</td></tr><tr><td><code>E_RENDER_FAILED</code></td><td>500</td><td>是</td><td>rendering</td><td>渲染进程异常退出</td></tr><tr><td><code>E_DELIVERY_FAILED</code></td><td>502</td><td>是</td><td>delivering</td><td>成片交付失败</td></tr><tr><td><code>E_NVENC_SESSION</code></td><td>503</td><td>是</td><td>rendering</td><td>编码会话达上限</td></tr><tr><td><code>E_OOM</code></td><td>503</td><td>是</td><td>rendering</td><td>资源不足</td></tr><tr><td><code>E_TIMEOUT</code></td><td>504</td><td>是</td><td>rendering</td><td>渲染超时</td></tr></table>
+</section>
+
+<div class="chg">
+生成于 2026-11-09 · 由 <code>make_api_doc.py</code> 渲染<br>
+相关文档：<code>docs/API.md</code>（文字版）· <code>docs/IR.md</code>（时间线格式）·
+<code>docs/OPS.md</code>（部署运维）· <code>docs/SECURITY.md</code>（威胁模型）
+</div>
+</main></div></body></html>

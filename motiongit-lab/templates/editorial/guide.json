@@ -1,0 +1,53 @@
+{
+  "purpose": "16:9 知识讲解 / 产品说明短片。9 种分镜（开场、论点、数据、对比、步骤、金句、演示、清单、片尾）由 inputs.json 的 scenes 数组编排，适合口播、方法分享与工具介绍。",
+  "duration": {
+    "policy": "range",
+    "seconds": 28,
+    "fps": { "num": 24, "den": 1 },
+    "adaptation": "时长由 scenes 最后一个 t1 与 durationSeconds 共同决定；两者必须一致。每个场景的 at / 句子时间锚点必须是该场景 t0..t1 内的全片绝对秒数。文案过长必须改写或拆场景，模板不做不可读缩放。"
+  },
+  "materials": [
+    {
+      "role": "text.script",
+      "mappedParameters": ["scenes"],
+      "required": true,
+      "ifMissing": "停止渲染并列出缺失分镜；不得使用上游 36 秒演示文案冒充本期内容。"
+    },
+    {
+      "role": "text.facts",
+      "mappedParameters": ["brand"],
+      "required": false,
+      "ifMissing": "使用默认品牌角标。"
+    },
+    {
+      "role": "video.presenter",
+      "mappedParameters": [],
+      "required": false,
+      "ifMissing": "所有场景强制 cam=none，不插占位真人卡；需要真人窗口时另建版本并提供 talkmap/face 素材。"
+    },
+    {
+      "role": "audio.voiceover",
+      "mappedParameters": [],
+      "required": false,
+      "ifMissing": "导出无音轨视频；不静默复用演示音，需要配音时用宿主 --audio 显式传入。"
+    },
+    {
+      "role": "audio.music",
+      "mappedParameters": [],
+      "required": false,
+      "ifMissing": "保持无音轨，不插入未授权音乐。"
+    }
+  ],
+  "layout": {
+    "ratio": "16:9",
+    "pixels": "1920x1080",
+    "safeArea": "上游版式以 1920×1080 绝对坐标编写，不可只改输出尺寸；竖屏需另建 portrait 版本",
+    "notes": "文字里的 *xx* 会渲染成强调色；场景自带 wipe/circle/flash/blur 转场与 SFX 时间线（SFX 仅记录，不自动出声）。"
+  },
+  "runtime": {
+    "profile": "html-dom/1",
+    "note": "本地宿主自定义 profile（非 MotionGit 官方内置 html-canvas/1）：页面无 canvas，宿主回退到整页截图；其余文件结构与 0.1.0-draft.1 一致。",
+    "dependencies": ["Node.js 22+", "Chromium headless (Playwright)", "FFmpeg"],
+    "network": false
+  }
+}

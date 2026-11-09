@@ -1,0 +1,42 @@
+{
+  "$schema": "https://motiongit.com/schema/motion/0.1.json",
+  "format": "motiongit-template",
+  "specVersion": "0.1.0-draft.1",
+  "template": {
+    "id": "workbuddy-motion-distill",
+    "version": "1.0.0",
+    "name": "MotionGit 用法蒸馏 · 12s 演示片",
+    "status": "draft"
+  },
+  "runtime": {
+    "profile": "html-canvas/1",
+    "engine": "motiongit-reference",
+    "entry": "src/index.html",
+    "dependencyLock": "motion.lock.json"
+  },
+  "parameters": {
+    "schema": "params.schema.json",
+    "defaultPreset": "presets/demo.json"
+  },
+  "assets": { "manifest": "asset-manifest.json" },
+  "output": {
+    "width": 1280,
+    "height": 720,
+    "fps": { "num": 30, "den": 1 },
+    "durationPolicy": "fixed",
+    "durationSeconds": 12
+  },
+  "preview": { "preset": "presets/demo.json" },
+  "license": { "file": "licenses/TEMPLATE-LICENSE.txt" },
+  "permissions": {
+    "network": false,
+    "read": ["package", "instance-inputs"],
+    "write": ["instance-output"]
+  },
+  "ai": {
+    "entry": "SKILL.md",
+    "guide": "guide.json",
+    "summary": "自制演示模板，按 MotionGit 0.1.0-draft.1 规范打包，用于验证 .motion 读取、参数校验、逐帧渲染与 MP4 导出链路。先读数据，不执行代码。"
+  },
+  "integrity": "integrity.json"
+}

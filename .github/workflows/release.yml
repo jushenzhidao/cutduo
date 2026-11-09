@@ -1,0 +1,161 @@
+name: Release
+
+# 三条入口，一条流水线：
+#
+#   ① push 到 main            → **自增 patch** 并发布（v0.1.0 → v0.1.1 → …）  ← 日常路径
+#   ② push tag `v*.*.*`       → 发布该 tag，**不 bump**（要 minor/major 时人工打 tag）
+#   ③ workflow_dispatch -f tag=… → 补发某个已存在的 tag（可重入）
+#
+# 为什么自动递增之外还保留 ②：自动只覆盖 patch。当"对外契约 / 字段表"这类**承诺型**变化
+# （可能不向后兼容）时，版本号必须由人决定 —— 那条路走 ②，tag 即承诺。
+#
+# 逃生阀：纯文档或 CI 自身的提交不该切版本时，在 commit message 里写中括号的 skip release
+# 标记（字面量见下方 if 条件）。⚠️ 它匹配**整条 message**，所以"描述这个逃生阀"的那次提交
+# 自己也会被跳过 —— 那类提交要么紧跟着真正要发的提交一起进主干，要么用 ③ 补发。
+#
+# 自我触发：模式 ① 会自己 push 新 tag。GITHUB_TOKEN 推送的事件**不会**触发其他 workflow，
+# 所以不会绕回来；另加 `actor != github-actions[bot]` 兜底 —— 将来若换成 PAT 推送也不自激。
+on:
+  push:
+    branches: [main]
+    tags: ['v[0-9]*.[0-9]*.[0-9]*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '要发布的 tag（必须已存在，如 v0.1.0）'
+        required: true
+
+permissions:
+  contents: write    # 打 tag（模式 ①）+ 建 Release
+
+# 同一 ref 不并发：两次 push main 会算出**同一个**下一个版本号并抢同一个 tag，必须串行；
+# 且**不取消**已在跑的（取消会留下"tag 打了、Release 没建"的半成品）。
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    # 逃生阀 + 自我触发兜底。workflow_dispatch 没有 head_commit，用 || '' 兜住。
+    if: ${{ github.actor != 'github-actions[bot]' && !contains(github.event.head_commit.message || '', '[skip release]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # 检出**要发布的那个 ref**：tag 触发 → 该 tag；派发式补发 → inputs.tag；
+          # push main（自动 bump）→ 该分支。
+          # 🔴 不写这一行时，派发式补发会检出默认分支，用主干代码构建并覆盖旧 tag 的产物。
+          ref: ${{ inputs.tag || github.ref }}
+          # 算版本号与 changelog 范围都要历史 tag；浅克隆会让两者一起退化。
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: ver
+        run: |
+          set -euo pipefail
+          INPUT='${{ inputs.tag }}'
+          REF='${{ github.ref }}'
+          if [ -n "$INPUT" ]; then
+            MODE=tag; TAG="$INPUT"                 # ③ 补发指定 tag
+          elif [ "${REF#refs/tags/}" != "$REF" ]; then
+            MODE=tag; TAG="${REF#refs/tags/}"      # ② 人工打 tag
+          else
+            MODE=auto                              # ① push main：自增 patch
+          fi
+
+          # 上一个版本 tag：用 --sort=-v:refname 而非 git describe —— 后者取"最近可达的 tag"，
+          # 有合并历史时会挑错版本；字典序还会把 v1.9.0 判为新于 v1.10.0。
+          # glob 顺带排除 latest 这类滚动指针。
+          PREV="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1)"
+
+          if [ "$MODE" = "auto" ]; then
+            BASE="${PREV:-v0.0.0}"        # 零 tag 仓库的冷启动
+            CORE="${BASE#v}"
+            MAJOR="${CORE%%.*}"
+            REST="${CORE#*.}"
+            MINOR="${REST%%.*}"
+            PATCH="${REST#*.}"
+            PATCH="${PATCH%%[-+]*}"        # 预发布后缀会打断 $(( )) 算术，先剥掉
+            TAG="v${MAJOR}.${MINOR}.$((PATCH + 1))"
+            END=HEAD
+          else
+            END="$TAG"
+          fi
+
+          case "$TAG" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "::error::tag '$TAG' does not match v<major>.<minor>.<patch>"; exit 1 ;;
+          esac
+
+          {
+            echo "mode=${MODE}"
+            echo "tag=${TAG}"
+            echo "prev=${PREV}"
+            echo "end=${END}"
+            echo "sha=$(git rev-parse --short=7 HEAD)"
+          } >> "$GITHUB_OUTPUT"
+          echo "mode=${MODE} prev=${PREV:-<none>} -> ${TAG}"
+
+      - name: Build changelog
+        run: |
+          set -euo pipefail
+          PREV='${{ steps.ver.outputs.prev }}'
+          TAG='${{ steps.ver.outputs.tag }}'
+          END='${{ steps.ver.outputs.end }}'
+          REPO_URL='https://github.com/${{ github.repository }}'
+          if [ -z "$PREV" ]; then
+            {
+              printf '## Initial release\n\n'
+              printf '三个项目同仓：`renderd/`（渲染服务）· `cutproof/`（可验证性闭环）· `motiongit-lab/`（模板运行时实验）。\n\n'
+              printf '## commits\n\n'
+              # 首个 release 会遍历全部历史，限长以免正文过大。
+              git log --no-merges --pretty='- %s (%h)' --max-count=50 "$END"
+            } > CHANGELOG.md
+          else
+            {
+              printf '**Full changelog**: %s/compare/%s...%s\n\n' "$REPO_URL" "$PREV" "$TAG"
+              printf '## Changes since %s\n\n' "$PREV"
+              git log --no-merges --pretty='- %s (%h)' "${PREV}..${END}"
+            } > CHANGELOG.md
+          fi
+          cat CHANGELOG.md
+
+      - name: Tag and push
+        if: ${{ steps.ver.outputs.mode == 'auto' }}
+        run: |
+          set -euo pipefail
+          TAG='${{ steps.ver.outputs.tag }}'
+          # runner 上没有 git 身份，annotated tag 需要它。
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "::error::tag $TAG already exists -- concurrent run, or someone tagged it meanwhile"
+            exit 1
+          fi
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG='${{ steps.ver.outputs.tag }}'
+          # 可重跑：同一个 tag 重跑本 job（失败重试、或改了 workflow 后补跑）时，
+          # Release 已存在就跳过而不是报 "already exists" 变红。
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "release $TAG already exists -- skipping creation"
+            exit 0
+          fi
+          # 不用 --generate-notes：它依赖已合并的 PR，本仓库直推 main，实测只产出一行
+          # compare 链接。notes 由上面的 git log 生成。
+          gh release create "$TAG" --title "$TAG" --notes-file CHANGELOG.md
+
+      - name: Summary
+        run: |
+          {
+            echo "### 已发布 ${{ steps.ver.outputs.tag }}（mode=${{ steps.ver.outputs.mode }}）"
+            echo ""
+            echo "- Release: https://github.com/${{ github.repository }}/releases/tag/${{ steps.ver.outputs.tag }}"
+            echo "- commit: ${{ steps.ver.outputs.sha }}"
+          } >> "$GITHUB_STEP_SUMMARY"

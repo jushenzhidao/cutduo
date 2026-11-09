@@ -1,0 +1,38 @@
+{
+  "guideVersion": "0.1",
+  "fit": {
+    "summary": "最小可运行的标题模板，用来验证读取、参数与渲染流程。",
+    "goodFor": [
+      "视频标题",
+      "章节标题"
+    ],
+    "notFor": [
+      "需要人物或实拍素材的视频"
+    ],
+    "placement": "opening"
+  },
+  "duration": {
+    "policy": "fixed",
+    "min": 6,
+    "max": 6,
+    "default": 6
+  },
+  "materials": [],
+  "copy": [
+    {
+      "param": "title",
+      "label": "标题",
+      "from": [
+        "conversation",
+        "text.script"
+      ],
+      "rule": "用户视频的主题，一句话"
+    }
+  ],
+  "conversation": [
+    "先问这条视频讲什么，再替用户写标题，让用户确认"
+  ],
+  "hostWithoutTools": [
+    "不能运行命令时：交付 inputs.json，并告诉用户在自己电脑上按 README 渲染"
+  ]
+}

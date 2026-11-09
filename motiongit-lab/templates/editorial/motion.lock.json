@@ -1,0 +1,12 @@
+{
+  "runtime": "html-dom/1",
+  "tested": [
+    {
+      "os": "macOS 27.2",
+      "node": "22.x",
+      "browser": "Chromium headless (Playwright 1.65)",
+      "ffmpeg": "9.0.2 (Homebrew arm64)"
+    }
+  ],
+  "dependencies": {}
+}

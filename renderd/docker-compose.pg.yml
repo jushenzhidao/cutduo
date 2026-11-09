@@ -1,0 +1,70 @@
+# 多 pod / 无单点拓扑：状态统一放 Postgres，api 与 worker 可以各自扩副本。
+# 与 docker-compose.yml 的区别：不再依赖「SQLite + 同机共享卷」这个前提。
+#
+#   docker compose -f docker-compose.pg.yml up -d --build
+#   RENDERD_DB_DSN=postgresql://... make test        # 同一套用例切到 PG
+#
+# 关键：RENDERD_PG_SCHEMA 必须显式指定且所有进程一致；
+# 不指定时每个 Store 实例会随机隔离 schema（那是给 unittest 用的）。
+services:
+  pg:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: renderd
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-renderd_local}"
+      POSTGRES_DB: renderd
+    volumes: ["pg-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U renderd -d renderd"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  api:
+    build: .
+    image: renderd:0.1.0
+    ports: ["${RENDERD_PUBLISH_PORT:-8787}:8787"]
+    environment: &pgenv
+      RENDERD_DB_DSN: "postgresql://renderd:${POSTGRES_PASSWORD:-renderd_local}@pg:5432/renderd"
+      RENDERD_PG_SCHEMA: renderd
+      # 未设置时服务会在共享 /data 卷生成随机签名密钥；
+      # 若 api/worker 不共享该卷，必须显式设置 RENDERD_SECRET 且各实例一致。
+      RENDERD_TOKENS: "${RENDERD_TOKENS:-devtoken:acme}"
+      RENDERD_SECRET: "${RENDERD_SECRET:-}"
+      RENDERD_QUOTA_QPS: "${RENDERD_QUOTA_QPS:-10}"
+      RENDERD_MAX_QUEUE_DEPTH: "${RENDERD_MAX_QUEUE_DEPTH:-2000}"
+      RENDERD_MAX_TENANT_INFLIGHT: "${RENDERD_MAX_TENANT_INFLIGHT:-8}"
+    volumes: ["renderd-data:/data"]
+    command: ["python", "-m", "renderd", "serve", "--workers", "0"]
+    depends_on:
+      pg:
+        condition: service_healthy
+    stop_grace_period: 300s
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys;sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8787/healthz',timeout=3).status==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # 可以起多个 worker 副本：领取走 PG 的 FOR UPDATE SKIP LOCKED，天然不双领
+  worker:
+    build: .
+    image: renderd:0.1.0
+    environment:
+      <<: *pgenv
+      RENDERD_WORKER_CONCURRENCY: "${RENDERD_WORKER_CONCURRENCY:-1}"
+    volumes: ["renderd-data:/data"]
+    command: ["python", "-m", "renderd", "worker", "--tenant", "acme", "--name", "w1"]
+    depends_on:
+      api:
+        condition: service_healthy
+    stop_grace_period: 300s
+    restart: unless-stopped
+
+volumes:
+  pg-data:
+  renderd-data:
