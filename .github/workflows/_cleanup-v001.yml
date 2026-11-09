@@ -32,7 +32,7 @@ jobs:
           set -uo pipefail
           TAG=v0.0.1
           API="https://api.github.com/repos/${GITHUB_REPOSITORY}"
-          REPORT=ci/cleanup-report.txt
+          REPORT=${RUNNER_TEMP}/cleanup-report.txt
           mkdir -p ci
 
           {
@@ -84,7 +84,8 @@ jobs:
           fi
           git fetch origin main --depth=1 || true
           git checkout -B cleanup-report origin/main 2>/dev/null || git checkout -B cleanup-report
-          mkdir -p ci && cp "${REPORT}" "ci/cleanup-report.txt"
-          git add ci/cleanup-report.txt
+          mkdir -p ci
+          cp "${RUNNER_TEMP}/cleanup-report.txt" "${REPORT}"
+          git add "${REPORT}"
           git commit -q -m "ci: 记录 v0.0.1 清理诊断报告" -m "[skip release]"
           git push origin HEAD:main
