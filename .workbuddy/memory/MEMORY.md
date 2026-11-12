@@ -193,7 +193,12 @@
   补 schema 后自动纳入校验，不需要改 API。
 - 新增一支版式：写 `api/kits/<name>.mjs`（导出 `capability` + `adapter`），
   在 `api/registry.mjs` 的 `MODULES` 加一行。CLI / 清单 / 冒烟自动跟上。
-- **`tools/smoke.sh` 现在同时验 CLI 与 API**：五支 CLI 探针 + 五支 `api.probe` + capabilities 枚举。
+- **`tools/smoke.sh` 现在同时验 CLI 与 API**：五支 CLI 探针 + 五支 `api.probe` + capabilities 枚举 + job 状态机。
+- **异步 job（`api/jobs.mjs`）**：`submitJob / jobStatus / listJobs / cancelJob`，状态落 `out/jobs/`。
+  三条硬约束：① 一 job 一独立进程（detached），不用线程；② **判定终态先读 stdout，不看 pid**
+  （pid 会复用，曾导致已完成的 job 永久卡 running）；③ `elapsedSeconds` 取 stdout 的 mtime，不是判定时刻。
+- **五支 schema 全 complete**，但只约束 `scenes[].type/t0/t1` 骨架与少量全局字段，
+  **不设 `additionalProperties:false`、不校验 `args` 内部**——各版式 args 形态不同，锁死必误杀历史参数。
 - **仓库根只能从 `src/root.mjs` 取**（向上找 `.git`）。禁止再写 `ROOT = dirname(..)`——
   各 kit 深度不同（render.mjs 在根、desk/mg 在 kits/<name>/），一搬家必错。
 - **字体注册只有 `src/fonts.mjs`**；`kits/paper/paper.mjs` 仅 re-export。
