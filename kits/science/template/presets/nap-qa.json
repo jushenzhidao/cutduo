@@ -1,0 +1,318 @@
+{
+  "durationSeconds": 52.0,
+  "fps": 30,
+  "fadeOutSeconds": 0.32,
+  "voices": {
+    "kid": "zh-CN-YunxiaNeural",
+    "mom": "zh-CN-XiaoxiaoNeural",
+    "default": "zh-CN-XiaoxiaoNeural"
+  },
+  "theme": {
+    "pop": "#FD2551",
+    "sun": "#FFD84D",
+    "jade": "#26A38C",
+    "jadeDeep": "#0E7A5F",
+    "blue": "#2B7FD4",
+    "ink": "#2C3A3E"
+  },
+  "brand": {
+    "show": true,
+    "text": "亲子科普",
+    "tag": "SCIENCE EXPLAINER"
+  },
+  "subtitle": {
+    "size": 62,
+    "color": "#FFFFFF",
+    "stroke": 6,
+    "strokeColor": "#1B2B30",
+    "y": 1002
+  },
+  "captions": [
+    {
+      "seg": 0,
+      "speaker": "default",
+      "start": 0,
+      "end": 0,
+      "text": "为什么中午非要睡一觉"
+    },
+    {
+      "seg": 0,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "不是偷懒，是大脑在清账"
+    },
+    {
+      "seg": 1,
+      "speaker": "kid",
+      "start": 0,
+      "end": 0,
+      "text": "妈妈，我一点都不困"
+    },
+    {
+      "seg": 1,
+      "speaker": "kid",
+      "start": 0,
+      "end": 0,
+      "text": "为什么非要躺下"
+    },
+    {
+      "seg": 2,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "困不困，和身体需要不需要是两件事"
+    },
+    {
+      "seg": 2,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "上午学的东西，都堆在脑子里"
+    },
+    {
+      "seg": 3,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "睡着以后，大脑开始整理"
+    },
+    {
+      "seg": 3,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "把重要的存起来，把没用的丢掉"
+    },
+    {
+      "seg": 4,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "所以午睡后回想东西会更清楚"
+    },
+    {
+      "seg": 4,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "情绪也更稳，不容易一点就炸"
+    },
+    {
+      "seg": 4,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "下午上课也更坐得住"
+    },
+    {
+      "seg": 5,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "关键不在于睡多久"
+    },
+    {
+      "seg": 5,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "二十分钟，比一小时更管用"
+    },
+    {
+      "seg": 6,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "三条提醒，记住就行"
+    },
+    {
+      "seg": 6,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "别超过半小时，否则越睡越昏"
+    },
+    {
+      "seg": 6,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "别趴桌上，压着眼睛和胃"
+    },
+    {
+      "seg": 7,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "睡一会儿，是给下午充电"
+    }
+  ],
+  "segments": [
+    {
+      "type": "cover",
+      "dur": 6.0,
+      "args": {
+        "prefix": "中午那件事",
+        "title": "睡午觉",
+        "sub": "为什么越睡越困",
+        "sticker": "clock",
+        "hint": "亲子科普 · 2 分钟讲明白",
+        "prefixSize": 96,
+        "burstR": 336
+      }
+    },
+    {
+      "type": "talk",
+      "dur": 6.0,
+      "args": {
+        "paper": "cream",
+        "figure": "none",
+        "eyebrow": "小满 · 七岁",
+        "eyebrowColor": "#2B7FD4",
+        "lines": [
+          "妈妈，我一点都不困",
+          "为什么非要躺下？"
+        ],
+        "accentLine": 1,
+        "size": 92,
+        "gesture": "idle",
+        "sticker": "question"
+      }
+    },
+    {
+      "type": "talk",
+      "dur": 8.0,
+      "args": {
+        "paper": "cream",
+        "figure": "right",
+        "eyebrow": "妈妈 · 儿科医生",
+        "eyebrowColor": "#26A38C",
+        "lines": [
+          "困不困，和需不需要",
+          "是两件事"
+        ],
+        "accentLine": 0,
+        "size": 80,
+        "gesture": "explain",
+        "sticker": "clock"
+      }
+    },
+    {
+      "type": "diagram",
+      "dur": 8.0,
+      "args": {
+        "paper": "mint",
+        "title": "睡着以后发生什么",
+        "organImage": "clock",
+        "organ": "clock",
+        "Eyes": true,
+        "probe": "none",
+        "callouts": [
+          {
+            "text": "重要信息归档",
+            "at": 0.6,
+            "x": 0.735,
+            "y": 0.28,
+            "size": 62,
+            "lead": [
+              0.415,
+              0.405
+            ]
+          },
+          {
+            "text": "没用的清出去",
+            "at": 1.6,
+            "x": 0.735,
+            "y": 0.72,
+            "size": 62,
+            "lead": [
+              0.455,
+              0.655
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "matrix",
+      "dur": 7.0,
+      "args": {
+        "paper": "mint",
+        "title": "午睡后的三个变化",
+        "items": [
+          {
+            "image": "check",
+            "icon": "check",
+            "label": "记得更牢",
+            "disc": "#C8EBDD"
+          },
+          {
+            "image": "shield",
+            "icon": "shield",
+            "label": "情绪更稳",
+            "disc": "#FFD1DC"
+          },
+          {
+            "image": "clock",
+            "icon": "clock",
+            "label": "下午更专注",
+            "disc": "#FFE770"
+          }
+        ]
+      }
+    },
+    {
+      "type": "focus",
+      "dur": 6.5,
+      "args": {
+        "paper": "sky",
+        "title": "二十分钟",
+        "iconImage": "clock",
+        "icon": "clock",
+        "claim": "比睡一小时更管用"
+      }
+    },
+    {
+      "type": "tip",
+      "dur": 8.0,
+      "args": {
+        "paper": "sky",
+        "head": "怎么睡才不昏",
+        "title": "三条记住就行",
+        "items": [
+          "别超过半小时",
+          "别趴桌上压着眼睛",
+          "醒来先坐一会儿再动"
+        ]
+      }
+    },
+    {
+      "type": "talk",
+      "dur": 5.0,
+      "args": {
+        "paper": "cream",
+        "figure": "right",
+        "eyebrow": "记住这一句",
+        "eyebrowColor": "#26A38C",
+        "lines": [
+          "睡一会儿",
+          "是给下午充电"
+        ],
+        "accentLine": 1,
+        "size": 82,
+        "gesture": "point",
+        "sticker": "drop"
+      }
+    },
+    {
+      "type": "outro",
+      "dur": 4.5,
+      "args": {
+        "line1": "别硬撑",
+        "line2": "睡二十分钟",
+        "note": "科普仅供参考 · 长期失眠请就医"
+      }
+    }
+  ]
+}

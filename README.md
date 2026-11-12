@@ -1,104 +1,126 @@
-# 剪辑渲染工作区
+# cutduo
 
-围绕「视频剪辑 / 渲染」的三个项目 + 验收材料。当前总 **2.1 GB**（2026-11-12 清理后；清理前 2.7 GB）。11-09 曾从 1.0 GB 清到 566 MB，此后几轮基准、复刻与成片又推高，本轮按同一口径再清一次。体积治理记录见 `docs/仓库清理-2026-11-09.md` 与 `docs/仓库清理-2026-11-12.md`。
+**Skia 直出的视频管线：五套版式，一条命令出片，不经过浏览器。**
 
-## 地图
+Node + [`@napi-rs/canvas`](https://github.com/Brooooooklyn/canvas)（Skia）逐帧绘制 → 管道喂给 ffmpeg 编码 → 合成音轨。
+没有 Chromium，没有截图，没有中间 JPEG。4127 帧 / 1440×1080 / 60fps 出片 12.0 秒，约 **344 fps**，是实时的 5.7 倍。
 
-| 目录 | 是什么 | 入口 |
+```bash
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:$PATH"
+
+node render.mjs --kit paper   --params kits/paper/presets/v8t.json --out out/paper.mp4
+node render.mjs --kit science --params kits/science/template/presets/demo.json --audio assets/audio/audio-v8t.m4a --out out/science.mp4
+node kits/desk/render.mjs --params content/demo.json --audio assets/audio/audio-desktop.m4a --out out/desk.mp4 --fps 60
+```
+
+## 五套版式
+
+| 代号 | 中文 | 画幅 | 入口 | 说明 |
+|---|---|---|---|---|
+| `paper` | 纸感 | 1920×1080 | `render.mjs --kit paper` | 从 paper-perspective 成片逐像素反推的 8 个版式 |
+| `science` | 科普 | 1920×1080 | `render.mjs --kit science` | 自建，9 版式，讲解位 37% / 图解释意 33% |
+| `desk` | 桌面 | 1440×1080@60 | `kits/desk/render.mjs` | 整台 Mac 桌面 + 16 个版式镜头 + 素材镜头 |
+| `editorial` | 杂志 | 1920×1080 | `kits/editorial/canvas-editorial.mjs` | 8 段分镜，改造自 MIT 项目 |
+| `mg` | 通用 | 1920×1080 | `kits/mg/render.mjs` | 5 类镜头的动效验证（2026-11-10 后未改动） |
+
+五者共用同一个渲染库，所以**换版式不换速度档**。
+
+> `desk` / `editorial` / `mg` 目前各有自己的 `render.mjs`，没有走根入口。
+> 原因是四份 render 骨架里各有一段约 350 行重复的 worker 分片 + ffmpeg 管道 + concat 逻辑，
+> 合并需要改动分片边界与编码参数，属于独立的一步。目录已按「版式自治」摆好，
+> 合并时只需让各自的 `render.mjs` 变成一层薄适配器，不动这里的路径。
+
+## 自己加一套版式
+
+`templates/_scaffold/` 是一支**能跑**的骨架：`kit.js`（绘制原语）+ `layouts.js`（版式）+
+`stage.js`（时间轴/字幕/角标/淡出，宿主无关）三件套齐全，带五层结构说明与两个校验脚本。
+
+```bash
+uv run python tools/new-template.py --id my-template --title "我的版式"   # 生成 + 自检
+node render.mjs --kit my-template \
+  --params templates/own/my-template/presets/default.json --out out/my.mp4  # Skia 直出
+uv run python tools/check-template.py --src templates/own/my-template        # 随时体检
+```
+
+三件套齐全的模板**不需要进 `kits/`**：`--kit` 先查内置适配器，再按 `templates/own/<名字>/src`
+找三件套，都能直出。同一份 `src/` 也能走浏览器宿主（`tools/motion-render.mjs`），
+双宿主逐帧比对的 MAE 由 `stage.js` 单点编排保证——编排只写一份，不在两个宿主里各写一遍。
+
+`.motion` 的哪些设计被吸收（三文件三读者、`ifMissing` 写进数据、容量跟版式走）、
+哪些是我们补的（`pitfalls[]`、Skia 宿主声明、实测字高下限）见 `templates/_scaffold/README.md`。
+
+
+## 目录
+
+四类边界：**引擎 / 版式 / 内容 / 素材**。改哪一层，影响范围是可预测的。
+
+| 目录 | 装什么 | 改它会影响 |
 |---|---|---|
-| `renderd/` | 商业级视频渲染服务：**IR 进，成片 + 证据回执出**。REST + MCP 双接口，SQLite / PostgreSQL 双后端，FFmpeg + MLT 双编译后端。已具备 Linux 云端单机部署能力 | `renderd/README.md`、`make -C renderd doctor`、**`renderd/docs/DEPLOY-LINUX.md`** |
-| `cutproof/` | 剪辑渲染「可验证性」最小闭环：素材进得来 → 成片敢交付，全链路可重跑 | `cutproof/README.md`、`./cutproof/ci/gate.sh` |
-| `motiongit-lab/` | MotionGit `.motion` 模板（ZIP 源码包）的运行时实验与基准：解包、改参、逐帧渲染、并行/进程模型测量 | `motiongit-lab/MOTIONGIT-PLAYBOOK.md` |
-| `skia-kit/` | 纸面口播模板（Skia，无浏览器）：一条命令出片、版式自检、新模板测量工具。`./skia-kit` 是指向 `motiongit-lab/skia-kit` 的软链，从工作区根或 motiongit-lab 里都能直接跑 | `skia-kit/README.md`、`skia-kit/REPLICATION.md` |
-| `desktop-kit/` | Mac Desktop 模板的 Skia 复刻：1440×1080 / 60fps，桌面骨架 + 16 个版式镜头 + `photo`/`clip` 两类素材镜头、13 项量化自检、按真实配音重排分镜。出片经验已蒸馏成用户级 skill `~/.workbuddy/skills/desktop-video-pipeline/` | `motiongit-lab/desktop-kit/README.md`、`motiongit-lab/out/desktop-compare.html`、`out/desktop.mp4` |
-| `motiongit-lab/content/` | **内容分镜**（15 个 JSON）：每支片的镜头、文案、素材引用；与渲染代码分离，改内容不进代码目录 | `content/hotpot.json` |
-| `motiongit-lab/mg-kit/` | MG 动效验证：纯 Skia 逐帧、5 类镜头（文字 / 档案时间轴 / 黑洞 2.5D 粒子 / 等轴积木 / 信息卡），带确定性自检 | `node mg-kit/render.mjs`、`deliverables/MG动效能力验证.html` |
-| `deliverables/` | 7 份 HTML 交付报告（浏览器打开） | `deliverables/落地总报告.html` |
-| `docs/` | 跨项目文档（外部仓库体检等） | — |
-| `templates/` | **模板目录**：按接入深度分四级（`01-original` / `02-rehost` / `03-semi-distill` / `04-full-distill`），加一张索引表（desk / science / paper / editorial / mg 各跑哪个文件、喂哪份参数）。类型目录只放 README，物理模板仍在 `motiongit-lab/templates/own|vendor/` | `templates/README.md` |
+| `render.mjs` | 主 CLI，按 `--kit` 分发 | 全部版式 |
+| `src/` | 引擎：仓库根探测、字体注册、门禁、参数校验、计时账本 | 全部版式 |
+| `kits/` | 五套版式，每支自治（渲染器 + 参数 schema + presets） | 只影响自己 |
+| `content/` | 分镜 JSON：文案、镜头、素材引用、配音对齐 | 不动代码 |
+| `assets/` | 字体（Noto Sans SC 三档）、配音 m4a、字幕 srt、图片 | 全部版式 |
+| `templates/` | MotionGit `.motion` 格式模板 + 四级接入索引 | 模板格式 |
+| `tools/` | 打包、校验、测量、`smoke.sh` | — |
+| `bench/` | 性能基准，含浏览器档与对照档的实测 | — |
+| `docs/` | 设计决策、实测记录、历史归档 | — |
+| `refs/` | **不入库**：vendor 模板（含账户 Key）、复刻工程、官方参考片 | — |
+| `out/` | 产物，可整体删除 | — |
 
-根目录 `result.md` / `decisions.md` / `progress.md` / `blockers.md` 是 renderd 这一轮的**验收四件套**，内部路径引用都以工作区根为基准，故保持在根目录。
+### 为什么这么分
 
-## 三个项目的关系
+2026-11-13 之前，所有东西都在 `motiongit-lab/` 一个目录里：引擎在 `skia-kit/`（156K），
+产物 842M，参考素材 200M+，两套模板体系混在 `templates/` 下。重构后边界才立起来：
 
+1. **引擎与版式分开**：原先 `mg` / `editorial` 要从 `../skia-kit/paper.mjs` 借 `registerFonts`，
+   版式之间产生了一条假依赖。现在字体注册在 `src/fonts.mjs`，依赖方向单向：`kits/* → src/*`。
+2. **仓库根不再靠 `dirname(..)` 猜**：四个 kit 原先各自算 `ROOT = dirname(..)`，深度一变就全错。
+   现在统一向上找 `.git`，见 `src/root.mjs`。搬家不再需要改任何路径计算。
+3. **产物与素材出仓**：`out/` 可整体删；`refs/` 整目录不入库（含不可外发的个人下载包）。
+   `.gitignore` 按身份特征匹配而不是路径枚举——旧规则全是 `motiongit-lab/xxx` 硬编码，
+   一搬家就整体失效，而其中一条正保护着 vendor 模板里的账户 Key。
+
+## 交付门禁
+
+```bash
+node src/gate.mjs out/film.mp4          # 单支
+node src/gate.mjs out/*.mp4 --html report.html
 ```
-cutproof            证明「这条路能走通」
-   ↓ 结论沉淀
-renderd             把它做成能起服务、能排队、能重启恢复的产品
-   ↑ 素材与模板来源
-motiongit-lab       真实模板运行时与性能基准（含 SKIA / Chromium 进程模型实测）
+
+只拦**交付完整性**：帧数与时长×fps 的偏差、音画时长差、空帧 ≤8%、黑帧 ≤3%。
+不拦 hook（前 2 秒运动）、平均亮度、重复帧——这三项在本仓 19 支成片上是连续分布，
+照搬外部阈值会误杀 13/19，包括全部口播片。判据标定过程写在 `src/gate.mjs` 头部。
+
+## 改完代码的回归
+
+```bash
+bash tools/smoke.sh      # 五套版式各出一帧，> 5KB 视为有效
 ```
 
-- **cutproof** 是 P0 阶段：先回答「同一份 IR 能不能每次都出同一支片子、渲染错了能不能比客户先知道」。
-- **renderd** 是产品化：同一个判定标准，加上幂等提交、租约回收、内容寻址缓存、三层断言、证据回执、配额与租户隔离。
-- **motiongit-lab** 提供真实素材与渲染压力来源，同时也是模板格式（`.motion` = ZIP 源码包）的调研产物。
+语法检查抓不住路径错误——`import` 合法、运行时才 404。只有真渲染一帧才知道。
 
-## 文档索引
+## 速度档
+
+速度只由两个开关决定：**有无浏览器**（约 6×）、**中间帧压不压缩**（10–30%）。
+
+| 档 | 构成 | 实测（1440×1080@60 / 8 worker） |
+|---|---|---|
+| 极速 | Skia 直出 + GPU 壁纸 + 裸帧 | 344 fps / 68.8s 片用 12.0s |
+| 标准 | Skia 直出 + 静态壁纸 + 压缩帧 | 189–210 fps / 20–22s |
+| 浏览器 | Chromium（film-kit 官方） | 55 fps / 75s |
+| 对照 | Chromium（cinecode） | 24.6 fps / 168s |
+
+fps 随片长上升（worker 预热与 ffmpeg 启动摊销），**比较速度必须同片**。
+
+## 文档
 
 | 想知道什么 | 看哪里 |
 |---|---|
-| renderd 现在能做什么、怎么部署 | `renderd/README.md`、`renderd/docs/API.md`、`renderd/docs/OPS.md` |
-| 安全模型与攻击面 | `renderd/docs/SECURITY.md`、`deliverables/对抗审查报告.html` |
-| 这一轮做了什么、实测数字 | `result.md`、`deliverables/落地总报告.html` |
-| 为什么这么设计 | `decisions.md`（逐条决策 + 理由） |
-| 还差什么 | `blockers.md`（每条写清卡在哪、需要什么才能解） |
-| MotionGit 模板怎么用 | `motiongit-lab/MOTIONGIT-PLAYBOOK.md` |
-| agent 找文件 / 找脚本 | `motiongit-lab/AGENTS.md`（五层结构、任务路由、根目录脚本索引、改动纪律） |
-| 体积治理与清理记录 | `docs/仓库清理-2026-11-09.md`、`docs/仓库清理-2026-11-12.md` |
-| 模板（内容）与代码如何分层 | `docs/模板与代码分离-2026-11-12.md` |
-| 一条模板该停在哪一级（原版→换宿主→半蒸馏→全蒸馏） | `templates/README.md` 第一节 + `motiongit-lab/AGENTS.md` §1.1 |
+| agent 找文件 / 任务路由 / 改动纪律 | `docs/AGENTS.md` |
+| 一条模板该停在哪一级（原版→换宿主→半蒸馏→全蒸馏） | `templates/README.md` |
+| MotionGit 模板格式与前因后果 | `docs/MOTIONGIT-PLAYBOOK.md` |
+| 科普版式的结构规律（37/33/10 是怎么来的） | `kits/science/template/SPEC.md` |
 | 编码与并行优化实测 | `docs/编码优化-2026-11-13.md` |
-| `.motion` 模板换宿主（Skia）可行性 | `docs/motion换宿主-2026-11-13.md` |
-| 一键出片的编排脚本 | `~/.workbuddy/skills/desktop-video-pipeline/scripts/make_film.py` |
-
-## 常用命令
-
-```bash
-# renderd
-cd renderd
-make doctor            # 环境自检
-make test              # 全量单测
-make test-container    # 容器内端到端
-make docker-run        # 起服务（8788 → 容器 8787）
-
-# renderd 部署到 Linux 云主机（单机 Compose：pg + api + worker + 可选 Caddy TLS）
-sudo ./deploy/linux/install.sh --domain render.example.com --email ops@example.com --tls
-make prod-ready        # 查就绪
-make prod-backup       # 备份
-
-# cutproof
-./cutproof/ci/gate.sh  # 五步全绿约 1 分钟
-
-# motiongit-lab
-cd motiongit-lab && npm ci && node motion-render.mjs --help
-
-# 一键出片（TTS → 混音 → 出片 → QA/门禁），详见用户级 skill
-uv run python ~/.workbuddy/skills/desktop-video-pipeline/scripts/make_film.py \
-  --preset desktop-kit/presets/<name>.json --music <cc0.wav>
-
-# desktop-kit（Skia 复刻 Mac Desktop，无需浏览器）
-cd motiongit-lab
-node desktop-kit/verify.mjs                       # 11 项量化自检
-node desktop-kit/render.mjs \
-  --params desktop-kit/presets/demo-voiced.json \
-  --audio edits/audio-desktop.m4a --out out/desktop.mp4 --fps 60
-```
-
-## 体积治理
-
-2026-11-09 做过一次清理：1.0 GB → 566 MB；2026-11-12 再做一轮，口径不变：**只删「跑一遍就能再生成」的媒体产物**，源码、模板、语料、证据 JSON、参考片与唯一副本一件不动。完整清单与重跑命令见两份 `docs/仓库清理-*.md`。
-
-| 位置 | 2026-11-12 清理后 | 性质 |
-|---|---|---|
-| `motiongit-lab/out/` | 696 MB | 104 支 mp4（442 MB）+ 报告/总览；可重跑，已忽略 |
-| `motiongit-lab/replicas/` | 288 MB | `out/` 465 MB、`reference/` 187 MB、`downloads/` 50 MB；媒体可重跑，参考片是本地校验唯一副本 |
-| `motiongit-lab/ref/` | 203 MB | mac-desktop 官方 demo 与抽帧，本地 1:1 校验用 |
-| `cutproof/`（含 `res/` + `corpus/`） | 208 MB | 回归基线语料，**删了就没法复现** |
-| `motiongit-lab/templates/` | 166 MB | `.motion` 模板与解包素材，**核心资产** |
-| `cinecode-probe/` | 163 MB | 管线对比实验产物（html/json 为证据） |
-| `motiongit-lab/edits/` | 76 MB | 编辑工程；含 `render-cache/` 82 MB 缓存、素材 38 MB |
-| `renderd/` | 86 MB | 服务源码 + `var/sample/` 唯一副本 |
-| `motiongit-lab/node_modules/` | 73 MB | `npm ci` 可重建 |
-| `deliverables/` | 308 KB | 交付报告 + skill 分发包 |
-
-`.gitignore` 已把 `renderd/var/`、`motiongit-lab/out/`、`replicas/` 的媒体、`node_modules/`、个人下载模板包（含个人 Key）划出版本库边界。
+| `.motion` 模板换宿主到 Skia 的可行性 | `docs/motion换宿主-2026-11-13.md` |
+| 仓库体积治理记录 | `docs/仓库清理-*.md` |

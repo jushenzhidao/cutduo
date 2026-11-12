@@ -1,0 +1,112 @@
+{
+  "purpose": "__SUMMARY__",
+  "distilledFrom": {
+    "file": "__SOURCE__",
+    "durationSeconds": 0,
+    "size": "__RESOLUTION__",
+    "fps": 0,
+    "shots": 0,
+    "medianShotSeconds": 0,
+    "note": "只反推版式语法与节奏；写明明确没复制的东西"
+  },
+  "duration": {
+    "policy": "fixed",
+    "seconds": 10,
+    "fps": {
+      "num": 30,
+      "den": 1
+    },
+    "adaptation": "总时长 = segments[].dur 之和，必须与 motion.json 的 durationSeconds 一致；否则末段被截断"
+  },
+  "materials": [
+    {
+      "role": "text.script",
+      "mappedParameters": [
+        "segments",
+        "captions"
+      ],
+      "required": true,
+      "ifMissing": "stop"
+    },
+    {
+      "role": "image.figure",
+      "mappedParameters": [
+        "segments[].figure"
+      ],
+      "required": false,
+      "ifMissing": "placeholder"
+    }
+  ],
+  "layout": {
+    "ratio": "16:9",
+    "pixels": "1920x1080",
+    "safeArea": "左右 96px；底部安全区高度按字幕实测字高 + 2 倍内边距计算，不得凭感觉",
+    "notes": "竖屏需另建 portrait 版本，不要裁切横屏"
+  },
+  "rhythm": {
+    "hardCut": "段与段之间硬切，无转场；所有入场动画在段首即推进 20–30%，避免切点出现空帧",
+    "captionLag": "字幕比画面晚 0.2–0.5s 出现，句间留 0.1s 以上间隙",
+    "beatPattern": "按实测比例分配：主讲解 40% / 图解 30% / 标签强调 15% / 首尾 15%。写实测值，不写目标值"
+  },
+  "layouts": [
+    {
+      "type": "cover",
+      "role": "封面 / 开场钩子",
+      "maxPerFilm": 1,
+      "args": {
+        "title": "string",
+        "sub": "string"
+      },
+      "capacity": "title ≤ 6 字；sub ≤ 16 字。上限必须是实测值（见 pitfalls）"
+    },
+    {
+      "type": "explain",
+      "role": "主讲解位",
+      "maxPerFilm": 0,
+      "args": {
+        "title": "string",
+        "point": "string"
+      },
+      "capacity": "point ≤ 20 字；单行放不下就换版式"
+    }
+  ],
+  "runtime": {
+    "profile": "html-canvas/1",
+    "entry": "src/index.html",
+    "dependencies": [
+      "kit.js",
+      "layouts.js",
+      "main.js"
+    ],
+    "network": false,
+    "fonts": "写清依赖哪个系统字体、缺字体时降到什么、有没有随包分发"
+  },
+  "voicing": {
+    "tool": "tools/vo.py",
+    "principle": "时间轴跟随配音，不是配音迁就时间轴",
+    "lead": 0.45,
+    "gap": 0.28,
+    "end": 0.55,
+    "tailHold": 0.14,
+    "loudnessI": -16,
+    "autoFilled": []
+  },
+  "voices": {
+    "mapping": "preset.voices 里按角色名映射音色；captions[].speaker 指向它",
+    "profiles": {
+      "default": "zh-CN-XiaoxiaoNeural"
+    }
+  },
+  "pitfalls": [
+    {
+      "symptom": "改完代码后 inspect 报 integrity 不通过",
+      "cause": "integrity.json 是打包时生成的，手改文件不会更新它",
+      "fix": "重新跑 build-template.py，不要手改 integrity.json"
+    },
+    {
+      "symptom": "换宿主后画面与浏览器不一致，或直接报错",
+      "cause": "src/*.js 里出现了 document / window / createElement",
+      "fix": "把这些调用收进 index.html；kit.js 与 layouts.js 只留纯 Canvas2D"
+    }
+  ]
+}

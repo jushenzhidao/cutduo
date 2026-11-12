@@ -1,0 +1,24 @@
+{
+  "name": "cutduo",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Skia 直出的视频管线：引擎 / 版式 / 内容 / 素材四分离，五套版式一条命令出片，不经过浏览器",
+  "scripts": {
+    "paper": "node render.mjs --kit paper --params kits/paper/presets/v8t.json",
+    "science": "node render.mjs --kit science --params kits/science/template/presets/demo.json",
+    "desk": "node kits/desk/render.mjs --params content/demo.json",
+    "editorial": "node kits/editorial/canvas-editorial.mjs --inputs content/inputs-v6.json",
+    "mg": "node kits/mg/render.mjs --params kits/mg/params.json",
+    "gate": "node src/gate.mjs",
+    "verify": "node src/verify.mjs",
+    "smoke": "bash tools/smoke.sh",
+    "doctor": "node tools/motion-render.mjs doctor",
+    "inspect": "node tools/motion-render.mjs inspect --package templates/fixtures/workbuddy-distill.motion",
+    "tpl:render": "node tools/motion-render.mjs render --package templates/fixtures/workbuddy-distill.motion --inputs content/inputs.json --out out/distill.mp4",
+    "tpl:build": "python3 tools/build-template.py"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^1.1.0",
+    "playwright": "^1.65.0"
+  }
+}

@@ -1,0 +1,50 @@
+# __TITLE__（`__ID__`）
+
+> 一句话说清：这支模板把什么样的内容，排成什么样的片子。
+
+## 这是什么
+
+- **画面语言**：__STYLE__
+- **适用内容**：__USE_CASE__
+- **不适用**：__NOT_FOR__
+- **来源**：__SOURCE__（只反推版式语法与节奏，未复制其素材/文案/品牌标识）
+
+## 怎么用
+
+```bash
+# 1. 结构体检（不需要渲染）
+uv run python check-template.py --src templates/own/__ID__
+
+# 2. 打包
+uv run python build-template.py --src templates/own/__ID__ --out packages/__ID__.motion
+node motion-render.mjs inspect --package packages/__ID__.motion
+
+# 3. 出片（Skia 直出，不启浏览器）
+node render.mjs --kit __ID__ --params presets/default.json --out out/__ID__.mp4 --workers 8
+
+# 4. 交付门禁
+node src/gate.mjs out/__ID__.mp4
+```
+
+内容怎么改：只动 `presets/*.json`。换成自己的品牌色改 `presets/*.json` 的 `theme`，
+不要改 `src/`。
+
+## 文件在哪一层
+
+| 层 | 文件 | 什么时候改 |
+|---|---|---|
+| L0 协议 | `motion.json` `motion.lock.json` `integrity.json` `licenses/` | 改身份、版本、输出规格。`integrity.json` 只由打包器生成 |
+| L1 契约 | `SKILL.md` `guide.json` `params.schema.json` | 加版式、改容量、改节奏时三份一起改 |
+| L2 内容 | `presets/` `assets/` `asset-manifest.json` | 每次出片 |
+| L3 源码 | `src/` `tools/` | 改画面语言 |
+| L4 说明 | `README.md`（本文件）`SPEC.md` `SKIA-SPEC.md` | 沉淀可复用规律 |
+
+**改哪一层有讲究**：改 L2 不用重新打包就能出片；改 L1/L3 必须重新打包并重算 integrity。
+
+## 三条不可破的约束
+
+1. `durationSeconds` = `segments[].dur` 之和，差一点末段就被截断。
+2. `src/kit.js` 与 `src/layouts.js` 不许出现 `document` / `window` / `createElement`。
+3. 文案与颜色不许写进 `src/`，一律从 preset 来——否则换内容就得改代码。
+
+体检脚本会把这三条都扫一遍。

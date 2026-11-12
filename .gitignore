@@ -1,48 +1,11 @@
-# ── 运行时数据与测试产物（可重跑）──
-renderd/var/
-cutproof/out/
-motiongit-lab/out/
-
-# ── MotionGit 个人下载包：含个人 API Key 与受限模板，不得入库/外传 ──
-# 依据见 docs/cutduo-仓库体检与发布方案.md 的 P0′
-# 自建的 templates/distill 与 templates/editorial 保留（build-template.py 依赖）
+# ══════════════════════════════════════════════════════════════
+# cutduo · Skia 直出视频管线
 #
-# ① 按「身份层特征」忽略，而不是按包名逐个列举：新增下载包（camera-mode /
-#    mac-desktop / promo-ink …）无需再改这里，去掉"忘了加一行就把 Key 推上去"这个
-#    人为环节。这三类文件在自建模板里不存在，不会误伤。
-motiongit-lab/templates/**/package/personal/
-motiongit-lab/templates/**/package/content/release.bin
-motiongit-lab/templates/**/template.motion
-motiongit-lab/templates/**/core.enc
-# ② 整包剔除：全部来自个人下载，PLAYBOOK 第 133 行明确「不得再分发模板本身」。
-#    2026-11-12 已拆为 templates/vendor/（下载）与 templates/own/（自建），规则先就位再移动。
-motiongit-lab/templates/vendor/
-# ③ 复刻工程的下载缓存：8 个 @motiongit 个人封套，全部含账户 Key，整目录剔除
-motiongit-lab/replicas/downloads/
-# ④ 通用兜底：任何位置新增的个人下载包都不入库（自建模板包用 .motion 时也需显式 -f）
-*.motion
-MotionGit-*.zip
-# ⑤ 官方预览参考片（公开，仅本地校验、不外发；8 条约 187MB + mac-desktop demo 202MB）
-motiongit-lab/ref/**/*.mp4
-motiongit-lab/replicas/reference/
-# ⑥ 复刻工程的可重跑产物（测量帧 / 成片 / 对比视频，脚本可重建）
-motiongit-lab/replicas/frames/
-motiongit-lab/replicas/out/
-motiongit-lab/replicas/highlights/
-motiongit-lab/replicas/preview/
-motiongit-lab/replicas/ALL-COMPARE.mp4
-motiongit-lab/replicas/overview-concat.txt
-# v2 高密度测量重建的可重跑媒体与编译产物
-motiongit-lab/replicas/highlights-v2/
-motiongit-lab/replicas/preview-v2/
-motiongit-lab/replicas/ALL-COMPARE-V2.mp4
-motiongit-lab/replicas/overview-v2-concat.txt
-motiongit-lab/replicas/specs2/*/field/
-motiongit-lab/replicas/engine/v2/ocr
-
-# ── cutproof 可再生产物（语料由 corpus/gen_dirty.py 生成）──
-cutproof/res/
-cutproof/corpus/assets/
+# 原则：按「身份层特征」匹配，不按具体路径枚举。
+# 原因是 2026-11-13 的目录重构把 motiongit-lab/ 拆成了 src / kits / content /
+# assets / refs / out —— 旧规则全是硬编码路径，一旦搬家就整体失效，
+# 而其中一条是 vendor 模板含账户 Key。改回路径匹配就等于给下一次搬家埋雷。
+# ══════════════════════════════════════════════════════════════
 
 # ── 依赖 ──
 node_modules/
@@ -54,23 +17,43 @@ __pycache__/
 .venv/
 venv/
 
-# ── 渲染缓存与本地抽帧（可重建，不入库）──
-motiongit-lab/edits/render-cache/
-motiongit-lab/ref/**/frames/
-# cinecode 对比实验的媒体产物：html 报告 / json 证据仍入库
-cinecode-probe/**/*.mp4
-cinecode-probe/**/*.wav
-
-# ── TTS 逐句缓存 / 分镜预览帧 / 二次测量帧（可重建，仅不入库）──
-motiongit-lab/edits/tts-cache/
-motiongit-lab/edits/preview-v*/
-motiongit-lab/replicas/specs2/*/field_clean/
-motiongit-lab/mg-kit/out/
-
-# ── 媒体临时件 ──
+# ── 产物：任何层级的 out/ 都可重建 ──
+**/out/
+**/render-cache/
+**/tts-cache/
+**/preview-v*/
 *.tmp.mp4
 *.part
-renderd/var/tmp/
+
+# ── refs/ 是不可重建或不可分发的素材区，整目录不入库 ──
+# 内含：vendor 模板（个人下载，含账户 Key）、官方预览片、复刻工程下载缓存。
+# 已跟踪的少量说明与脚本仍会保留（gitignore 只影响未跟踪文件）。
+/refs/
+
+# ── MotionGit 个人下载包：按身份层特征忽略 ──
+# 新增下载包（camera-mode / mac-desktop / promo-ink …）不需要再改这里，
+# 去掉「忘了加一行就把 Key 推上去」这个人为环节。
+**/package/personal/
+**/package/content/release.bin
+**/core.enc
+**/template.motion
+**/downloads/
+MotionGit-*.zip
+
+# 自建模板包默认不入库，需要时显式 git add -f
+*.motion
+
+# ── 参考片与测量产物 ──
+**/reference/
+**/replicas/frames/
+**/replicas/highlights*/
+**/replicas/preview*/
+**/specs2/*/field/
+**/specs2/*/field_clean/
+
+# ── 原始中间图：build-template 的产物，成品由去掉 _raw 的同名文件承载 ──
+# 覆盖 figures/（人物姿态）与 props/（道具），两者都是生图中间态
+**/*_raw.png
 
 # ── 系统 ──
 .DS_Store
