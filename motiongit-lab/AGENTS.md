@@ -3,12 +3,59 @@
 面向 AI agent 的入口。目标：**用最短路径找到该改的文件，并且知道改完怎么验**。
 路径以本目录为根；命令默认在 `motiongit-lab/` 下执行，且先 `export PATH="$HOME/.local/bin:/opt/homebrew/bin:$PATH"`。
 
+## 0. 命名约定（先读，避免「方案」一词四义）
+
+历史上「方案」这个词同时指了四件正交的事，导致沟通歧义。约定如下：**「方案」只指产线**，
+其余三层一律叫「档位」。一条成片 = 产线 × 壁纸 × 传帧 × 封装。
+
+### 产线（决定画面长相）
+
+| 代号 | 中文名 | 代码 | 内容入口 | 状态 |
+|---|---|---|---|---|
+| `desk` | 桌面线 | `desktop-kit/` | `content/*.json` | **主力**，全部交付片走这条 |
+| `science` | 科普线 | `skia-kit/science.mjs` | `templates/own/science-explainer/presets/` | 可用，浏览器/Skia 双宿主 |
+| `paper` | 纸感线 | `skia-kit/paper.mjs` | `skia-kit/presets/` | 可用，1920×1080@60 |
+| `editorial` | 杂志线 | `canvas-editorial.mjs` | `edits/inputs*.json` | 可用，走浏览器 canvas2d |
+| `mg` | 通用线 | `mg-kit/` | `mg-kit/params.json` | 历史最小引擎（5 scene），2026-11-10 后未改动、无交付片使用 |
+
+以上五个是**我们自己的**。以下三个是对照对象，不是产线，别混：
+
+- `film-kit` — motiongit 官方 mac-desktop 原件（浏览器，55 fps）
+- `cinecode` — 第三方产线（无头 Chrome，24.6 fps）
+- `vendor/*` — `templates/vendor/` 下 5 个个人下载模板包
+
+### 三个参数档位（不改变画面风格）
+
+| 维度 | 档位 | 含义 | 代价 |
+|---|---|---|---|
+| 壁纸 | **静态** | Skia 渐变 | 0.05–0.16 ms/帧，无流动感 |
+| | **流体** | GPU fBm（headless-gl） | 3.0 ms/帧，需 `HEADLESS_GL` |
+| | **仿流体** | JS 逐像素同效 | 164 ms/帧，仅作 CPU 侧对照 |
+| 传帧 | **裸帧** | RGBA 直供 ffmpeg stdin | 12.2 ms/帧，6.2 MB/帧过管道 |
+| | **压缩帧** | JPEG q94 中间帧 | 28.8 ms/帧，多一次有损 |
+| 封装 | **兼容档** | H.264 crf20 | 任何设备可播 |
+| | **小型档** | H.265 crf24 | 约 0.64×，老设备可能不认 |
+| | **极窄档** | AV1 | 同 CRF 下反而可能更大，慎用 |
+
+### 固定句式与例子
+
+写成 `产线 · 壁纸 · 传帧 · 封装`：
+
+- `桌面线 · 流体 · 裸帧 · 兼容档` — `out/desktop-opt.mp4`（4127 帧 / 68.8s / 8.34 MB / 344 fps）
+- `桌面线 · 静态 · 压缩帧 · 兼容档` — 未优化的早期版本
+- `科普线 · 静态 · 压缩帧 · 兼容档` — `out/science-explainer-*.mp4`
+
+**五支交付片（`desktop-opt` / `ai-cut` / `nanjing` / `period` / `hotpot`）用的是同一组合**，
+差别只在内容与素材——它们是同一条产线的五个内容，不是五套方案。
+
+> 命名只落在文档层，**不改物理目录**。路径稳定性优先于整齐，改目录会牵动十余处引用。
+
 ## 1. 这是什么
 
 MotionGit `.motion` 模板的运行时实验与出片产线。两条主线：
 
 - **拆**：解包、测量、复刻第三方模板（`templates/`、`replicas/`、`ref/`）。
-- **造**：用自己的渲染器出片（`desktop-kit/`、`skia-kit/`、`mg-kit/`、`content/`）。
+- **造**：用自己的渲染器出片（`desktop-kit/` = 桌面线、`skia-kit/` = 纸感线与科普线、`mg-kit/` = 通用线、`content/`）。
 
 ## 2. 五层结构（2026-11-12 起）
 
