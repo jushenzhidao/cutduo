@@ -3,52 +3,60 @@
 面向 AI agent 的入口。目标：**用最短路径找到该改的文件，并且知道改完怎么验**。
 路径以本目录为根；命令默认在 `motiongit-lab/` 下执行，且先 `export PATH="$HOME/.local/bin:/opt/homebrew/bin:$PATH"`。
 
-## 0. 命名约定（先读，避免「方案」一词四义）
+## 0. 命名约定（先读，避免「方案」一词歧义）
 
-历史上「方案」这个词同时指了四件正交的事，导致沟通歧义。约定如下：**「方案」只指产线**，
-其余三层一律叫「档位」。一条成片 = 产线 × 壁纸 × 传帧 × 封装。
+用户反馈过两次「分不清」。根因是**「方案」同时指了四层正交的事**。约定四段式，
+每段都是可测的工程量，不需要记雅名：
 
-### 产线（决定画面长相）
+```
+速度档 / 模板 / 传帧 / 封装
+```
 
-| 代号 | 中文名 | 代码 | 内容入口 | 状态 |
+例：`极速档 / desk / raw / h264`
+
+### 第一维：速度档（按实测吞吐，1440×1080@60 · 8 worker）
+
+| 档 | 代号 | 构成 | 实测 | 同片 68.8s 耗时 |
 |---|---|---|---|---|
-| `desk` | 桌面线 | `desktop-kit/` | `content/*.json` | **主力**，全部交付片走这条 |
-| `science` | 科普线 | `skia-kit/science.mjs` | `templates/own/science-explainer/presets/` | 可用，浏览器/Skia 双宿主 |
-| `paper` | 纸感线 | `skia-kit/paper.mjs` | `skia-kit/presets/` | 可用，1920×1080@60 |
-| `editorial` | 杂志线 | `canvas-editorial.mjs` | `edits/inputs*.json` | 可用，走浏览器 canvas2d |
-| `mg` | 通用线 | `mg-kit/` | `mg-kit/params.json` | 历史最小引擎（5 scene），2026-11-10 后未改动、无交付片使用 |
+| **极速档** | `fast` | Skia 直出 + GPU 壁纸 + 裸帧 | 344 fps | 12.0 s |
+| **标准档** | `std` | Skia 直出 + 静态壁纸 + 压缩帧 | 189–210 fps | 20–22 s |
+| **浏览器档** | `chrome` | Chromium 渲染（film-kit 官方） | 55 fps | 75 s |
+| **对照档** | `ref` | Chromium（cinecode） | 24.6 fps | 168 s |
 
-以上五个是**我们自己的**。以下三个是对照对象，不是产线，别混：
+速度只由两件事决定：**有没有浏览器（约 6×）**、**中间帧压不压缩（10–30%）**。
+壁纸是否走 GPU、编码选 H.265 还是 H.264，对速度影响都 **< 5%**。
 
-- `film-kit` — motiongit 官方 mac-desktop 原件（浏览器，55 fps）
-- `cinecode` — 第三方产线（无头 Chrome，24.6 fps）
-- `vendor/*` — `templates/vendor/` 下 5 个个人下载模板包
+> ⚠️ fps 随片长上升（worker 预热与 ffmpeg 启动的固定开销被摊薄）：4127 帧的片 344 fps，
+> 1419 帧的片只有 195–210 fps。**比较速度必须同片**，跨片比 fps 会误判。
 
-### 三个参数档位（不改变画面风格）
+### 第二维：模板（决定画面长相，不改变速度档）
 
-| 维度 | 档位 | 含义 | 代价 |
+| 代号 | 中文 | 代码 | 内容入口 |
 |---|---|---|---|
-| 壁纸 | **静态** | Skia 渐变 | 0.05–0.16 ms/帧，无流动感 |
-| | **流体** | GPU fBm（headless-gl） | 3.0 ms/帧，需 `HEADLESS_GL` |
-| | **仿流体** | JS 逐像素同效 | 164 ms/帧，仅作 CPU 侧对照 |
-| 传帧 | **裸帧** | RGBA 直供 ffmpeg stdin | 12.2 ms/帧，6.2 MB/帧过管道 |
-| | **压缩帧** | JPEG q94 中间帧 | 28.8 ms/帧，多一次有损 |
-| 封装 | **兼容档** | H.264 crf20 | 任何设备可播 |
-| | **小型档** | H.265 crf24 | 约 0.64×，老设备可能不认 |
-| | **极窄档** | AV1 | 同 CRF 下反而可能更大，慎用 |
+| `desk` | 桌面 | `desktop-kit/` | `content/*.json` |
+| `science` | 科普 | `skia-kit/science.mjs` | `templates/own/science-explainer/presets/` |
+| `paper` | 纸感 | `skia-kit/paper.mjs` | `skia-kit/presets/` |
+| `editorial` | 杂志 | `canvas-editorial.mjs` | `edits/inputs*.json` |
+| `mg` | 通用 | `mg-kit/` | `mg-kit/params.json`（2026-11-10 后未改动、无交付片） |
 
-### 固定句式与例子
+五个模板用的是**同一个渲染库**（`@napi-rs/canvas` / Skia），所以模板不改变速度档。
+`science` 额外支持浏览器宿主（同一份 `kit.js` + `layouts.js`），那是它的双跑能力，不是另一套栈。
 
-写成 `产线 · 壁纸 · 传帧 · 封装`：
+### 第三、四维：传帧与封装
 
-- `桌面线 · 流体 · 裸帧 · 兼容档` — `out/desktop-opt.mp4`（4127 帧 / 68.8s / 8.34 MB / 344 fps）
-- `桌面线 · 静态 · 压缩帧 · 兼容档` — 未优化的早期版本
-- `科普线 · 静态 · 压缩帧 · 兼容档` — `out/science-explainer-*.mp4`
+| 维度 | 档位 | 代价 |
+|---|---|---|
+| 传帧 | `raw` 裸帧 / `jpeg` 压缩帧 | 12.2 vs 28.8 ms/帧；两者的体积与保真度同时反向 |
+| 封装 | `h264` 兼容 / `h265` 小型（0.64×）/ `av1` 极窄 | 只影响体积，不影响速度 |
 
-**五支交付片（`desktop-opt` / `ai-cut` / `nanjing` / `period` / `hotpot`）用的是同一组合**，
-差别只在内容与素材——它们是同一条产线的五个内容，不是五套方案。
+### 明确不在这套命名里
 
-> 命名只落在文档层，**不改物理目录**。路径稳定性优先于整齐，改目录会牵动十余处引用。
+- `film-kit`（官方原件）、`cinecode`（三方）—— 它们是**浏览器档与对照档的实例**，不是我们的产线。
+- `templates/vendor/*` —— 下载来的模板包，仅作对照，**不入库、不外传**。
+- **五支交付片（`desktop-opt` / `ai-cut` / `nanjing` / `period` / `hotpot`）是同一组合**：
+  `极速档 / desk / raw / h264`，差别只在内容与素材，不是五套方案。
+
+> 命名只落文档层，**不改物理目录**——路径稳定性优先于整齐，改目录会牵动十余处引用。
 
 ## 1. 这是什么
 
