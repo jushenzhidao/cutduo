@@ -141,10 +141,65 @@ WorkBuddy 的 `~/.workbuddy/mcp.json`：
 | 升级 | 重传 src.tgz → `docker compose build && up -d`（数据卷不变） |
 | 排障 | 先看 `/health`，再看 `docker compose logs`；MCP 层错误都带 `code`/`fix` |
 
-## 八、已知限制
+## 八、实际部署记录（2026-11-13 05:00）
+
+**容器已在 ai-prod 跑起来**，内网 `127.0.0.1:8787` 可访问，状态 healthy。
+**未完成：DNS、证书、443 站点**——这三步都卡在 DNS 上。
+
+### 已完成的验证
+
+| 项 | 结果 |
+|---|---|
+| 镜像构建 | `cutduo-mcp:2.0.0`，409MB，约 4 分钟（ffmpeg 层 169s） |
+| 容器 | `Up (healthy)`，`127.0.0.1:8787->8787` |
+| 鉴权 | 无 token → 401，有 token → 200 |
+| 握手 | `protocolVersion 2025-03-26`，serverInfo cutduo 2.0.0 |
+| 工具 | 7 个全部注册 |
+| **容器内渲染** | paper probe **0.311s**，产物 75036B（本地 75140B，差 0.14%） |
+| 画面 | 中文标题/强调下划线/章节卡/字幕条全部正常，无方框字 |
+
+0.14% 的体积差来自不同平台的 freetype 渲染，不是字体回退 —— 若回退到系统字体，
+字形会完全不同，差异会是一个数量级以上。
+
+### 三个实际踩到的坑
+
+1. **打包漏了 `render.mjs`**。它是仓库根的 CLI，paper/science 的 adapter 指向它。
+   症状极具迷惑性：容器能起、health 正常、协议能握手，**只有真出片时才报「入口不存在」**。
+   已用 `deploy/package.sh` 固化，自带 10 个关键文件的自检。
+2. **`docker compose ps/logs` 也要 `--env-file`**。`up` 带了不代表后续命令带；
+   否则插值 `${CUTDUO_TOKEN:?}` 直接报错。已建 `deploy/.env` 软链到 `/opt/cutduo/.env`。
+3. **macOS 的 `._*` 资源叉文件被打进镜像**（每个 163 字节）。
+   不影响功能但污染层，打包时 `--exclude='._*'`。
+
+### 剩余步骤（按顺序）
+
+```bash
+# 1. 阿里云 DNS 控制台加记录（1task.cn 的 NS 是 dns13.hichina.com）
+#    类型 A  主机记录 cut-mcp  记录值 210.121.44.245  TTL 600
+
+# 2. 确认解析生效
+dig +short cut-mcp.1task.cn    # 应返回 210.121.44.245
+
+# 3. 配 80 端口（ACME 通道）并签发
+cp deploy/nginx-cut-mcp.conf /www/server/panel/vhost/nginx/cut-mcp.1task.cn.conf
+# 注意：参考同机的 mcp.1task.cn.conf，ACME 的 location 必须排在 catch-all 之前
+acme.sh --issue -d cut-mcp.1task.cn --webroot /www/wwwroot/cut-mcp
+acme.sh --install-cert -d cut-mcp.1task.cn \
+  --fullchain-file /www/server/panel/vhost/cert/cut-mcp.1task.cn/fullchain.pem \
+  --key-file       /www/server/panel/vhost/cert/cut-mcp.1task.cn/privkey.pem \
+  --reloadcmd      "/www/server/nginx/sbin/nginx -s reload"
+/www/server/nginx/sbin/nginx -t && /www/server/nginx/sbin/nginx -s reload
+```
+
+## 九、已知限制
 
 1. **无 SSE 流**：只支持 `POST /mcp` 单次请求-响应。MCP 协议允许，但客户端若强制要求
    `GET /mcp` 开流会失败。WorkBuddy 与主流客户端用 POST 即可。
 2. **无多租户**：一个 token 一个配额池，任务队列全局共享。
 3. **产物不持久**：`/data` 是本地卷，重装容器不丢，但没做对象存储备份。
 4. **无鉴权分级**：token 泄露等于可以无限出片，建议定期轮换。
+5. **宿主机器已超载**：部署时 ai-prod 的 load average 是 **67（64 核）**，上面还跑着 30+ 个服务
+   （含 renderd 的 api/worker/pg）。渲染是 CPU 密集，调用时会和现有服务抢核。
+   `MAX_JOBS=3` 意味着 24 个渲染线程；建议首次压测后再决定是否放宽，长片尽量错峰。
+6. **`mcp.cutduo.com` 仍指向旧的 renderd**：那是另一个服务（容器 `renderd-api-1`，端口 39340），
+   与本服务无关，也未下线。两个 MCP 并存时注意客户端配置别指错。
