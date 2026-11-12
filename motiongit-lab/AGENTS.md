@@ -137,6 +137,7 @@ MotionGit `.motion` 模板的运行时实验与出片产线。两条主线：
 | 宿主 | `motion-host/poc.mjs` | `.motion` 单镜头跑在 Skia 上（依赖 `templates/vendor`） |
 | 宿主 | `motion-host/poc-full.mjs` | `.motion` 整片宿主 main.js 跑在 Skia 上，`--bench` 测单帧 1.01 ms |
 | 宿主 | `motion-host/render-parallel.mjs` | 换宿主 + 并行出片，24 worker 480 fps（8.7× 官方） |
+| 宿主 | `motion-host/check-hostable.mjs` | 判据：5 个 vendor 模板里只有 `mac-desktop` 可换宿主 |
 | 字体 | `font-metrics`（原 `t.mjs`） |
 
 **必须在仓库根运行**（脚本用 `process.cwd()` 解析 `assets/fonts`、`edits/inputs-md.json`），

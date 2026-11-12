@@ -18,7 +18,8 @@ import { createCanvas, GlobalFonts } from '@napi-rs/canvas';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const REPO = path.resolve(HERE, '../..');
-const TPL = path.join(REPO, 'templates/vendor/mac-desktop');
+const TPL_NAME = (() => { const i = process.argv.indexOf('--template'); return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : 'mac-desktop'; })();
+const TPL = path.join(REPO, 'templates/vendor', TPL_NAME);
 const PKG = path.join(TPL, 'package/content/release.bin');
 
 if (!fs.existsSync(PKG)) {
@@ -33,24 +34,49 @@ const OUT = fs.mkdtempSync(path.join(os.tmpdir(), 'motion-full-'));
 execFileSync('unzip', ['-q', PKG, '-d', OUT], { stdio: 'inherit' });
 const ENGINE = path.join(OUT, 'engine');
 
+// 前置检测：DOM/CSS 渲染的模板换宿主不成立（需要浏览器布局引擎）
+if (fs.existsSync(path.join(ENGINE, 'src/dom.js'))) {
+  console.error(`${TPL_NAME} 使用 DOM/CSS 渲染（src/dom.js），换宿主需要自建布局引擎，不成立。`);
+  console.error('用 check-hostable.mjs 查可换宿主的模板；该模板请走 motion-render.mjs（Chromium）。');
+  fs.rmSync(OUT, { recursive: true, force: true });
+  process.exit(2);
+}
+
 // ① plan 里有编译后的 FILM，直接拿来当时间轴
-const planFile = fs
-  .readdirSync(path.join(TPL, 'instance'))
-  .filter((f) => /^plan-.*\.json$/.test(f))
-  .sort()
-  .pop();
-if (!planFile) throw new Error('instance/plan-*.json 不存在');
-const plan = JSON.parse(fs.readFileSync(path.join(TPL, 'instance', planFile), 'utf8'));
+const instDir = path.join(TPL, 'instance');
+const planFile = fs.existsSync(instDir)
+  ? fs.readdirSync(instDir).filter((f) => /^plan-.*\.json$/.test(f)).sort().pop()
+  : null;
+
+// 有 instance 就用模板自带的编译结果；没有就用 --shot/--props 手工造一条最小时间轴
+let FILM;
+if (planFile) {
+  FILM = JSON.parse(fs.readFileSync(path.join(instDir, planFile), 'utf8')).FILM;
+} else {
+  const cliGet2 = (k, d) => { const i = process.argv.indexOf('--' + k); return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : d; };
+  const shotName = cliGet2('shot', 'headline');
+  const props = JSON.parse(cliGet2('props', JSON.stringify({
+    look: 'ink', kicker: 'SKIA HOST', line1: '换宿主', line2: '*可行*',
+    number: 480, suffix: '+', numberLabel: 'fps 实测', stamp: '已验证',
+  })));
+  FILM = {
+    fps: Number(cliGet2('fps', 60)), width: Number(cliGet2('width', 1080)), height: Number(cliGet2('height', 1440)),
+    end: 4, talkEnd: 4, tail: 0, ins: [], beats: [], globals: {}, presenter: { mode: 'video' },
+    shots: [{ i: 0, type: shotName, layer: 'main', t0: 0, t1: 4, beats: { wow: 0.55 }, props }],
+    custom: [],
+  };
+  console.log(`${TPL_NAME}: 无 instance，手工造 FILM（${shotName} / ${FILM.width}x${FILM.height}）`);
+}
 
 fs.mkdirSync(path.join(ENGINE, 'data'), { recursive: true });
-fs.writeFileSync(path.join(ENGINE, 'data', 'film.js'), `export const FILM = ${JSON.stringify(plan.FILM)};\n`);
+fs.writeFileSync(path.join(ENGINE, 'data', 'film.js'), `export const FILM = ${JSON.stringify(FILM)};\n`);
 fs.writeFileSync(path.join(ENGINE, 'data', 'venv.js'), `export const VENV = { fps: 30, v: [] };\n`);
 fs.writeFileSync(path.join(ENGINE, 'data', 'face.js'), `export const FACE = { n: 0 };\n`);
 fs.writeFileSync(path.join(ENGINE, 'data', 'subs.js'), `export const SUBS = [];\n`);
-console.log(`FILM: ${plan.FILM.shots.length} 镜 / ${plan.FILM.end.toFixed(2)}s / ${plan.FILM.fps}fps`);
+console.log(`FILM: ${FILM.shots.length} 镜 / ${FILM.end.toFixed(2)}s / ${FILM.fps}fps / ${FILM.width}x${FILM.height}`);
 
 // ② 宿主 shim：main.js 的 DOM 依赖只有 getElementById / createElement / fonts / title
-const canvas = createCanvas(plan.FILM.width, plan.FILM.height);
+const canvas = createCanvas(FILM.width, FILM.height);
 globalThis.window = globalThis;
 globalThis.window.FILMKIT = { version: 1, warnings: [] };
 globalThis.document = {
@@ -95,7 +121,7 @@ if (process.argv.includes('--bench')) {
   const N = 90;
   await window.renderAt(0.5);
   const t0 = performance.now();
-  for (let i = 0; i < N; i++) await window.renderAt(0.5 + i / plan.FILM.fps);
+  for (let i = 0; i < N; i++) await window.renderAt(0.5 + i / FILM.fps);
   const ms = (performance.now() - t0) / N;
   console.log(`单帧渲染 ${ms.toFixed(2)} ms → 单核 ${(1000 / ms).toFixed(0)} fps`);
 }
