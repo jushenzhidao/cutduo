@@ -107,8 +107,16 @@ async function loadPhotos(P) {
   const input = pipe === 'raw'
     ? ['-f', 'rawvideo', '-pix_fmt', 'rgba', '-s', `${W}x${H}`, '-framerate', String(P.fps), '-i', 'pipe:0']
     : ['-f', 'image2pipe', '-framerate', String(P.fps), '-i', 'pipe:0'];
+  // --codec：libx264（CRF 控质）| vt264 / vthevc（VideoToolbox，码率控质，不占 CPU）
+  const codec = get('codec', 'libx264');
+  const vArgs = codec === 'vt264'
+    ? ['-c:v', 'h264_videotoolbox', '-b:v', get('bitrate', '6M'), '-pix_fmt', 'yuv420p']
+    : codec === 'vthevc'
+      ? ['-c:v', 'hevc_videotoolbox', '-b:v', get('bitrate', '4M'), '-pix_fmt', 'yuv420p', '-tag:v', 'hvc1']
+      : ['-c:v', 'libx264', '-preset', x264, '-crf', crf, '-pix_fmt', 'yuv420p',
+         ...(get('tune', null) ? ['-tune', get('tune')] : [])];
   const ff = spawn(FFMPEG, ['-hide_banner', '-loglevel', 'error', '-y', ...input,
-    '-c:v', 'libx264', '-preset', x264, '-crf', crf, '-pix_fmt', 'yuv420p', '-f', 'mpegts', part],
+    ...vArgs, '-f', 'mpegts', part],
   { stdio: ['pipe', 'ignore', 'inherit'] });
   const done = once(ff, 'close');
 
@@ -188,6 +196,8 @@ async function main() {
       '--start', String(seg.s), '--end', String(seg.e), '--part', seg.part,
       '--preset', preset, '--bg', bg, '--pipe', pipe,
       '--crf', String(get('crf', 20)), '--x264', get('x264', 'veryfast'), '--jpeg', String(get('jpeg', 94)),
+      '--codec', get('codec', 'libx264'), '--bitrate', get('bitrate', '6M'),
+      ...(get('tune', null) ? ['--tune', get('tune')] : []),
       ...(get('presenter', null) ? ['--presenter', resolveInput(get('presenter'))] : []),
     ], { stdio: ['ignore', 'inherit', 'inherit', 'ipc'] });
     w.once('message', (m) => (m && m.ok ? res(m) : rej(new Error('child failed'))));

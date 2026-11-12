@@ -40,6 +40,14 @@ ESM 的 `../skia-kit/paper.mjs` 不受位置影响（`motiongit-lab/skia-kit` �
 | 截图 | `shot.mjs` / `shot2.mjs` | Playwright 截 HTML 报告 |
 | 字体 | `font-metrics.mjs` | 三字重实测字宽与墨迹边界 |
 
+## 编码对比（2026-11-13 实测，详见 `docs/编码优化-2026-11-13.md`）
+
+`render-bench.mjs` 现支持 `--codec libx264|vt264|vthevc`、`--bitrate 6M`、`--tune animation`。
+
+- 硬件编码（videotoolbox）**速度无收益**（417 vs 420 fps），体积大 5.7–7.6 倍；
+- worker 8 已饱和，12/16 单帧成本 +20%/+54%；
+- **`-tune animation` 体积 −24% 且速度不变**，画质 SSIM 0.9915，是唯一免费收益。
+
 ## 已修的可移植性问题（2026-11-12）
 
 - `bench-draw.mjs`：3 处硬编码绝对路径 → 相对 import + cwd 相对路径；
