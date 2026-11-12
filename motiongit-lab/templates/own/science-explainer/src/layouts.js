@@ -159,9 +159,10 @@
 
   function figureSlot(ctx, W, H, a, t, dur) {
     const T = MK.T;
+    if (a.figure === 'none') return;
     const side = a.figure === 'left' ? 'left' : 'right';
     const img = a.figureImage && window.__MK_IMAGES && window.__MK_IMAGES[a.figureImage];
-    const cx = (side === 'left' ? 0.245 : 0.755) * W;
+    const cx = (side === 'left' ? 0.255 : 0.765) * W;
     const enter = ease((t - 0.05) / 0.55);
     ctx.save();
     ctx.globalAlpha *= enter;
@@ -185,14 +186,14 @@
       const mouth = mouthAt(t, a.talking);
       const bob = Math.sin(t * 1.15) * 5 + (mouth - 0.1) * 7;
       const tilt = Math.sin(t * 0.62) * 0.006 + (a.gesture === 'nod' ? Math.sin(t * 3.0) * 0.012 * k : 0);
-      const HH = H * (a.figureHeight || 0.99);
+      const HH = H * (a.figureHeight || 0.86);
       const draw = (img, alpha) => {
         if (!img || alpha <= 0.004) return;
         const sc = HH / img.naturalHeight;
         const w = img.naturalWidth * sc;
         ctx.save();
         ctx.globalAlpha *= alpha;
-        ctx.translate(cx, H + bob);
+        ctx.translate(cx, H + 92 + bob);
         ctx.rotate(tilt);
         ctx.drawImage(img, -w / 2, -HH, w, HH);
         ctx.restore();
@@ -316,8 +317,9 @@
     figureSlot(ctx, W, H, a, t, dur);
 
     const left = a.figure === 'left';
-    const bx = left ? W * 0.47 : W * 0.105;
-    const bw = W * 0.40;
+    const bare = a.figure === 'none';
+    const bx = bare ? W * 0.195 : (left ? W * 0.47 : W * 0.105);
+    const bw = bare ? W * 0.70 : W * 0.40;
 
     // 眉毛标
     if (a.eyebrow) {
@@ -356,7 +358,7 @@
     if (a.sticker) {
       const ks = pop((t - 0.5) / 0.42);
       ctx.save();
-      ctx.translate(bx + Math.min(bw, W * 0.30) * 0.5, H * 0.735);
+      ctx.translate(bare ? W * 0.735 : bx + Math.min(bw, W * 0.30) * 0.5, bare ? H * 0.545 : H * 0.735);
       ctx.rotate((a.stickerRot || -8) * Math.PI / 180);
       ctx.scale(ks, ks);
       MK.icon(a.sticker, ctx, 0, 0, a.stickerSize || 190, {});

@@ -78,7 +78,7 @@
       "role": "讲解位 / 观点陈述",
       "maxPerFilm": 6,
       "args": {
-        "figure": "right（默认）| left",
+        "figure": "right（默认）| left | none（不画人，纯字卡）",
         "figureImage": "可选，透明底 PNG 的 data URL；缺省画内置扁平讲解员",
         "hair": "发色",
         "skin": "肤色",
@@ -92,9 +92,11 @@
         "gesture": "idle | explain（单手比划）| open（双手摊开）| point | count | nod（点头）",
         "gestureAt": "手势起始秒（段内），默认 0.9",
         "talking": "[[起,止],...] 说话区间，嘴型只在区间内开合；由 tools/vo.py 自动写入，不必手填",
-        "eyebrowColor": "眉标竖条颜色，用来区分角色（孩子蓝 / 妈妈绿）"
+        "eyebrowColor": "眉标竖条颜色，用来区分角色（孩子蓝 / 妈妈绿）",
+        "figures": "false 时回退内置矢量人物；缺省用 assets/figures 的 3D 姿态图",
+        "figureHeight": "人物高度占画面比，默认 0.86"
       },
-      "capacity": "lines ≤ 3 行，每行 ≤ 9 字（86px）；figure 在右时段落左边界 202px；人物会呼吸、眨眼、说话时开口、按 gesture 抬手"
+      "capacity": "lines ≤ 3 行，每行 ≤ 9 字（86px）；figure:left 时段落左边界 902px；figure:none 时字卡右移到 0.195W、贴纸移到右侧 0.735W"
     },
     {
       "type": "diagram",

@@ -1,0 +1,300 @@
+{
+  "durationSeconds": 73.824,
+  "fps": 30,
+  "fadeOutSeconds": 0.32,
+  "theme": {
+    "pop": "#FD2551",
+    "sun": "#FFD84D",
+    "jade": "#26A38C",
+    "jadeDeep": "#0E7A5F",
+    "blue": "#2B7FD4",
+    "ink": "#2C3A3E"
+  },
+  "brand": {
+    "show": true,
+    "text": "儿科超声科普",
+    "tag": "SCIENCE EXPLAINER"
+  },
+  "subtitle": {
+    "size": 62,
+    "color": "#FFFFFF",
+    "stroke": 6,
+    "strokeColor": "#1B2B30",
+    "y": 1002
+  },
+  "captions": [
+    {
+      "start": 0.45,
+      "end": 4.502,
+      "text": "孩子突然喊肚子疼，家长最怕漏掉急症"
+    },
+    {
+      "start": 4.642,
+      "end": 8.382,
+      "text": "急诊室里，超声就是那双「火眼金睛」"
+    },
+    {
+      "start": 9.242,
+      "end": 12.982,
+      "text": "最常见的困惑是：到底该做什么检查"
+    },
+    {
+      "start": 13.122,
+      "end": 17.294,
+      "text": "X 光有辐射，CT 更重，孩子受得了吗"
+    },
+    {
+      "start": 18.154,
+      "end": 22.182,
+      "text": "对比一下：X 光有电离辐射，不能多做"
+    },
+    {
+      "start": 22.322,
+      "end": 26.11,
+      "text": "超声零辐射、可重复，躺着就能查"
+    },
+    {
+      "start": 26.97,
+      "end": 30.686,
+      "text": "比如肠套叠，一段肠子套进另一段"
+    },
+    {
+      "start": 30.826,
+      "end": 34.878,
+      "text": "探头一放上去，套入的肠管当场显形"
+    },
+    {
+      "start": 35.738,
+      "end": 39.862,
+      "text": "阑尾炎、肠套叠、胆囊炎、肾结石"
+    },
+    {
+      "start": 40.002,
+      "end": 43.694,
+      "text": "这几类儿童急腹症，超声能先筛一遍"
+    },
+    {
+      "start": 44.554,
+      "end": 48.03,
+      "text": "更关键的是快：十几分钟出结果"
+    },
+    {
+      "start": 48.17,
+      "end": 51.406,
+      "text": "不用等预约，也不用楼上楼下跑"
+    },
+    {
+      "start": 52.266,
+      "end": 56.438,
+      "text": "为什么儿科急诊偏爱超声？记住三点"
+    },
+    {
+      "start": 56.578,
+      "end": 60.63,
+      "text": "无辐射可反复、不用镇静、实时动态"
+    },
+    {
+      "start": 61.49,
+      "end": 64.942,
+      "text": "孩子腹痛别硬扛，也别自己乱吃药"
+    },
+    {
+      "start": 65.082,
+      "end": 68.414,
+      "text": "先做超声，再决定下一步怎么走"
+    }
+  ],
+  "segments": [
+    {
+      "type": "cover",
+      "dur": 8.792,
+      "note": "封面：爆炸贴 + 双色标题 + 副标（对应参考片 0–5.5s）",
+      "args": {
+        "prefix": "急诊室里的",
+        "title": "火眼金睛",
+        "sub": "超声快速锁定儿童腹痛",
+        "sticker": "eyes",
+        "hint": "医学科普 · 3 分钟看懂"
+      }
+    },
+    {
+      "type": "talk",
+      "dur": 8.912,
+      "note": "讲解位：左侧留白放要点，右侧人物位（无图时画抽象剪影）",
+      "args": {
+        "paper": "cream",
+        "figure": "right",
+        "eyebrow": "家长最常见的困惑",
+        "lines": [
+          "孩子总喊肚子疼",
+          "到底该查什么？"
+        ],
+        "accentLine": 1,
+        "size": 84,
+        "sticker": "question",
+        "talking": [
+          [
+            0.45,
+            4.19
+          ],
+          [
+            4.33,
+            8.5
+          ]
+        ]
+      }
+    },
+    {
+      "type": "compare",
+      "dur": 8.816,
+      "note": "对比：旧方案 vs 新方案（对应参考片 X 光 vs 超声）",
+      "args": {
+        "paper": "sky",
+        "title": "为什么首选超声",
+        "left": {
+          "icon": "xray",
+          "label": "X 光",
+          "note": "有电离辐射",
+          "bad": true,
+          "badge": "no"
+        },
+        "right": {
+          "icon": "scanner",
+          "label": "超声",
+          "note": "零辐射可重复",
+          "badge": "yes"
+        },
+        "conclusion": "儿童腹痛 · 首选超声"
+      }
+    },
+    {
+      "type": "diagram",
+      "dur": 8.768,
+      "note": "圆框图解：器官 + 探头 + 声波 + 引线标注（对应参考片解剖示意镜头）",
+      "args": {
+        "paper": "mint",
+        "title": "肠套叠",
+        "organ": "gut",
+        "eyes": true,
+        "mark": [
+          0.2,
+          0.8
+        ],
+        "pulse": true,
+        "probe": "left",
+        "callouts": [
+          {
+            "text": "一段肠子套进另一段",
+            "at": 4.31,
+            "x": 0.735,
+            "y": 0.3,
+            "size": 70,
+            "lead": [
+              0.405,
+              0.665
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "matrix",
+      "dur": 8.816,
+      "note": "图标阵列：病种清单（对应参考片「超声都能诊断」四连图标）",
+      "args": {
+        "paper": "mint",
+        "title": "超声都能查什么",
+        "items": [
+          {
+            "icon": "appendix",
+            "label": "阑尾炎",
+            "disc": "#FFE770",
+            "stone": true
+          },
+          {
+            "icon": "intussusception",
+            "label": "肠套叠",
+            "disc": "#FFD1DC",
+            "stone": true
+          },
+          {
+            "icon": "gallbladder",
+            "label": "胆囊炎",
+            "disc": "#C8EBDD",
+            "stone": true
+          },
+          {
+            "icon": "kidney",
+            "label": "肾结石",
+            "disc": "#CFE6FB",
+            "stone": true
+          }
+        ]
+      }
+    },
+    {
+      "type": "focus",
+      "dur": 7.712,
+      "note": "单卡强调：一个卖点 + 划掉旧认知（对应参考片「快速实时」卖点卡）",
+      "args": {
+        "paper": "sky",
+        "title": "快速实时",
+        "icon": "scanner",
+        "strike": "要等半天",
+        "claim": "十几分钟出结果"
+      }
+    },
+    {
+      "type": "tip",
+      "dur": 9.224,
+      "note": "便签：知识小贴士（对应参考片便签卡）",
+      "args": {
+        "paper": "sky",
+        "head": "知识小贴士",
+        "title": "为什么儿科急诊偏爱超声",
+        "items": [
+          "无辐射，可反复检查",
+          "不用镇静，孩子配合度高",
+          "实时动态，当场出结论"
+        ]
+      }
+    },
+    {
+      "type": "talk",
+      "dur": 7.784,
+      "note": "回扣讲解位：一句话总结",
+      "args": {
+        "paper": "cream",
+        "figure": "right",
+        "eyebrow": "记住这一句",
+        "lines": [
+          "孩子腹痛别硬扛",
+          "先做超声再决定"
+        ],
+        "accentLine": 1,
+        "sticker": "shield",
+        "talking": [
+          [
+            0.45,
+            3.9
+          ],
+          [
+            4.04,
+            7.37
+          ]
+        ]
+      }
+    },
+    {
+      "type": "outro",
+      "dur": 5.0,
+      "note": "结尾：斜切条 + 免责声明（对应参考片尾板）",
+      "args": {
+        "line1": "感谢观看",
+        "line2": "下期再会",
+        "note": "科普内容仅供参考 · 具体诊疗请遵医嘱"
+      }
+    }
+  ],
+  "audio": "out/demo.edge.wav"
+}

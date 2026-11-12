@@ -1,10 +1,60 @@
 {
-  "assets": [],
+  "assets": [
+    {
+      "path": "assets/figures/idle.png",
+      "kind": "image",
+      "role": "讲解位姿态：待机",
+      "size": "720x980",
+      "alpha": true
+    },
+    {
+      "path": "assets/figures/explain.png",
+      "kind": "image",
+      "role": "讲解位姿态：单手比划",
+      "size": "720x980",
+      "alpha": true
+    },
+    {
+      "path": "assets/figures/open.png",
+      "kind": "image",
+      "role": "讲解位姿态：双手摊开",
+      "size": "720x980",
+      "alpha": true
+    },
+    {
+      "path": "assets/figures/point.png",
+      "kind": "image",
+      "role": "讲解位姿态：指向",
+      "size": "720x980",
+      "alpha": true
+    }
+  ],
   "fonts": [
-    { "family": "Yuanti SC", "bundled": false, "role": "标题与标签（圆润卡通感）", "note": "macOS 系统字体；缺省回退 Hiragino Sans GB / PingFang SC / Microsoft YaHei" },
-    { "family": "PingFang SC", "bundled": false, "role": "正文与字幕", "note": "macOS 系统字体；跨平台回退 Microsoft YaHei" }
+    {
+      "family": "Yuanti SC",
+      "bundled": false,
+      "role": "标题与标签（圆润卡通感）",
+      "note": "macOS 系统字体；缺省回退 Hiragino Sans GB / PingFang SC / Microsoft YaHei"
+    },
+    {
+      "family": "PingFang SC",
+      "bundled": false,
+      "role": "正文与字幕",
+      "note": "macOS 系统字体；跨平台回退 Microsoft YaHei"
+    }
   ],
   "slots": [
-    { "param": "segments[].args.figureImage", "kind": "image", "required": false, "note": "讲解位人物图（透明底 PNG，data URL 或包内相对路径）。缺省绘制抽象剪影，不伪造真人插画。" }
+    {
+      "param": "segments[].args.figureImage",
+      "kind": "image",
+      "required": false,
+      "note": "讲解位人物图（透明底 PNG，data URL 或包内相对路径）。缺省绘制抽象剪影，不伪造真人插画。"
+    },
+    {
+      "param": "assets/figures/*.png",
+      "kind": "image",
+      "required": false,
+      "note": "flux-3-image 生成、PIL 抠图的 3D 软胶角色，四姿态同角色；替换成自己角色时保持 720×980 底对齐即可"
+    }
   ]
 }

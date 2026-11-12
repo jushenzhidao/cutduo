@@ -19,6 +19,7 @@ import { createPaperRenderer, registerFonts, loadTokens } from './paper.mjs';
 import { createScienceRenderer } from './science.mjs';
 
 const FFMPEG = process.env.FFMPEG || '/opt/homebrew/bin/ffmpeg';
+const FFPROBE = process.env.FFPROBE || '/opt/homebrew/bin/ffprobe';
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 
 /** 相对路径解析：先按 cwd，再按仓库根。这样从工作区根或 motiongit-lab 里跑都对。 */
@@ -179,10 +180,19 @@ if (!isMainThread) {
 
   const dur = (P.frames / P.fps).toFixed(3);
   if (A.audio && fs.existsSync(A.audio)) {
+    // 音轨策略：AAC 直接 copy（无损、快）；其它格式（尤其 vo.py 产出的 wav/PCM）
+    // 必须转 AAC —— mp4 里塞 pcm_s16le 会让浏览器/Safari/部分播放器整轨静音。
+    let acodec = '';
+    try {
+      acodec = execFileSync(FFPROBE, ['-v', 'error', '-select_streams', 'a:0',
+        '-show_entries', 'stream=codec_name', '-of', 'csv=p=0', A.audio], { encoding: 'utf8' }).trim();
+    } catch { /* 探测失败按需要转码处理 */ }
+    const audioArgs = acodec === 'aac' ? ['-c:a', 'copy'] : ['-c:a', 'aac', '-b:a', '160k', '-ar', '44100', '-ac', '1'];
     execFileSync(FFMPEG, ['-hide_banner', '-loglevel', 'error', '-y',
       '-i', silent, '-i', A.audio,
-      '-map', '0:v:0', '-map', '1:a:0', '-c:v', 'copy', '-c:a', 'copy',
+      '-map', '0:v:0', '-map', '1:a:0', '-c:v', 'copy', ...audioArgs,
       '-t', dur, '-movflags', '+faststart', A.out]);
+    if (acodec && acodec !== 'aac') console.log(`  音轨 ${acodec} → aac 160k（mp4 不吃 PCM）`);
   } else {
     execFileSync(FFMPEG, ['-hide_banner', '-loglevel', 'error', '-y', '-i', silent, '-c', 'copy', '-t', dur, A.out]);
   }

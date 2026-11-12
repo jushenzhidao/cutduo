@@ -96,6 +96,27 @@ node motion-render.mjs render --package . --style microwave.vo \
 
 **做不到的**：原片那种逐帧手绘的微表情和身体转动。这是程序化骨骼的边界——想要那种精度只能上插画素材（`figureImage` 槽位已经留好）。
 
+## 3D 软胶人物素材（flux-3-image 生成）
+
+`assets/figures/` 里有 4 个姿态的同一角色，透明底 PNG（720×980）：
+
+| 文件 | 姿态 |
+|---|---|
+| `idle.png` | 双手垂在身侧 |
+| `explain.png` | 右手抬起比划 |
+| `open.png` | 双手摊开 |
+| `point.png` | 食指指向左侧 |
+
+接入方式：`index.html` 里以 `<img data-fig="idle" src="../assets/figures/idle.png">` 挂载，
+渲染器内联成 dataURL；`talk` 段按 `gesture` 在姿态间做 0.34s 混合，叠加呼吸起伏与轻微摆动。
+
+- `figure: 'none'`：该段不画人（提问段只出字卡，回答段才让医生出场）
+- `figures: false`：强制回退到内置矢量人物
+- `figureHeight`：人物高度占画面比，默认 0.86
+
+生成与抠图链路：flux-3-image（`aspect_ratio 3:4` / `resolution 1k`，用首张做 reference 保证同角色）
+→ PIL 四角 floodfill 去白底（thresh 46）→ 近白残留清零 → alpha 收缩 1px → 羽化 0.7 → 统一底对齐。
+
 ## 换内容
 
 改 `presets/demo.json`（或复制一份用 `--style` 指定）：

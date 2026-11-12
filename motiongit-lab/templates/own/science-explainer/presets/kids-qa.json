@@ -174,9 +174,7 @@
       "note": "孩子发问：一个人小声嘀咕，语气要轻（不缩小：缩了会让人物下沉，靠衣服色区分角色）",
       "args": {
         "paper": "cream",
-        "figure": "right",
-        "coat": "#5AA9E6",
-        "hair": "#3A2A22",
+        "figure": "none",
         "eyebrow": "小满 · 七岁",
         "eyebrowColor": "#2B7FD4",
         "lines": [
@@ -184,9 +182,10 @@
           "是不是饿坏了？"
         ],
         "accentLine": 1,
-        "size": 84,
+        "size": 96,
         "gesture": "idle",
-        "sticker": "question"
+        "sticker": "question",
+        "note": "孩子提问：不画人，只出字卡 + 问号，回答段才让 3D 医生出场"
       }
     },
     {
@@ -196,7 +195,6 @@
       "args": {
         "paper": "cream",
         "figure": "right",
-        "coat": "#C9703A",
         "eyebrow": "妈妈 · 儿科医生",
         "eyebrowColor": "#26A38C",
         "lines": [
@@ -206,7 +204,8 @@
         "accentLine": 0,
         "size": 76,
         "gesture": "explain",
-        "sticker": "drop"
+        "sticker": "drop",
+        "figures": true
       }
     },
     {
@@ -309,7 +308,6 @@
       "args": {
         "paper": "cream",
         "figure": "right",
-        "coat": "#C9703A",
         "eyebrow": "记住这一句",
         "eyebrowColor": "#26A38C",
         "lines": [
@@ -319,7 +317,8 @@
         "accentLine": 1,
         "size": 78,
         "gesture": "nod",
-        "sticker": "shield"
+        "sticker": "shield",
+        "figures": true
       }
     },
     {

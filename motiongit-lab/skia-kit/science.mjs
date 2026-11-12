@@ -14,7 +14,12 @@ import path from 'node:path';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
-const SRC_DIR = path.resolve(HERE, '..', 'templates', 'science-explainer', 'src');
+// 模板目录经过一次重组（templates/ → templates/own/），按存在性探测，两个位置都认。
+const SRC_CANDIDATES = [
+  path.resolve(HERE, '..', 'templates', 'own', 'science-explainer', 'src'),
+  path.resolve(HERE, '..', 'templates', 'science-explainer', 'src'),
+];
+const SRC_DIR = SRC_CANDIDATES.find((d) => fs.existsSync(path.join(d, 'kit.js'))) || SRC_CANDIDATES[0];
 
 /** 字重 → 已注册字体族。key 必须是数字或字符串化的百位。 */
 const FONT_MAP = {
