@@ -2,8 +2,8 @@
 /**
  * mg-kit · 一条命令出片（纯 Skia，无浏览器）
  *
- *   node mg-kit/render.mjs --params mg-kit/params.json --out mg-kit/out/mg-demo.mp4
- *   node mg-kit/render.mjs --params mg-kit/params.json --probe mg-kit/out/frames/t12.png --at 12.4
+ *   node kits/mg/render.mjs --params kits/mg/params.json --out kits/mg/out/mg-demo.mp4
+ *   node kits/mg/render.mjs --params kits/mg/params.json --probe out/mg-t12.png --at 12.4
  *
  * 沿用 skia-kit 的并行分片：N 个 worker 各渲染一段帧区间 → image2pipe JPEG
  * → libx264 → mpegts → concat copy → mp4。scene 是纯函数，分片边界无接缝。
@@ -37,9 +37,9 @@ function resolveInput(p, mustExist = true) {
 function parseArgs(argv) {
   const get = (k, d) => { const i = argv.indexOf('--' + k); return i >= 0 && argv[i + 1] ? argv[i + 1] : d; };
   return {
-    params: resolveInput(get('params', 'mg-kit/params.json')),
+    params: resolveInput(get('params', 'kits/mg/params.json')),
     audio: resolveInput(get('audio', null), false),
-    out: path.resolve(get('out', 'mg-kit/out/mg-demo.mp4')),
+    out: path.resolve(get('out', 'kits/mg/out/mg-demo.mp4')),
     workers: Math.max(1, Number(get('workers', Math.min(8, os.cpus().length)))),
     fps: get('fps', null),
     crf: String(get('crf', 20)),
