@@ -29,6 +29,9 @@ node api/cli.mjs render   --kit paper --preset v8t --json
 echo '{"kit":"paper","preset":"v8t"}' | node api/cli.mjs render --stdin --json
 ```
 
+长片或调用方可能断线时用异步：`render --async` 拿 jobId，`status --id <id>` 轮询，
+`jobs` 列出最近任务，`cancel --id <id>` 终止。job 状态落在 `out/jobs/`，跨进程可查。
+
 回执里的帧数、时长、分辨率一律由 ffprobe 读产物得出，**不是渲染器的自述计划值**；
 错误带 `code` / `hint` / `fix`，调用方能据此自行纠正。契约细节见 [`docs/API.md`](docs/API.md)。
 

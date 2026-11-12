@@ -132,6 +132,32 @@ function human(kind, r) {
   if (kind === 'probe') {
     return `✓ ${r.output.path}  ${(r.output.bytes / 1024).toFixed(0)}KB  @${r.at}s  ${r.timings.wallSeconds}s`;
   }
+  if (kind === 'status') {
+    const head = `${pad(r.status, 10)}${r.jobId}  ${r.kit || '-'}  ${r.elapsedSeconds}s`;
+    if (r.status === 'done' && r.receipt) {
+      const o = r.receipt.output;
+      return [
+        head,
+        `  → ${o.path}  ${o.frames} 帧 / ${o.durationSeconds}s / ${o.fps}fps / ${(o.bytes / 1048576).toFixed(2)}MB`,
+        `  ${r.receipt.timings.wallSeconds}s 墙钟 · ${r.receipt.timings.framesPerSecond} fps`,
+      ].join('\n');
+    }
+    if (r.status === 'failed' && r.error) {
+      return [head, `  ✗ ${r.error.code}: ${r.error.message}`,
+        ...(r.error.fix ? [`  改法：${r.error.fix}`] : [])].join('\n');
+    }
+    return head;
+  }
+  if (kind === 'jobs') {
+    if (!r.jobs.length) return '（还没有任务）';
+    const lines = [`共 ${r.jobs.length} 个（新→旧）`];
+    for (const j of r.jobs) {
+      lines.push(
+        `  ${pad(j.status, 10)}${pad(j.jobId, 28)}${pad(j.kit || '-', 11)}${pad(j.elapsedSeconds + 's', 9)}${j.receipt?.output?.path || ''}`,
+      );
+    }
+    return lines.join('\n');
+  }
   if (kind === 'gate') {
     const rows = (r.films || []).map((f) => `${f.verdict || (f.pass ? 'PASS' : 'FAIL')}  ${f.file || f.path || ''}`);
     return [`${r.pass ? '✓ 门禁通过' : '✗ 门禁未通过'}`, ...rows].join('\n');
@@ -164,8 +190,34 @@ async function main() {
       return r.ok ? 0 : 1;
     }
     case 'render': {
-      const r = await api.render(stdinReq || reqFromFlags());
+      const req = stdinReq || reqFromFlags();
+      if (flags.async) {
+        const r = api.submitJob(req);
+        if (asJson) pr(r);
+        else process.stdout.write(`已提交 ${r.jobId}（pid ${r.pid}）\n  查询：node api/cli.mjs status --id ${r.jobId}\n`);
+        return 0;
+      }
+      const r = await api.render(req);
       asJson ? pr(r) : process.stdout.write(human('render', r) + '\n');
+      return 0;
+    }
+    case 'status': {
+      const id = flags.id || flags.job;
+      if (!id) throw new Error('status 需要 --id <jobId>');
+      const r = api.jobStatus(String(id));
+      asJson ? pr(r) : process.stdout.write(human('status', r) + '\n');
+      return r.status === 'failed' ? 1 : 0;
+    }
+    case 'jobs': {
+      const r = api.listJobs(Number(flags.limit || 20));
+      asJson ? pr(r) : process.stdout.write(human('jobs', r) + '\n');
+      return 0;
+    }
+    case 'cancel': {
+      const id = flags.id || flags.job;
+      if (!id) throw new Error('cancel 需要 --id <jobId>');
+      const r = await api.cancelJob(String(id));
+      asJson ? pr(r) : process.stdout.write(`已取消 ${r.jobId}（${r.status}）\n`);
       return 0;
     }
     case 'probe': {

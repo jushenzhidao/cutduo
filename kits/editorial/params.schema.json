@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "editorial inputs",
+  "description": "杂志版式的分镜参数。scenes 是唯一必需字段；brand/accent 缺省用内置值。刻意不设 additionalProperties:false —— 历史 inputs 有三十余种写法，收紧会误杀。",
+  "type": "object",
+  "required": ["scenes"],
+  "properties": {
+    "brand": { "type": "string", "maxLength": 40, "description": "品牌角标，留空不画" },
+    "accent": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$", "description": "主强调色" },
+    "accent2": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$", "description": "次级强调色" },
+    "durationSeconds": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 1800,
+      "description": "成片总时长；缺省取最后一个 scene 的 t1"
+    },
+    "fps": { "type": "number", "minimum": 12, "maximum": 60, "description": "帧率，常用 24 / 30" },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "description": "分镜序列，时间单位秒",
+      "items": {
+        "type": "object",
+        "required": ["type", "t0", "t1"],
+        "properties": {
+          "type": { "type": "string", "minLength": 1, "description": "版式名，如 hero / point / quote" },
+          "t0": { "type": "number", "minimum": 0, "description": "入点（秒）" },
+          "t1": { "type": "number", "minimum": 0, "description": "出点（秒），必须大于 t0" },
+          "args": { "type": "object", "description": "该版式的参数，结构由 type 决定，此处不约束" }
+        }
+      }
+    },
+    "captions": {
+      "type": "array",
+      "description": "烧录字幕；缺省不画",
+      "items": {
+        "type": "object",
+        "required": ["start", "end", "text"],
+        "properties": {
+          "start": { "type": "number", "minimum": 0 },
+          "end": { "type": "number", "minimum": 0 },
+          "text": { "type": "string" }
+        }
+      }
+    }
+  }
+}

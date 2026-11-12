@@ -181,6 +181,19 @@
   `render.mjs`（主 CLI）/ `src/`（引擎）/ `kits/{paper,science,desk,editorial,mg}` / `content/` /
   `assets/{fonts,audio,captions,media}` / `templates/` / `tools/` / `bench/` / `docs/`；
   `refs/{vendor,replicas,reference}` 与 `out/` 整目录不入库。
+
+## API 层（2026-11-13 04:40 起，agent api first）
+
+- **`api/` 是唯一业务实现，CLI 只是宿主。** 六个动词：`capabilities / describe / validate / render / probe / gate`。
+- 契约细节见 `docs/API.md`；能力清单 `api/capabilities.json` 由代码生成，**不要手改**。
+- **回执规格只信 ffprobe 探测**，不解析 kit 的 stdout（自述是计划值，且五支格式不同）。
+- **错误必带 `code` / `hint` / `fix`**；`validate` 永不抛，报错精确到 JSON Pointer。
+- **`overrides` 白名单只放渲染超参**，内容必须走 `params`；白名单在 `api/contract.mjs` 硬编码。
+- `editorial` / `mg` 无 `params.schema.json` → `schemaStatus: 'missing'`，回执 `unvalidated: true`。
+  补 schema 后自动纳入校验，不需要改 API。
+- 新增一支版式：写 `api/kits/<name>.mjs`（导出 `capability` + `adapter`），
+  在 `api/registry.mjs` 的 `MODULES` 加一行。CLI / 清单 / 冒烟自动跟上。
+- **`tools/smoke.sh` 现在同时验 CLI 与 API**：五支 CLI 探针 + 五支 `api.probe` + capabilities 枚举。
 - **仓库根只能从 `src/root.mjs` 取**（向上找 `.git`）。禁止再写 `ROOT = dirname(..)`——
   各 kit 深度不同（render.mjs 在根、desk/mg 在 kits/<name>/），一搬家必错。
 - **字体注册只有 `src/fonts.mjs`**；`kits/paper/paper.mjs` 仅 re-export。

@@ -277,3 +277,12 @@ export function result(fn) {
     return { ok: false, error: toApiError(e).toJSON() };
   }
 }
+
+// 异步任务：长片或需要断线重连时用这四个，语义与上面的 render 一致，
+// 只是把「等结果」换成「拿 jobId 再轮询」。
+export {
+  submit as submitJob,
+  status as jobStatus,
+  list as listJobs,
+  cancel as cancelJob,
+} from './jobs.mjs';

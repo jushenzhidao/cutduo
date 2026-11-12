@@ -56,6 +56,17 @@ for k in paper science desk editorial mg; do
   fi
 done
 
+# 异步任务：submit → 立即 cancel，只验证状态机能走完（不等整片，否则冒烟要几分钟）
+JOB=$(echo "{\"kit\":\"mg\",\"preset\":\"default\",\"out\":\"$OUT/job-smoke.mp4\"}" \
+  | node api/cli.mjs render --stdin --async --json 2>/dev/null \
+  | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).jobId||"")}catch{console.log("")}})')
+if [ -n "$JOB" ] && node api/cli.mjs cancel --id "$JOB" >/dev/null 2>&1; then
+  printf 'PASS  %-10s submit → cancel\n' job
+else
+  printf 'FAIL  %-10s submit → cancel\n' job
+  fail=1
+fi
+
 echo
 if [ "$fail" -ne 0 ]; then
   echo "有版式未通过 —— 不要提交"

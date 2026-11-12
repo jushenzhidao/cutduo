@@ -193,9 +193,9 @@
         "fpsDefault": 24,
         "fpsNote": "实际帧率由 params.fps 决定，inputs-v6 是 24fps"
       },
-      "paramsSchema": null,
-      "schemaStatus": "missing",
-      "schemaNote": "本支尚未提供 params.schema.json，validate 会对参数放行并在回执标 unvalidated:true。补 schema 后自动生效。",
+      "paramsSchema": "kits/editorial/params.schema.json",
+      "schemaStatus": "complete",
+      "schemaNote": "schema 只约束 scenes 的骨架（type/t0/t1）与少量全局字段；args 内部结构由各版式自己决定，不在 schema 里锁死。",
       "presets": [
         {
           "id": "inputs-v6",
@@ -248,9 +248,9 @@
         ],
         "fpsDefault": 60
       },
-      "paramsSchema": null,
-      "schemaStatus": "missing",
-      "schemaNote": "本支只用一份固定 params.json，尚未抽出 schema。结构变化时 API 无从校验，需靠 smoke.sh 兜底。",
+      "paramsSchema": "kits/mg/params.schema.json",
+      "schemaStatus": "complete",
+      "schemaNote": "schema 只约束 scenes 骨架与画幅字段；镜头参数在 args 里，结构随 type 变化，不在 schema 里锁死。",
       "presets": [
         {
           "id": "default",

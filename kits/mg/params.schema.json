@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "mg-kit params",
+  "description": "MG 动效验证的参数。五类镜头：文字 / 档案时间轴 / 黑洞 2.5D 粒子 / 等轴积木 / 信息卡。scenes 必填；width/height 缺省 1920x1080。刻意不设 additionalProperties:false，避免锁死后续新增的镜头字段。",
+  "type": "object",
+  "required": ["scenes"],
+  "properties": {
+    "brand": { "type": "string", "maxLength": 60, "description": "顶部角标" },
+    "width": { "type": "integer", "minimum": 320, "maximum": 3840, "default": 1920 },
+    "height": { "type": "integer", "minimum": 240, "maximum": 2160, "default": 1080 },
+    "fps": { "type": "number", "minimum": 12, "maximum": 60, "default": 60 },
+    "durationSeconds": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 600,
+      "description": "成片总时长；缺省取最后一个 scene 的 t1"
+    },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "description": "镜头序列，时间单位秒",
+      "items": {
+        "type": "object",
+        "required": ["type", "t0", "t1"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "minLength": 1,
+            "description": "镜头类型：intro / timeline / blackhole / blocks / card 之类"
+          },
+          "t0": { "type": "number", "minimum": 0 },
+          "t1": { "type": "number", "minimum": 0 },
+          "args": { "type": "object", "description": "镜头参数，结构由 type 决定，此处不约束" }
+        }
+      }
+    }
+  }
+}

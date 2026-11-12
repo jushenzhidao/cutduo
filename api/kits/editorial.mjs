@@ -10,10 +10,9 @@ export const capability = {
     note: '需要 scenes 与 durationSeconds；brand / accent 可选。参数文件在 content/inputs-*.json。',
   },
   output: { width: 1920, height: 1080, fpsChoices: [24, 30, 60], fpsDefault: 24, fpsNote: '实际帧率由 params.fps 决定，inputs-v6 是 24fps' },
-  paramsSchema: null,
-  // 不假装有校验：这支没有 params.schema.json，API 会放行但回执里标明 unvalidated
-  schemaStatus: 'missing',
-  schemaNote: '本支尚未提供 params.schema.json，validate 会对参数放行并在回执标 unvalidated:true。补 schema 后自动生效。',
+  paramsSchema: 'kits/editorial/params.schema.json',
+  schemaStatus: 'complete',
+  schemaNote: 'schema 只约束 scenes 的骨架（type/t0/t1）与少量全局字段；args 内部结构由各版式自己决定，不在 schema 里锁死。',
   presets: [
     { id: 'inputs-v6', path: 'content/inputs-v6.json', note: '6 版分镜' },
     { id: 'inputs-v8t', path: 'content/inputs-v8t.json', note: '8 版分镜' },

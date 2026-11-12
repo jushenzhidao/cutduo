@@ -26,11 +26,40 @@ api first 的做法是反过来：**先把契约定死，实现按契约补齐**
 | `capabilities()` | 有哪些能力、各自要什么、产出什么 | 否 | 抛 |
 | `describe(kit)` | 单支详情，含完整 params schema | 否 | 抛 |
 | `validate(req)` | 参数预检 | 否 | **不抛**，返回结构化问题列表 |
-| `render(req)` | 出片 | 是 | 抛 |
+| `render(req)` | 出片（同步等待） | 是 | 抛 |
 | `probe(req)` | 出一帧 PNG 看版式 | 否 | 抛 |
 | `gate(file)` | 对既有成片跑交付门禁 | 否 | 抛（判 FAIL 时 `pass:false`） |
+| `submitJob(req)` | 异步出片，立即返回 jobId | 是（后台） | 抛 |
+| `jobStatus(id)` | 查询进度与结果 | 否 | 抛 |
+| `listJobs(limit)` | 最近任务，新→旧 | 否 | — |
+| `cancelJob(id)` | 终止任务 | 否 | 抛 |
 
 `validate` 之所以不抛，是因为它的语义就是「告诉我哪里有问题」；抛异常反而逼调用方用 try/catch 取信息。
+
+## 同步还是异步
+
+```bash
+# 同步：短片，调用方愿意等（40s 片约 6s）
+echo '{"kit":"paper","preset":"v8t"}' | node api/cli.mjs render --stdin --json
+
+# 异步：长片，或调用方可能断线
+ID=$(echo '{"kit":"desk","preset":"demo"}' | node api/cli.mjs render --stdin --async --json | jq -r .jobId)
+node api/cli.mjs status --id "$ID" --json
+node api/cli.mjs jobs
+node api/cli.mjs cancel --id "$ID"
+```
+
+异步任务的状态机：`queued → running → done | failed | cancelled`。
+
+三条实现约束，改这个文件前必须知道：
+
+1. **一个 job 一个独立进程**（`detached` + `unref`）。API 进程先退出时任务仍要继续跑，线程做不到这一点。
+2. **状态只落在 `out/jobs/<id>.json`**，不留在内存。任何进程（包括重启后的 CLI）都能查询同一份状态。
+3. **判定终态以产物为准，不以 pid 为准**。系统会复用 pid，`kill(pid, 0)` 成功不代表还是那个 job。
+   早期版本只看 pid，结果已完成的 job 被永久卡在 `running`——**比报错更糟，调用方会一直等**。
+   现在先读 `stdout`，有完整 JSON 就直接判终态。
+4. **`elapsedSeconds` 取 stdout 的 mtime**，不是「判定它的那一刻」。否则同一个 job 在不同时间
+   查询会得到不同的耗时，回执就不成立了。
 
 ## 请求
 
@@ -149,11 +178,15 @@ api/index.mjs        ← 唯一的业务实现
 
 ## 已知限制
 
-1. **同步执行**。`render()` 会阻塞到出片完成。40s 的片约 5–16 秒，可接受；
-   若要做分钟级长片，应加 job 队列与 `jobStatus(jobId)`，当前未做。
-2. **两支无 schema**。`editorial` 与 `mg` 的参数只能靠命名约定，回执标 `unvalidated:true`。
-   补 `params.schema.json` 后自动纳入校验，不需要改 API。
-3. **五支走子进程**。为的是隔离与不动实现；进程启动约 50–100ms，占比可忽略。
+1. **job 没有并发上限**。连续 submit 十个任务就是十个进程同时跑，会把 CPU 打满并互相拖慢。
+   生产用之前需要加信号量或队列。当前按「调用方自己控制」处理。
+2. **schema 只约束骨架**。五支现在都有 `params.schema.json`，但都刻意不设
+   `additionalProperties: false`，且 `scenes[].args` 的内部结构不校验——因为各版式的 args
+   形态完全不同，锁死会把历史参数全部误杀。所以「schema 通过」只意味着骨架对了，
+   字段拼错仍可能静默忽略。
+3. **五支走子进程**。为的是隔离与不动实现；实测进程启动约 70ms（`render` 6.37s vs 端到端 6.5s）。
    若将来要省，把 `_runner.mjs` 的 spawn 换成 import 即可，契约不变。
 4. **overrides 白名单是硬编码**。新增可覆盖的超参要同时改 `contract.mjs` 的 `ALLOWED_OVERRIDES`，
    否则会被拒——这是刻意的，防止内容与超参混在同一个字段里。
+5. **job 文件不会自动清理**。`out/jobs/` 会一直累积；`out/` 整体可删，删了之后旧 jobId 查询会报
+   `JOB_NOT_FOUND`，这是预期行为。
