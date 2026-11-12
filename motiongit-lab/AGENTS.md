@@ -18,7 +18,7 @@ MotionGit `.motion` 模板的运行时实验与出片产线。两条主线：
 | 内容 | `content/` | 15 个分镜 JSON（镜头/文案/素材引用） | 可自由改，改完重跑 TTS |
 | 素材 | `edits/assets/` | 实拍照片、生成人像、Pexels 图/视频帧 | 唯一副本，**不删** |
 | 产物 | `out/`、`replicas/out/` | 成片、总览、报告 | 可重跑，已忽略入库 |
-| 第三方模板 | `templates/` | 下载包 + 自建模板 | 下载包含个人 Key，**不外传** |
+| 第三方模板 | `templates/` | 下载包 + 自建模板 | 下载包含个人 Key，**不外传**；清单见 `templates/README.md` |
 
 `desktop-kit/presets` 是指向 `../content` 的过渡软链，旧命令仍可用；新命令请写 `content/`。
 
@@ -123,5 +123,6 @@ MotionGit `.motion` 模板的运行时实验与出片产线。两条主线：
   `profile-*` / `shot*` 因文档引用多、依赖 cwd，暂留根目录。
 - **暂不移动**：`bench-draw.mjs`（绝对路径）、`bench-limit.sh` / `bench-three.sh`（`cd $(dirname)`）、
   `profile-*` / `shot*`（依赖 cwd）、`canvas-editorial.mjs` / `render-*.{mjs,py}`（是引擎不是脚本）。
-- **`templates/` 的 own/vendor 分离**：暂以索引标注代替物理拆分；真要拆，先改 `.gitignore` 的 5 条整包规则，
-  再移动，避免个人 Key 因规则失效被误提交。
+- **`templates/` 的 own/vendor 分离**：已建立 `templates/README.md`（来源/许可/入库/分发清单），
+  并在 `.gitignore` 预留 `templates/vendor/` 规则；**物理移动仍未做**。顺序必须是「先改规则 → 再移动」，
+  否则个人 Key 会因规则失效被误提交；移动后 `git status` 只要出现 `personal/`、`core.enc` 就立即回滚。

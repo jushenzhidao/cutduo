@@ -15,11 +15,15 @@ motiongit-lab/templates/**/package/content/release.bin
 motiongit-lab/templates/**/template.motion
 motiongit-lab/templates/**/core.enc
 # ② 整包剔除：全部来自个人下载，PLAYBOOK 第 133 行明确「不得再分发模板本身」
+#    将来拆 templates/vendor/ 时，把下面 5 条替换为 `motiongit-lab/templates/vendor/`；
+#    顺序必须先改规则再移动，否则凭据文件会短暂失去排除。清单见 templates/README.md。
 motiongit-lab/templates/paper-perspective/
 motiongit-lab/templates/paper-perspective-11/
 motiongit-lab/templates/camera-mode/
 motiongit-lab/templates/mac-desktop/
 motiongit-lab/templates/promo-ink/
+# ②b 预留：拆分后 vendor/ 整包排除（当前尚无该目录，规则先就位）
+motiongit-lab/templates/vendor/
 # ③ 复刻工程的下载缓存：8 个 @motiongit 个人封套，全部含账户 Key，整目录剔除
 motiongit-lab/replicas/downloads/
 # ④ 通用兜底：任何位置新增的个人下载包都不入库（自建模板包用 .motion 时也需显式 -f）
