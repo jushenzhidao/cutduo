@@ -13,6 +13,28 @@ node render.mjs --kit science --params kits/science/template/presets/demo.json -
 node kits/desk/render.mjs --params content/demo.json --audio assets/audio/audio-desktop.m4a --out out/desk.mp4 --fps 60
 ```
 
+## 两种用法
+
+人用 CLI，agent 用 API。**API 是唯一实现，CLI 是它的一个宿主。**
+
+```bash
+node api/cli.mjs capabilities            # 五支版式：id / 画幅 / 帧率 / 内容模型 / schema 状态
+node api/cli.mjs describe --kit science  # 单支详情，含完整 params schema
+node api/cli.mjs validate --kit paper --preset v8t     # 只校验，不出片
+node api/cli.mjs render   --kit paper --preset v8t --json
+```
+
+```bash
+# agent 首选：JSON in / JSON out
+echo '{"kit":"paper","preset":"v8t"}' | node api/cli.mjs render --stdin --json
+```
+
+回执里的帧数、时长、分辨率一律由 ffprobe 读产物得出，**不是渲染器的自述计划值**；
+错误带 `code` / `hint` / `fix`，调用方能据此自行纠正。契约细节见 [`docs/API.md`](docs/API.md)。
+
+新增一支版式只需在 `api/kits/` 声明 `capability` 与 `adapter`，CLI、能力清单、
+冒烟全部自动跟上——不需要改 API 层。
+
 ## 五套版式
 
 | 代号 | 中文 | 画幅 | 入口 | 说明 |
@@ -56,6 +78,7 @@ uv run python tools/check-template.py --src templates/own/my-template        # �
 
 | 目录 | 装什么 | 改它会影响 |
 |---|---|---|
+| `api/` | **契约层**：能力清单、参数校验、统一回执、五支 adapter | agent 的全部调用面 |
 | `render.mjs` | 主 CLI，按 `--kit` 分发 | 全部版式 |
 | `src/` | 引擎：仓库根探测、字体注册、门禁、参数校验、计时账本 | 全部版式 |
 | `kits/` | 五套版式，每支自治（渲染器 + 参数 schema + presets） | 只影响自己 |
@@ -96,6 +119,10 @@ node src/gate.mjs out/*.mp4 --html report.html
 
 ```bash
 bash tools/smoke.sh      # 五套版式各出一帧，> 5KB 视为有效
+
+# 单支模板四关：结构 → 单帧渲染 → 打包 → 包校验（骨架会自动实例化）
+python3 tools/template-smoke.py --template kits/science/template
+python3 tools/template-smoke.py --template templates/own/<名字>
 ```
 
 语法检查抓不住路径错误——`import` 合法、运行时才 404。只有真渲染一帧才知道。

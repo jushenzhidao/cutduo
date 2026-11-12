@@ -174,15 +174,17 @@
 `@napi-rs/canvas`，全仓只有 `motion-render.mjs` 用 playwright（跑第三方 `.motion` 模板）。
 我们的出片栈**只有一条**：Node + `@napi-rs/canvas`（Skia）+ 可选 `headless-gl` + ffmpeg。
 
-## 仓库位置与模板目录（2026-11-13 04:0x）
+## 仓库位置与结构（2026-11-13 04:23 重构后，权威版在根 `README.md`）
 
-- **仓库根 = `~/Desktop/wb/cutduo`**（2026-11-13 04:0x 去掉日期层：原
-  `Desktop/wb/cutduo/2026-11-08-21-08-09/` 的内容已全部上提一层）。
-  旧路径 `~/WorkBuddy/2026-11-08-21-08-09` 现在是指向该目录的软链，
-  仅为让当前会话继续可用，重新打开项目后即可删。
-- 仓库根 `templates/` = **四类目录**（接入深度，不是互斥分类）：
-  `01-original` / `02-rehost` / `03-semi-distill` / `04-full-distill`。
-  **只放 README，不放代码与参数副本**；物理模板仍在 `motiongit-lab/templates/{own,vendor}/`
-  （own/vendor 是「能不能分发」的硬边界，四级只是过程属性）。
-- `skia-kit/render.mjs` 探针的正确写法是 `--probe <file.png> --at <秒>`；
-  `--probe --at 5` 会把 `--at` 当文件名，在 cwd 生成一个叫 `--at` 的 PNG。
+- **仓库根 = `~/Desktop/wb/cutduo`**。旧路径 `~/WorkBuddy/2026-11-08-21-08-09` 是指向它的软链。
+- **`motiongit-lab/` 这一层已不存在**，拆为四类边界（依赖方向单向 `kits/* → src/*`）：
+  `render.mjs`（主 CLI）/ `src/`（引擎）/ `kits/{paper,science,desk,editorial,mg}` / `content/` /
+  `assets/{fonts,audio,captions,media}` / `templates/` / `tools/` / `bench/` / `docs/`；
+  `refs/{vendor,replicas,reference}` 与 `out/` 整目录不入库。
+- **仓库根只能从 `src/root.mjs` 取**（向上找 `.git`）。禁止再写 `ROOT = dirname(..)`——
+  各 kit 深度不同（render.mjs 在根、desk/mg 在 kits/<name>/），一搬家必错。
+- **字体注册只有 `src/fonts.mjs`**；`kits/paper/paper.mjs` 仅 re-export。
+- **`.gitignore` 按身份特征匹配，禁止改回路径枚举**（`**/core.enc`、`**/template.motion`、`/refs/`、`**/*_raw.png`）。
+  旧规则全是 `motiongit-lab/xxx`，搬家后 7 条静默失效，其中一条保护 vendor 的账户 Key。
+- **改路径必须跑 `bash tools/smoke.sh`**（五支各出一帧，>5KB）。`node --check` 抓不住 404。
+- 探针写法：`--probe <file.png> --at <秒>`；`--probe --at 5` 会把 `--at` 当文件名。

@@ -4,6 +4,9 @@
   "private": true,
   "description": "Skia 直出的视频管线：引擎 / 版式 / 内容 / 素材四分离，五套版式一条命令出片，不经过浏览器",
   "scripts": {
+    "api": "node api/cli.mjs",
+    "api:cap": "node api/cli.mjs capabilities",
+    "api:json": "node api/cli.mjs render --stdin --json",
     "paper": "node render.mjs --kit paper --params kits/paper/presets/v8t.json",
     "science": "node render.mjs --kit science --params kits/science/template/presets/demo.json",
     "desk": "node kits/desk/render.mjs --params content/demo.json",

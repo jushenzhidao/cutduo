@@ -849,6 +849,10 @@ if (!isMainThread) {
 
   if (AUDIO && fs.existsSync(path.resolve(AUDIO))) {
     mixAudio(videoOnly, AUDIO, OUT);
+  } else if (videoOnly !== OUT) {
+    // 无音轨时也要落到 --out 指定的名字。否则调用方按约定去读 OUT 会扑空，
+    // 而下面仍打印 ✓ OUT —— 假成功比失败更难查（API 层接进来时就是这么暴露的）。
+    fs.renameSync(videoOnly, OUT);
   }
   fs.rmSync(TMP, { recursive: true, force: true });
   console.log(`\n✓ ${OUT}  ${FRAMES} 帧 / ${enc}s / ${INCREMENTAL ? '增量模式' : WORKERS + ' worker'}（绘制+JPEG+H.264）`);

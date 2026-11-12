@@ -1,0 +1,269 @@
+{
+  "apiVersion": "1.0",
+  "kits": [
+    {
+      "id": "paper",
+      "name": "纸感口播",
+      "description": "从 paper-perspective 成片逐像素反推的 8 个版式：hero / point / number / compare / steps / quote / checklist / outro。适合知识口播、单主持、强排版。",
+      "contentModel": {
+        "name": "scenes[]",
+        "required": true,
+        "note": "每个 scene 需要 type / t0 / t1 / args；时间单位秒。captions 可选。"
+      },
+      "output": {
+        "width": 1920,
+        "height": 1080,
+        "fpsChoices": [
+          24,
+          30,
+          60
+        ],
+        "fpsDefault": 60
+      },
+      "paramsSchema": "kits/paper/params.schema.json",
+      "schemaStatus": "complete",
+      "presets": [
+        {
+          "id": "v8t",
+          "path": "kits/paper/presets/v8t.json",
+          "note": "8 版式示例，42.9s"
+        }
+      ],
+      "defaultPreset": "kits/paper/presets/v8t.json",
+      "audio": {
+        "required": false,
+        "note": "有口播时必须给；无音轨也能出片但 gate 会告警"
+      },
+      "extras": {
+        "theme": [
+          "clean"
+        ],
+        "transition": [
+          "cut",
+          "fade"
+        ]
+      }
+    },
+    {
+      "id": "science",
+      "name": "科普讲解",
+      "description": "自建 9 版式：讲解位 37% / 图解释意 33% / 标签强调 10% / 阵列 6% / 对比 4% / 首尾 10%。切点中位 2.75s，跟句子走不跟动作走。",
+      "contentModel": {
+        "name": "segments[]",
+        "required": true,
+        "note": "每段 { type, dur, ...平铺参数 } 或 { type, dur, args }。durationSeconds 必须等于各段 dur 之和。"
+      },
+      "output": {
+        "width": 1920,
+        "height": 1080,
+        "fpsChoices": [
+          24,
+          30,
+          60
+        ],
+        "fpsDefault": 30
+      },
+      "paramsSchema": "kits/science/template/params.schema.json",
+      "schemaStatus": "complete",
+      "presets": [
+        {
+          "id": "demo",
+          "path": "kits/science/template/presets/demo.json",
+          "note": "基础演示"
+        },
+        {
+          "id": "demo.vo",
+          "path": "kits/science/template/presets/demo.vo.json",
+          "note": "带配音时长对齐"
+        },
+        {
+          "id": "microwave",
+          "path": "kits/science/template/presets/microwave.json",
+          "note": "微波炉原理，含图解释意"
+        },
+        {
+          "id": "microwave.vo",
+          "path": "kits/science/template/presets/microwave.vo.json",
+          "note": "同上，配音版"
+        },
+        {
+          "id": "kids-qa",
+          "path": "kits/science/template/presets/kids-qa.json",
+          "note": "儿童问答体"
+        },
+        {
+          "id": "nap-qa",
+          "path": "kits/science/template/presets/nap-qa.json",
+          "note": "午睡问答体"
+        },
+        {
+          "id": "demo.edge",
+          "path": "kits/science/template/presets/demo.edge.json",
+          "note": "边界用例"
+        }
+      ],
+      "defaultPreset": "kits/science/template/presets/demo.json",
+      "audio": {
+        "required": false,
+        "note": "口播科普片必须给；片段时长与音轨需对齐，否则末段被截断"
+      },
+      "extras": {
+        "theme": "任意强调色对象",
+        "dualHost": "同一份 kit.js/layouts.js 可跑浏览器宿主"
+      }
+    },
+    {
+      "id": "desk",
+      "name": "桌面片场",
+      "description": "把整台 Mac 桌面重写成模板：桌面骨架 + 16 个版式镜头 + photo/clip 两类素材镜头，13 项量化自检。适合软件演示、产品叙事。",
+      "contentModel": {
+        "name": "shots[]",
+        "required": true,
+        "note": "需要 fps / durationSeconds / shots；chapters 决定壁纸与整屏翻牌，brand 是右下角角标。"
+      },
+      "output": {
+        "width": 1440,
+        "height": 1080,
+        "fpsChoices": [
+          24,
+          30,
+          60
+        ],
+        "fpsDefault": 60
+      },
+      "paramsSchema": "kits/desk/params.schema.json",
+      "schemaStatus": "complete",
+      "presets": [
+        {
+          "id": "demo",
+          "path": "content/demo.json",
+          "note": "基础演示，无配音"
+        },
+        {
+          "id": "demo-voiced",
+          "path": "content/demo-voiced.json",
+          "note": "带配音对齐"
+        },
+        {
+          "id": "hotpot",
+          "path": "content/hotpot.json",
+          "note": "实拍 + 分镜混合"
+        },
+        {
+          "id": "nanjing",
+          "path": "content/nanjing.json",
+          "note": "城市叙事"
+        },
+        {
+          "id": "uv",
+          "path": "content/uv.json",
+          "note": "单概念讲解"
+        }
+      ],
+      "defaultPreset": "content/demo.json",
+      "audio": {
+        "required": false,
+        "note": "口播片必须给；`-voiced` 系列参数已按配音时长重排"
+      },
+      "extras": {
+        "presenter": "头像路径或 off",
+        "profiles": [
+          "standard",
+          "quality"
+        ]
+      }
+    },
+    {
+      "id": "editorial",
+      "name": "杂志剪辑",
+      "description": "8 段分镜的杂志排版：强网格、大字号标题、色块分区。改造自 MIT 项目，适合观点输出与品牌短片。",
+      "contentModel": {
+        "name": "scenes[]",
+        "required": true,
+        "note": "需要 scenes 与 durationSeconds；brand / accent 可选。参数文件在 content/inputs-*.json。"
+      },
+      "output": {
+        "width": 1920,
+        "height": 1080,
+        "fpsChoices": [
+          24,
+          30,
+          60
+        ],
+        "fpsDefault": 24,
+        "fpsNote": "实际帧率由 params.fps 决定，inputs-v6 是 24fps"
+      },
+      "paramsSchema": null,
+      "schemaStatus": "missing",
+      "schemaNote": "本支尚未提供 params.schema.json，validate 会对参数放行并在回执标 unvalidated:true。补 schema 后自动生效。",
+      "presets": [
+        {
+          "id": "inputs-v6",
+          "path": "content/inputs-v6.json",
+          "note": "6 版分镜"
+        },
+        {
+          "id": "inputs-v8t",
+          "path": "content/inputs-v8t.json",
+          "note": "8 版分镜"
+        },
+        {
+          "id": "inputs-kit",
+          "path": "content/inputs-kit.json",
+          "note": "纸感同源内容"
+        },
+        {
+          "id": "inputs-md",
+          "path": "content/inputs-md.json",
+          "note": "基准用固定内容"
+        }
+      ],
+      "defaultPreset": "content/inputs-v6.json",
+      "audio": {
+        "required": false,
+        "note": "口播片必须给；无音轨只出画面"
+      },
+      "extras": {
+        "theme": "强调色",
+        "skin": "排版风格",
+        "avatar": "头像路径或 off"
+      }
+    },
+    {
+      "id": "mg",
+      "name": "MG 动效",
+      "description": "5 类镜头的动效验证：文字 / 档案时间轴 / 黑洞 2.5D 粒子 / 等轴积木 / 信息卡，带确定性自检。2026-11-10 后未改动。",
+      "contentModel": {
+        "name": "params.json",
+        "required": true,
+        "note": "结构自成一套（非 scenes/shots/segments），以 kits/mg/params.json 为准。"
+      },
+      "output": {
+        "width": 1920,
+        "height": 1080,
+        "fpsChoices": [
+          24,
+          30,
+          60
+        ],
+        "fpsDefault": 60
+      },
+      "paramsSchema": null,
+      "schemaStatus": "missing",
+      "schemaNote": "本支只用一份固定 params.json，尚未抽出 schema。结构变化时 API 无从校验，需靠 smoke.sh 兜底。",
+      "presets": [
+        {
+          "id": "default",
+          "path": "kits/mg/params.json",
+          "note": "唯一参数集"
+        }
+      ],
+      "defaultPreset": "kits/mg/params.json",
+      "audio": {
+        "required": false,
+        "note": "无口播，通常不出音轨"
+      },
+      "extras": {}
+    }
+  ]
+}
