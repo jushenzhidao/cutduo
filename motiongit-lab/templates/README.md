@@ -1,53 +1,64 @@
-# templates · 模板来源与分发边界
+# templates · 自建与下载分开
 
-这个目录同时放着**第三方下载包**和**自建模板**，两者在许可与可分发性上完全不同。
+2026-11-12 拆分：`own/` 放自建模板（入库、可分发），`vendor/` 放个人下载包（不入库、不外传）。
 新增模板前先看本表；不确定来源，按「不可分发」处理。
 
 ## 一、清单
 
-| 目录 / 文件 | 类型 | runtime profile | 来源 | 入库 | 可分发 |
-|---|---|---|---|---|---|
-| `camera-mode/` | 个人下载包 | `motiongit-host/1`（film-kit） | motiongit.com 个人下载 | 否 | **禁止** |
-| `mac-desktop/` | 个人下载包 | `motiongit-host/1`（film-kit） | motiongit.com/adunext/mac-desktop | 否 | **禁止** |
-| `paper-perspective/` | 个人下载包 | `motiongit-host/1`（motion-kit） | motiongit.com/adunext | 否 | **禁止** |
-| `paper-perspective-11/` | 个人下载包 | `motiongit-host/1`（motion-kit） | 同上（v11 分支） | 否 | **禁止** |
-| `promo-ink/` | 个人下载包 | `motiongit-host/1`（html-canvas） | motiongit.com/motiongit | 否 | **禁止** |
-| `distill/` | 自建模板 | `html-canvas/1` | 按 `.motion` 规范自建 | 是 | 可 |
-| `editorial/` | 自建模板 | `html-dom/1` | 改造自 `aisovip/adu-motion-video`（MIT） | 是 | 可（保留 `licenses/UPSTREAM-LICENSE.txt`） |
-| `science-explainer/` | 自建模板 | `html-canvas/1` | 依科普片结构规律自建 | 是 | 可 |
-| `workbuddy-science-explainer.motion` | 打包产物 | 同上 | 由 `science-explainer/` 打包 | 需 `git add -f`（`*.motion` 全局忽略） | 可 |
+### `own/` · 自建（入库、可分发）
 
-## 二、为什么下载包不入库
+| 目录 / 文件 | runtime profile | 来源 | 备注 |
+|---|---|---|---|
+| `own/distill/` | `html-canvas/1` | 按 `.motion` 规范自建 | 最初用于验证格式 |
+| `own/editorial/` | `html-dom/1` | 改造自 `aisovip/adu-motion-video`（MIT） | 保留 `licenses/UPSTREAM-LICENSE.txt` |
+| `own/science-explainer/` | `html-canvas/1` | 依科普片结构规律自建 | 9 个版式，`SKIA-SPEC.md` 有宿主移植说明 |
+| `own/workbuddy-science-explainer.motion` | 同上 | 由 `own/science-explainer/` 打包 | `*.motion` 被全局忽略，入库需 `git add -f` |
 
-`.gitignore` 按「身份层特征」排除，而不是逐个包名列举：
+### `vendor/` · 个人下载（不入库、禁止分发）
+
+| 目录 | runtime profile | 来源 |
+|---|---|---|
+| `vendor/camera-mode/` | `motiongit-host/1`（film-kit） | motiongit.com 个人下载 |
+| `vendor/mac-desktop/` | `motiongit-host/1`（film-kit） | motiongit.com/adunext/mac-desktop |
+| `vendor/paper-perspective/` | `motiongit-host/1`（motion-kit） | motiongit.com/adunext |
+| `vendor/paper-perspective-11/` | `motiongit-host/1`（motion-kit） | 同上（v11 分支） |
+| `vendor/promo-ink/` | `motiongit-host/1`（html-canvas） | motiongit.com/motiongit |
+
+**为什么整目录排除**：个人下载包含账号凭据（`package/personal/`）、加密核心（`core.enc`）
+与受限 `release.bin`。`PLAYBOOK.md` 第 133 行明确「不得再分发模板本身」——
+既不能进版本库，也不能随交付外发。
+
+`.gitignore` 现有规则：
 
 ```
-templates/**/package/personal/         # 个人 Key 与回执
+templates/vendor/                        # 整目录排除
+templates/**/package/personal/           # 身份层特征，双保险
 templates/**/package/content/release.bin
 templates/**/template.motion
 templates/**/core.enc
+*.motion
 ```
 
-另加 5 条整包规则覆盖上述个人下载目录。`PLAYBOOK.md` 第 133 行明确「不得再分发模板本身」——
-**个人下载包含账号凭据，既不能进版本库，也不能随交付外发**。
-
-## 三、将来拆 own / vendor 的顺序
-
-当前没有物理拆分。真要拆，严格按这个顺序，否则规则会短暂失效：
-
-1. 先把 `.gitignore` 的 5 条整包规则换成 `templates/vendor/`（**规则先就位**）；
-2. 再用 `git mv` 把 5 个下载包移入 `templates/vendor/`；
-3. 把 3 个自建模板移入 `templates/own/`（可选，收益仅是语义清楚）；
-4. 跑 `git status --short` 确认没有任何 `personal/`、`release.bin`、`core.enc` 出现在待提交列表；
-5. 同步 `build-template.py` 的默认 `--src` 与文档引用。
-
-第 4 步是硬门槛：只要看到凭据文件，立即回滚。
-
-## 四、打包
+## 二、打包自建模板
 
 ```bash
-uv run python build-template.py --src templates/science-explainer \
-  --out templates/workbuddy-science-explainer.motion
+uv run python build-template.py --src templates/own/science-explainer \
+  --out own/workbuddy-science-explainer.motion
 ```
 
-产物含 `integrity.json`（SHA-256 清单），用 `motion-render.mjs inspect` 验证后再交付。
+产物含 `integrity.json`（SHA-256 清单）。验证：
+
+```bash
+node motion-render.mjs inspect --package /tmp/sep-check.motion
+# 期望 integrity 30/30 通过
+```
+
+## 三、迁移记录（2026-11-12）
+
+1. **先改规则**：`.gitignore` 的 5 条按包名整包规则合并为 `templates/vendor/`，再移动；
+2. **下载包用 `mv`**（不在 git 索引里），**自建包用 `git mv`**（保留历史）；
+3. **移动后查凭据**：`git status --short | grep -E 'personal/|release.bin|core.enc'` 必须为空；
+4. **回归**：`build-template.py` 打包 `own/science-explainer` → `motion-render.mjs inspect` 30/30，
+   `desktop-kit/verify.mjs` 13/13。
+
+历史文档 `MOTIONGIT-PLAYBOOK.md` 保留写作时的旧路径，文件头已加版本注记。

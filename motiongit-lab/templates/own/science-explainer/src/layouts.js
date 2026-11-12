@@ -8,6 +8,17 @@
   const L = (window.L = window.L || {});
   const { clamp, lerp, ease, easeInOut, pop, rgba, hash } = MK.u;
 
+  // 姿态图：由 index.html 的 <img data-fig> 提供，渲染器会把它们内联成 dataURL
+  const FIGS = (window.__MK_FIGS = window.__MK_FIGS || {});
+  function collectFigures() {
+    if (typeof document === 'undefined') return;
+    document.querySelectorAll('img[data-fig]').forEach((el) => { FIGS[el.dataset.fig] = el; });
+  }
+  collectFigures();
+
+  // 手势名 → 姿态图名
+  const POSE_OF = { idle: 'idle', explain: 'explain', open: 'open', point: 'point', count: 'explain', nod: 'idle' };
+
   /* ------------------------------ 通用小部件 ------------------------------ */
   // 带下限的入场：容器类元素从 from 收到 1，保证硬切首帧已是近完整画面
   function enter(v, from) {
@@ -164,6 +175,33 @@
     }
     const g = a.gesture || 'idle';
     const k = gestureK(t, dur === undefined ? 6 : dur, a.gestureAt === undefined ? 0.9 : a.gestureAt);
+
+    // 有真实姿态图时：idle 与动作图按 k 混合，叠加呼吸/说话起伏
+    const imgs = a.figures === false ? null : FIGS;
+    if (imgs && imgs.idle && imgs.idle.complete && imgs.idle.naturalWidth) {
+      const poseName = POSE_OF[g] || 'idle';
+      const pose = (poseName !== 'idle' && imgs[poseName] && imgs[poseName].complete) ? imgs[poseName] : null;
+      const mix = pose ? ease(clamp((k - 0.30) / 0.34, 0, 1)) : 0;
+      const mouth = mouthAt(t, a.talking);
+      const bob = Math.sin(t * 1.15) * 5 + (mouth - 0.1) * 7;
+      const tilt = Math.sin(t * 0.62) * 0.006 + (a.gesture === 'nod' ? Math.sin(t * 3.0) * 0.012 * k : 0);
+      const HH = H * (a.figureHeight || 0.99);
+      const draw = (img, alpha) => {
+        if (!img || alpha <= 0.004) return;
+        const sc = HH / img.naturalHeight;
+        const w = img.naturalWidth * sc;
+        ctx.save();
+        ctx.globalAlpha *= alpha;
+        ctx.translate(cx, H + bob);
+        ctx.rotate(tilt);
+        ctx.drawImage(img, -w / 2, -HH, w, HH);
+        ctx.restore();
+      };
+      draw(imgs.idle, 1 - mix);
+      draw(pose, mix);
+      ctx.restore();
+      return;
+    }
     let armL = 0, armR = 0, nod = 0;
     if (g === 'explain') { armL = k * 0.92; }
     else if (g === 'open') { armL = k * 0.66; armR = k * 0.66; }
