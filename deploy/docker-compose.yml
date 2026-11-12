@@ -17,7 +17,10 @@ services:
       # 必填：否则任何人都能往服务器传文件、烧 CPU
       CUTDUO_TOKEN: ${CUTDUO_TOKEN:?CUTDUO_TOKEN 未设置，先 export}
       CUTDUO_PUBLIC_URL: https://cut-mcp.1task.cn
-      CUTDUO_MAX_JOBS: "3"
+      # 实测这台机器（Xeon E5-2682 v4，单核弱、核多）并发是负收益：
+      # 3 个任务并发 76s，串行 3×(worker=32) 约 58s。每个渲染已吃满 cpus/2，
+      # 再并发只是互相抢核。设 1 让第二个请求排队，比两个都变慢好。
+      CUTDUO_MAX_JOBS: "1"
       CUTDUO_WAIT_SECONDS: "90"
       CUTDUO_MAX_UPLOAD_MB: "64"
       CUTDUO_ASSET_TTL_DAYS: "7"

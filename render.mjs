@@ -17,6 +17,7 @@ import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { createPaperRenderer, loadTokens } from './kits/paper/paper.mjs';
 import { createScienceRenderer } from './kits/science/science.mjs';
 import { createWebCanvasRenderer } from './src/webcanvas.mjs';
+import { createClayRenderer } from './kits/clay/clay.mjs';
 import { registerFonts } from './src/fonts.mjs';
 import { REPO_ROOT, DIRS, resolveInput } from './src/root.mjs';
 
@@ -26,7 +27,7 @@ import { REPO_ROOT, DIRS, resolveInput } from './src/root.mjs';
  * 或直接的 src 目录。通用路径要求三件套 kit.js / layouts.js / stage.js。
  */
 function kitSpec(kit) {
-  if (kit === 'science' || kit === 'paper') return { kind: kit };
+  if (kit === 'science' || kit === 'paper' || kit === 'clay') return { kind: kit };
   // 三种写法都认：模板名 / 模板根目录 / src 目录本身
   const cands = [
     path.resolve(REPO_ROOT, 'templates', 'own', kit, 'src'),
@@ -60,6 +61,13 @@ function kitSpec(kit) {
   return spec;
 }
 
+/** 默认 worker 数：每 worker 约吃 2 核（node 进程 + ffmpeg 子进程），上限 32 下限 4。
+ *  实测：30 核 M5 用 16 最快（5.6s vs 8 worker 6.7s）；64 核 Xeon 用 32 最快（19.4s vs 22.0s）。
+ *  代价是分片变多、体积略增约 5%（mpegts 分片边界更多）。 */
+function defaultWorkers() {
+  return Math.min(32, Math.max(4, Math.floor(os.cpus().length / 2)));
+}
+
 function parseArgs(argv) {
   const get = (k, d) => { const i = argv.indexOf('--' + k); return i >= 0 && argv[i + 1] ? argv[i + 1] : d; };
   return {
@@ -67,7 +75,7 @@ function parseArgs(argv) {
     params: resolveInput(get('params', 'kits/paper/presets/v8t.json')),
     audio: resolveInput(get('audio', null), false),
     out: path.resolve(get('out', 'out/kit.mp4')),
-    workers: Math.max(1, Number(get('workers', Math.min(8, os.cpus().length)))),
+    workers: Math.max(1, Number(get('workers', defaultWorkers()))),
     fps: get('fps', null),
     crf: String(get('crf', 20)),
     jpeg: Number(get('jpeg', 94)),
@@ -147,7 +155,9 @@ if (!isMainThread) {
     ? createScienceRenderer({ canvas, ctx, width: W, height: H, fps: P.fps, brand, subtitle, theme, fadeOutSeconds })
     : spec.kind === 'paper'
       ? createPaperRenderer({ ctx, tokens: tokensPath ? loadTokens(tokensPath) : undefined, palette, transition, transitionDur })
-      : createWebCanvasRenderer({ srcDir: spec.srcDir, templateDir: spec.templateDir, canvas, ctx, width: W, height: H });
+      : spec.kind === 'clay'
+        ? createClayRenderer({ canvas, ctx, width: W, height: H, subtitle, brand })
+        : createWebCanvasRenderer({ srcDir: spec.srcDir, templateDir: spec.templateDir, canvas, ctx, width: W, height: H });
   r.setContent(spec.kind === 'paper' ? { scenes: P.scenes, captions: P.captions, avatar } : stageContent);
   if (spec.kind === 'science' || spec.kind === 'webcanvas') await r.ready();
 
@@ -174,7 +184,9 @@ if (!isMainThread) {
       ? createScienceRenderer({ canvas, ctx: r0, width: OUT_W, height: OUT_H, brand: P.brand, subtitle: P.subtitle, theme: P.theme, fadeOutSeconds: P.fadeOutSeconds })
       : spec.kind === 'paper'
         ? createPaperRenderer({ ctx: r0, palette: PALETTE })
-        : createWebCanvasRenderer({ srcDir: spec.srcDir, templateDir: spec.templateDir, canvas, ctx: r0, width: OUT_W, height: OUT_H });
+        : spec.kind === 'clay'
+          ? createClayRenderer({ canvas, ctx: r0, width: OUT_W, height: OUT_H, subtitle: P.subtitle, brand: P.brand })
+          : createWebCanvasRenderer({ srcDir: spec.srcDir, templateDir: spec.templateDir, canvas, ctx: r0, width: OUT_W, height: OUT_H });
     r.setContent(spec.kind === 'paper' ? { scenes: P.scenes, captions: P.captions, avatar } : probeContent);
     if (spec.kind === 'science' || spec.kind === 'webcanvas') await r.ready();
     r.renderFrame(A.at);

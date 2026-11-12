@@ -32,13 +32,20 @@ function resolveInput(p, mustExist = true) {
   if (fs.existsSync(byRoot) || !mustExist) return byRoot;
   return byCwd;
 }
+/** 默认 worker 数：每 worker 约吃 2 核（node 进程 + ffmpeg 子进程），上限 32 下限 4。
+ *  实测：30 核 M5 用 16 最快（5.6s vs 8 worker 6.7s）；64 核 Xeon 用 32 最快（19.4s vs 22.0s）。
+ *  代价是分片变多、体积略增约 5%（mpegts 分片边界更多）。 */
+function defaultWorkers() {
+  return Math.min(32, Math.max(4, Math.floor(os.cpus().length / 2)));
+}
+
 function parseArgs(argv) {
   const get = (k, d) => { const i = argv.indexOf('--' + k); return i >= 0 && argv[i + 1] ? argv[i + 1] : d; };
   return {
     params: resolveInput(get('params', 'kits/mg/params.json')),
     audio: resolveInput(get('audio', null), false),
     out: path.resolve(get('out', 'kits/mg/out/mg-demo.mp4')),
-    workers: Math.max(1, Number(get('workers', Math.min(8, os.cpus().length)))),
+    workers: Math.max(1, Number(get('workers', defaultWorkers()))),
     fps: get('fps', null),
     crf: String(get('crf', 20)),
     jpeg: Number(get('jpeg', 94)),

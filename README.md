@@ -1,6 +1,6 @@
 # cutduo
 
-**Skia 直出的视频管线：五套版式，一条命令出片，不经过浏览器。**
+**Skia 直出的视频管线：六套版式，一条命令出片，不经过浏览器。**
 
 Node + [`@napi-rs/canvas`](https://github.com/Brooooooklyn/canvas)（Skia）逐帧绘制 → 管道喂给 ffmpeg 编码 → 合成音轨。
 没有 Chromium，没有截图，没有中间 JPEG。4127 帧 / 1440×1080 / 60fps 出片 12.0 秒，约 **344 fps**，是实时的 5.7 倍。
@@ -18,7 +18,7 @@ node kits/desk/render.mjs --params content/demo.json --audio assets/audio/audio-
 人用 CLI，程序 import API，agent 走远程 MCP。**API 是唯一实现，其余都是宿主。**
 
 ```bash
-node api/cli.mjs capabilities            # 五支版式：id / 画幅 / 帧率 / 内容模型 / schema 状态
+node api/cli.mjs capabilities            # 六支版式：id / 画幅 / 帧率 / 内容模型 / schema 状态
 node api/cli.mjs describe --kit science  # 单支详情，含完整 params schema
 node api/cli.mjs validate --kit paper --preset v8t     # 只校验，不出片
 node api/cli.mjs render   --kit paper --preset v8t --json
@@ -57,8 +57,11 @@ node mcp/server.mjs        # 本地默认 :8787，POST /mcp
 | `desk` | 桌面 | 1440×1080@60 | `kits/desk/render.mjs` | 整台 Mac 桌面 + 16 个版式镜头 + 素材镜头 |
 | `editorial` | 杂志 | 1920×1080 | `kits/editorial/canvas-editorial.mjs` | 8 段分镜，改造自 MIT 项目 |
 | `mg` | 通用 | 1920×1080 | `kits/mg/render.mjs` | 5 类镜头的动效验证（2026-11-10 后未改动） |
+| `clay` | 黏土图示 | 1920×1080 | `render.mjs --kit clay` | **换宿主**：原样跑 knowledge-explainer-clay 的 Canvas2D 源码，7 种物体拆合机制 |
 
-五者共用同一个渲染库，所以**换版式不换速度档**。
+六者共用同一个渲染库，所以**换版式不换速度档**。
+
+前三支是反推/自建，`clay` 是换宿主（不改上游代码，只接管环境与时间轴）。
 
 > `desk` / `editorial` / `mg` 仍各有自己的 `render.mjs`，但**管道已不再重复**：
 > 「分片 → ffmpeg → concat → 音轨」收进了 `src/pipeline.mjs`，三个入口只剩渲染器构造与画幅参数
@@ -78,6 +81,9 @@ node mcp/server.mjs        # 本地默认 :8787，POST /mcp
 `stage.js`（时间轴/字幕/角标/淡出，宿主无关）三件套齐全，带五层结构说明与两个校验脚本。
 
 ```bash
+# 从现成模板半蒸馏：先读它的内容模型
+python3 tools/distill-inspect.py --package refs/vendor/<名字>/template.motion
+
 uv run python tools/new-template.py --id my-template --title "我的版式"   # 生成 + 自检
 node render.mjs --kit my-template \
   --params templates/own/my-template/presets/default.json --out out/my.mp4  # Skia 直出
@@ -103,7 +109,7 @@ uv run python tools/check-template.py --src templates/own/my-template        # �
 | `deploy/` | compose 与 nginx 配置（端口只绑回环） | 上线方式 |
 | `render.mjs` | 主 CLI，按 `--kit` 分发 | 全部版式 |
 | `src/` | 引擎：仓库根探测、字体注册、门禁、参数校验、计时账本 | 全部版式 |
-| `kits/` | 五套版式，每支自治（渲染器 + 参数 schema + presets） | 只影响自己 |
+| `kits/` | 六套版式，每支自治（渲染器 + 参数 schema + presets） | 只影响自己 |
 | `content/` | 分镜 JSON：文案、镜头、素材引用、配音对齐 | 不动代码 |
 | `assets/` | 字体（Noto Sans SC 三档）、配音 m4a、字幕 srt、图片 | 全部版式 |
 | `templates/` | MotionGit `.motion` 格式模板 + 四级接入索引 | 模板格式 |
@@ -161,6 +167,26 @@ python3 tools/template-smoke.py --template templates/own/<名字>
 | 对照 | Chromium（cinecode） | 24.6 fps / 168s |
 
 fps 随片长上升（worker 预热与 ffmpeg 启动摊销），**比较速度必须同片**。
+
+### 本机与云端实测（2026-11-13，1920×1080@60，mg 1920 帧 / 32s）
+
+| 环境 | CPU | 默认 worker | 单任务 | 吞吐 |
+|---|---|---|---|---|
+| 本机 | Apple M5 Ultra 30 核 | 15 | **5.6s** | 343 fps |
+| 云端 | Xeon E5-2682 v4 64 核 | 32 | 18.9s | 102 fps |
+
+差距 3.4 倍，主因是**单核性能**（M5 对 2016 年的 Broadwell），不是实现差异。
+Skia 是 CPU 光栅化，这类负载吃单核远多于吃核数。
+
+`worker` 默认值 = `clamp(4, 32, cpus/2)`。依据：每个 worker 是一个 node 进程加一个 ffmpeg
+子进程，实际约吃 2 核。实测 30 核用 15（比 8 worker 快 25%）、64 核用 32（快 16%）。
+代价是分片变多、体积约 +4%（mpegts 分片边界更多）。
+
+同片对照（paper 2573 帧）：8 worker 5.75s → 15 worker **4.1s**，体积 1.09 → 1.04MB。
+
+**云端并发是负收益**：3 个任务并发总墙钟 76s，串行只要 62s。每个渲染已经吃满 `cpus/2`，
+再并发只是互相抢核。所以 `deploy/docker-compose.yml` 里 `CUTDUO_MAX_JOBS=1`，
+第二个请求排队而不是并跑。
 
 ## 文档
 
