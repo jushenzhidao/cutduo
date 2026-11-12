@@ -27,6 +27,48 @@
       "role": "讲解位姿态：指向",
       "size": "720x980",
       "alpha": true
+    },
+    {
+      "path": "assets/props/gut.png",
+      "kind": "image",
+      "role": "3D 软胶道具：gut",
+      "size": "512x512",
+      "alpha": true
+    },
+    {
+      "path": "assets/props/drop.png",
+      "kind": "image",
+      "role": "3D 软胶道具：drop",
+      "size": "512x512",
+      "alpha": true
+    },
+    {
+      "path": "assets/props/clock.png",
+      "kind": "image",
+      "role": "3D 软胶道具：clock",
+      "size": "512x512",
+      "alpha": true
+    },
+    {
+      "path": "assets/props/shield.png",
+      "kind": "image",
+      "role": "3D 软胶道具：shield",
+      "size": "512x512",
+      "alpha": true
+    },
+    {
+      "path": "assets/props/check.png",
+      "kind": "image",
+      "role": "3D 软胶道具：check",
+      "size": "512x512",
+      "alpha": true
+    },
+    {
+      "path": "assets/props/radiation.png",
+      "kind": "image",
+      "role": "3D 软胶道具：radiation",
+      "size": "512x512",
+      "alpha": true
     }
   ],
   "fonts": [

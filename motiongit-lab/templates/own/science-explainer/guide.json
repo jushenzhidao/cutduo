@@ -94,7 +94,7 @@
         "talking": "[[起,止],...] 说话区间，嘴型只在区间内开合；由 tools/vo.py 自动写入，不必手填",
         "eyebrowColor": "眉标竖条颜色，用来区分角色（孩子蓝 / 妈妈绿）",
         "figures": "false 时回退内置矢量人物；缺省用 assets/figures 的 3D 姿态图",
-        "figureHeight": "人物高度占画面比，默认 0.86"
+        "figureHeight": "人物高度占画面比。矢量人物 0.86 合适；**3D 姿态图建议 0.92–0.96**（0.86 时头顶距上沿约 0.22H，偏沉）"
       },
       "capacity": "lines ≤ 3 行，每行 ≤ 9 字（86px）；figure:left 时段落左边界 902px；figure:none 时字卡右移到 0.195W、贴纸移到右侧 0.735W"
     },
@@ -112,7 +112,8 @@
         "paper": "mint（默认）| sky",
         "r": "圆半径，默认 352",
         "cx": "圆心 x 归一化，默认 0.48",
-        "cy": "圆心 y 归一化，默认 0.505"
+        "cy": "圆心 y 归一化，默认 0.505",
+        "organImage": "用 assets/props 里的 3D 软胶道具名（gut/drop/clock/shield/check/radiation）；给了就画图，否则回退矢量器官"
       },
       "capacity": "callouts ≤ 2 条；每条 ≤ 10 字（70px）；lead 必须落在器官内部，否则引线会悬空"
     },
@@ -122,8 +123,8 @@
       "maxPerFilm": 2,
       "args": {
         "title": "顶部标题条，如「为什么首选超声」",
-        "left": "{icon, label, note, bad:true, badge:'no'}",
-        "right": "{icon, label, note, badge:'yes'}",
+        "left": "{image, icon, label, note, bad, badge}",
+        "right": "{image, icon, label, note, badge}",
         "conclusion": "底部金句标签，留空则不画",
         "paper": "sky（默认）"
       },
@@ -135,7 +136,7 @@
       "maxPerFilm": 2,
       "args": {
         "title": "顶部标题条",
-        "items": "[{icon, label, disc, stone, strike}]，3–4 项单行，5–6 项折两行",
+        "items": "[{image, icon, label, disc, stone, strike}]，image 优先（3D 道具），icon 是矢量回退",
         "paper": "mint（默认）"
       },
       "capacity": "items ≤ 6；label ≤ 5 字；strike:true 会在图标上画红叉（用于被否定的旧认知）"
@@ -150,7 +151,8 @@
         "strike": "可选，左侧被划掉的旧认知标签，如「要等半天」",
         "claim": "底部手写感结论，如「十几分钟出结果」",
         "paper": "sky（默认）",
-        "r": "圆卡半径，默认 268"
+        "r": "圆卡半径，默认 268",
+        "iconImage": "3D 道具名，优先于 icon"
       },
       "capacity": "title ≤ 5 字；claim ≤ 9 字（78px）；strike ≤ 5 字"
     },

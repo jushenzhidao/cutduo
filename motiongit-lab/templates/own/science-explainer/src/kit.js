@@ -905,6 +905,33 @@
     ctx.restore();
   };
 
+  /* -------------------------------- 3D 道具 -------------------------------- */
+  // 与人物同一套 flux-3-image 生成的软胶材质；index.html 的 <img data-prop> 会被内联成 dataURL
+  const PROPS = (window.__MK_PROPS = window.__MK_PROPS || {});
+  function collectProps() {
+    if (typeof document === 'undefined') return;
+    document.querySelectorAll('img[data-prop]').forEach((el) => { PROPS[el.dataset.prop] = el; });
+  }
+  collectProps();
+
+  // 口型贴片：与人物同一构图的嘴部差异图（闭→半开→大张），只在变化区域有 alpha
+  const MOUTHS = (window.__MK_MOUTHS = window.__MK_MOUTHS || {});
+  if (typeof document !== 'undefined') {
+    document.querySelectorAll('img[data-mouth]').forEach((el) => { MOUTHS[el.dataset.mouth] = el; });
+  }
+
+  // 返回 true 表示画了图；false 时调用方回退到矢量图标
+  MK.prop = function (name, ctx, x, y, size) {
+    if (!name) return false;
+    const im = PROPS[name];
+    if (!im || !im.complete || !im.naturalWidth) return false;
+    ctx.save();
+    ctx.drawImage(im, x - size / 2, y - size / 2, size, size);
+    ctx.restore();
+    return true;
+  };
+  MK.hasProp = (name) => !!(name && PROPS[name] && PROPS[name].complete && PROPS[name].naturalWidth);
+
   /* ------------------------------- 会动的人物 ------------------------------- */
   // 分层骨骼：躯干（呼吸）→ 手臂（手势）→ 颈头（点头/摇头/眨眼/口型）
   // o.mouth 0..1 控制口型开合，o.armL/R 0..1 控制抬手，o.nod -1..1 点头，o.shake -1..1 摇头
@@ -1048,22 +1075,62 @@
 
   /* --------------------------------- 字幕 --------------------------------- */
   // 参考片字幕：居中、白字、粗黑描边、位于底部安全区内
+  // 字幕折行：优先在标点处断（取最靠近中点且两行都放得下的），否则按字数均分。
+  // 目的：长句不要一路缩字号——62px 缩到 30 多 px，手机上直接不可读。
+  const CAP_PUNCT = '，、：；。！？—,.;:!?';
+  function wrapCaption(ctx, text, maxW, size, weight, font) {
+    const m = (str) => MK.measure(ctx, str, size, weight, font);
+    if (m(text) <= maxW) return [text];
+    const chars = [...text];
+    let best = -1;
+    for (let i = 1; i < chars.length; i++) {
+      if (!CAP_PUNCT.includes(chars[i - 1])) continue;
+      const a = chars.slice(0, i).join(''), b = chars.slice(i).join('');
+      if (m(a) <= maxW && m(b) <= maxW) {
+        if (best < 0 || Math.abs(i - chars.length / 2) < Math.abs(best - chars.length / 2)) best = i;
+      }
+    }
+    if (best > 0) return [chars.slice(0, best).join(''), chars.slice(best).join('')];
+    const half = Math.ceil(chars.length / 2);
+    return [chars.slice(0, half).join(''), chars.slice(half).join('')];
+  }
+
   MK.caption = function (ctx, W, H, cap, style, t) {
     if (!cap || !cap.text) return;
     const s = style || {};
-    const size = s.size || 62;
-    const y = s.y || H - 78;
-    const lines = String(cap.text).split('\n');
+    const maxW = W - 260;
+    const weight = s.weight || 700;
+    const font = s.font || 'sans';
+    let size = s.size || 62;
+    let lines = String(cap.text).split('\n').filter((x) => String(x).trim());
+
+    if (lines.length === 1) {
+      const wrapped = wrapCaption(ctx, lines[0], maxW, size, weight, font);
+      if (wrapped.length > 1) lines = wrapped;
+    }
+    // 两行必须统一字号：逐行各自套 maxW 会缩出两种大小，观感是"一句话里字忽大忽小"
+    if (lines.length > 1) size = Math.min(size, 50);   // 折行本身就意味着信息密度高，先降一档
+    const widest = Math.max(...lines.map((ln) => MK.measure(ctx, ln, size, weight, font)));
+    if (widest > maxW) size = Math.max(44, Math.floor(size * maxW / widest));
+
+    // 折行后字幕块会向上长高，不能顶进正文区。
+    // 注意要按**视觉顶端**（基线 − 0.78em 的字形高）判，直接拿基线判会差出约 45px。
+    const gap = size * (lines.length > 1 ? 1.22 : 1.32);
+    let y = s.y || H - 78;
+    const floor = H * 0.88;
+    const visualTop = y - (lines.length - 1) * gap - size * 0.78;
+    if (visualTop < floor) y += floor - visualTop;
+
     lines.forEach((ln, i) => {
-      MK.text(ctx, ln, W / 2, y - (lines.length - 1 - i) * size * 1.32, {
+      MK.text(ctx, ln, W / 2, y - (lines.length - 1 - i) * gap, {
         size,
-        weight: s.weight || 700,
+        weight,
         color: s.color || '#FFFFFF',
         align: 'center',
         stroke: s.stroke === undefined ? size * 0.19 : s.stroke,
         strokeColor: s.strokeColor || '#1B2B30',
-        font: s.font || 'sans',
-        maxW: W - 260,
+        font,
+        maxW,
       });
     });
   };

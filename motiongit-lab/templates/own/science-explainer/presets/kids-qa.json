@@ -246,7 +246,8 @@
               0.62
             ]
           }
-        ]
+        ],
+        "organImage": "gut"
       }
     },
     {
@@ -260,17 +261,20 @@
           {
             "icon": "clock",
             "label": "肚子饿了",
-            "disc": "#FFE770"
+            "disc": "#FFE770",
+            "image": "clock"
           },
           {
             "icon": "drop",
             "label": "吃得太快",
-            "disc": "#CFE6FB"
+            "disc": "#CFE6FB",
+            "image": "drop"
           },
           {
             "icon": "gut",
             "label": "正在消化",
-            "disc": "#C8EBDD"
+            "disc": "#C8EBDD",
+            "image": "gut"
           }
         ]
       }
@@ -283,7 +287,8 @@
         "paper": "sky",
         "title": "正常现象",
         "icon": "check",
-        "claim": "说明肠子在正常工作"
+        "claim": "说明肠子在正常工作",
+        "iconImage": "check"
       }
     },
     {

@@ -85,7 +85,7 @@
     const localT = clamp(t - cur.t0, 0, cur.seg.dur);
     const fn = L[cur.seg.type];
     if (fn) {
-      fn(ctx, W, H, localT, cur.seg.dur, cur.seg.args || {}, env);
+      fn(ctx, W, H, localT, cur.seg.dur, cur.seg.args || {}, env, frame);
     } else {
       MK.paper(ctx, W, H, 'cream', localT);
       MK.text(ctx, '未知版式：' + cur.seg.type, W / 2, H / 2, { size: 60, align: 'center', color: T.pop, font: 'sans' });

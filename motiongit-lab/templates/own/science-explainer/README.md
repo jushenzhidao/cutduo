@@ -2,7 +2,7 @@
 
 把一条中文医学科普片蒸馏成**可换文案的 `.motion` 模板包**。8 类版式、字幕烧录、零外部素材可跑。
 
-- 画幅 1920×1080 / 30fps / 54.5s（demo）
+- 画幅 1920×1080 / 30fps；无声 demo 59.1s，配音版 79.0s（`demo.edge.json`）
 - 两条运行路径（同一份 `src/`，画面一致）：
   - `html-canvas/1`：Node 22+ / Chromium headless / FFmpeg，字体用系统 `PingFang SC`
   - `skia/1`：Node 22+ / `@napi-rs/canvas` / FFmpeg，**零浏览器**，字体用随包 Noto Sans SC
@@ -46,12 +46,20 @@ node skia-kit/render.mjs --kit science \
   --audio out/demo.vo.wav --out out/demo-skia.mp4 --fps 30 --workers 20
 ```
 
-实测：2215 帧 / 11.3s（≈196 fps）/ 6.88 MB / 门禁 PASS；同片 canvas 版 14.37s（154 fps）。
+实测（`demo.edge.json`，79.0s / 2369 帧）：Skia **15.2s（156 fps）/ 6.98 MB**，
+同片 canvas 版 24.21s（98 fps）/ 7.91 MB —— 快 59%，体积小 12%。
 单帧探针用 `--probe out/f.png --at 12.5`，调版式时秒级出图。
 
 ## 配音（关键：配音决定时间轴）
 
-模板只出画面。音轨用 `tools/vo.py` 生成，而且**让配音反过来决定时间轴**：
+模板只出画面。音轨用 `tools/vo.py` 生成，而且**让配音反过来决定时间轴**。
+
+前置：`edge-tts` 必须在 PATH 里（常装在 `~/.local/bin`，非交互 shell 不加载 `.zshrc`）：
+
+```bash
+uv tool install edge-tts                 # 首次
+export PATH="$HOME/.local/bin:$PATH"     # 或在调用前显式加上
+```
 
 ```bash
 uv run --with numpy python tools/vo.py \
@@ -117,7 +125,41 @@ node motion-render.mjs render --package . --style microwave.vo \
 生成与抠图链路：flux-3-image（`aspect_ratio 3:4` / `resolution 1k`，用首张做 reference 保证同角色）
 → PIL 四角 floodfill 去白底（thresh 46）→ 近白残留清零 → alpha 收缩 1px → 羽化 0.7 → 统一底对齐。
 
+## 对口型（真口型，音频包络驱动）
+
+做法：**嘴部差异贴片 + 逐帧 RMS 包络**。
+
+1. `tools/vo.py` 按帧算 RMS（窗 45ms）→ 归一化 p95 → `mouthCurve`（每帧 0..1）写进 preset
+2. `assets/figures/mouth/` 有三张嘴部贴片：`m_half`（半开）、`m_open`（大张）、`m_round`（圆唇）
+3. 渲染时按包络值在贴片间过渡：`0.30→0.62` 淡入半开，`0.62→0.84` 淡入大张
+
+贴片怎么来的（关键是同构图）：
+
+- 以基准人物图的公网 URL 作 `reference_images`，prompt 只改一句 `ONLY the mouth changes: ...`
+- 四张生成的头部位置/大小几乎完全一致（可直接叠加，无需仿射对齐）
+- 用 numpy 算基准与变体的像素差 → 阈值 26 → `MaxFilter(7)` 膨胀 → `GaussianBlur(3)` 羽化，
+  只保留"嘴部变化区域"的 alpha，其余透明
+- 因此贴片叠上去没有方块接缝，也没有色差
+
+嘴部在人物图坐标系的位置：中心 `(334.5, 345)`（720×980 基准），贴片矩形 210×150。
+换角色素材时要重新量这两个值，否则贴片会歪。
+
+**局限**：这是 2 档口型（半开/大张）的近似，不是音素级。中文的圆唇音（o/u）用 `m_round` 会更准，
+目前没接；要更细需要 5–8 张不同口型 + 音素对齐。
+
 ## 换内容
+
+### 现成 preset 的用途
+
+| preset | 时长 | 用途 |
+|---|---:|---|
+| `demo.edge.json` | 79.0s | **推荐起点**：edge-tts 配音版，手势/口型/逐项点亮齐全 |
+| `demo.json` | 59.1s | 无声基准（手定时间轴），改文案时从这份复制 |
+| `demo.vo.json` | 73.8s | 旧配音版（声线相同、文案未拆分），仅作对照 |
+| `microwave.vo.json` | 64.8s | 另一套内容，验证换题可用 |
+| `kids-qa.vo.json` | 65.3s | 儿童问答内容，验证换题可用 |
+
+`*.vo.json` / `*.edge.json` 都是 **派生产物**（由 `vo.py` 生成），不要手改；要改文案改 `demo.json` 再重跑 `vo.py`。
 
 改 `presets/demo.json`（或复制一份用 `--style` 指定）：
 
@@ -133,6 +175,7 @@ node motion-render.mjs render --package . --style microwave.vo \
 - 不生成语音、不生成配乐（要配音用 `--audio` 传文件）
 - 器官图形是矢量示意，不是医学精确图；做持证宣教请替换为专业插画
 - 只有横屏；竖屏需重排版式，不能裁切
+- 字幕单行建议 ≤ 26 字（62px）；超长会自动折行并降档到 50/44px，`vo.py` 会给告警——折行是兜底，cover/tip 这类底部有内容的版式会变挤
 - 未随包分发字体；Windows 会回退到微软雅黑，字重观感会变
 
 ## 许可

@@ -12,7 +12,7 @@
 
 原则：时间轴跟随配音，不是配音迁就时间轴。
 """
-import argparse, json, os, subprocess, sys, tempfile, wave
+import argparse, json, os, re, shutil, subprocess, sys, tempfile, wave
 from pathlib import Path
 
 import numpy as np
@@ -44,6 +44,31 @@ def tts(text, mp3, voice, rate, pitch):
     return wav
 
 
+def mouth_curve(pcm, fps, total, win=0.045):
+    """按帧算 RMS 包络 → 0..1，用于对口型。窗长略大于一帧，避免抖动。"""
+    n = int(SR * total)
+    pcm = pcm[:n].astype(np.float32) / 32768.0
+    frames = int(round(total * fps))
+    hop = SR / fps
+    half = max(1, int(SR * win / 2))
+    out = np.zeros(frames, dtype=np.float32)
+    for i in range(frames):
+        c = int(i * hop)
+        a, b = max(0, c - half), min(len(pcm), c + half)
+        if b > a:
+            seg = pcm[a:b]
+            out[i] = float(np.sqrt(np.mean(seg * seg)))
+    # 归一化到 p95，静音段压到 0
+    hi = np.percentile(out, 95) or 1.0
+    out = np.clip(out / hi, 0, 1)
+    out[out < 0.06] = 0
+    # 轻平滑（EMA），再去掉尾音抖动
+    a = 0.55
+    for i in range(1, frames):
+        out[i] = a * out[i] + (1 - a) * out[i - 1]
+    return [round(float(v), 2) for v in out]
+
+
 def read_wav(p):
     with wave.open(str(p), 'rb') as w:
         if w.getnchannels() != 1 or w.getframerate() != SR:
@@ -61,6 +86,15 @@ def main():
     ap.add_argument('--pitch', default='+0Hz')
     ap.add_argument('--keep', action='store_true', help='保留逐句音频')
     a = ap.parse_args()
+
+    # 前置检查：edge-tts 常装在 ~/.local/bin，非交互 shell 的 PATH 里往往没有。
+    # 不做这一步，报错会是 "失败: edge-tts --voice ..." 而看不出真实原因。
+    if shutil.which('edge-tts') is None:
+        sys.exit(
+            '找不到 edge-tts。\n'
+            '  安装：uv tool install edge-tts\n'
+            '  或把 ~/.local/bin 加进 PATH：export PATH="$HOME/.local/bin:$PATH"'
+        )
 
     src = json.loads(Path(a.preset).read_text(encoding='utf-8'))
     caps = src['captions']
@@ -84,6 +118,15 @@ def main():
                 k = i
                 break
         owner.append(k)
+
+    # 字幕容量检查：单行 62px 在 1660px 内约 26 个汉字。超了会折行并降档，
+    # 折行是兜底不是设计——cover/tip 这类底部有内容的版式会变挤。
+    LONG = 26
+    over = [(i, c) for i, c in enumerate(caps) if len(c['text']) > LONG]
+    if over:
+        print(f'⚠ {len(over)} 句超过 {LONG} 字（会自动折行，建议拆句）：')
+        for i, c in over:
+            print(f'   第{i+1}句 {len(c["text"])} 字：{c["text"][:24]}…')
 
     voices = src.get('voices') or {}
 
@@ -123,23 +166,40 @@ def main():
             caps[i]['start'] = round(tc, 3)
             caps[i]['end'] = round(tc + durs[i] + TAIL_HOLD, 3)
             tc += durs[i] + GAP
-        # 配音驱动动效：便签三条 = 三句话，把每条的点亮时刻钉在对应句子上
+        # 配音驱动动效：tip / matrix 的每一条 = 一句话，把点亮时刻钉在对应句上。
+        # 允许「引入句 + N 条」：如「记住三点」后接三条，此时条目对齐**后** N 句；
+        # 多出的句子最多 1 句（引入），否则说明文案与条目数量不匹配，不猜。
         seg_args = dict(s.get('args') or {})
-        if s['type'] == 'tip':
+        if s['type'] in ('tip', 'matrix'):
             items = seg_args.get('items') or []
-            if len(idxs) == len(items):
-                seg_args['itemAt'] = [round(caps[i]['start'] - cursor, 2) for i in idxs]
-        # 图标阵列：一句一卡
-        if s['type'] == 'matrix':
-            items = seg_args.get('items') or []
-            if len(idxs) == len(items):
-                seg_args['itemAt'] = [round(caps[i]['start'] - cursor, 2) for i in idxs]
+            n = len(items)
+            picked = None
+            if n and len(idxs) >= n and len(idxs) - n <= 1:
+                # 一句一条：直接用句子起点
+                picked = [round(caps[i]['start'] - cursor, 2) for i in idxs[-n:]]
+            elif n:
+                # 段内找「一句列举 N 项」的句子（如「阑尾炎、肠套叠、胆囊炎、肾结石」）：
+                # 按各段字数比例切分这句的语音区间。朗读匀速，等长词的误差 < 0.1s。
+                for i in idxs:
+                    c = caps[i]
+                    parts = [x for x in re.split(r'[、，,]', c['text']) if x.strip()]
+                    if len(parts) != n:
+                        continue
+                    speech = max(0.1, (c['end'] - c['start']) - TAIL_HOLD)
+                    total = sum(len(x) for x in parts)
+                    t_acc, picked = c['start'], []
+                    for x in parts:
+                        picked.append(round(t_acc - cursor, 2))
+                        t_acc += speech * len(x) / total
+                    break
+            if picked:
+                seg_args['itemAt'] = picked
         # 圆框图解：第 2 句起依次放出标注（第 1 句留给画面入场）
         if s['type'] == 'diagram':
             cos = seg_args.get('callouts') or []
-            if len(idxs) >= len(cos) + 1:
+            if len(idxs) >= len(cos):
                 seg_args['callouts'] = [
-                    {**c, 'at': round(caps[idxs[i + 1]]['start'] - cursor, 2)} for i, c in enumerate(cos)
+                    {**c, 'at': round(caps[idxs[i]]['start'] - cursor, 2)} for i, c in enumerate(cos)
                 ]
         # 讲解位：把本段每句的说话区间写进去，人物嘴型只在说话时动
         if s['type'] == 'talk' and idxs:
@@ -172,7 +232,9 @@ def main():
          '-c:a', 'pcm_s16le', str(out_wav)])
     raw.unlink(missing_ok=True)
 
+    fps = float(src.get('fps') or 30)
     out = {**src}
+    out['mouthCurve'] = mouth_curve(np.frombuffer(buf[: int(SR * total)].tobytes(), dtype=np.int16), fps, total)
     out['durationSeconds'] = total
     out['captions'] = [
         {k: v for k, v in c.items() if k in ('start', 'end', 'text', 'speaker')} for c in caps
@@ -186,6 +248,7 @@ def main():
     print(f'\n新时长 {total:.2f}s（原 {sum(float(s["dur"]) for s in segs):.2f}s）')
     for i, s in enumerate(new_segs):
         print(f'  段{i+1} {s["type"]:<8} {s["dur"]:.2f}s @ {s["_t0"]:.2f}s')
+    print(f'口型包络 {len(out["mouthCurve"])} 帧（逐帧 RMS）')
     print(f'音轨 → {out_wav}\npreset → {a.out_preset}')
 
 

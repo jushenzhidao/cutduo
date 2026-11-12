@@ -15,6 +15,7 @@
 | `motiongit-lab/mg-kit/` | MG 动效验证：纯 Skia 逐帧、5 类镜头（文字 / 档案时间轴 / 黑洞 2.5D 粒子 / 等轴积木 / 信息卡），带确定性自检 | `node mg-kit/render.mjs`、`deliverables/MG动效能力验证.html` |
 | `deliverables/` | 7 份 HTML 交付报告（浏览器打开） | `deliverables/落地总报告.html` |
 | `docs/` | 跨项目文档（外部仓库体检等） | — |
+| `templates/` | **模板目录**：按接入深度分四级（`01-original` / `02-rehost` / `03-semi-distill` / `04-full-distill`），加一张索引表（desk / science / paper / editorial / mg 各跑哪个文件、喂哪份参数）。类型目录只放 README，物理模板仍在 `motiongit-lab/templates/own|vendor/` | `templates/README.md` |
 
 根目录 `result.md` / `decisions.md` / `progress.md` / `blockers.md` 是 renderd 这一轮的**验收四件套**，内部路径引用都以工作区根为基准，故保持在根目录。
 
@@ -45,6 +46,7 @@ motiongit-lab       真实模板运行时与性能基准（含 SKIA / Chromium �
 | agent 找文件 / 找脚本 | `motiongit-lab/AGENTS.md`（五层结构、任务路由、根目录脚本索引、改动纪律） |
 | 体积治理与清理记录 | `docs/仓库清理-2026-11-09.md`、`docs/仓库清理-2026-11-12.md` |
 | 模板（内容）与代码如何分层 | `docs/模板与代码分离-2026-11-12.md` |
+| 一条模板该停在哪一级（原版→换宿主→半蒸馏→全蒸馏） | `templates/README.md` 第一节 + `motiongit-lab/AGENTS.md` §1.1 |
 | 编码与并行优化实测 | `docs/编码优化-2026-11-13.md` |
 | `.motion` 模板换宿主（Skia）可行性 | `docs/motion换宿主-2026-11-13.md` |
 | 一键出片的编排脚本 | `~/.workbuddy/skills/desktop-video-pipeline/scripts/make_film.py` |

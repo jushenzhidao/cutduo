@@ -27,20 +27,34 @@
     "schema": "params.schema.json",
     "defaultPreset": "presets/demo.json"
   },
-  "assets": { "manifest": "asset-manifest.json" },
+  "assets": {
+    "manifest": "asset-manifest.json"
+  },
   "output": {
     "width": 1920,
     "height": 1080,
-    "fps": { "num": 30, "den": 1 },
+    "fps": {
+      "num": 30,
+      "den": 1
+    },
     "durationPolicy": "fixed",
-    "durationSeconds": 54.5
+    "durationSeconds": 59.1
   },
-  "preview": { "preset": "presets/demo.json" },
-  "license": { "file": "licenses/TEMPLATE-LICENSE.txt" },
+  "preview": {
+    "preset": "presets/demo.json"
+  },
+  "license": {
+    "file": "licenses/TEMPLATE-LICENSE.txt"
+  },
   "permissions": {
     "network": false,
-    "read": ["package", "instance-inputs"],
-    "write": ["instance-output"]
+    "read": [
+      "package",
+      "instance-inputs"
+    ],
+    "write": [
+      "instance-output"
+    ]
   },
   "ai": {
     "entry": "SKILL.md",

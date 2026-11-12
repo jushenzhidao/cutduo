@@ -1,4 +1,0 @@
-# 多 pod / 无单点部署时的 Postgres 后端驱动。
-# SQLite 单机模式不需要它，但镜像里预装，让同一个镜像在两种拓扑下都能跑：
-# 设 RENDERD_DB_DSN 即切到 PG，不设就是零外部依赖的单机模式。
-psycopg[binary]>=3.1

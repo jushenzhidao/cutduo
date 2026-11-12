@@ -157,7 +157,14 @@
     return clamp(up * down, 0, 1);
   }
 
-  function figureSlot(ctx, W, H, a, t, dur) {
+  // 音频包络：vo.py 写进 preset 的 mouthCurve，每帧一个 0..1 值
+  function curveAt(curve, frame) {
+    if (!curve || !curve.length) return null;
+    const i = Math.max(0, Math.min(curve.length - 1, Math.round(frame)));
+    return curve[i];
+  }
+
+  function figureSlot(ctx, W, H, a, t, dur, frame) {
     const T = MK.T;
     if (a.figure === 'none') return;
     const side = a.figure === 'left' ? 'left' : 'right';
@@ -167,6 +174,8 @@
     ctx.save();
     ctx.globalAlpha *= enter;
     ctx.translate((1 - enter) * (side === 'left' ? -70 : 70), 0);
+
+    // ① 显式传入单张人物图
     if (img && img.complete && img.naturalWidth) {
       const sc = Math.min((W * 0.46) / img.naturalWidth, (H * 0.94) / img.naturalHeight);
       const w = img.naturalWidth * sc, h = img.naturalHeight * sc;
@@ -174,35 +183,87 @@
       ctx.restore();
       return;
     }
+
     const g = a.gesture || 'idle';
     const k = gestureK(t, dur === undefined ? 6 : dur, a.gestureAt === undefined ? 0.9 : a.gestureAt);
+    const env = curveAt(a.mouthCurve, frame);
+    const mouth = env === null ? mouthAt(t, a.talking) : env;
 
-    // 有真实姿态图时：idle 与动作图按 k 混合，叠加呼吸/说话起伏
+    // ② 姿态图（assets/figures 的四张透明 PNG）
     const imgs = a.figures === false ? null : FIGS;
     if (imgs && imgs.idle && imgs.idle.complete && imgs.idle.naturalWidth) {
       const poseName = POSE_OF[g] || 'idle';
       const pose = (poseName !== 'idle' && imgs[poseName] && imgs[poseName].complete) ? imgs[poseName] : null;
       const mix = pose ? ease(clamp((k - 0.30) / 0.34, 0, 1)) : 0;
-      const mouth = mouthAt(t, a.talking);
       const bob = Math.sin(t * 1.15) * 5 + (mouth - 0.1) * 7;
       const tilt = Math.sin(t * 0.62) * 0.006 + (a.gesture === 'nod' ? Math.sin(t * 3.0) * 0.012 * k : 0);
       const HH = H * (a.figureHeight || 0.86);
-      const draw = (img, alpha) => {
-        if (!img || alpha <= 0.004) return;
-        const sc = HH / img.naturalHeight;
-        const w = img.naturalWidth * sc;
+      const draw = (im, alpha) => {
+        if (!im || alpha <= 0.004) return;
+        const sc = HH / im.naturalHeight;
+        const w = im.naturalWidth * sc;
         ctx.save();
         ctx.globalAlpha *= alpha;
         ctx.translate(cx, H + 92 + bob);
         ctx.rotate(tilt);
-        ctx.drawImage(img, -w / 2, -HH, w, HH);
+        ctx.drawImage(im, -w / 2, -HH, w, HH);
         ctx.restore();
       };
       draw(imgs.idle, 1 - mix);
       draw(pose, mix);
+      // 口型贴片：按音频包络在"半开 / 大张"之间过渡，贴片本身带羽化 alpha
+      const M = window.__MK_MOUTHS || {};
+      const mSc = HH / 980;
+      const patchW = 210 * mSc, patchH = 150 * mSc;
+      const pX = cx - (720 * mSc) / 2 + 334.5 * mSc - patchW / 2;
+      const pY = (H + 92) - HH + 345 * mSc - patchH / 2 + bob;
+      const drawPatch = (im, alpha) => {
+        if (!im || !im.complete || !im.naturalWidth || alpha <= 0.02) return;
+        ctx.save();
+        ctx.globalAlpha *= Math.min(1, alpha);
+        ctx.drawImage(im, pX, pY, patchW, patchH);
+        ctx.restore();
+      };
+      // 口型贴片暂停（2026-11-13）：m_half/m_open 是**分别生成**的整图，整张下半脸
+      // （鼻唇沟、脸颊阴影）都与 idle 不同（差异 >60 的像素约 3.5 万）。任何贴片方案都会
+      // 留下抹痕或方块边：整块贴=贴纸感，差异蒙版=断续碎片（微笑与圆唇重合处没有差异，贴不上）。
+      // 要恢复：先拿到"同一张脸、只有嘴变"的素材，或人工标注四角做仿射后再开。
+      // 现在回落到音频包络驱动整体起伏（mouth 仍参与 bob 计算）。
+      if (false && mouth > 0.30) {
+        const t1 = clamp((mouth - 0.30) / 0.26, 0, 1);
+        const t2 = clamp((mouth - 0.62) / 0.22, 0, 1);
+        drawPatch(M.half, t1 * (1 - t2 * 0.5));
+        drawPatch(M.open, t2);
+      }
+
+      if (a.debugFigure) {
+        const sc0 = HH / imgs.idle.naturalHeight;
+        const w0 = imgs.idle.naturalWidth * sc0;
+        const top0 = (H + 92) - HH;
+        ctx.save();
+        // 红框 = 图片实际绘制区域
+        ctx.strokeStyle = '#FF0033'; ctx.lineWidth = 5;
+        ctx.strokeRect(cx - w0 / 2, top0, w0, HH);
+        // 黄框 = 原图整幅（用于核对 720x980）
+        // 蓝十字 = 按 mouthX/mouthY 算出的嘴位置
+        const mx0 = cx - w0 / 2 + (a.mouthX === undefined ? 335 : a.mouthX) * sc0;
+        const my0 = top0 + (a.mouthY === undefined ? 345 : a.mouthY) * sc0;
+        ctx.strokeStyle = '#0066FF'; ctx.lineWidth = 6;
+        ctx.beginPath(); ctx.moveTo(mx0 - 70, my0); ctx.lineTo(mx0 + 70, my0);
+        ctx.moveTo(mx0, my0 - 70); ctx.lineTo(mx0, my0 + 70); ctx.stroke();
+        ctx.beginPath(); ctx.arc(mx0, my0, 22, 0, Math.PI * 2); ctx.stroke();
+        // 顶部标注
+        ctx.fillStyle = '#FF0033'; ctx.font = '700 40px sans-serif';
+        ctx.fillText(`top=${Math.round(top0)} H=${Math.round(HH)} w=${Math.round(w0)}`, cx - w0 / 2 + 10, top0 + 40);
+        ctx.restore();
+      }
+      // 口型：3D 软胶的嘴是立体渲染，矢量覆盖会假；改用包络驱动头部起伏（bob 里已含 mouth），
+      // 即"说话时的身体节奏"。真正的口型需要口型序列素材，见 README 的已知限制。
       ctx.restore();
       return;
     }
+
+    // ③ 内置矢量人物
     let armL = 0, armR = 0, nod = 0;
     if (g === 'explain') { armL = k * 0.92; }
     else if (g === 'open') { armL = k * 0.66; armR = k * 0.66; }
@@ -212,8 +273,7 @@
     MK.figure(ctx, {
       cx, baseY: H * 0.965, scale: (a.figureScale || 1) * 0.93,
       t, hair: a.hair, skin: a.skin, coat: a.coat,
-      mouth: mouthAt(t, a.talking),
-      armL, armR, nod,
+      mouth, armL, armR, nod,
       look: side === 'left' ? 0.35 : -0.35,
       blinkSeed: a.blinkSeed || 1.3,
     });
@@ -291,7 +351,7 @@
       const subSize = a.subSize || 54;
       const sw = MK.measure(ctx, a.sub, subSize, 700) + subSize * 1.1;
       ctx.save();
-      ctx.translate(W / 2, H * 0.60);
+      ctx.translate(W / 2, H * 0.765);
       ctx.scale(k2, k2);
       ctx.translate(-sw / 2, 0);
       MK.tagSun(ctx, a.sub, 0, 0, subSize, {});
@@ -310,11 +370,11 @@
   };
 
   /* -------------------------------- 2 讲解位 -------------------------------- */
-  L.talk = function (ctx, W, H, t, dur, a, env) {
+  L.talk = function (ctx, W, H, t, dur, a, env, frame) {
     const T = env.T;
     ctx.save();
     MK.paper(ctx, W, H, a.paper || 'cream', t);
-    figureSlot(ctx, W, H, a, t, dur);
+    figureSlot(ctx, W, H, a, t, dur, frame);
 
     const left = a.figure === 'left';
     const bare = a.figure === 'none';
@@ -346,7 +406,7 @@
       ctx.restore();
       const kw = MK.measure(ctx, ln, a.size || 86, 700);
       if (i === (a.accentLine === undefined ? 0 : a.accentLine)) {
-        MK.marker(ctx, bx + 4, y + 32, bx + Math.min(kw, bw) - 6, y + 32, T.sun, 34);
+        MK.marker(ctx, bx + 4, y + 46, bx + Math.min(kw, bw) - 6, y + 46, T.sun, 30);
         // 重描字压住划痕
         ctx.save(); ctx.globalAlpha *= k; ctx.translate(dx, 0);
         MK.text(ctx, ln, bx, y, { size: a.size || 86, weight: 700, color: T.pop, maxW: bw, spacing: -1 });
@@ -361,7 +421,9 @@
       ctx.translate(bare ? W * 0.735 : bx + Math.min(bw, W * 0.30) * 0.5, bare ? H * 0.545 : H * 0.735);
       ctx.rotate((a.stickerRot || -8) * Math.PI / 180);
       ctx.scale(ks, ks);
-      MK.icon(a.sticker, ctx, 0, 0, a.stickerSize || 190, {});
+      if (!MK.prop(a.sticker, ctx, 0, 0, a.stickerSize || 190)) {
+        MK.icon(a.sticker, ctx, 0, 0, a.stickerSize || 190, {});
+      }
       ctx.restore();
     }
 
@@ -424,7 +486,24 @@
         ctx.fillStyle = rgba(T.pop, 0.35); ctx.fill();
         ctx.restore();
       }
-      MK.icon(a.organ || 'gut', ctx, 0, 0, sz, { eyes: a.eyes !== false, mark: mark && [mark[0], mark[1]] });
+      const usedProp = a.organImage && MK.prop(a.organImage, ctx, 0, 0, sz * 0.92);
+      if (!usedProp) {
+        MK.icon(a.organ || 'gut', ctx, 0, 0, sz, { eyes: a.eyes !== false, mark: mark && [mark[0], mark[1]] });
+      } else if (mark) {
+        // 3D 道具本身没有病灶点，用矢量补：黄点 + 红圈，位置沿用归一化坐标
+        const k = sz * 0.92;
+        const px = (mark[0] - 0.5) * k, py = (mark[1] - 0.5) * k;
+        ctx.save();
+        ctx.beginPath(); ctx.arc(px, py, k * 0.058, 0, Math.PI * 2);
+        ctx.fillStyle = '#FFE04D'; ctx.fill();
+        ctx.lineWidth = k * 0.016; ctx.strokeStyle = '#C25E4C'; ctx.stroke();
+        if (a.pulse) {
+          const ph = (Math.sin(t * 5.2) + 1) / 2;
+          ctx.beginPath(); ctx.arc(px, py, k * (0.075 + ph * 0.03), 0, Math.PI * 2);
+          ctx.strokeStyle = rgba(T.pop, 0.55 * (1 - ph * 0.6)); ctx.lineWidth = k * 0.012; ctx.stroke();
+        }
+        ctx.restore();
+      }
       ctx.restore();
     }
 
@@ -526,7 +605,9 @@
         ring: 'rgba(255,255,255,0.98)', spin: t * 0.1, shadow: false, innerRatio: 0.9,
         dashColor: d.bad ? 'rgba(180,200,205,0.8)' : 'rgba(255,255,255,0.9)',
       });
-      MK.icon(d.icon || 'scanner', ctx, cw / 2, cardY + cardH * 0.36, ir * 1.92, {});
+      if (!(d.image && MK.prop(d.image, ctx, cw / 2, cardY + cardH * 0.36, ir * 2.05))) {
+        MK.icon(d.icon || 'scanner', ctx, cw / 2, cardY + cardH * 0.36, ir * 1.92, {});
+      }
       // 标题
       MK.text(ctx, d.label || '', cw / 2, cardY + cardH * 0.72, {
         size: 62, weight: 700, color: d.bad ? '#6C7B80' : T.jadeDeep, align: 'center', maxW: cw * 0.86,
@@ -609,8 +690,10 @@
       const cx = startX + c * cellW;
       const cy = startY + r * gapY;
       const at = (a.itemAt && a.itemAt[i] !== undefined) ? Number(a.itemAt[i]) : 0.02 + i * 0.15;
+      // enter() 自带 0.82 的入场下限（为硬切首帧准备），它永不返回 0 —— 所以 k<=0 判断不出来。
+      // 未到时间的项必须显式跳过，否则整组图标会在段首同时出现，itemAt 形同虚设。
+      if (t < at) return;
       const k = enter((t - at) / 0.45, 0.82);
-      if (k <= 0) return;
       const R = Math.min(cellW * 0.36, H * 0.168);
       ctx.save();
       ctx.translate(cx, cy);
@@ -626,7 +709,9 @@
           fill: it.disc || '#FFE770', ring: 'rgba(255,255,255,0.98)',
           spin: t * 0.10 + i * 0.4, innerRatio: 0.9, dashColor: 'rgba(255,255,255,0.95)',
         });
-        MK.icon(it.icon || 'scanner', ctx, 0, 0, R * 1.62, { eyes: false, stone: it.stone });
+        if (!(it.image && MK.prop(it.image, ctx, 0, 0, R * 1.95))) {
+          MK.icon(it.icon || 'scanner', ctx, 0, 0, R * 1.62, { eyes: false, stone: it.stone });
+        }
       }
       ctx.restore();
       // 标签
@@ -678,7 +763,9 @@
       fill: a.disc || '#FFE770', ring: 'rgba(255,255,255,0.98)',
       spin: t * 0.16, innerRatio: 0.90, dashColor: 'rgba(255,255,255,0.95)',
     });
-    MK.icon(a.icon || 'scanner', ctx, 0, 0, R * 1.34, { eyes: false });
+    if (!(a.iconImage && MK.prop(a.iconImage, ctx, 0, 0, R * 1.9))) {
+      MK.icon(a.icon || 'scanner', ctx, 0, 0, R * 1.34, { eyes: false });
+    }
     ctx.restore();
 
     // 左侧被划掉的旧标签

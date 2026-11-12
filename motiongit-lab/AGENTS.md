@@ -76,7 +76,66 @@ MotionGit `.motion` 模板的运行时实验与出片产线。两条主线：
 - **拆**：解包、测量、复刻第三方模板（`templates/`、`replicas/`、`ref/`）。
 - **造**：用自己的渲染器出片（`desktop-kit/` = 桌面线、`skia-kit/` = 纸感线与科普线、`mg-kit/` = 通用线、`content/`）。
 
-## 2. 五层结构（2026-11-12 起）
+### 1.1 拿到一个新模板，先问用途（2026-11-13 定稿）
+
+**不用 `protection` 定生死**——它只决定「用哪种方式」，不决定「能不能做」。
+
+| 用途 | 走哪 | 说明 |
+|---|---|---|
+| 一次性出片 | **Chrome** | 官方链路，零成本（60s 片约 2.6 分钟） |
+| 短期反复（几条～几十条） | **换宿主** | 需同时满足：源码可读 + 引擎 Canvas2D；不满足就 Chrome |
+| 长期产线（持续产出） | **半蒸馏** | 有源码：蒸内容模型（2–4 天）；无源码：照片反推（3–5 天） |
+
+技术判据只剩两条，且只用来判断「换宿主」成不成立：
+
+1. **引擎必须是 Canvas2D**：有 `src/dom.js` 或非 canvas 的 `createElement('div'/'img')` → 换宿主等于写半个浏览器。
+2. **源码可读**：`protection: protected` 是 AES-256-GCM 密文，换宿主需要源码 ⇒ 只能 Chrome 或照片反推。
+
+> protected ≠ 做不了。蒸馏本来就是重写渲染，源码只是参考；`skia-kit` 当年就是逐像素反推
+> `paper-perspective`。代价是要自己对齐版式与笔触，时间从 2 天变 3–5 天。
+
+三条路的定位，别混（**这是接入深度的四级梯子，不是四个互斥分类**）：
+
+| 档 | 借什么 | 相对 Chrome | 产物落点 | 成本 |
+|---|---|---|---|---|
+| **原版** | 全部（官方 Chrome 链路） | 1× | `templates/vendor/<name>/` | 0 |
+| **换宿主** | 它的渲染器 | 0.8–1.5×（视绘制复杂度） | 同上，不改模板 | 几小时 |
+| **半蒸馏** | 它的**内容模型**（recipe/schema） | 3–14× | `templates/own/<name>/` | 2–4 天 |
+| **全蒸馏** | 只借设计参考 | 6–14× | `templates/own/<name>/` + `content/` | 2–4 天起 |
+
+`原版` 不是「落后档」，是**默认档**——多数模板停在这里就对了。四级之间是同一条模板可以逐级深入的关系：
+先跑原版看效果，需要去浏览器就跑换宿主，需要新内容就半蒸馏，需要自己的镜头语言才全蒸馏。
+
+**铁律**：不要拿「换宿主」当性能手段。它省的是 Chromium 依赖与可定制性，不是时间。
+速度只有两处能白拿：模板的 QA/记账链路（关审计）、重复绘制（缓存）。多进程是最后手段，
+且只对「纯 JS 计算型」模板有效（Chrome 多实例在重绘制场景几乎不扩展）。
+
+已评估过的模板，别再重复试：
+
+| 模板 | 结论 |
+|---|---|
+| `mac-desktop` | 换宿主最优（480 fps / 24 worker，官方 8.7×） |
+| `knowledge-explainer-sketchnote` | 可换宿主；通用图解 184 fps、手绘 native 14 fps（单核）。要多进程才划算（12 worker 138.9 fps） |
+| `camera-mode` | 引擎是 DOM/CSS，换宿主不成立；走 Chrome 或蒸馏 |
+| `paper-perspective` / `paper-perspective-11` / `promo-ink` | 源码加密，换宿主不成立；走 Chrome 或照片反推 |
+
+### 1.2 自建一支新模板：从骨架生成，别手抄
+
+```bash
+uv run python new-template.py --id my-template --title "我的版式"   # 生成 + 自检
+uv run python check-template.py --src templates/own/my-template      # 随时体检
+```
+
+骨架在 `templates/_scaffold/`，**能出片**（完整绘制原语 + 两个版式 + 宿主入口），
+但画面语言要自己写。模板内部的五层（协议 / 契约 / 内容 / 源码 / 说明）与四条硬边界
+见 `templates/_scaffold/README.md` —— 注意这跟本文件 §2 的「仓库分层」不是一个东西：
+§2 说文件放在仓库哪，那边说一份模板内部该有什么。
+
+体检器分两层：通用约束（所有模板）与形态约束（按 `runtime.profile` 与内容模型分派）。
+它不强迫所有模板同构——`editorial` 用 `scenes`、`distill` 用平铺点位、`science-explainer`
+用 `segments[].args`，三种都合法。
+
+## 2. 仓库分层（2026-11-12 起）
 
 | 层 | 路径 | 放什么 | 能不能随便动 |
 |---|---|---|---|
@@ -85,6 +144,7 @@ MotionGit `.motion` 模板的运行时实验与出片产线。两条主线：
 | 素材 | `edits/assets/` | 实拍照片、生成人像、Pexels 图/视频帧 | 唯一副本，**不删** |
 | 产物 | `out/`、`replicas/out/` | 成片、总览、报告 | 可重跑，已忽略入库 |
 | 自建模板 | `templates/own/` | `distill` / `editorial` / `science-explainer` + 打包产物 | 可改、可分发；保留上游 LICENSE |
+| 模板骨架 | `templates/_scaffold/` | 新建模板时复制的空骨架（结构完整、能出片） | 改它会影响以后所有新模板，改完跑 `check-template.py --src templates/_scaffold` |
 | 下载模板 | `templates/vendor/` | 5 个个人下载包（film-kit / motion-kit / html-canvas） | **不入库、不外传**，含个人 Key |
 
 `desktop-kit/presets` 是指向 `../content` 的过渡软链，旧命令仍可用；新命令请写 `content/`。

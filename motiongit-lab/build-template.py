@@ -39,9 +39,12 @@ refs = [
 for ref in refs:
     assert (SRC / ref).is_file(), f"manifest 引用缺失: {ref}"
 
+# 打包只收运行时产物：_raw.* 是未抠图/未压缩的源素材，indesign 类中间件同样排除
+SKIP = ("_raw.png", "_raw.jpg", "_raw.jpeg", ".psd", ".xcf")
 files = sorted(
     p for p in SRC.rglob("*")
     if p.is_file() and p.name != "integrity.json" and not p.name.startswith(".")
+    and not p.name.endswith(SKIP)
 )
 integrity = {
     "algorithm": "sha256",

@@ -1,11 +1,14 @@
 // 单帧成本分解：绘制 / 取帧 / 编码器对比（单进程，反映 1 核能力）
 import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { createCanvas, GlobalFonts } from '@napi-rs/canvas';
 import { createDesktopRenderer } from '../desktop-kit/desktop.mjs';
 
-const ROOT = '/Users/macstudio/WorkBuddy/2026-11-08-21-08-09/motiongit-lab';
+// 本脚本在 motiongit-lab/bench/ 下 ⇒ ROOT 恒为本仓 motiongit-lab/，不写死绝对路径
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 process.chdir(ROOT);
 
 const fontDir = `${ROOT}/assets/fonts`;

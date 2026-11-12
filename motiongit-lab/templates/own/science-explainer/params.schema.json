@@ -183,6 +183,15 @@
       "additionalProperties": {
         "type": "string"
       }
+    },
+    "mouthCurve": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "description": "逐帧口型包络（0..1），由 tools/vo.py 从配音音轨算 RMS 生成；有它时人物嘴型按帧开合，忽略 talking 的模拟值"
     }
   }
 }

@@ -39,7 +39,42 @@ templates/**/core.enc
 *.motion
 ```
 
-## 二、打包自建模板
+## 二、按接入深度看：每个模板停在哪一级
+
+四级梯子（定义见 `AGENTS.md` §1.1）：**原版 → 换宿主 → 半蒸馏 → 全蒸馏**。
+同一条模板可以逐级深入，不是互斥分类；`原版` 是默认档，不是落后档。
+
+| 模板 | 当前级别 | 依据 / 实测 |
+|---|---|---|
+| `vendor/mac-desktop` | **换宿主**（另有全蒸馏线 `desktop-kit/`） | 24 worker 480 fps，官方 8.7× |
+| `vendor/knowledge-explainer-sketchnote` | **换宿主** | 通用图解 184 fps；手绘 native 12 worker 138.9 fps |
+| `vendor/camera-mode` | 原版 | 引擎是 DOM/CSS，换宿主不成立 |
+| `vendor/paper-perspective` / `-11` / `promo-ink` | 原版 | 源码加密，换宿主不成立；要深入只能照片反推（3–5 天） |
+| `own/science-explainer` | **全蒸馏** | 自建 9 版式，20 worker 196 fps |
+| `own/editorial` | **全蒸馏**（改造自 MIT 项目） | 工程是 `html-dom/1`，出片用 `canvas-editorial.mjs`（Skia 直出，无浏览器） |
+| `own/distill` | 规范验证包 | 不承载产线 |
+
+四级的代码落点：
+
+| 档 | 模板放哪 | 代码放哪 |
+|---|---|---|
+| 原版 | `templates/vendor/<name>/template.motion` | `motion-render.mjs` |
+| 换宿主 | 同上（不改模板） | `bench/motion-host/*-host.mjs`、`*-parallel*.mjs` |
+| 半蒸馏 | `templates/own/<name>/` | 新 kit（可复用 `skia-kit/` 的渲染骨架） |
+| 全蒸馏 | `templates/own/<name>/` + `content/` | `desktop-kit/`、`skia-kit/` |
+
+**四级目录在哪**：仓库根的 `templates/01-original/` ～ `04-full-distill/` 是**类型索引层**——
+每个目录只放一份 `README.md`（判据、实例、命令），不放代码与参数副本；本目录的 `own/` + `vendor/`
+仍是唯一物理落点。
+
+**为什么不把物理文件按四级搬**：`own/` 与 `vendor/` 是按「能不能分发」分的，属凭据与许可的硬约束；
+四级是过程属性，会随投入变化（今天原版，明天换宿主）。按过程搬目录会让路径不稳定，且同一模板
+可能同时有两级产物（`mac-desktop` 既有换宿主 PoC，也有 `desktop-kit`）。用类型目录 + 这张表串起来即可。
+
+**半蒸馏目前没有实例**——如果决定把 sketchnote 做下去，它会是第一个：自写渲染 + 沿用它的
+recipe/schema，落在 `templates/own/sketchnote-distill/`。
+
+## 三、打包自建模板
 
 ```bash
 uv run python build-template.py --src templates/own/science-explainer \
@@ -53,7 +88,7 @@ node motion-render.mjs inspect --package /tmp/sep-check.motion
 # 期望 integrity 30/30 通过
 ```
 
-## 三、迁移记录（2026-11-12）
+## 四、迁移记录（2026-11-12）
 
 1. **先改规则**：`.gitignore` 的 5 条按包名整包规则合并为 `templates/vendor/`，再移动；
 2. **下载包用 `mv`**（不在 git 索引里），**自建包用 `git mv`**（保留历史）；

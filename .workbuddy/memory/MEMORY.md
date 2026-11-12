@@ -19,6 +19,24 @@
   - 手机可读性：横屏 1920×1080 要求字高 40px，而 skia-kit 字幕为 34px ⇒ 会把自家片判不合格。
   - 结论：搬**判据维度**（亮度 L* 下限 / 分横竖的最小字高 / 开场运动），阈值用现有成片分位标定。
 
+## 模板接入策略（2026-11-13 定稿，权威版在 `motiongit-lab/AGENTS.md` §1.1）
+
+**一句话：先问用途，再问技术；默认 Chrome，别拿「换宿主」当性能手段。**
+
+| 用途 | 走哪 | 成本 |
+|---|---|---|
+| 一次性出片 | Chrome | 0 |
+| 短期反复（源码可读 + Canvas2D） | 换宿主 | 几小时 |
+| 长期产线 | 半蒸馏（蒸**内容模型**，不是视觉代码） | 2–4 天；无源码反推 3–5 天 |
+
+- **`protection` 不是门槛**，只决定方式：open 可换宿主；protected 只能 Chrome 或照片反推
+  （蒸馏本来就是重写，源码只是参考；skia-kit 当年就反推过 paper-perspective）。
+- 换宿主还需要引擎是 Canvas2D（有 `dom.js` / 非 canvas createElement 就不成立）。
+- 速度只有两处能白拿：关模板审计、缓存重复绘制。多进程是最后手段，只对纯 JS 计算型模板有效
+  （Chrome 多实例在重绘制场景几乎不扩展：native 8 实例 32.9 fps < 单实例 42 fps）。
+- 已评估：`mac-desktop` 换宿主最优（480 fps / 24w）；`sketchnote` 可换但手绘单核 14 fps、
+  要 12 worker 才划算（138.9 fps）；`camera-mode` 引擎 DOM；`paper-*`/`promo-ink` 源码加密。
+
 ## 交付门禁的标定结果（2026-11-10，已落地为 `skia-kit/gate.mjs`）
 
 在 19 支既有成片 + 3 支新片上实测，三项"看起来像门禁"的指标其实是连续分布，不是对错：
@@ -155,3 +173,16 @@
 上一版把 `editorial` 说成「走浏览器 canvas2d」是**错的**：`canvas-editorial.mjs` 实际 import
 `@napi-rs/canvas`，全仓只有 `motion-render.mjs` 用 playwright（跑第三方 `.motion` 模板）。
 我们的出片栈**只有一条**：Node + `@napi-rs/canvas`（Skia）+ 可选 `headless-gl` + ffmpeg。
+
+## 仓库位置与模板目录（2026-11-13 04:0x）
+
+- **仓库根 = `~/Desktop/wb/cutduo`**（2026-11-13 04:0x 去掉日期层：原
+  `Desktop/wb/cutduo/2026-11-08-21-08-09/` 的内容已全部上提一层）。
+  旧路径 `~/WorkBuddy/2026-11-08-21-08-09` 现在是指向该目录的软链，
+  仅为让当前会话继续可用，重新打开项目后即可删。
+- 仓库根 `templates/` = **四类目录**（接入深度，不是互斥分类）：
+  `01-original` / `02-rehost` / `03-semi-distill` / `04-full-distill`。
+  **只放 README，不放代码与参数副本**；物理模板仍在 `motiongit-lab/templates/{own,vendor}/`
+  （own/vendor 是「能不能分发」的硬边界，四级只是过程属性）。
+- `skia-kit/render.mjs` 探针的正确写法是 `--probe <file.png> --at <秒>`；
+  `--probe --at 5` 会把 `--at` 当文件名，在 cwd 生成一个叫 `--at` 的 PNG。

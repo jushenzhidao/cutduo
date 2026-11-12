@@ -1186,3 +1186,108 @@ SQLite `_migrate` + PG `_PG_ALTERS` 各加一条 ALTER。
   实拍任务 pass、日志无异常。
 
 **全量回归 183 个用例 OK（跳 6）**，比上一轮 164 增加 19 个（配额 4 / 契约 8 / 渲染 7）。
+
+### 改名 renderd → cutloop（2026-11-13 02:1x）
+
+用户定名 `cutloop`（cut + loop：剪辑 + agent 的写-渲-验-改闭环，兼指"同输入同输出"的可重复性）。
+命名占用实测：PyPI 可用 / npm 可用 / `.dev` `.io` 均未被占；GitHub 用户名 `cutloop` 已占
+（org 与 user 同命名空间），开源时用 `cutloop-labs` 或挂 `jushenzhidao` 下即可。
+
+**改了什么**：包 `renderd` → `cutloop`（含目录）、778 处字符串、59 个文件；
+契约 `cutproof/receipt/v1` → `cutloop/receipt/v1`；镜像/容器名/部署路径/Prometheus 规则文件同步。
+
+**新增 `pyproject.toml`**（此前只能 `python -m renderd` 跑，装不了、发不了 PyPI）。
+现在 `pip install -e .` 可用，console script `cutloop`，依赖仍只有 pillow（PG 走 extras）。
+
+**环境变量做了双读兼容**：`cutloop/__init__.py` 包初始化时把 `RENDERD_*` 别名成 `CUTLOOP_*`，
+新值优先、旧值兜底。原因是 `auth.py` 等处直读 `os.environ`，只改名会让服务以**零 token**启动，
+所有请求 401 而健康检查仍绿 —— 这是最隐蔽的一类事故。实测三种组合均符合预期。
+
+**验收**：183 用例（177 passed / 6 skipped），退出码 0，与改名前的基线完全一致。
+切换清单与回滚写在 `renderd/docs/MIGRATION-cutloop.md`。
+
+注意：`pyproject.toml` 里 `addopts = "-q"`，命令行再给 `-q` 会压掉汇总行（`-qq` 效果），
+取用例数要用 `--co -o addopts=""`。
+
+### 吸收两家优点：patched_ir + 模板能力声明（2026-11-13 02:3x）
+
+按 `videospec` / `MotionKit` 的对照结论，只挑了两条"降低 agent 往返"的：
+`⑤ fixes 变成可直接提交的 IR` 和 `③ 模板能力声明`。均已在 `cutloop` 落地。
+
+**① patched_ir（validate_render 返回）**
+- `runner.apply_fixes()`：把 `{"field","action","value"}` 落到 IR 副本上，
+  支持 `styles.*.font_family` 通配与 `tracks[0].clips[1].out_frame` 下标
+- **不新建字段**：只在已存在的落点上改。凭空补出的结构 IR 校验没见过，比不改更危险
+- 无法应用的 fix 显式回 `fixes_unapplied`，不静默吞掉
+- 只在 validate 时生成（`include_patch=True`），submit 路径不做多余深拷贝
+- 实测：字体不存在 → 回退到 Hiragino Sans GB，`patched_ir` 已改、原 IR 不变、`fixes_applied=1`
+
+**② 模板能力声明**
+- `CAPABILITY_HINTS` 七项词表（multi_clip/text/audio/transition/speed/subtitle/overlay）
+- `capabilities_of(template)` 从 tracks 结构推导，`list_templates` 一并返回词表
+
+**⚠️ 真实链路发现一个 unit test 抓不到的 bug**：最初把 capabilities 存进模板 JSON，
+而 `TemplateRegistry._seed()` 只在文件缺失时才写 → 存量安装（含本机 `var/templates/`）
+永远拿不到新字段，能力声明静默为空。改为**加载时从结构推导**后，旧副本自动正确。
+这就是为什么改完要跑一次真实 `Service.validate()`，而不是只看 pytest 绿。
+
+**验收**：188 passed / 6 skipped（新增 11 条，含"磁盘副本不可信"回归用例）。
+
+### cutloop 迁出为独立项目（2026-11-13 02:4x）
+
+`renderd/`（含 cutloop 包）已整体迁至 **`/Users/macstudio/WorkBuddy/cutloop`**，原位置删除。
+同盘 rename 原子完成，106MB（其中 var/ 85MB 运行产物、.venv 已删重建）。
+
+**新仓库**：`git init` + 4 次提交，95 个跟踪文件；.gitignore 补上 `.venv/`、`build/`、`dist/`、`*.egg-info/`。
+历史仍留在本工作区仓库的 `renderd/` 路径下（本工作区 `git status` 现显示 63 个删除，未提交）。
+
+**验证**（搬移后重跑）：188 passed / 6 skipped（**逐模块**跑；单进程全量在本沙箱会被杀，报 137）；
+`cutloop doctor` 全绿（ffmpeg 9.0.2 / 1377 字体 / sqlite 3.53）；`cutloop --version` = 0.2.1。
+
+**修掉两个打包问题**：
+1. `pyproject.toml` 缺 `version` → `pip` 直接拒绝构建。改为 `dynamic = ["version"]` +
+   `[tool.setuptools.dynamic] version = {attr = "cutloop.__version__"}`，版本仍只有一处定义。
+2. `uv pip install .` 产生的 `build/lib/` 被 `git add -A` 误提交 → 已 `git rm --cached` 并加忽略。
+
+**环境限制（非项目缺陷）**：`uv pip install -e .` 在本机报 `EEXIST: mkdir`（uv 构建缓存临时目录冲突），
+非 editable 安装正常。换机器或在 `uv cache clean` 之后应可恢复。
+
+### ⚠️ 更正一条旧结论：备份其实是有的
+
+2026-11-13 00:0x 我说「crontab 里没有任何 renderd 备份」——**这是错的**，原因是用 `crontab -l | head -10`
+把下面那行截掉了。实测：
+
+```
+30 4 * * * BACKUP_DIR=/var/backups/renderd KEEP_DAYS=7 /opt/renderd/deploy/linux/backup.sh
+```
+
+`/var/backups/renderd/` 下有 11-10、11-11、11-12 三份，最近一份 **185MB**，日志显示 pg_dump + /data 打包均成功。
+
+**但仍有一个真缺口**：备份目录 `/var/backups` 与数据同在最系统盘（`/dev/sda1`），
+所以它能防误删、防逻辑错误，**不防磁盘损坏或整机故障**。要补的是异地副本，不是"从零建备份"。
+
+### cutloop 最终落位（2026-11-13 03:1x）
+
+目标改为 **`/Users/macstudio/Desktop/wb/cutloop`**（此前误放 `~/WorkBuddy/cutloop`，已删除）。
+
+该位置**不是空目录**，而是用户 02:25 用 `uv init` 建的脚手架，且已配好远端
+`git@github.com:jushenzhidao/cutloop.git`（可连、与本地 12ec3c9 一致）。
+因此按「合并进脚手架」处理，而不是覆盖：
+
+- `cutloop/` → `src/cutloop/`（沿用脚手架的 src 布局，避免从 cwd 误导入）
+- pyproject 加 `package-dir = {"" = "src"}` 与 pytest `pythonpath = ["src"]`
+- 保留 setuptools 后端（未验证 uv_build）；`requires-python` 取 >=3.10（镜像 3.12）
+- `.gitignore` 合并：var/、deploy/certs/、*.sqlite3、.venv-af/、.pytest_cache/
+- 保留其 `.git` 与 `origin`，共 3 个提交，97 个跟踪文件，**未 push**
+
+**验收**：188 passed / 6 skipped；`python -m cutloop doctor` 全绿；`import cutloop` 解析到 `src/cutloop/__init__.py`。
+
+**一个环境坑**：setuptools 的 `editable_wheel` 在本机沙箱稳定报 `EEXIST: mkdir`
+（uv 与 pip 都如此，非项目问题）。改用 `.pth` 直连源码（`site-packages/cutloop-src.pth` 指向 `src`），
+等价 editable 效果；命令入口用 `python -m cutloop`。普通（非 editable）安装可正常生成 console script。
+
+**未完成的**：amd64 镜像构建。卡在两处，均已定位：
+1. 本机 `www.github.com` 不通 → 改到 ai-prod 构建（已能下载 ffmpeg）
+2. `Dockerfile` 钉的是 `latest` 的 sha256，上游轮换后**永久不可重建**；
+   已改为钉 `autobuild-2026-11-12-15-40` + 资产名（含 commit `n9.0.2-57-gd838f9f9ae`）+ 新 sha256。
+   重建尚未跑完（被中断），下次继续：`docker build --build-arg TARGETARCH=amd64 -t cutloop:0.2.1 .`
