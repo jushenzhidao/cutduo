@@ -1,8 +1,8 @@
 import { createCanvas } from '@napi-rs/canvas';
-import { createPaperRenderer, registerFonts } from '/Users/macstudio/WorkBuddy/2026-11-08-21-08-09/skia-kit/paper.mjs';
+import { createPaperRenderer, registerFonts } from '../skia-kit/paper.mjs';
 import fs from 'node:fs';
-const P = JSON.parse(fs.readFileSync('/Users/macstudio/WorkBuddy/2026-11-08-21-08-09/motiongit-lab/edits/inputs-md.json','utf8'));
-registerFonts('/Users/macstudio/WorkBuddy/2026-11-08-21-08-09/motiongit-lab/assets/fonts');
+const P = JSON.parse(fs.readFileSync('edits/inputs-md.json','utf8'));
+registerFonts('assets/fonts');
 const canvas = createCanvas(1920,1080);
 const r = createPaperRenderer({ ctx: canvas.getContext('2d'), palette: { bg:'#FAFAF7', ink:'#111214', accent:'#2462EA', body:'#4C5150', label:'#7A807C', bar:'rgba(17,18,20,0.88)', ring:'rgba(36,98,234,0.22)', hair:'rgba(0,0,0,0.08)' } });
 r.setContent({ scenes: P.scenes, captions: P.captions, avatar: null });

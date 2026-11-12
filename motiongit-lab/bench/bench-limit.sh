@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 极限压测：Skia 1/2/4/8/12/16 worker + Chromium 8 路，记录耗时与峰值内存
 set -uo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 OUTCSV=/tmp/limit.csv
 echo "mode,workers,wall_s,peak_rss_mb,procs" > "$OUTCSV"

@@ -37,64 +37,40 @@ MotionGit `.motion` 模板的运行时实验与出片产线。两条主线：
 
 出片的一键编排在用户级 skill：`~/.workbuddy/skills/desktop-video-pipeline/scripts/make_film.py`。
 
-## 4. 根目录脚本索引
+## 4. 脚本索引
 
-根目录脚本是历史实验的扁平堆积。**按用途查表，不要按名字猜**。迁移前先看「可移植性」。
-`bench/` 下的脚本依赖 `process.cwd()`，**必须从仓库根运行**（详见 `bench/README.md`）。
+根目录已收敛为 **入口 / 引擎 / 工具** 三类（18 个）；一次性基准、探针、拼图脚本全部在 `bench/`（19 个）。
 
-### 入口 / 必需
+### 根目录（18）
 
-| 文件 | 用途 | 注意 |
+| 类别 | 文件 | 用途 |
 |---|---|---|
-| `motion-render.mjs` | `.motion` 通用宿主（doctor/check-params/preview/render） | 主入口 |
-| `setup.sh` | 装 Playwright/Chromium/FFmpeg（国内镜像） | 首次环境 |
-| `fetch-fonts.sh` | 拉 Noto Sans SC 三字重 | 首次环境 |
-| `build-template.py` | 把 `templates/<name>/` 打成 `.motion` | `--src/--out` |
-| `safe-unpack.py` | 只读安全解包（拒绝越界/软链/压缩炸弹） | 安全边界 |
-| `gen-tpl-params.py` | 由 `.motion` 生成参数样例 | — |
+| 入口 | `motion-render.mjs` | `.motion` 通用宿主（doctor/check-params/preview/render） |
+| 入口 | `setup.sh` / `fetch-fonts.sh` | 首次环境：Playwright/Chromium/FFmpeg、Noto 字体 |
+| 入口 | `build-template.py` | 把 `templates/own/<name>/` 打成 `.motion` |
+| 入口 | `safe-unpack.py` | 只读安全解包（拒绝越界/软链/压缩炸弹） |
+| 引擎 | `canvas-editorial.mjs` | Skia 版 editorial 剪辑（36K，读 `edits/inputs*.json`） |
+| 引擎 | `render-daemon.mjs` | 常驻 daemon（复用 Skia/字体/worker） |
+| 引擎 | `render-parallel.mjs` | 分片并行渲染原型 |
+| 引擎 | `render-batch.py` | 多条片各跑一条完整流水线 |
+| 引擎 | `render-parallel-tpl.py` | **实验失败，默认禁用**（文件头有实测结论） |
+| 工具 | `build-sync.py` | 旁白逐句合成 + 时间轴重排 |
+| 工具 | `build-voices.sh` / `build-voices-more.sh` | 批量换音色/方言 |
+| 工具 | `gen-tpl-params.py` / `make-tpl.sh` / `shard-tpl.py` / `test-theme.sh` | 模板参数/打包/切片/主题测试 |
+| 门禁 | `qa-gate.py` | 交付完整性（黑帧/重复段/音画时长）；**skill 写死此路径，勿移** |
 
-### 渲染引擎 / 实验实现
+### `bench/`（19）
 
-| 文件 | 用途 | 状态 |
-|---|---|---|
-| `canvas-editorial.mjs` | Skia 版 editorial 剪辑（36K，读 `edits/inputs*.json`） | 可用，被文档引用 7 处 |
-| `render-daemon.mjs` | 常驻渲染 daemon（复用 Skia/字体/worker） | 实验可用 |
-| `render-parallel.mjs` | 分片并行渲染原型（N 段 Chromium + FFmpeg） | 实验可用 |
-| `render-batch.py` | 多条片各跑一条完整流水线 | 可用 |
-| `render-parallel-tpl.py` | 模板按时间切片并行 | **实验失败，默认禁用**（文件头有实测结论） |
-
-### 基准（一次性，结论已进 PLAYBOOK）
-
-| 文件 | 用途 | 可移植性 |
-|---|---|---|
-| `bench-draw.mjs` | 绘制成本 | **硬编码绝对路径**，换机器/移动即断 |
-| `bench/bench-enc.mjs` | 纯编码成本 | 已移入 `bench/`，须从仓库根运行 |
-| `bench-pipe.mjs` | JPEG vs RAW 管道 A/B | 用 `path.resolve('.')`，须在根运行 |
-| `bench-ffmpeg.py` | FFmpeg 编码档位 + PSNR | 参数化 |
-| `bench-limit.sh` | worker 数 / 内存极限压测 | `cd $(dirname)`，**移动会断** |
-| `bench-three.sh` | 串行 / 4 路 / 8 路对比 | 同上 |
-
-### 探针（回答单点问题）
-
-| 文件 | 用途 |
+| 类别 | 文件 |
 |---|---|
-| `cankit-probe.mjs` | CanvasKit / SkSL 可行性（三问） |
-| `bench/grain-probe.mjs` | SkSL 烘颗粒 tile 的正确用法 | 已移入 `bench/` |
-| `probe-kit.mjs` | 按分镜中点抽帧成 PNG（唯一有相对 import 的脚本） |
-| `profile-chrome.mjs` | Chrome 逐帧截图路径对比 |
-| `profile-engines.mjs` | Chromium / WebKit / Firefox 引擎对比 |
-| `mem-monitor.py` | 进程树 RSS 峰值采样 |
-| `proc-args.py` | 进程参数/环境读取 |
+| 成本基准 | `bench-draw` `bench-enc` `bench-pipe` `bench-ffmpeg` |
+| 并发/内存 | `bench-limit.sh` `bench-three.sh` `mem-monitor.py` `proc-args.py` |
+| 探针 | `cankit-probe` `grain-probe` `probe-kit` `profile-chrome` `profile-engines` |
+| 拼图/截图 | `mk-compare` `mk-compare-skia` `mk-label` `shot` `shot2` |
+| 字体 | `font-metrics`（原 `t.mjs`） |
 
-### 拼图 / 截图 / 临时
-
-| 文件 | 用途 | 注意 |
-|---|---|---|
-| `mk-compare.mjs` | 四条管线同点对比图 | 依赖 `/tmp/cmp/*.jpg` |
-| `mk-compare-skia.mjs` | 三版 Skia 对比图 | — |
-| `mk-label.mjs` | 批量打标签 | 依赖 `assets/fonts` |
-| `shot.mjs` / `shot2.mjs` | 用 Playwright 截 HTML 报告 | 依赖 `process.cwd()` |
-| `bench/font-metrics.mjs` | 字体度量小样（原 `t.mjs`） | 已移入 `bench/` |
+**必须在仓库根运行**（脚本用 `process.cwd()` 解析 `assets/fonts`、`edits/inputs-md.json`），
+两个 shell 已改成 `cd "$(dirname "$0")/.."`。详见 `bench/README.md`。
 
 ## 5. 禁区
 
@@ -116,11 +92,12 @@ MotionGit `.motion` 模板的运行时实验与出片产线。两条主线：
 
 不为整齐而大搬家——移动会破坏文档引用与脚本内的相对/绝对路径。按「先索引、再小步移动、每步验证」推进：
 
-- **已完成**：内容与代码分离（`presets/` → `content/`，保留软链）；README 体积表与清理记录；本索引；
-  第一批 3 个脚本移入 `bench/`（`font-metrics` / `bench-enc` / `grain-probe`），三个都已实跑通过。
-- **下一步（每次 ≤5 个文件）**：只移动「无文档引用 + 无相对 import + 不依赖 cwd」的脚本，移动后跑一次探针 + `verify`。
-  下一批要先修依赖：`bench-draw.mjs` 的硬编码绝对路径、`bench-limit.sh` / `bench-three.sh` 的 `cd $(dirname)`。
-  `profile-*` / `shot*` 因文档引用多、依赖 cwd，暂留根目录。
+- **已完成**：内容与代码分离（`presets/` → `content/`）；脚本三层收敛（根目录 37 → 18，`bench/` 19 个）；
+  `templates/` 规则与清单就位；本索引。
+- **下一步**：`templates/` 的 own/vendor 物理拆分（`.gitignore` 规则已预留，顺序：先规则 → 再移动 →
+  `git status` 查凭据 → 回归 `build-template.py`）。
+- **不再移动**：`canvas-editorial` / `render-*` 是引擎；`motion-render` / `setup` / `build-template` 是入口；
+  `qa-gate.py` 被 skill 写死。路径稳定性优先于目录整齐。
 - **暂不移动**：`bench-draw.mjs`（绝对路径）、`bench-limit.sh` / `bench-three.sh`（`cd $(dirname)`）、
   `profile-*` / `shot*`（依赖 cwd）、`canvas-editorial.mjs` / `render-*.{mjs,py}`（是引擎不是脚本）。
 - **`templates/` 的 own/vendor 分离**：已建立 `templates/README.md`（来源/许可/入库/分发清单），

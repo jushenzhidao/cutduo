@@ -1,7 +1,7 @@
 // 抽帧检查：把 inputs-<prefix>.json 里每个分镜的中点渲成 PNG
 import fs from 'node:fs';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
-import { createPaperRenderer, registerFonts } from './skia-kit/paper.mjs';
+import { createPaperRenderer, registerFonts } from '../skia-kit/paper.mjs';
 
 const params = process.argv[2] || 'edits/inputs-kit.json';
 const outDir = process.argv[3] || 'out/probe-kit';

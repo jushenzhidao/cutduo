@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 实战对比：同一份剪辑稿，串行 / 4 路 / 8 路各导一版
 set -uo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 for j in 1 4 8; do
   echo "=== jobs=$j ==="
