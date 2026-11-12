@@ -76,6 +76,20 @@ if (document.title !== 'done') {
   process.exit(1);
 }
 
+// --check：验证 frame(t) 是否无状态（分片并行前提）
+// 同一时刻「直接渲染」与「先跑一段再渲染」应逐字节一致，否则分片会错位。
+if (process.argv.includes('--check')) {
+  await window.renderAt(0.2);
+  await window.renderAt(10);
+  const a = canvas.toBuffer('image/png');
+  await window.renderAt(10);          // 连续渲染 10s
+  await window.renderAt(10.5);
+  await window.renderAt(11);          // 跳到 11s
+  await window.renderAt(10);          // 再回到 10s
+  const b = canvas.toBuffer('image/png');
+  console.log(`无状态检查：${a.equals(b) ? 'PASS（逐字节一致）' : `FAIL（差 ${a.length} vs ${b.length} 字节）`}`);
+}
+
 // --bench：测连续渲染的每帧成本（不含编码）
 if (process.argv.includes('--bench')) {
   const N = 90;
