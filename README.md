@@ -46,6 +46,7 @@ motiongit-lab       真实模板运行时与性能基准（含 SKIA / Chromium �
 | 体积治理与清理记录 | `docs/仓库清理-2026-11-09.md`、`docs/仓库清理-2026-11-12.md` |
 | 模板（内容）与代码如何分层 | `docs/模板与代码分离-2026-11-12.md` |
 | 编码与并行优化实测 | `docs/编码优化-2026-11-13.md` |
+| `.motion` 模板换宿主（Skia）可行性 | `docs/motion换宿主-2026-11-13.md` |
 | 一键出片的编排脚本 | `~/.workbuddy/skills/desktop-video-pipeline/scripts/make_film.py` |
 
 ## 常用命令

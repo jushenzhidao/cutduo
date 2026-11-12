@@ -134,6 +134,7 @@ MotionGit `.motion` 模板的运行时实验与出片产线。两条主线：
 | 并发/内存 | `bench-limit.sh` `bench-three.sh` `mem-monitor.py` `proc-args.py` |
 | 探针 | `cankit-probe` `grain-probe` `probe-kit` `profile-chrome` `profile-engines` |
 | 拼图/截图 | `mk-compare` `mk-compare-skia` `mk-label` `shot` `shot2` |
+| 宿主 | `motion-host/poc.mjs` | 把 `.motion` 镜头跑在 Skia 上（换宿主验证；依赖 `templates/vendor`） |
 | 字体 | `font-metrics`（原 `t.mjs`） |
 
 **必须在仓库根运行**（脚本用 `process.cwd()` 解析 `assets/fonts`、`edits/inputs-md.json`），
