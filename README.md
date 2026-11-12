@@ -55,6 +55,10 @@ echo '{"kit":"paper","preset":"v8t"}' | node api/cli.mjs render --stdin --json
 > （`mg` 136 → 108 行、`desk` 165 → 141 行、根入口 225 → 214 行）。
 > 抽取前后用同片同参逐帧比对：MAE 0.000、差异像素 0、体积与帧数一致。
 >
+> 合并还暴露了一处真实漂移：`mg` 的无音轨分支带 `-movflags +faststart`，另两支漏了 ——
+> 同一仓库对同一件事有两种做法，分散时没人发现。已统一，现在所有 mp4 的 moov 都在文件头。
+> （`paper` / `desk` 因补了 faststart 而哈希变化，但 PSNR 为 `y:inf u:inf v:inf`，画面逐像素一致。）
+>
 > `editorial` 例外——它自带 `render-cache` 与两套 worker 路径，结构与前三套不同，
 > 强行合并会引入抽象泄漏，先留着。
 
