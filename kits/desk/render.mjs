@@ -10,14 +10,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { spawn, execFileSync } from 'node:child_process';
-import { once } from 'node:events';
+import { planShards, partArgs, pumpFrames, spawnPart, concatParts } from '../../src/pipeline.mjs';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { createDesktopRenderer, registerFonts, validateParams, DEFAULT_TOKENS } from './desktop.mjs';
 import { REPO_ROOT } from '../../src/root.mjs';
 
-const FFMPEG = process.env.FFMPEG || '/opt/homebrew/bin/ffmpeg';
 const ROOT = REPO_ROOT;
 const W = DEFAULT_TOKENS.width, H = DEFAULT_TOKENS.height;
 
@@ -100,19 +98,10 @@ if (!isMainThread) {
   registerFonts(path.join(ROOT, 'assets/fonts'));
   const P = loadParams(params, fps);
   const { canvas, r } = await makeRenderer(P, await loadPresenter(presenter), start, end);
-  const ff = spawn(FFMPEG, ['-hide_banner', '-loglevel', 'error', '-y',
-    '-f', 'image2pipe', '-framerate', String(P.fps), '-i', 'pipe:0',
-    '-c:v', 'libx264', '-preset', preset, '-crf', crf, '-pix_fmt', 'yuv420p',
-    '-f', 'mpegts', part], { stdio: ['pipe', 'ignore', 'inherit'] });
-  const done = once(ff, 'close');
-  for (let f = start; f < end; f++) {
-    r.renderFrame(f / P.fps);
-    const buf = canvas.toBuffer('image/jpeg', jpeg);
-    if (!ff.stdin.write(buf)) await once(ff.stdin, 'drain');
-  }
-  ff.stdin.end();
-  const [code] = await done;
-  if (code !== 0) throw new Error('ffmpeg exit ' + code);
+  const ff = spawnPart(partArgs({
+    pipe: 'jpeg', fps: P.fps, width: W, height: H, crf, preset, jpeg, part,
+  }));
+  await pumpFrames({ renderer: r, canvas, fps: P.fps, start, end, ff, pipe: 'jpeg', jpeg });
   parentPort.postMessage({ ok: true, frames: end - start });
 } else {
   const t0 = Date.now();
@@ -128,12 +117,7 @@ if (!isMainThread) {
   }
 
   const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'desktop-kit-'));
-  const per = Math.ceil(P.frames / A.workers);
-  const segs = [];
-  for (let i = 0; i < A.workers; i++) {
-    const s = i * per, e = Math.min(P.frames, s + per);
-    if (s < e) segs.push({ i, s, e, part: path.join(TMP, `seg-${i}.ts`) });
-  }
+  const segs = planShards(P.frames, A.workers, TMP);
   await Promise.all(segs.map((seg) => new Promise((resolve, reject) => {
     const w = new Worker(new URL(import.meta.url), {
       workerData: { start: seg.s, end: seg.e, part: seg.part, params: A.params, fps: P.fps,
@@ -144,20 +128,11 @@ if (!isMainThread) {
     w.once('error', reject);
   })));
 
-  const list = path.join(TMP, 'list.txt');
-  fs.writeFileSync(list, segs.map((s) => `file '${s.part}'`).join('\n'));
-  const silent = path.join(TMP, 'silent.mp4');
-  execFileSync(FFMPEG, ['-hide_banner', '-loglevel', 'error', '-y',
-    '-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', silent]);
+  concatParts({
+    parts: segs.map((s) => s.part), tmpDir: TMP, out: A.out,
+    audio: A.audio, fps: P.fps, frames: P.frames,
+  });
   const dur = (P.frames / P.fps).toFixed(3);
-  if (A.audio && fs.existsSync(A.audio)) {
-    execFileSync(FFMPEG, ['-hide_banner', '-loglevel', 'error', '-y',
-      '-i', silent, '-i', A.audio, '-map', '0:v:0', '-map', '1:a:0',
-      '-c:v', 'copy', '-c:a', 'copy', '-t', dur, '-movflags', '+faststart', A.out]);
-  } else {
-    execFileSync(FFMPEG, ['-hide_banner', '-loglevel', 'error', '-y', '-i', silent,
-      '-c', 'copy', '-t', dur, A.out]);
-  }
   fs.rmSync(TMP, { recursive: true, force: true });
   const size = (fs.statSync(A.out).size / 1048576).toFixed(2);
   console.log(`✓ ${A.out}`);

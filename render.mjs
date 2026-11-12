@@ -11,8 +11,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { spawn, execFileSync } from 'node:child_process';
-import { once } from 'node:events';
+import { planShards, partArgs, pumpFrames, spawnPart, concatParts, report } from './src/pipeline.mjs';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { createPaperRenderer, loadTokens } from './kits/paper/paper.mjs';
@@ -21,8 +20,6 @@ import { createWebCanvasRenderer } from './src/webcanvas.mjs';
 import { registerFonts } from './src/fonts.mjs';
 import { REPO_ROOT, DIRS, resolveInput } from './src/root.mjs';
 
-const FFMPEG = process.env.FFMPEG || '/opt/homebrew/bin/ffmpeg';
-const FFPROBE = process.env.FFPROBE || '/opt/homebrew/bin/ffprobe';
 
 /**
  * --kit 解析：science / paper 是内置专用适配器；其余视为模板名（templates/own/<name>）
@@ -30,8 +27,10 @@ const FFPROBE = process.env.FFPROBE || '/opt/homebrew/bin/ffprobe';
  */
 function kitSpec(kit) {
   if (kit === 'science' || kit === 'paper') return { kind: kit };
+  // 三种写法都认：模板名 / 模板根目录 / src 目录本身
   const cands = [
     path.resolve(REPO_ROOT, 'templates', 'own', kit, 'src'),
+    path.resolve(kit, 'src'),
     path.resolve(kit),
   ];
   const srcDir = cands.find((d) => fs.existsSync(path.join(d, 'kit.js')));
@@ -40,7 +39,25 @@ function kitSpec(kit) {
       `找不到 kit：${kit}\n  试过：${cands.join('\n        ')}\n  可用：science / paper / <模板名>`
     );
   }
-  return { kind: 'webcanvas', srcDir, templateDir: path.dirname(srcDir) };
+  const templateDir = path.dirname(srcDir);
+  // 路径恰好指向内置适配器的模板时，仍走专用适配器：
+  // science 要预载姿态图/口型贴片，通用宿主不认识这些概念，会静默退化成矢量人物。
+  const rel = path.relative(REPO_ROOT, srcDir).split(path.sep).join('/');
+  if (rel === 'kits/science/template/src') return { kind: 'science' };
+
+  const spec = { kind: 'webcanvas', srcDir, templateDir };
+  // 画幅以模板 manifest 为准：不读这一步，竖屏模板会被渲成横屏（此前 5 处写死 1920x1080）
+  const mp = path.join(templateDir, 'motion.json');
+  if (fs.existsSync(mp)) {
+    try {
+      const o = JSON.parse(fs.readFileSync(mp, 'utf8')).output || {};
+      if (o.width) spec.width = Number(o.width);
+      if (o.height) spec.height = Number(o.height);
+    } catch {
+      /* manifest 坏了就让默认值兜底，不阻断出片 */
+    }
+  }
+  return spec;
 }
 
 function parseArgs(argv) {
@@ -114,40 +131,30 @@ async function loadAvatar(p) {
 }
 
 if (!isMainThread) {
-  const { start, end, part, params, crf, jpeg, preset, tokensPath, fps, transition, transitionDur, palette, pipe, x264Threads, kit, brand, subtitle, theme, fadeOutSeconds } = workerData;
+  const { start, end, part, params, crf, jpeg, preset, tokensPath, fps, transition, transitionDur, palette, pipe, x264Threads, kit, brand, subtitle, theme, fadeOutSeconds, width, height } = workerData;
+  const W = Number(width) || 1920;
+  const H = Number(height) || 1080;
   registerFonts(DIRS.fonts);
   // fps 必须由主线程显式传入：params 里常是 24，CLI 的 --fps 60 只改主线程会导致
   // worker 按 24fps 计时（帧号/时间轴错位、成片被截短）。
   const P = loadParams(params, fps);
   const avatar = await loadAvatar(workerData.avatar);
-  const canvas = createCanvas(1920, 1080);
+  const canvas = createCanvas(W, H);
   const ctx = canvas.getContext('2d');
   const spec = kitSpec(kit);
   const stageContent = { scenes: P.scenes, captions: P.captions, brand, subtitle, theme, fadeOutSeconds };
   const r = spec.kind === 'science'
-    ? createScienceRenderer({ canvas, ctx, width: 1920, height: 1080, fps: P.fps, brand, subtitle, theme, fadeOutSeconds })
+    ? createScienceRenderer({ canvas, ctx, width: W, height: H, fps: P.fps, brand, subtitle, theme, fadeOutSeconds })
     : spec.kind === 'paper'
       ? createPaperRenderer({ ctx, tokens: tokensPath ? loadTokens(tokensPath) : undefined, palette, transition, transitionDur })
-      : createWebCanvasRenderer({ srcDir: spec.srcDir, templateDir: spec.templateDir, canvas, ctx, width: 1920, height: 1080 });
+      : createWebCanvasRenderer({ srcDir: spec.srcDir, templateDir: spec.templateDir, canvas, ctx, width: W, height: H });
   r.setContent(spec.kind === 'paper' ? { scenes: P.scenes, captions: P.captions, avatar } : stageContent);
   if (spec.kind === 'science' || spec.kind === 'webcanvas') await r.ready();
 
-  const inputArgs = pipe === 'raw'
-    ? ['-f', 'rawvideo', '-pix_fmt', 'rgba', '-s', '1920x1080', '-framerate', String(P.fps), '-i', 'pipe:0']
-    : ['-f', 'image2pipe', '-framerate', String(P.fps), '-vcodec', 'mjpeg', '-i', 'pipe:0'];
-  const ff = spawn(FFMPEG, ['-hide_banner', '-loglevel', 'error', '-y', ...inputArgs,
-    '-c:v', 'libx264', '-preset', preset, '-crf', crf, '-pix_fmt', 'yuv420p',
-    ...(x264Threads ? ['-threads', String(x264Threads)] : []),
-    '-f', 'mpegts', part], { stdio: ['pipe', 'ignore', 'inherit'] });
-  const done = once(ff, 'close');
-  for (let f = start; f < end; f++) {
-    r.renderFrame(f / P.fps);
-    const buf = pipe === 'raw' ? canvas.data() : canvas.toBuffer('image/jpeg', jpeg);
-    if (!ff.stdin.write(buf)) await once(ff.stdin, 'drain');
-  }
-  ff.stdin.end();
-  const [code] = await done;
-  if (code !== 0) throw new Error('ffmpeg exit ' + code);
+  const ff = spawnPart(partArgs({
+    pipe, fps: P.fps, width: W, height: H, crf, preset, jpeg, x264Threads, part,
+  }));
+  await pumpFrames({ renderer: r, canvas, fps: P.fps, start, end, ff, pipe, jpeg });
   parentPort.postMessage({ ok: true, frames: end - start });
 } else {
   const t0 = Date.now();
@@ -156,15 +163,18 @@ if (!isMainThread) {
 
   if (A.probe) {
     const avatar = await loadAvatar(A.avatar);
-    const canvas = createCanvas(1920, 1080);
+    const SPEC = kitSpec(A.kit);
+    const OUT_W = Number(P.width || SPEC.width || 1920);
+    const OUT_H = Number(P.height || SPEC.height || 1080);
+    const canvas = createCanvas(OUT_W, OUT_H);
     const r0 = canvas.getContext('2d');
-    const spec = kitSpec(A.kit);
+    const spec = SPEC;
     const probeContent = { scenes: P.scenes, captions: P.captions, brand: P.brand, subtitle: P.subtitle, theme: P.theme, fadeOutSeconds: P.fadeOutSeconds };
     const r = spec.kind === 'science'
-      ? createScienceRenderer({ canvas, ctx: r0, brand: P.brand, subtitle: P.subtitle, theme: P.theme, fadeOutSeconds: P.fadeOutSeconds })
+      ? createScienceRenderer({ canvas, ctx: r0, width: OUT_W, height: OUT_H, brand: P.brand, subtitle: P.subtitle, theme: P.theme, fadeOutSeconds: P.fadeOutSeconds })
       : spec.kind === 'paper'
         ? createPaperRenderer({ ctx: r0, palette: PALETTE })
-        : createWebCanvasRenderer({ srcDir: spec.srcDir, templateDir: spec.templateDir, canvas, ctx: r0, width: 1920, height: 1080 });
+        : createWebCanvasRenderer({ srcDir: spec.srcDir, templateDir: spec.templateDir, canvas, ctx: r0, width: OUT_W, height: OUT_H });
     r.setContent(spec.kind === 'paper' ? { scenes: P.scenes, captions: P.captions, avatar } : probeContent);
     if (spec.kind === 'science' || spec.kind === 'webcanvas') await r.ready();
     r.renderFrame(A.at);
@@ -173,16 +183,17 @@ if (!isMainThread) {
     process.exit(0);
   }
 
+  const SPEC = kitSpec(A.kit);
+  // params 显式声明 > 模板 manifest > 1920×1080
+  const OUT_W = Number(P.width || SPEC.width || 1920);
+  const OUT_H = Number(P.height || SPEC.height || 1080);
+
   const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'skia-kit-'));
-  const per = Math.ceil(P.frames / A.workers);
-  const segs = [];
-  for (let i = 0; i < A.workers; i++) {
-    const s = i * per, e = Math.min(P.frames, s + per);
-    if (s < e) segs.push({ i, s, e, part: path.join(TMP, `seg-${i}.ts`) });
-  }
+  const segs = planShards(P.frames, A.workers, TMP);
   await Promise.all(segs.map((seg) => new Promise((resolve, reject) => {
     const w = new Worker(new URL(import.meta.url), {
       workerData: { start: seg.s, end: seg.e, part: seg.part, params: A.params, fps: P.fps,
+        width: OUT_W, height: OUT_H,
         transition: A.transition, transitionDur: A.transitionDur,
         avatar: A.avatar, crf: A.crf, jpeg: A.jpeg, preset: A.preset, palette: PALETTE,
         pipe: A.pipe, x264Threads: A.x264Threads, kit: A.kit,
@@ -194,32 +205,10 @@ if (!isMainThread) {
     w.once('error', reject);
   })));
 
-  const list = path.join(TMP, 'list.txt');
-  fs.writeFileSync(list, segs.map((s) => `file '${s.part}'`).join('\n'));
-  const silent = path.join(TMP, 'silent.mp4');
-  execFileSync(FFMPEG, ['-hide_banner', '-loglevel', 'error', '-y',
-    '-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', silent]);
-
-  const dur = (P.frames / P.fps).toFixed(3);
-  if (A.audio && fs.existsSync(A.audio)) {
-    // 音轨策略：AAC 直接 copy（无损、快）；其它格式（尤其 vo.py 产出的 wav/PCM）
-    // 必须转 AAC —— mp4 里塞 pcm_s16le 会让浏览器/Safari/部分播放器整轨静音。
-    let acodec = '';
-    try {
-      acodec = execFileSync(FFPROBE, ['-v', 'error', '-select_streams', 'a:0',
-        '-show_entries', 'stream=codec_name', '-of', 'csv=p=0', A.audio], { encoding: 'utf8' }).trim();
-    } catch { /* 探测失败按需要转码处理 */ }
-    const audioArgs = acodec === 'aac' ? ['-c:a', 'copy'] : ['-c:a', 'aac', '-b:a', '160k', '-ar', '44100', '-ac', '1'];
-    execFileSync(FFMPEG, ['-hide_banner', '-loglevel', 'error', '-y',
-      '-i', silent, '-i', A.audio,
-      '-map', '0:v:0', '-map', '1:a:0', '-c:v', 'copy', ...audioArgs,
-      '-t', dur, '-movflags', '+faststart', A.out]);
-    if (acodec && acodec !== 'aac') console.log(`  音轨 ${acodec} → aac 160k（mp4 不吃 PCM）`);
-  } else {
-    execFileSync(FFMPEG, ['-hide_banner', '-loglevel', 'error', '-y', '-i', silent, '-c', 'copy', '-t', dur, A.out]);
-  }
+  concatParts({
+    parts: segs.map((s) => s.part), tmpDir: TMP, out: A.out,
+    audio: A.audio, fps: P.fps, frames: P.frames,
+  });
   fs.rmSync(TMP, { recursive: true, force: true });
-  const size = (fs.statSync(A.out).size / 1048576).toFixed(2);
-  console.log(`✓ ${A.out}`);
-  console.log(`  ${P.frames} 帧 / ${dur}s / ${P.fps}fps / ${size}MB / ${((Date.now() - t0) / 1000).toFixed(1)}s / ${A.workers} workers`);
+  report({ out: A.out, frames: P.frames, fps: P.fps, startedAt: t0, workers: A.workers });
 }

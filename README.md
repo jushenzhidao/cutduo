@@ -50,10 +50,13 @@ echo '{"kit":"paper","preset":"v8t"}' | node api/cli.mjs render --stdin --json
 
 五者共用同一个渲染库，所以**换版式不换速度档**。
 
-> `desk` / `editorial` / `mg` 目前各有自己的 `render.mjs`，没有走根入口。
-> 原因是四份 render 骨架里各有一段约 350 行重复的 worker 分片 + ffmpeg 管道 + concat 逻辑，
-> 合并需要改动分片边界与编码参数，属于独立的一步。目录已按「版式自治」摆好，
-> 合并时只需让各自的 `render.mjs` 变成一层薄适配器，不动这里的路径。
+> `desk` / `editorial` / `mg` 仍各有自己的 `render.mjs`，但**管道已不再重复**：
+> 「分片 → ffmpeg → concat → 音轨」收进了 `src/pipeline.mjs`，三个入口只剩渲染器构造与画幅参数
+> （`mg` 136 → 108 行、`desk` 165 → 141 行、根入口 225 → 214 行）。
+> 抽取前后用同片同参逐帧比对：MAE 0.000、差异像素 0、体积与帧数一致。
+>
+> `editorial` 例外——它自带 `render-cache` 与两套 worker 路径，结构与前三套不同，
+> 强行合并会引入抽象泄漏，先留着。
 
 ## 自己加一套版式
 
