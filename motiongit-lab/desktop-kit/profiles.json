@@ -1,9 +1,9 @@
 {
-  "_note": "出片超参预设。--profile <name> 选用，任意单项可用 --bg/--pipe/--crf/--tune 覆盖。实测见 docs/编码优化-2026-11-13.md：quality 是画质拐点（再降 CRF 体积翻倍只换 0.0014 SSIM）。",
+  "_note": "出片超参两档：standard（默认）/ quality（质量优先）。任意单项可用 CLI 覆盖，例：--crf 25 压更小、--bg static 在 headless-gl 不可用时回退、--codec libx265 换 H.265。实测见 docs/编码优化-2026-11-13.md。",
   "default": "standard",
   "profiles": {
     "standard": {
-      "label": "默认：平衡档（实测 424.9 fps / 4.72MB / 68.8s 片 / 9.71s 出片）",
+      "label": "默认：肉眼无损（SSIM 0.9916），68.8s 片 4.72MB / 9.7s 出片",
       "bg": "gpu",
       "pipe": "raw",
       "codec": "libx264",
@@ -12,39 +12,13 @@
       "tune": "animation"
     },
     "quality": {
-      "label": "质量优先：slower + crf 15 + tune film（SSIM 0.9953 / PSNR 52.2，体积约 4× standard）",
+      "label": "质量优先：SSIM 0.9953 / PSNR 52.2，体积约 4.9×（23.14MB / 16.0s）",
       "bg": "gpu",
       "pipe": "raw",
       "codec": "libx264",
       "x264": "slower",
       "crf": 15,
       "tune": "film"
-    },
-    "small": {
-      "label": "小体积：CRF 25，速度不变，体积约 0.65×",
-      "bg": "gpu",
-      "pipe": "raw",
-      "codec": "libx264",
-      "x264": "veryfast",
-      "crf": 25,
-      "tune": "animation"
-    },
-    "tiny": {
-      "label": "极窄：H.265 CRF 30，体积约 0.57×，慢 44%，老设备可能不认",
-      "bg": "gpu",
-      "pipe": "raw",
-      "codec": "libx265",
-      "x264": "veryfast",
-      "crf": 30
-    },
-    "flat": {
-      "label": "无 GPU 壁纸回退：慢 65%（噪点壁纸编码更难），仅 headless-gl 不可用时使用",
-      "bg": "static",
-      "pipe": "raw",
-      "codec": "libx264",
-      "x264": "veryfast",
-      "crf": 20,
-      "tune": "animation"
     }
   }
 }
