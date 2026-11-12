@@ -197,6 +197,9 @@
 - **异步 job（`api/jobs.mjs`）**：`submitJob / jobStatus / listJobs / cancelJob`，状态落 `out/jobs/`。
   三条硬约束：① 一 job 一独立进程（detached），不用线程；② **判定终态先读 stdout，不看 pid**
   （pid 会复用，曾导致已完成的 job 永久卡 running）；③ `elapsedSeconds` 取 stdout 的 mtime，不是判定时刻。
+- **并发上限 `MAX_JOBS = clamp(1..4, cpus/8)`**（30 核 = 3，`CUTDUO_MAX_JOBS` 可覆盖），
+  超出**排队而非拒绝**。⚠️ 代价：**`status()` 不是纯查询**，它在 lazy scheduling 里补位拉队首。
+  实测 3 个 mg 并行各 12s vs 单独 7s ⇒ 并发几乎无吞吐收益（每支已吃满 8 worker），排队是保护。
 - **五支 schema 全 complete**，但只约束 `scenes[].type/t0/t1` 骨架与少量全局字段，
   **不设 `additionalProperties:false`、不校验 `args` 内部**——各版式 args 形态不同，锁死必误杀历史参数。
 - **仓库根只能从 `src/root.mjs` 取**（向上找 `.git`）。禁止再写 `ROOT = dirname(..)`——

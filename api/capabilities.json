@@ -1,5 +1,11 @@
 {
   "apiVersion": "1.0",
+  "limits": {
+    "maxConcurrentJobs": 3,
+    "workersPerJob": 8,
+    "note": "每个 job 独立进程、各 8 worker；超出 maxConcurrentJobs 的任务停在 queued，由后续 submit/status/list 调用补位",
+    "override": "环境变量 CUTDUO_MAX_JOBS"
+  },
   "kits": [
     {
       "id": "paper",

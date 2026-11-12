@@ -51,7 +51,14 @@ node api/cli.mjs cancel --id "$ID"
 
 异步任务的状态机：`queued → running → done | failed | cancelled`。
 
-三条实现约束，改这个文件前必须知道：
+**并发上限默认 3**（按「每 8 核放一个渲染、每个渲染 8 worker」估算，夹在 1–4 之间，
+可用 `CUTDUO_MAX_JOBS` 覆盖）。超出上限的任务停在 `queued`，`status` 会给出 `queuePosition`。
+上限值在 `capabilities().limits` 里公开。
+
+实测 3 个 mg 并行时各需 12s，单独跑只要 7s —— **并发会互相拖慢**，
+所以排队不是限制而是保护：多开换不来吞吐，只换来更长的单个耗时。
+
+四条实现约束，改这个文件前必须知道：
 
 1. **一个 job 一个独立进程**（`detached` + `unref`）。API 进程先退出时任务仍要继续跑，线程做不到这一点。
 2. **状态只落在 `out/jobs/<id>.json`**，不留在内存。任何进程（包括重启后的 CLI）都能查询同一份状态。
@@ -60,6 +67,10 @@ node api/cli.mjs cancel --id "$ID"
    现在先读 `stdout`，有完整 JSON 就直接判终态。
 4. **`elapsedSeconds` 取 stdout 的 mtime**，不是「判定它的那一刻」。否则同一个 job 在不同时间
    查询会得到不同的耗时，回执就不成立了。
+
+还有一条要知道的副作用：**没有常驻调度器，补位发生在 `submit` / `status` / `list` 调用时**
+（lazy scheduling）。也就是说 `status()` 不是纯查询 —— 它会顺带拉起队首任务。
+代价是「没人轮询时队列不动」，但既然没人在轮询，也就没人在等结果。
 
 ## 请求
 
@@ -178,8 +189,9 @@ api/index.mjs        ← 唯一的业务实现
 
 ## 已知限制
 
-1. **job 没有并发上限**。连续 submit 十个任务就是十个进程同时跑，会把 CPU 打满并互相拖慢。
-   生产用之前需要加信号量或队列。当前按「调用方自己控制」处理。
+1. **并发上限是启发式估算**。`maxConcurrentJobs` 按核数除以 8 得出，不看内存与当前负载。
+   机器上同时跑别的重活时，这个值偏乐观；反过来在只跑本仓的机器上偏保守。
+   `CUTDUO_MAX_JOBS` 可以覆盖，但要自己承担后果。
 2. **schema 只约束骨架**。五支现在都有 `params.schema.json`，但都刻意不设
    `additionalProperties: false`，且 `scenes[].args` 的内部结构不校验——因为各版式的 args
    形态完全不同，锁死会把历史参数全部误杀。所以「schema 通过」只意味着骨架对了，

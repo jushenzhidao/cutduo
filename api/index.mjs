@@ -22,14 +22,22 @@ import { ApiError, CODE, toApiError } from './errors.mjs';
 import { normalizeRequest, probeOutput, buildReceipt } from './contract.mjs';
 import { validate as validateSchema, formatErrors } from './validate.mjs';
 import * as registry from './registry.mjs';
+import { MAX_JOBS } from './jobs.mjs';
 
 export { ApiError, CODE } from './errors.mjs';
+export { MAX_JOBS } from './jobs.mjs';
 
 /** 能力清单。可安全序列化成 JSON 交给 agent。 */
 export function capabilities() {
   return {
     apiVersion: '1.0',
     repoRoot: REPO_ROOT,
+    limits: {
+      maxConcurrentJobs: MAX_JOBS,
+      workersPerJob: 8,
+      note: '每个 job 独立进程、各 8 worker；超出 maxConcurrentJobs 的任务停在 queued，由后续 submit/status/list 调用补位',
+      override: '环境变量 CUTDUO_MAX_JOBS',
+    },
     kits: registry.list(),
   };
 }

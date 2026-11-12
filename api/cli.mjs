@@ -133,6 +133,9 @@ function human(kind, r) {
     return `✓ ${r.output.path}  ${(r.output.bytes / 1024).toFixed(0)}KB  @${r.at}s  ${r.timings.wallSeconds}s`;
   }
   if (kind === 'status') {
+    if (r.status === 'queued') {
+      return `queued    ${r.jobId}  ${r.kit}  排队第 ${r.queuePosition ?? '?'} 位（并发上限 ${api.MAX_JOBS}）`;
+    }
     const head = `${pad(r.status, 10)}${r.jobId}  ${r.kit || '-'}  ${r.elapsedSeconds}s`;
     if (r.status === 'done' && r.receipt) {
       const o = r.receipt.output;
@@ -150,10 +153,13 @@ function human(kind, r) {
   }
   if (kind === 'jobs') {
     if (!r.jobs.length) return '（还没有任务）';
-    const lines = [`共 ${r.jobs.length} 个（新→旧）`];
+    const lines = [`共 ${r.jobs.length} 个（新→旧）　并发上限 ${r.maxConcurrent}`];
     for (const j of r.jobs) {
+      const tailInfo = j.status === 'queued'
+        ? `排队第 ${j.queuePosition ?? '?'} 位`
+        : (j.receipt?.output?.path || '');
       lines.push(
-        `  ${pad(j.status, 10)}${pad(j.jobId, 28)}${pad(j.kit || '-', 11)}${pad(j.elapsedSeconds + 's', 9)}${j.receipt?.output?.path || ''}`,
+        `  ${pad(j.status, 10)}${pad(j.jobId, 28)}${pad(j.kit || '-', 11)}${pad(j.elapsedSeconds + 's', 9)}${tailInfo}`,
       );
     }
     return lines.join('\n');
