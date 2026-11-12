@@ -15,11 +15,12 @@
 // Exit code 1 when any film fails a hard gate.
 
 import { execFileSync } from 'node:child_process';
+import * as BINS from './bins.mjs';
 import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-const FFMPEG = '/opt/homebrew/bin/ffmpeg';
-const FFPROBE = '/opt/homebrew/bin/ffprobe';
+const FFMPEG = BINS.FFMPEG;
+const FFPROBE = BINS.FFPROBE;
 
 // Calibrated limits: the corpus maximum plus a margin, so a normal film cannot trip them.
 const LIMIT = {

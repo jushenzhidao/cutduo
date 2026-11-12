@@ -141,55 +141,52 @@ WorkBuddy 的 `~/.workbuddy/mcp.json`：
 | 升级 | 重传 src.tgz → `docker compose build && up -d`（数据卷不变） |
 | 排障 | 先看 `/health`，再看 `docker compose logs`；MCP 层错误都带 `code`/`fix` |
 
-## 八、实际部署记录（2026-11-13 05:00）
+## 八、部署完成记录（2026-11-13 05:08）
 
-**容器已在 ai-prod 跑起来**，内网 `127.0.0.1:8787` 可访问，状态 healthy。
-**未完成：DNS、证书、443 站点**——这三步都卡在 DNS 上。
-
-### 已完成的验证
+**已上线**：`https://cut-mcp.1task.cn/mcp`，容器 `cutduo-mcp` 在 ai-prod 上运行。
 
 | 项 | 结果 |
 |---|---|
-| 镜像构建 | `cutduo-mcp:2.0.0`，409MB，约 4 分钟（ffmpeg 层 169s） |
-| 容器 | `Up (healthy)`，`127.0.0.1:8787->8787` |
-| 鉴权 | 无 token → 401，有 token → 200 |
-| 握手 | `protocolVersion 2025-03-26`，serverInfo cutduo 2.0.0 |
-| 工具 | 7 个全部注册 |
-| **容器内渲染** | paper probe **0.311s**，产物 75036B（本地 75140B，差 0.14%） |
-| 画面 | 中文标题/强调下划线/章节卡/字幕条全部正常，无方框字 |
+| DNS | `cut-mcp.1task.cn` → 210.121.44.245（阿里云 API 添加，RecordId 2120986037102210048） |
+| 证书 | Let's Encrypt ECC，有效期至 2027-01-10，acme.sh 自动续期 |
+| nginx | 80 跳 443 + ACME 通道；443 反代 `127.0.0.1:8787`，`proxy_read_timeout 900s` |
+| 公网 health | HTTP 200，TLS 验证通过 |
+| 公网鉴权 | 无 token → 401 |
+| **公网出片** | paper + 上传音轨 → 2573 帧 / 42.886s / 1.94MB / 带音轨，**21.3s** |
+| 五支渲染 | paper 74K / science 1.1M / desk 1.5M / editorial 37K / mg 379K，与本地量级一致 |
 
-0.14% 的体积差来自不同平台的 freetype 渲染，不是字体回退 —— 若回退到系统字体，
-字形会完全不同，差异会是一个数量级以上。
+### 三个踩到的坑（按杀伤力排序）
 
-### 三个实际踩到的坑
+1. **ffmpeg 路径写死成 macOS 的 `/opt/homebrew/bin/ffmpeg`**。
+   本地一切正常，容器里 `spawn ENOENT`。散落在 5 个运行时文件（contract / pipeline / timing /
+   gate / editorial）。已收敛到 `src/bins.mjs`：环境变量 → Homebrew 路径 → 交给 PATH。
+   **这个错误本地冒烟永远发现不了**，只有真在容器里出片才暴露。
+2. **打包漏了仓库根的 `render.mjs`**。症状同样是「容器能起、health 正常、只有出片才报错」。
+   已用 `deploy/package.sh` 固化，带 10 个关键文件自检。
+3. **证书目录不存在导致 `install-cert` 失败**。`acme.sh --install-cert` 不会自己建目录，
+   要先 `mkdir -p /www/server/panel/vhost/cert/<host>`。
 
-1. **打包漏了 `render.mjs`**。它是仓库根的 CLI，paper/science 的 adapter 指向它。
-   症状极具迷惑性：容器能起、health 正常、协议能握手，**只有真出片时才报「入口不存在」**。
-   已用 `deploy/package.sh` 固化，自带 10 个关键文件的自检。
-2. **`docker compose ps/logs` 也要 `--env-file`**。`up` 带了不代表后续命令带；
-   否则插值 `${CUTDUO_TOKEN:?}` 直接报错。已建 `deploy/.env` 软链到 `/opt/cutduo/.env`。
-3. **macOS 的 `._*` 资源叉文件被打进镜像**（每个 163 字节）。
-   不影响功能但污染层，打包时 `--exclude='._*'`。
+### 两个使用上的注意
 
-### 剩余步骤（按顺序）
+- **下载产物要带 token**：`GET /files/<name>` 走同一套 Bearer 鉴权，不带会拿到 88 字节的
+  `UNAUTHORIZED` JSON 而不是 mp4。回执里的 `downloadUrl` 只是地址，不含凭证。
+- **公网出片比本地慢约 3.5 倍**（21.3s vs 6s）：ai-prod 的 load average 是 67（64 核），
+  30+ 个服务在抢核。短 probe 不受影响（0.28s），长片建议错峰。
 
-```bash
-# 1. 阿里云 DNS 控制台加记录（1task.cn 的 NS 是 dns13.hichina.com）
-#    类型 A  主机记录 cut-mcp  记录值 210.121.44.245  TTL 600
+### 客户端注册
 
-# 2. 确认解析生效
-dig +short cut-mcp.1task.cn    # 应返回 210.121.44.245
-
-# 3. 配 80 端口（ACME 通道）并签发
-cp deploy/nginx-cut-mcp.conf /www/server/panel/vhost/nginx/cut-mcp.1task.cn.conf
-# 注意：参考同机的 mcp.1task.cn.conf，ACME 的 location 必须排在 catch-all 之前
-acme.sh --issue -d cut-mcp.1task.cn --webroot /www/wwwroot/cut-mcp
-acme.sh --install-cert -d cut-mcp.1task.cn \
-  --fullchain-file /www/server/panel/vhost/cert/cut-mcp.1task.cn/fullchain.pem \
-  --key-file       /www/server/panel/vhost/cert/cut-mcp.1task.cn/privkey.pem \
-  --reloadcmd      "/www/server/nginx/sbin/nginx -s reload"
-/www/server/nginx/sbin/nginx -t && /www/server/nginx/sbin/nginx -s reload
+```json
+{
+  "mcpServers": {
+    "cutduo": {
+      "url": "https://cut-mcp.1task.cn/mcp",
+      "headers": { "Authorization": "Bearer <CUTDUO_TOKEN>" }
+    }
+  }
+}
 ```
+
+token 在服务器 `/opt/cutduo/.env`（`chmod 600`）。注册后需在连接器管理页点一次「信任」。
 
 ## 九、已知限制
 

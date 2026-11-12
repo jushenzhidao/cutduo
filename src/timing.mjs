@@ -21,6 +21,7 @@
 // 记录写到 motiongit-lab/timing/ledger.jsonl（一行一支片），可提交、可 diff、可长期累积。
 
 import { execFileSync, spawnSync } from 'node:child_process';
+import * as BINS from './bins.mjs';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -31,7 +32,7 @@ const ROOT = path.resolve(path.dirname(SELF), '..');
 const DIR = path.join(ROOT, 'tools', 'timing');
 const LEDGER = path.join(DIR, 'ledger.jsonl');
 const OPEN = path.join(DIR, 'open.json');
-const FFPROBE = '/opt/homebrew/bin/ffprobe';
+const FFPROBE = BINS.FFPROBE;
 const PHASES = ['author', 'render', 'revision', 'other'];
 
 mkdirSync(DIR, { recursive: true });

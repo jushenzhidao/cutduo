@@ -8,6 +8,7 @@
  *     --audio edits/audio-v6.m4a [--probe out/skia-probe.png]
  */
 import fs from 'node:fs';
+import * as BINS from '../../src/bins.mjs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { spawn, execFileSync } from 'node:child_process';
@@ -23,7 +24,7 @@ const INPUTS = path.resolve(get('inputs', 'content/inputs-inc-a.json'));
 const OUT = path.resolve(get('out', 'out/skia-cut.mp4'));
 const AUDIO = get('audio', 'edits/audio-v6.m4a');
 const PROBE = get('probe', null);
-const FFMPEG = '/opt/homebrew/bin/ffmpeg';
+const FFMPEG = BINS.FFMPEG;
 
 // 字体：Noto Sans SC（与 motion-kit 同源的思源黑体）优先，PingFang 兜底。
 // 注意：Skia 对 PingFang.ttc 的注册是静默失败的（GlobalFonts.has 返回 false），

@@ -17,7 +17,7 @@ import { execFileSync } from 'node:child_process';
 import { REPO_ROOT, DIRS, resolveInput } from '../src/root.mjs';
 import { ApiError, CODE } from './errors.mjs';
 
-const FFPROBE = process.env.FFPROBE || '/opt/homebrew/bin/ffprobe';
+import { FFPROBE } from '../src/bins.mjs';
 
 /**
  * 把各种入参收敛成统一请求。

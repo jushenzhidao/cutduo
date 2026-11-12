@@ -14,8 +14,10 @@ import path from 'node:path';
 import { spawn, execFileSync } from 'node:child_process';
 import { once } from 'node:events';
 
-export const FFMPEG = process.env.FFMPEG || '/opt/homebrew/bin/ffmpeg';
-export const FFPROBE = process.env.FFPROBE || '/opt/homebrew/bin/ffprobe';
+import { FFMPEG, FFPROBE } from './bins.mjs';
+
+// 仍从这里转出：历史调用方是 `from '../src/pipeline.mjs'` 取 FFMPEG 的
+export { FFMPEG, FFPROBE };
 
 /** 把总帧数切成 N 个区间；区间边界必须与改造前逐字一致，否则成片帧序会错位。 */
 export function planShards(frames, workers, tmpDir) {
