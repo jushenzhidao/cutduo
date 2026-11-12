@@ -1,0 +1,42 @@
+{
+  "$schema": "https://motiongit.com/schema/motion/0.1.json",
+  "format": "skia-template",
+  "specVersion": "1.0.0",
+  "template": {
+    "id": "skia-paper",
+    "version": "1.0.0",
+    "name": "纸面口播（Skia 无浏览器）",
+    "status": "stable",
+    "note": "版式按 motion-kit paper-perspective 成片逐像素反推；渲染不依赖浏览器"
+  },
+  "runtime": {
+    "engine": "@napi-rs/canvas (Skia)",
+    "entry": "render.mjs",
+    "module": "paper.mjs",
+    "requires": ["@napi-rs/canvas", "ffmpeg", "assets/fonts/NotoSansSC-{Black,Medium,Regular}.otf"]
+  },
+  "output": {
+    "width": 1920,
+    "height": 1080,
+    "fps": { "num": 60, "den": 1 },
+    "durationPolicy": "follow-audio"
+  },
+  "parameters": {
+    "schema": "params.schema.json",
+    "defaultPreset": "presets/v8t.json"
+  },
+  "tokens": "tokens.json",
+  "layouts": ["hero", "point", "number", "compare", "steps", "quote", "checklist", "outro"],
+  "features": {
+    "avatarCard": true,
+    "burnedInCaptions": true,
+    "timecode": true,
+    "richAccent": "用 *星号* 标记强调词",
+    "autoWrap": true,
+    "fontFit": true
+  },
+  "license": {
+    "template": "internal",
+    "fonts": "Noto Sans SC (SIL OFL 1.1)"
+  }
+}

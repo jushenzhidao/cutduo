@@ -1,0 +1,350 @@
+{
+  "_note": "由 build-voices.py 按真实配音时长重排；音轨 edits/audio-period.m4a",
+  "fps": 60,
+  "durationSeconds": 48.006,
+  "brand": "desktop-kit · 身体使用说明",
+  "photos": {
+    "warm": "edits/assets/period/warm.jpg",
+    "record": "edits/assets/period/record.jpg"
+  },
+  "chapters": [
+    {
+      "name": "01 起站",
+      "wall": "blue"
+    },
+    {
+      "name": "02 此刻",
+      "wall": "light"
+    },
+    {
+      "name": "03 别信",
+      "wall": "light"
+    },
+    {
+      "name": "04 红线",
+      "wall": "orange"
+    },
+    {
+      "name": "05 终点",
+      "wall": "blue"
+    }
+  ],
+  "shots": [
+    {
+      "type": "title",
+      "t0": 0.0,
+      "t1": 2.974,
+      "chapter": "01 起站",
+      "args": {
+        "app": "身体使用说明",
+        "headline": "来了怎么办",
+        "train": "经期手册",
+        "status": "已发车"
+      }
+    },
+    {
+      "type": "talk",
+      "t0": 2.974,
+      "t1": 6.226,
+      "chapter": "01 起站",
+      "args": {
+        "label": "先别慌，按三步来"
+      }
+    },
+    {
+      "type": "comments",
+      "t0": 6.226,
+      "t1": 10.39,
+      "chapter": "02 此刻",
+      "args": {
+        "items": [
+          {
+            "text": "第 1 步 · 热敷下腹"
+          },
+          {
+            "text": "约 40℃，别直接贴皮肤"
+          },
+          {
+            "text": "第 2 步 · 止痛药"
+          },
+          {
+            "text": "布洛芬 / 萘普生，按说明"
+          },
+          {
+            "text": "痛刚开始就吃，效果最好"
+          },
+          {
+            "text": "通常只用 1–2 天"
+          },
+          {
+            "text": "胃溃疡、哮喘、过敏者别用"
+          },
+          {
+            "text": "第 3 步 · 休息"
+          },
+          {
+            "text": "睡够，别硬撑"
+          },
+          {
+            "text": "轻度散步也可以"
+          },
+          {
+            "text": "疼痛多在 2–3 天缓解",
+            "hi": true
+          },
+          {
+            "text": "痛得反常，就不是小事"
+          }
+        ]
+      }
+    },
+    {
+      "type": "photo",
+      "t0": 10.39,
+      "t1": 13.57,
+      "chapter": "02 此刻",
+      "args": {
+        "key": "warm",
+        "layout": "window",
+        "file": "暖一点 · 歇一会儿.jpg",
+        "title": "暖一点，也歇一会儿",
+        "credit": "Pexels"
+      }
+    },
+    {
+      "type": "counter",
+      "t0": 13.57,
+      "t1": 16.846,
+      "chapter": "02 此刻",
+      "args": {
+        "label": "NSAIDs · 一线止痛",
+        "value": "80%",
+        "sub": "原发性痛经 · 文献报道有效率"
+      }
+    },
+    {
+      "type": "chart",
+      "t0": 16.846,
+      "t1": 20.17,
+      "chapter": "02 此刻",
+      "args": {
+        "title": "疼痛曲线 · 示意",
+        "value": "第 1–2 天",
+        "points": [
+          0.68,
+          0.94,
+          0.88,
+          0.62,
+          0.38,
+          0.22,
+          0.13,
+          0.08,
+          0.05
+        ]
+      }
+    },
+    {
+      "type": "ranking",
+      "t0": 20.17,
+      "t1": 23.854,
+      "chapter": "03 别信",
+      "args": {
+        "rows": [
+          "红糖水",
+          "姜茶"
+        ],
+        "sub": "缓解痛经 · 目前无证据"
+      }
+    },
+    {
+      "type": "tickets",
+      "t0": 23.854,
+      "t1": 27.106,
+      "chapter": "03 别信",
+      "args": {
+        "kicker": "MYTH · 谣言退票",
+        "title": "别信偏方",
+        "sub": "红糖水 / 姜茶 · 无证据",
+        "price": "不用扛",
+        "stamp": "已退票"
+      }
+    },
+    {
+      "type": "station",
+      "t0": 27.106,
+      "t1": 30.334,
+      "chapter": "04 红线",
+      "args": {
+        "name": "就医站",
+        "sub": "这几种情况别扛"
+      }
+    },
+    {
+      "type": "flipBoard",
+      "t0": 30.334,
+      "t1": 34.066,
+      "chapter": "04 红线",
+      "args": {
+        "kicker": "// 红线 · 逐字翻牌",
+        "word": "别硬扛",
+        "sub": "每小时湿透一片，持续 2 小时"
+      }
+    },
+    {
+      "type": "comments",
+      "t0": 34.066,
+      "t1": 38.35,
+      "chapter": "04 红线",
+      "args": {
+        "items": [
+          {
+            "text": "每小时湿透一片卫生巾"
+          },
+          {
+            "text": "持续 2 小时以上 → 立即就医"
+          },
+          {
+            "text": "经期超过 7 天"
+          },
+          {
+            "text": "血块大于 2.5cm"
+          },
+          {
+            "text": "需要两种用品一起用"
+          },
+          {
+            "text": "痛到止痛药也压不住"
+          },
+          {
+            "text": "一次比一次更痛"
+          },
+          {
+            "text": "头晕、出冷汗、脸色发白"
+          },
+          {
+            "text": "经期之间出血 / 同房后出血"
+          },
+          {
+            "text": "可能怀孕时的出血，先查"
+          },
+          {
+            "text": "伴发热，或疼到影响生活"
+          },
+          {
+            "text": "去妇科，别自己下结论",
+            "hi": true
+          }
+        ]
+      }
+    },
+    {
+      "type": "photo",
+      "t0": 38.35,
+      "t1": 41.842,
+      "chapter": "05 终点",
+      "args": {
+        "key": "record",
+        "layout": "window",
+        "file": "记录 · 周期.jpg",
+        "title": "记下来，下次好判断",
+        "credit": "Pexels"
+      }
+    },
+    {
+      "type": "outro",
+      "t0": 41.842,
+      "t1": 48.006,
+      "chapter": "05 终点",
+      "args": {
+        "title": "记住三件事",
+        "lines": [
+          "热敷 · 按需用药 · 看红线",
+          "异常就去妇科",
+          "科普内容，不替代医生判断"
+        ],
+        "cta": "存好这条 →",
+        "brand": "ACOG · NHS · 默沙东"
+      }
+    }
+  ],
+  "captions": [
+    {
+      "start": 0.23,
+      "end": 2.974,
+      "zh": "大姨妈来了，*先别慌*。",
+      "en": "Your period is here. Don't panic."
+    },
+    {
+      "start": 3.074,
+      "end": 6.226,
+      "zh": "不适通常 *两三天内缓解*。",
+      "en": "It usually eases in a few days."
+    },
+    {
+      "start": 6.326,
+      "end": 10.39,
+      "zh": "热敷、止痛药、休息，*按顺序来*。",
+      "en": "Heat, pain relief, then rest."
+    },
+    {
+      "start": 10.49,
+      "end": 13.57,
+      "zh": "热敷之外，*也别忘了休息*。",
+      "en": "Rest matters just as much."
+    },
+    {
+      "start": 13.67,
+      "end": 16.846,
+      "zh": "布洛芬这类药，*是一线方案*。",
+      "en": "NSAIDs are the first-line option."
+    },
+    {
+      "start": 16.946,
+      "end": 20.17,
+      "zh": "痛刚起来就吃，*比硬忍有效*。",
+      "en": "Take it at the first sign of pain."
+    },
+    {
+      "start": 20.27,
+      "end": 23.854,
+      "zh": "红糖水、姜茶，*目前没有证据*。",
+      "en": "Brown sugar and ginger tea lack evidence."
+    },
+    {
+      "start": 23.954,
+      "end": 27.106,
+      "zh": "痛到影响生活，*不用硬扛*。",
+      "en": "You do not have to tough it out."
+    },
+    {
+      "start": 27.206,
+      "end": 30.334,
+      "zh": "但这几种情况，*别在家扛*。",
+      "en": "But some signs need a doctor."
+    },
+    {
+      "start": 30.434,
+      "end": 34.066,
+      "zh": "每小时湿透一片，*连续两小时*。",
+      "en": "Soaking a pad hourly, for two hours."
+    },
+    {
+      "start": 34.166,
+      "end": 38.35,
+      "zh": "超过七天、大血块、*晕厥*，都去查。",
+      "en": "Over 7 days, large clots, fainting."
+    },
+    {
+      "start": 38.45,
+      "end": 41.842,
+      "zh": "记下日期和量，*下次好判断*。",
+      "en": "Log the dates and the flow."
+    },
+    {
+      "start": 41.942,
+      "end": 45.586,
+      "zh": "科普不替代医生，*异常就就医*。",
+      "en": "This is not medical advice."
+    }
+  ]
+}

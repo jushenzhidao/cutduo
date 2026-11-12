@@ -1,0 +1,21 @@
+{
+  "profile": "personal-download-v1",
+  "specVersion": "1.0.0-rc.1",
+  "recipientAccountId": 149,
+  "apiKeyId": 154,
+  "authorAccountId": 1,
+  "templateId": 591,
+  "templateSlug": "motiongit-promo-keynote",
+  "releaseId": 643,
+  "templateVersion": "2.6.4",
+  "downloadId": "8f16f0f7-9e71-4b16-9e16-e857d3040ebf",
+  "issuedAt": 1794244160,
+  "protection": "protected",
+  "releaseArchiveSha256": "7be15eee5b41676979f23675a7a56b3bf51c1379559667b05cc37dcf0fc6a01b",
+  "personalDownloadSha256": "72d0bf1de2290fd60a6cef1f8df0a805fd8bdd15ce8b57718479c20dd1576af9",
+  "receiptSha256": "a2d946297ea248a8c23f48a66bdef03b0cdb2a3ea9331c2f33cf76a511110195",
+  "descriptorSha256": "16200ab3a799b6587ac3c42058b8c45d9c510b8bd4508e13726183d89fb9134e",
+  "signingKeyId": "personal-20261011-7b234fbb",
+  "releaseBytes": 11290288,
+  "personalBytes": 12298382
+}

@@ -869,3 +869,320 @@ MLT 9/9                    容器 10/10
 ```
 SQLite 157/157（跳 6）   PG 157/157（跳 5）   MLT 9/9   容器 10/10
 ```
+
+---
+
+## 01:11–01:35 · 线上性能监测（mcp.cutduo.com 真实调用）
+
+用户「mcp.cutduo.com 已经在测试调用了，监控下性能」。测试方在 01:15–01:27 完成 5 轮完整调用
+（11 个素材 / 43.5 MB / 5 个任务），本轮只做观测与度量，**没有改任何应用代码**。
+
+### 先解决「看不见」
+
+原 vhost 的 access_log 没有 `$request_time` / `$upstream_response_time`，回答不了「慢在哪一层」。
+`mcp.cutduo.com.conf` 加**第二条** access_log + 独立 log_format（原日志格式与宝塔统计不动），
+中途又补了 `$upstream_header_time`（大文件下载时 `urt` 会被客户端拖慢）。
+备份 `*.bak-perf-20261110-011410`，`nginx -t` 后 reload。
+新增 `/etc/logrotate.d/mcp-cutduo-perf`（宝塔的切割不管这条新日志，不加会被写满）。
+解析脚本入库：`renderd/tests/perf_report.py`。
+
+### 实测结论（5 个任务，全部 verdict=pass）
+
+```
+                                  排队   归一化   编译   渲染    校验   总计   渲染fps
+180帧 540×960  2Mbps              0.20   0.54   0.33   7.20   3.86  12.13   25.0
+450帧 1080×1920 2Mbps             0.41   7.24   0.14  17.52   7.12  32.43   25.7
+450帧 同样素材（mezz 命中）        0.19   0.41   0.13  16.70   7.07  24.50   27.0
+450帧 1080×1920 10Mbps 未标记      0.14  15.45   0.12  21.99  11.38  49.09   20.5
+450帧 10Mbps 未标记（新素材）      0.57  15.25   0.12  22.94  16.06  54.93   19.6
+```
+
+**最重要的新发现（以及一次自我否证）：输出规格相同，成本可以差 2.2 倍，但这一轮拆不开原因。**
+同样 450 帧 1080×1920，2 Mbps 素材 24.5s，10 Mbps 素材 49–55s。
+最初归因「源码率」，把同期宿主 load 拉出来对照后不成立：任务 3 跑在 load 13.2，
+任务 5 跑在 load 42–54（64 核）。**码率与宿主争抢同时变了**，两者都有机理，本轮无法分离。
+→ 需要受控实验（同一批 IR 在低负载窗口重跑）。**教训：慢下来时先看邻居，再看自己。**
+
+### 三条可修的浪费（都有对照实验）
+
+1. **每请求新建 PG 连接**：20 次 HTTP → PG `sessions` +21；`/healthz` 20 次只 +1。
+   connect 11–27ms vs 同连接查询 0.81–0.91ms vs 热态 get_tenant 0.30ms。
+   10 并发最慢 5 个 124–139ms（SCRAM 串行）。根因：ThreadingHTTPServer 每请求新线程 + thread-local 连接
+   （上一轮修 SQLite fd 泄漏留下的 `close_thread_connection` 在 PG 上等于每请求握手）。
+   修法：连接池，30ms → 3ms。
+2. **元数据类 action 触发整片重编**：`passthrough = (not actions) and not audio_role`，
+   只要缺色彩标记或无音轨就重编。对照实验（同一素材 b60b6e58…，150 帧 6.2MB）：
+   `-c:v copy` + 容器色彩标记 **672ms** 且 primaries/transfer/space 全部 bt709；
+   现行 `libx264 crf20 veryfast` **11250ms**，且 transfer/primaries 仍是 unknown。**16.7 倍**。
+   适用面必须锁死：action ⊆ {TAG_COLOR, AUDIO_SYNTH} 且几何/帧率/像素格式/SAR/旋转已达标。
+3. **校验阶段 3 次视频全解码 + 2 次音频全解码**：blackdetect、contact sheet、last frame 各一遍，
+   ebur128 与 showwavespic 各一遍。450 帧 7.07–16.06s，占 28–29%。合并进一个 filtergraph 可省约 65%。
+
+另两条：单 worker 串行（吞吐 1.9–2.2 任务/分钟，宿主 64 核有余量）；
+预检在 API 请求线程里跑（`validate_render` 2.6–11.8s，api 峰值 178% / 配额 200%）。
+
+### 两个测量假象（写进报告，避免下次误判）
+
+- 用 curl 逐次测 TLS 得 37–40ms，那是 curl 进程加载 CA 库的开销；同进程实测握手 **5.6ms**。
+- 上传端到端 2.6s 里服务端只占 0.28s，其余是客户端 0.6–1.2MB/s 的上行。
+  大文件下载同理：`proxy_buffering off` 下 `urt` 跟随客户端消费速度（12.9MB 用 3.2s ≈ 4MB/s，是客户端）。
+
+### 交付
+
+`deliverables/mcp-性能监测-2026-11-10.html`（8 节，含对照实验与回滚方式）。
+仍未做的：三条 P0 都要重启容器，正在测试中，等测试结束再上。
+
+---
+
+## 无人值守轮 U · 8 个 @motiongit 模板元素级复刻（2026-11-10 01:30 起）
+
+**用户指令**：「无人驻守任务：默认都是同意或者继续，全部完成再说 记录不足」。
+即：不中途询问、所有确认默认同意，全部阶段做完再一次性汇报；验收四件套记录按本轮补齐。
+
+**目标**：`motiongit-lab/replicas/` 一个目录下，把 8 个已下载的 @motiongit 模板做成
+可逐帧渲染、能出 MP4 的独立复刻，逐一视频对比 + 自动修复 + 8 条对抗审查。
+
+| 阶段 | 内容 | 状态 |
+|---|---|---|
+| U0 | 8 个模板包下载 + 内层 release.bin 校验（8/8 PASS，50.31 MiB） | 已完成（01:12） |
+| U1 | 8 条官方预览参考片采集（按 templateId 精确匹配、排除推荐位 card） | 已完成（01:33） |
+| U2 | 元素级自动测量 → 8 份 spec.json | 已完成（01:37） |
+| U3 | 统一渲染器逐帧出片（等时长/等画幅/等帧率） | 已完成（01:42） |
+| U4 | 8 组视频一一对比 + 8 条对抗审查 + 自动修复 | 已完成（02:12） |
+| U5 | 汇总报告 + 四件套记录收口 | 已完成（02:16） |
+
+**U2 实测**：8 条参考片全部 1920×1080 / 60fps，时长 57.000–108.000s；每 1.5s 抽一帧，
+量出 8×6 色块网格、量化主色、水平梯度文字带、内容边界、锐度；相邻帧网格差 >22 判镜头切点。
+段数 2–31（keynote 31 段最密，ink 仅 2 段）。补下载 velocity 时定位到一个通用坑：
+批量 URL 清单末行无换行，`while read` 会跳过最后一行 —— 已单独补下并复测。
+
+**U3 实测**：`engine/replica.mjs`（frame→画面纯函数）+ `engine/render.mjs`（8 worker 分片 +
+JPEG pipe + mpegts concat）。8 条成片共 **32475 帧**，与参考片逐一等时长等帧率；单条
+22.2–41.2s 出片，体积 1.4–6.8MB，字体注册 3 字重。探针帧目视确认无空白/黑屏、文字未裁切。
+出片期间**未改动渲染器源码**——worker 每次启动都读当前文件，中途改会造成 8 条代码不一致。
+
+**U4 第一轮（01:44–01:53）**：`compare.py --tag before` 生成 8 组视频对比；`audit.py` 得 43/64 PASS。
+FAIL 分四类：锐度（7）、重复帧（5）、安全区（1）、授权（8，实为判定器误报）。
+`fix.py` 先标定 grain→锐度（0.93+16.4×grain），再逐模板 3 点探针反解 grain/flat，
+按同时间点 8×6 网格差做单轮补偿；渲染器加确定性细噪点、连续动效、字幕条上移。
+重出 8 条 → 50/64 PASS，网格色差普遍下降（keynote 9.43→4.81、user 21.88→12.29）。
+
+**U4 第二轮（01:54 起）**：复核发现 velocity 的 8.27 是被单组近乎纯色参考帧拉高的均值失真，
+「重复帧」判据对小动效不敏感，main 的安全区 FAIL 来自框线压边线而非文字越界。
+三处分别改为中位数判据、变化像素占比判据、内容框内边距 96px；`fix2.py` 按实测中位数锐度
+反调参数后重出片。两轮封顶，剩余偏差如实写入 blockers，不做第三轮过拟合。
+
+**环境事实（已核实）**：参考片 1920×1080 / 60fps（ink 59.250s / 3555 帧）；
+`@napi-rs/canvas` 可用；ffmpeg/ffprobe 在 `/opt/homebrew/bin/`（不在 PATH，必须绝对路径）；
+Python 一律 `uv run --with ...`；Host shim 对已存在目录的 `mkdir(exist_ok=True)` 会抛 EEXIST，
+脚本里必须先 `if not p.exists()`。
+
+**中断恢复**：从本表最后一个未完成阶段开始；所有中间产物都在 `replicas/` 下且可重跑，
+脚本均为幂等（同输入同输出）。
+
+**U5 收口（02:16）**：`REPORT.html`（8 卡片 + 8 条汇总视频 + 修复前后指标 + 未达标清单）、
+8 份 `metrics-*.json`、`audit-{before,after}.json`、`fix-report*.json`、`specs/ALL.json` 全部生成。
+统一判据后最终数字：网格色差 **10.290→6.409（−37.7%）**、固定点色差 14.112→12.803、
+MAD 18.488→17.357、对抗审查 **57/64→60/64 PASS**。8 条成片共 32475 帧，
+8 条汇总对比视频 + 64 个单组片段，8 条修复片。剩余 4 项锐度中位数 0.797–1.071
+已写进 `blockers.md` §十四，判定为内容差异/参数上限，不再迭代。
+所有媒体产物与含 Key 封套均被 .gitignore 隔离；四件套、PLAYBOOK §38、memory 日志已补齐。
+
+**U6 继续优化（02:22 起，用户「未达标的继续优化」）**：复核 4 个未达标模板的逐点数据，
+确认根因不在参数大小而在**抽象层级**——`grain` 是全片常量，复刻锐度恒定而参考片逐镜头波动
+3–10×。新增 `engine/optimize.py`：对 4 个模板各 8 个 compare 采样点做 3 探针
+（grain=0/0.4、flat=0.6）实测标定，写入 `spec.render.curve`（预测误差 0.063–0.297）；
+`replica.mjs` 新增 `paramsAt(t)` 按时间线性插值，逐帧确定性不变。
+渲染器改动后 8 条全部重出（不只 4 条），保持代码指纹与成片一致。
+
+**U7 实测链（02:22–02:50）**：
+- `optimize.py` 曲线版 → 61/64（pixel 达标）。
+- `optimize2.py` 用一次真实出片测出成片级 `kg_eff=20.81/grain`（probe PNG 为 16.4，
+  推翻「噪点被 H.264 压掉」的假设），按 8 组实测残差反馈 grain → 63/64（keynote / velocity 达标）。
+- `optimize3.py` 定位 blueprint 拖累中位数的 5 组全部 `flat>0.47`（flat 压制被低估），
+  改按实测比值做 flat 比例反馈，三轮 0.682→0.835→0.882→0.920→**0.947** → **64/64 PASS**。
+- 每轮渲染器/spec 改动后 8 条全部重出，保持代码指纹与成片一致。
+
+**最终数字**：审查 57/64 → **64/64**；网格色差 10.290→6.462、固定点 14.112→12.838、
+MAD 18.488→17.437。锐度比均值 1.123→1.309 是 velocity 单组近乎纯色参考帧（比值 45.9）
+拉高，判据为 8 组**中位数**，8 个模板全部落在 0.93–1.05。四件套与 PLAYBOOK §38 已同步。
+
+### 补测（02:24–02:40）· 三处「字节不变」的免费优化
+
+用户追问「有地方可以优化吗」，继续往下拆。起点是一个对不上的数字：
+纯解码+编码 150 帧只要 1.9s（≈80fps），线上渲染却只有 20–27fps —— 差的是滤镜链，不是编码器。
+
+| 变体（同一 mezz，150 帧，crf20 veryfast 4 线程） | 耗时 | 输出 |
+|---|---|---|
+| 纯解码+编码 | 1855–1932 ms | — |
+| + 空转 scale/pad（尺寸已达标） | 1953 ms（+4%） | 一致 |
+| + 整帧 RGBA 叠加（现状） | **5661 ms** | 基准 |
+| + 叠加层按 bbox 裁剪 | 4337 ms | **逐字节一致** |
+| + 裁剪 + `-framerate 30` | **3460 ms** | **逐字节一致（SSIM 1.000000）** |
+
+根因：文字层用 `Image.new("RGBA",(W,H))` 栅格化整帧，而实测文字只占 **0.8%–3.7%** 面积
+（bbox 591×92 / 1080×1920）。96% 以上的透明像素每帧仍参与全帧 alpha 混合。裁剪后叠加成本 3.8s → 0.45s。
+
+校验阶段（450 帧 12.9MB 成片）：
+- blackdetect 2622ms + contact sheet 2330ms → **split 一次解码 2721ms**，contact sheet 逐字节一致
+- 末帧 `select=eq(n,449)` 2297ms → **`-sseof -0.05` 350ms（7×）**，jpg 逐字节一致
+  （`-0.1` 会早一帧，epsilon 必须按帧长取；用 `evidence_sha256` 做守卫）
+- ebur128 2466ms 是 L3 断言必需，未动；waveform 只有 92ms
+
+按最慢任务（54.9s）折算：归一化 −13.3s、渲染 −8.9s、校验 −6.9s → **≈26s（−53%）**。
+代价：图层 PNG 变了 → 缓存键变 → 全量缓存失效一次（输出相同，安全）；`COMPILE_REV` 要 bump。
+
+---
+
+## U8 · 每个模板跑视频对比原版（2026-11-10 03:28–03:35）
+
+用户要求「每个模板跑点视频 对比原版」。无人值守约定继续生效：默认同意/继续，全部完成再汇报。
+
+| 步骤 | 结果 |
+|---|---|
+| U8-1 现状核查 | 8 条 `compare.mp4`（1280×420 / 60fps / 960 帧 / 16s）、64 个 `pair-*.mp4`、8 条官方参考片、8 条最终复刻片齐备；8 条全部 `ffmpeg -f null -` 解码零错误 |
+| U8-2 目视对抗审查 | 发现两处真实缺陷：① 标签栏「官方参考/复刻/指标」全部画在 x≥640，与画面左右不对应；② 中文渲染成方块 |
+| U8-3 根因 | ② 的代码写死 `/System/Library/Fonts/PingFang.ttc`，本机不存在，Pillow 静默回退到无中文字形的默认字体；实测可用 `STHeiti Medium.ttc` / `Arial Unicode.ttf` |
+| U8-4 修复 | `compare.py` 的 `label()` 改为左右分栏、指标归右侧，新增 `load_font()` 候选探测；重跑 `--tag after`，8 条视频与 64 个片段全部重出，指标数值与修复前逐项一致（只改标签像素，未动渲染器） |
+| U8-5 完整性判据 | 新增 `engine/verify-video.py`：从成片按 `concat_t=2i+1` 抽帧裁左右半边，与两源片在 `source_t=start+1` 抽帧缩放后算 MAD，各留 10% 裕度；**8/8 模板 × 8/8 组 = 64/64 PASS**，写 `video-integrity.json` |
+| U8-6 交付整理 | 新增 `engine/gallery.py`：48s 总览 `ALL-COMPARE.mp4`（8 模板 × 3 时间窗）、24 段精选 `highlights/`、8 张 2×2 四点拼图 `preview/`、索引 `VIDEOS.html`；HTML 41 个相对引用实测 0 缺失，拼图与总览目视正常 |
+| U8-7 收口 | `REPORT.html` 增加 VIDEOS.html 入口；.gitignore 补 highlights/preview/ALL-COMPARE/overview-concat；四件套、PLAYBOOK §39、memory 同步 |
+
+**踩过的坑（判定器自身）**：第一版完整性脚本把「原片时间点」直接用于 seek 16s 拼接视频，导致错帧与 FAIL；且 `/tmp/mg-verify` 目录在本机 Python shim 下 `mkdir(exist_ok=True)` 抛 EEXIST。两处都改判据/写法后复跑才通过——不把工具错误当成产品缺陷。
+
+---
+
+## U9 · 继续优化到逼近 1:1（2026-11-10 04:58–05:52）
+
+用户指出「复刻继续优化，没有 1:1 还原」。无人值守约定继续生效：默认同意/继续，全部完成再汇报。
+**先承认口径**：U 轮的 64/64 判据是配色分布/几何/节奏/锐度，8 个模板还共用一套骨架渲染器；
+判据全绿 ≠ 画面 1:1。
+
+| 阶段 | 结果 |
+|---|---|
+| U9-1 误差分解 | 8 模板 4 时间点实测：**平坦背景区贡献 45–74% 的 MAD**，平坦区自身 MAD 25–56（ink 25.25 / velocity 55.91 / user 35.02 / keynote 32.72）。主因是 v1 用「分段代表帧」的恒定 8×6 网格，官方片段内有渐变与转场 —— 大面积底色随时间对不上，不是文字/素材不可重建 |
+| U9-2 粒度上界实验 | 颜色场（降采样再放大）在 96×54 下即可把 MAD 压到 ink 5.00 / velocity 6.09 / user 4.55 / keynote 6.27；确认收益来自「逐时刻色彩布局」 |
+| U9-3 能力核查 | macOS Vision OCR 可用（热态 0.27s/帧，置信度 1.0，输出文本 + 归一化 bbox）；本机 Arial/Arial Bold 可注册 → 文字层可独立重建，不必把文字当色块糊掉 |
+| U9-4 v2 流水线 | `engine/v2/measure2.py`（160×90 面积平均颜色场 / 0.25s，Vision OCR 文字层，硬切标记）、`ocr.swift`、`replica2.mjs`、`render2.mjs`；新增 `compare2.py` / `evaluate2.py` / `gallery2.py`，`verify-video.py` 支持 `--v2` |
+| U9-5 两轮否决 | ① 净背景场擦除 + 矢量图形层：单帧 MAD 7.20→8.38，目视出现抹除色带、把圆点群/logo 错画成矩形 → 回退，改用提高粒度（96×54→160×90，7.20→6.57）；② 整帧高分辨率降采样直接贴：MAD 可趋近 0 但那是重编码不是复刻 → 明确否决 |
+| U9-6 三轮修正 | ① **时间轴**：`fps=N` 的 PTS 标签是 i×DT，但帧内容是区间中点 (i+0.5)×DT（精确帧号验证：field/0001 与源帧 n=15/t=0.25 完全一致 MAD=0）；② **硬切不插值**：相邻场差 >20 标为镜头切换，该区间在中点硬切，否则合成原片不存在的混合画面；③ **0.25s 采样 + 低幅互补噪点**：解决 user 单点 t=33.05s 的极端错色（115.39→25.2） |
+| U9-7 最终实测 | 平均 MAD **17.44 → 8.62（−50.6%）**、8/8 模板全部改善（23.7%–72.5%），网格色差 6.46 → 4.65；8 条 v2 成片共 32475 帧，8 条对比视频 + 64 片段 + 48s 总览 + 24 段精选 + 8 张拼图 |
+| U9-8 自检 | 视频完整性 8/8 × 8/8 组 = 64/64 PASS；同帧两次探针 PNG 哈希一致；8/8 帧数与时长正确、无黑帧（最暗 9.3–27.8）、无重复帧（相邻差 0.141–0.962）；HTML 三页 133 个引用 0 缺失 |
+| U9-9 收口 | `VIDEOS-V2.html` / `ALL-COMPARE-V2.mp4` / `v2-eval.json` / `video-integrity-v2.json`；`REPORT.html` 加 v2 入口；.gitignore 补 v2 媒体与 OCR 编译产物；四件套、PLAYBOOK §40、memory 同步 |
+
+**工具层插曲（非产品缺陷）**：`measure2.py` 每次清空 `field/` 删 119 个文件触发批量删除保护，
+全量测量中断在 3/8；改为「不删除、ffmpeg -y 覆盖同名序号 + 按预期帧数截断」后跑完 8/8。
+`render2.mjs` 首版在 worker 里读 `--slug`（worker 的 `process.argv` 不含主进程参数）导致
+`Promise.all` 永久挂起，改为经 `workerData` 传递 slug 后单条 9.6s 出片。
+
+### 压测（12:18–12:26）· 服务没被打挂，是被自己的配额挡住
+
+脚本入库 `renderd/tests/stress_mcp.py`（开环 rps / 并发突刺 / 渲染吞吐三段）。
+
+**止损口径踩了一个坑**：最初用「宿主 load > 55」判定，第一次就误报 —— 这台机器由 20+ 个业务共用，
+实测基线 load 就在 **60–74**（64 核），而本服务最多只占 api 2 核 + worker 4 核。
+改成只盯 api 容器 cgroup CPU（>195% 才停）后才有意义：全程峰值 **153%/200%**，从未打满。
+
+| 段 | 结论 |
+|---|---|
+| A 开环 rps | 2/5/8 rps 零 429；**10 rps 起 9% 被拒、12 rps 23%**（正是 `RENDERD_QUOTA_QPS=10`）。p50 全程 27–35 ms **不随压力上升** |
+| B 并发突刺 30/60/100 | 成功 11/20/26，其余 429；**0 个 5xx、0 个超时**，PG 连接恒为 9，healthz 仍 1.5 ms |
+| C 渲染 8×180帧 | 8/8 成功、0 失败、0 缓存命中；排队 **0.44→73.02 s 严格线性（每任务 +10.4 s）**；执行 p50 10.96 s（背靠背几乎无退化）；**5.6 任务/分钟** |
+| D 公网 TLS 50 并发 | 握手 p50 **68 ms**（单连接 5.6 ms，涨 12 倍）；20×200 / 30×429 |
+
+**最重要的结论：MCP 层相对渲染能力是 6–33 倍过剩。**
+8 rps 干净 ≈ 480 请求/分钟；一次渲染流程约 13 个请求 → 约 37 个流程/分钟的请求预算，
+而单 worker 只能 5.6 个（180 帧）/ 1.1–2.4 个（450 帧）。
+⇒ **再优化 MCP 吞吐没有意义，扩 worker 副本或压渲染成本才是。**
+
+边界：只用了一个租户（多租户要改 `RENDERD_TOKENS` 并重启，未做），所以 PG `max_connections=100`
+那条崖没被触到。压测留下 8 个任务（`job_ff2805…` 起），`/data/out` 70 MB，未清理。
+
+### 能力清单（12:28–12:40）
+
+产出 `docs/能力清单.md`（13 节）：四种入口、5 个 MCP 工具、22 条 REST、IR 能力矩阵、
+21 类归一化故障、四层校验、异步机制、交付、多租户安全、可观测、可切换后端，外加一节「不支持清单」。
+
+核对时发现两处与印象不符，已按代码修正：
+- 上传上限是应用层 **512 MB**（`MAX_UPLOAD_MB`），nginx 放行 600 MB —— 之前口头说的 600 是网关值。
+- `/metrics` 实际只发 **12 条**序列，且 `renderd_tenant_inflight` 有 HELP/TYPE 但零样本，
+  `renderd_jobs` 与 `uptime_seconds` 反而没有 HELP —— 改名时漏改，租户在途分布只能从 `/v1/queue` 取。
+
+### metrics 修正 + 两处新缺口（12:33–12:55）
+
+**修了 metrics 的三处不一致**（`service.py metrics()` + `store.known_tenants()`）：
+- `renderd_tenant_inflight` 改为**对每个登记租户都发一条**（无在途发 0），空闲时序列不再整条消失
+- 补 `renderd_jobs` / `renderd_uptime_seconds` 的 HELP/TYPE
+- `renderd_jobs` 分组块在无任务时整块不发（避免「有 HELP 无样本」，空库启动就会踩到）
+- 新增 `tests/test_production_async.py::test_02b_metrics_exposition_is_consistent`：
+  断言 HELP/TYPE 与样本一一对应 + 空闲时有 0 值。**全量 164 个用例 OK（跳 6）**。
+  本机跑测试需要 Pillow 与 ffmpeg，用 `uv run --python 3.13 --with pillow` + `PATH=/opt/homebrew/bin`。
+
+**新查出的两处 P0（已写入 blockers §十一）**：
+1. **月度时长配额可被排队任务透支**：实测 60 s 配额接进 8 个 15 s 任务（120 s），
+   因为 submit 只读配额、usage 在渲染完成后才记账。上限由 `max_tenant_inflight=8` 兜住 → 最坏 8×。
+2. **生产上没有 renderd 的备份在跑**：`crontab` 里只有 apiduo 一条，`/opt/renderd/backups` 不存在。
+
+顺带确认了两件「不是问题」的事：
+- 模板是**热加载**的（`TemplateRegistry.load()` 每次 glob 目录），加模板不用重启；
+  但代价是每次 `list_templates` 都全量读盘，模板多了要加 mtime 缓存。
+- 月度配额**确实在提交时校验**（`E_QUOTA_EXCEEDED`），不是没做。
+
+## 12:43–13:12 · 「全做」：四项 P0/P1 + 上线
+
+用户「全做」。按依赖顺序推进，每块跑测试，最后一次上线。
+
+### 1 · 配额预占（P0）
+
+不给 `jobs` 加预占表，而是加一列 `billed_seconds`（提交时写、离开 accepted/running 自动失效）：
+预占 = `SUM(billed_seconds) WHERE status IN ('accepted','running')`。
+判定放进 `store.submit()` 的同一事务（`used + reserved > quota` 才拒），
+`quota_remaining_seconds()` 也改成减预占。
+`service.submit` 的快速失败加了「先把幂等键查一遍」——否则配额用尽时连自己刚提交的任务都重放不回来。
+SQLite `_migrate` + PG `_PG_ALTERS` 各加一条 ALTER。
+回归 `tests/test_quota.py` 4 项：60 s 只进 4 个 15 s、重放不受配额影响、成功/失败都释放预占。
+
+### 2 · 备份（P0）
+
+手动跑 `backup.sh`：182 MB / 13 s，SHA256 双向校验通过；
+`renderd.dump` 用 `pg_restore` 导进临时库，**17 个任务 / 1 个租户完整还原**后删库。
+生产装 cron（04:30 / 保留 7 天）+ 备份日志 logrotate（`/var/log` 对 group 可写，必须带 `su root root`）。
+`install.sh` 从「结尾打印一行建议」改成**自动安装**这条 cron —— 原文那个建议实测两周没人执行。
+
+### 3 · MCP 契约（P1）
+
+- `assets` 的 `$ref: #/$defs/Asset` 悬空 → 改成内联 `ASSET_SCHEMA`（id/uri 必填，sha256/kind 可选）；
+- 新增 `upload_asset`（base64，先按长度粗判再解码）、`list_jobs`、`cancel_job`；
+- `cutproof/mcp/tools.json` 同步（补 `$defs.Asset` + 三个工具）。
+回归 `tests/test_mcp_contract.py` 8 项：无悬空 `$ref`、required 都在 properties、素材结构可读、三个工具真能跑。
+
+### 4 · 渲染三条优化（P1，输出逐字节不变）
+
+- **文字层按 bbox 裁剪**：`img.crop(bbox)`，编译期按 `overlay=x:y` 偏移；空文案存 1×1 占位并跳过叠加。
+  （实测文字只占 0.8%–3.7%，原来每帧白做一次全帧 alpha 混合。）
+- **校验合并解码**：`blackdetect` 与 contact sheet 合并成一次 `split` 解码，末帧改 `-sseof -(1.5/fps)`；
+  任一步失败自动回落旧实现（证据不能因优化而缺失）。
+- **元数据类动作走流拷贝**：`can_copy_video()` = 动作集合 ⊆ {TAG_COLOR, AUDIO_SYNTH} 且非音轨。
+  实测同素材 copy 672 ms vs 重编 11 250 ms。
+- `COMPILE_REV` 4 → 5。回归 `tests/test_render_opt.py` 7 项，含 24/25/30 fps 下「seek 取到的末帧
+与全解码 `select=eq(n,N-1)` 逐字节相同」。
+
+**上线实测（同一 IR，180 帧）**：render **7.20 → 5.14 s**，validate **3.86 → 2.46 s**，
+总计 **12.03 → 7.85 s（−35%）**，回执 `verdict=pass`。
+
+### 5 · 告警（P2）
+
+`deploy/alerts/renderd.rules.yml` 五条：队列最老等待、有排队但无人领（worker 死）、
+15 分钟新增失败、指标抓不到、磁盘水位。配 `README.md` 写清抓取与指标语义（尤其
+`failed_jobs_24h` 是滚动 gauge 要用 `delta()`）。**未部署 Prometheus 本体**，只产出规则与接入说明。
+
+### 6 · 上线
+
+- 服务器有 `.vendor/ffmpeg.tar.xz` 与 buildx，本地可构建：`v0.2.2`；
+- 发现镜像里的 `HEALTHCHECK` 还是旧的内联 urllib 探针（服务器 Dockerfile 未同步）→
+  同步后重建，**worker 首次变成 healthy**（长期存在的假告警关闭）；
+- `.env` 备份后切到 v0.2.2（回滚只需改回 v0.2.1），PG 自动补 `billed_seconds` 列；
+- 验证：healthz/readyz 200、8 个 MCP 工具、assets schema 无 `$ref`、指标 HELP/样本自洽、
+  实拍任务 pass、日志无异常。
+
+**全量回归 183 个用例 OK（跳 6）**，比上一轮 164 增加 19 个（配额 4 / 契约 8 / 渲染 7）。

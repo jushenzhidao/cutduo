@@ -20,6 +20,28 @@ motiongit-lab/templates/paper-perspective-11/
 motiongit-lab/templates/camera-mode/
 motiongit-lab/templates/mac-desktop/
 motiongit-lab/templates/promo-ink/
+# ③ 复刻工程的下载缓存：8 个 @motiongit 个人封套，全部含账户 Key，整目录剔除
+motiongit-lab/replicas/downloads/
+# ④ 通用兜底：任何位置新增的个人下载包都不入库（自建模板包用 .motion 时也需显式 -f）
+*.motion
+MotionGit-*.zip
+# ⑤ 官方预览参考片（公开，仅本地校验、不外发；8 条约 187MB + mac-desktop demo 202MB）
+motiongit-lab/ref/**/*.mp4
+motiongit-lab/replicas/reference/
+# ⑥ 复刻工程的可重跑产物（测量帧 / 成片 / 对比视频，脚本可重建）
+motiongit-lab/replicas/frames/
+motiongit-lab/replicas/out/
+motiongit-lab/replicas/highlights/
+motiongit-lab/replicas/preview/
+motiongit-lab/replicas/ALL-COMPARE.mp4
+motiongit-lab/replicas/overview-concat.txt
+# v2 高密度测量重建的可重跑媒体与编译产物
+motiongit-lab/replicas/highlights-v2/
+motiongit-lab/replicas/preview-v2/
+motiongit-lab/replicas/ALL-COMPARE-V2.mp4
+motiongit-lab/replicas/overview-v2-concat.txt
+motiongit-lab/replicas/specs2/*/field/
+motiongit-lab/replicas/engine/v2/ocr
 
 # ── cutproof 可再生产物（语料由 corpus/gen_dirty.py 生成）──
 cutproof/res/
@@ -34,6 +56,19 @@ __pycache__/
 *.egg-info/
 .venv/
 venv/
+
+# ── 渲染缓存与本地抽帧（可重建，不入库）──
+motiongit-lab/edits/render-cache/
+motiongit-lab/ref/**/frames/
+# cinecode 对比实验的媒体产物：html 报告 / json 证据仍入库
+cinecode-probe/**/*.mp4
+cinecode-probe/**/*.wav
+
+# ── TTS 逐句缓存 / 分镜预览帧 / 二次测量帧（可重建，仅不入库）──
+motiongit-lab/edits/tts-cache/
+motiongit-lab/edits/preview-v*/
+motiongit-lab/replicas/specs2/*/field_clean/
+motiongit-lab/mg-kit/out/
 
 # ── 媒体临时件 ──
 *.tmp.mp4

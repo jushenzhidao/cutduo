@@ -9,16 +9,16 @@
 import http from 'node:http';
 import path from 'node:path';
 import { Worker } from 'node:worker_threads';
-import { loadInputs, renderIncremental, mixAudio, initCanvas, renderFrame } from './canvas-editorial.mjs';
+import { loadInputs, renderIncremental, mixAudio, initCanvas, renderFrame, applyTheme, setSkin } from './canvas-editorial.mjs';
 
 class WorkerPool {
-  constructor(size, inputsPath) {
+  constructor(size, inputsPath, theme = 'knowledge') {
     this.idle = [];
     this.queue = [];
     this.workers = [];
     for (let i = 0; i < size; i++) {
       const w = new Worker(new URL('./canvas-editorial.mjs', import.meta.url), {
-        workerData: { persistent: true, inputsPath },
+        workerData: { persistent: true, inputsPath, theme },
         resourceLimits: { maxOldGenerationSizeMb: 256 },
       });
       w.on('message', (m) => {
@@ -40,8 +40,16 @@ class WorkerPool {
       const { task, resolve, reject } = this.queue.shift();
       const onMsg = (m) => {
         w.off('message', onMsg);
-        if (m && m.ok) { resolve(m); this.idle.push(w); this.flush(); }
-        else reject(new Error((m && m.error) || 'worker failed'));
+        if (m && m.ok) {
+          const bad = (task.theme && m.theme !== task.theme)
+            || (task.skin && m.skin !== task.skin)
+            || (task.inputsPath && m.inputsPath !== path.resolve(task.inputsPath));
+          if (bad) {
+            reject(new Error(`worker 参数不一致：期望 ${task.theme}/${task.skin}/${path.resolve(task.inputsPath)}，实际 ${m.theme}/${m.skin}/${m.inputsPath}`));
+            return;
+          }
+          resolve(m); this.idle.push(w); this.flush();
+        } else reject(new Error((m && m.error) || 'worker failed'));
       };
       w.on('message', onMsg);
       w.postMessage(task);
@@ -56,6 +64,14 @@ renderFrame(1.0); // warmup：字体、Skia 表面、绘制缓存
 const POOL_SIZE = Math.max(1, Number(process.argv[3] || 8));
 const POOL = new WorkerPool(POOL_SIZE, DEFAULT_INPUTS);
 
+// 主题/输入是主线程全局状态，多主题请求必须串行，否则互相污染
+let RENDER_QUEUE = Promise.resolve();
+function enqueue(fn) {
+  const run = RENDER_QUEUE.then(fn, fn);
+  RENDER_QUEUE = run.catch(() => {});
+  return run;
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/health') {
@@ -69,7 +85,7 @@ const server = http.createServer(async (req, res) => {
     }
     let body = '';
     for await (const c of req) body += c;
-    const { inputs, out, audio, workers = 8, cacheMaxBytes } = JSON.parse(body || '{}');
+    const { inputs, out, audio, workers = 8, cacheMaxBytes, theme = 'knowledge', skin = '' } = JSON.parse(body || '{}');
     if (!out || !audio) {
       res.statusCode = 400;
       res.end(JSON.stringify({ ok: false, error: 'out/audio required' }));
@@ -77,9 +93,14 @@ const server = http.createServer(async (req, res) => {
     }
     const ip = path.resolve(inputs || DEFAULT_INPUTS);
     const t0 = Date.now();
-    loadInputs(ip);
-    const list = await renderIncremental({ workers, inputsPath: ip, concat: false, pool: POOL, cacheMaxBytes });
-    mixAudio(list, audio, out, true);
+    const outPath = await enqueue(async () => {
+      applyTheme(theme);
+      setSkin(skin);
+      loadInputs(ip);
+      const list = await renderIncremental({ workers, inputsPath: ip, concat: false, pool: POOL, cacheMaxBytes, theme, skin });
+      mixAudio(list, audio, out, true);
+      return out;
+    });
     res.setHeader('content-type', 'application/json');
     res.end(JSON.stringify({ ok: true, ms: Date.now() - t0, out }));
   } catch (e) {

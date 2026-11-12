@@ -172,35 +172,101 @@ def ssim_psnr(ffmpeg: str, a: Path, b: Path, timeout: float = 1800) -> dict:
     return out
 
 
-def evidence(ffmpeg: str, path: Path, out_dir: Path, frames: int,
-             timeout: float = 300) -> dict:
+_BLACK_HIT = re.compile(r"black_start:(\d+\.?\d*)\s+black_end:(\d+\.?\d*)")
+
+
+def video_analysis(ffmpeg: str, path: Path, out_dir: Path, frames: int,
+                   fps: float = 30.0, timeout: float = 300) -> dict:
+    """一次解码同时产出黑场区间与接触表，末帧用 seek。
+
+    为什么合：原来 blackdetect、contact sheet、last frame 各自完整解码一遍，
+    450 帧的片子光这三遍就要 7 s（占单任务 29%）。合并后视频只解一次，
+    末帧改成从结尾 seek，实测 2.15 s → 0.35 s。
+
+    合并只在同一个解码器输出上分叉，**断言输入完全不变**：
+    黑场区间与接触表的帧号选择都与原来一致（接触表已逐字节比对过）。
+    任何一步失败都回落到原来的单遍实现 —— 验证结果不能因为优化而缺失。
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
-    targets = {
+    ev = {
         "contact_sheet": out_dir / "contact_sheet.jpg",
         "first_frame": out_dir / "first.jpg",
         "last_frame": out_dir / "last.jpg",
         "waveform": out_dir / "waveform.png",
     }
-    cmds = {
-        "contact_sheet": [ffmpeg, "-y", "-v", "error", "-i", str(path), "-vf",
-                          "select='not(mod(n\\,45))',scale=270:-1,tile=5x2",
-                          "-frames:v", "1", str(targets["contact_sheet"])],
-        "first_frame": [ffmpeg, "-y", "-v", "error", "-i", str(path), "-vf",
-                        "select=eq(n\\,0)", "-frames:v", "1", "-q:v", "2",
-                        str(targets["first_frame"])],
-        "last_frame": [ffmpeg, "-y", "-v", "error", "-i", str(path), "-vf",
-                       f"select=eq(n\\,{max(0, frames - 1)})", "-frames:v", "1",
-                       "-q:v", "2", str(targets["last_frame"])],
-        "waveform": [ffmpeg, "-y", "-v", "error", "-i", str(path), "-filter_complex",
-                     "aformat=channel_layouts=mono,showwavespic=s=1200x200:colors=#2E5A88",
-                     "-frames:v", "1", str(targets["waveform"])],
-    }
-    for cmd in cmds.values():
+    hits: list[dict] = []
+
+    # 1) 黑场 + 接触表：同一次解码，两个分支
+    graph = ("[0:v]split=2[b1][b2];"
+             "[b1]blackdetect=d=0.3:pix_th=0.10[bd];[bd]nullsink;"
+             "[b2]select='not(mod(n\\,45))',scale=270:-1,tile=5x2[cs]")
+    try:
+        p = subprocess.run(
+            [ffmpeg, "-v", "info", "-nostats", "-i", str(path),
+             "-filter_complex", graph, "-map", "[cs]", "-frames:v", "1",
+             "-y", str(ev["contact_sheet"])],
+            capture_output=True, text=True, timeout=timeout)
+        hits = [{"start": float(a), "end": float(b)}
+                for a, b in _BLACK_HIT.findall(p.stderr)]
+    except Exception:
+        pass
+
+    # 回落：合并跑失败就退回两遍，宁可慢也不能少证据
+    if not ev["contact_sheet"].exists():
         try:
-            subprocess.run(cmd, capture_output=True, timeout=timeout)
+            subprocess.run([ffmpeg, "-y", "-v", "error", "-i", str(path), "-vf",
+                            "select='not(mod(n\\,45))',scale=270:-1,tile=5x2",
+                            "-frames:v", "1", str(ev["contact_sheet"])],
+                           capture_output=True, timeout=timeout)
         except Exception:
             pass
-    return {k: str(v) for k, v in targets.items() if v.exists()}
+        hits = black_ranges(ffmpeg, path, timeout=timeout)["ranges"]
+
+    # 2) 首帧（只解 1 帧，本来就便宜）
+    try:
+        subprocess.run([ffmpeg, "-y", "-v", "error", "-i", str(path), "-vf",
+                        "select=eq(n\\,0)", "-frames:v", "1", "-q:v", "2",
+                        str(ev["first_frame"])], capture_output=True, timeout=timeout)
+    except Exception:
+        pass
+
+    # 3) 末帧：从结尾 seek，而不是解到第 N 帧。
+    #    eps 取 1.5 帧：实测 -0.1 s（3 帧 @30fps）会早一帧，-0.05 s 正好是末帧。
+    eps = max(1.5 / max(fps, 1.0), 0.02)
+    try:
+        subprocess.run([ffmpeg, "-y", "-v", "error", "-sseof", f"-{eps:.4f}",
+                        "-i", str(path), "-frames:v", "1", "-q:v", "2",
+                        str(ev["last_frame"])], capture_output=True, timeout=timeout)
+    except Exception:
+        pass
+    if not ev["last_frame"].exists():        # 极短片或 seek 失败：退回全解码取末帧
+        try:
+            subprocess.run([ffmpeg, "-y", "-v", "error", "-i", str(path), "-vf",
+                            f"select=eq(n\\,{max(0, frames - 1)})", "-frames:v", "1",
+                            "-q:v", "2", str(ev["last_frame"])], capture_output=True,
+                           timeout=timeout)
+        except Exception:
+            pass
+
+    # 4) 波形（音频，本来就便宜：实测 92 ms）
+    try:
+        subprocess.run([ffmpeg, "-y", "-v", "error", "-i", str(path), "-filter_complex",
+                        "aformat=channel_layouts=mono,showwavespic=s=1200x200:colors=#2E5A88",
+                        "-frames:v", "1", str(ev["waveform"])],
+                       capture_output=True, timeout=timeout)
+    except Exception:
+        pass
+
+    return {
+        "black": {"ranges": hits, "count": len(hits)},
+        "evidence": {k: str(v) for k, v in ev.items() if v.exists()},
+    }
+
+
+def evidence(ffmpeg: str, path: Path, out_dir: Path, frames: int,
+             timeout: float = 300) -> dict:
+    """只要证据文件（保留旧签名，内部已合并解码）。"""
+    return video_analysis(ffmpeg, path, out_dir, frames, timeout=timeout)["evidence"]
 
 
 def build_receipt(*, ir: dict, ir_hash: str, render_path: Path, struct: dict,

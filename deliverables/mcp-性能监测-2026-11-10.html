@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>mcp.cutduo.com 性能监测 · 2026-11-10</title>
+<style>
+:root{--paper:#f7f4ec;--card:#fffdf7;--ink:#1f1c17;--ink2:#4a453b;--ink3:#7d7668;
+--rule:#dcd6c8;--acc:#b23a2b;--accs:#f7e6e1;--teal:#1d6f5c;--amber:#a97a1e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",sans-serif;
+font-size:16px;line-height:1.8;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:0 28px 110px}
+h1,h2,h3{font-family:"Songti SC",Georgia,serif;font-weight:600}
+.hero{padding:72px 0 34px;border-bottom:1px solid var(--rule)}
+.kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--acc);font-weight:700;margin-bottom:18px}
+h1{font-size:40px;line-height:1.24;margin:0 0 16px}
+.lede{font-size:17.5px;color:var(--ink2);max-width:820px;margin:0}
+.lede b{color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);margin:34px 0 0}
+.stat{background:var(--card);padding:18px 20px}
+.stat .n{font-family:"Songti SC",Georgia,serif;font-size:33px;line-height:1.15}
+.stat .l{font-size:12.5px;color:var(--ink3);margin-top:4px}
+.stat.hot .n{color:var(--acc)} .stat.good .n{color:var(--teal)}
+section{margin-top:56px}
+h2{font-size:25px;margin:0 0 8px;padding-top:16px;border-top:2px solid var(--ink)}
+h2 .num{font-size:13px;letter-spacing:.1em;color:var(--acc);margin-right:11px;vertical-align:3px;
+font-family:-apple-system,sans-serif;font-weight:700}
+.sub{color:var(--ink3);font-size:14.5px;margin:0 0 22px}
+h3{font-size:18px;margin:32px 0 10px}
+p{margin:0 0 15px;color:var(--ink2)}
+code{font-family:ui-monospace,Menlo,monospace;font-size:.86em;background:#eee9dd;padding:1px 5px;border-radius:2px;color:#3a352c}
+pre{background:#eee9dd;padding:14px 16px;border-radius:3px;overflow-x:auto;font-size:12.5px;line-height:1.65;color:#3a352c}
+table{width:100%;border-collapse:collapse;font-size:13px;background:var(--card);margin:0 0 14px}
+th{text-align:left;font-size:12px;letter-spacing:.04em;padding:9px 11px;border-bottom:1.5px solid var(--ink);background:#fbf9f3;white-space:nowrap}
+td{padding:8px 11px;border-bottom:1px solid var(--rule);vertical-align:top;color:var(--ink2)}
+tr:last-child td{border-bottom:none}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}
+.ok{color:var(--teal);font-weight:700} .bad{color:var(--acc);font-weight:700} .warn{color:var(--amber);font-weight:700}
+.tag{display:inline-block;padding:1px 6px;border-radius:8px;font-size:10.5px;background:#eceae4;color:var(--ink3);margin:1px 2px 1px 0;white-space:nowrap}
+.tag.hot{background:var(--accs);color:var(--acc)} .tag.good{background:#e2f0ea;color:var(--teal)}
+.bars{margin:6px 0 18px}
+.bar{display:grid;grid-template-columns:110px 1fr 62px;gap:10px;align-items:center;font-size:12.5px;color:var(--ink2);margin-bottom:5px}
+.bar .track{height:15px;background:#e9e4d6;position:relative;border-radius:2px;overflow:hidden}
+.bar .fill{position:absolute;left:0;top:0;bottom:0;background:var(--ink3)}
+.bar .fill.a{background:var(--acc)} .bar .fill.t{background:var(--teal)} .bar .fill.m{background:var(--amber)}
+.bar .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
+.callout{border-left:3px solid var(--acc);background:var(--accs);padding:13px 18px;margin:18px 0;font-size:14.5px;color:#5a2a22}
+.callout.t{border-color:var(--teal);background:#e9f2ee;color:#1b4f43}
+.callout b{color:inherit}
+ul{margin:0 0 15px;padding-left:22px;color:var(--ink2)} li{margin-bottom:6px}
+.foot{margin-top:64px;padding-top:18px;border-top:1px solid var(--rule);font-size:12.5px;color:var(--ink3)}
+</style></head><body><div class="wrap">
+
+<div class="hero">
+  <div class="kicker">Production Observation · mcp.cutduo.com</div>
+  <h1>性能监测：5 个真实任务零失败，<br>瓶颈是「每请求重连数据库」与「无谓的整片重编」</h1>
+  <p class="lede">
+    监测窗口 <b>2026-11-10 01:14 → 01:30</b>（+08:00），生产机 <span class="mono">210.121.44.245</span>。
+    期间测试客户端完成 <b>5 轮完整调用</b>：上传 11 个素材（43.5 MB）→ 校验 → 提交 → 轮询 → 下载成片。
+    <b>5/5 verdict=pass，0 失败、0 重试、0 个 5xx。</b>
+    实测暴露出两个可直接修的浪费：每个 HTTP 请求都新建一条 PG 连接（+20–30 ms，并发放大 4.5×），
+    以及为了补两个元数据字段而把整段视频重编一遍（0.67 s 的活干了 11 s）。
+  </p>
+  <div class="stats">
+    <div class="stat good"><div class="n">5 / 5</div><div class="l">渲染任务 verdict=pass</div></div>
+    <div class="stat"><div class="n">32.4s</div><div class="l">p50 单任务端到端（12.1–54.9s）</div></div>
+    <div class="stat"><div class="n">19.6–27</div><div class="l">fps @1080×1920（码率与负载共同影响）</div></div>
+    <div class="stat hot"><div class="n">21 / 20</div><div class="l">请求数 : 新建 PG 会话数</div></div>
+  </div>
+</div>
+
+<section>
+  <h2><span class="num">01</span>先解决「看不见」</h2>
+  <p class="sub">默认 access_log 只有状态码和字节数，回答不了「慢在哪一层」。这是本次监测的第一件事。</p>
+
+  <p>原 vhost 用的是 nginx 默认 combined 格式，既没有 <code>$request_time</code>，
+  也没有 <code>$upstream_response_time</code>。后果是请求慢的时候只知道「慢」，
+  不知道慢在 TLS、网络、nginx 还是应用。而这两者的差额最容易被误判 ——
+  端到端里包含客户端上行时间，把它当服务端耗时会得出完全错误的优化方向（§03 的上传数据即是例证）。</p>
+
+  <p>处理方式是<strong>只增不改</strong>：在原 <code>access_log</code> 之外加第二条日志与独立 log_format，
+  原日志格式、宝塔统计、其他 20 多个 vhost 全部不动。</p>
+
+<pre># /www/server/panel/vhost/nginx/mcp.cutduo.com.conf
+log_format cutduo_perf escape=json '{"ts":"$time_iso8601","ip":"$remote_addr",
+  "m":"$request_method","uri":"$request_uri","st":$status,"rt":$request_time,
+  "urt":"$upstream_response_time","uht":"$upstream_header_time",
+  "uct":"$upstream_connect_time","body":$body_bytes_sent,
+  "req":$request_length,"ua":"$http_user_agent"}';
+access_log /www/wwwlogs/mcp.cutduo.com.perf.log cutduo_perf;   # 新增一行</pre>
+
+  <ul>
+    <li>改前备份 <span class="mono">mcp.cutduo.com.conf.bak-perf-20261110-011410</span>，<code>nginx -t</code> 通过后才 <code>reload</code>；</li>
+    <li><code>uht</code>（上游首字节）是中途补的：大文件下载时 <code>urt</code> 会跟随客户端消费速度，
+        没有 TTFB 就分不清是服务端慢还是客户端慢 —— 见 §03；</li>
+    <li>新增 <span class="mono">/etc/logrotate.d/mcp-cutduo-perf</span>（daily / 50 M / 保留 7 份 / <code>kill -USR1</code>）。
+        宝塔的切割只处理 <span class="mono">&lt;domain&gt;.log</span>，不管这条新日志，不加就会被写满；</li>
+    <li>解析脚本入库：<span class="mono">renderd/tests/perf_report.py</span>，按端点出 p50/p95/p99，并把上传拆成「客户端」与「服务端」两列。</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="num">02</span>可用性：这一轮没有任何失败</h2>
+  <p class="sub">判断性能之前，先确认测到的是正常路径。</p>
+
+  <table>
+    <tr><th>观测项</th><th class="n">值</th><th>说明</th></tr>
+    <tr><td>渲染任务</td><td class="n ok">5 / 5 pass</td><td>回执 <span class="mono">verdict=pass</span>，L1 十项全过，4 件证据齐备</td></tr>
+    <tr><td>失败 / 重试</td><td class="n ok">0 / 0</td><td><span class="mono">failed_24h=0</span>，<span class="mono">attempts</span> 全为 1</td></tr>
+    <tr><td>5xx</td><td class="n ok">0</td><td>全窗口无 5xx</td></tr>
+    <tr><td>测试客户端请求</td><td class="n">54（43 × 200 + 11 × 201）</td><td>11 次上传共 43.53 MB，全部 201</td></tr>
+    <tr><td>429</td><td class="n warn">3（全部来自自测探针）</td><td>连打 12 次工具调用触发应用层 10 QPS 限速；测试客户端本身 0 次</td></tr>
+    <tr><td>应用错误日志</td><td class="n ok">0</td><td>api / worker 容器近 40 分钟无 error / traceback</td></tr>
+  </table>
+
+  <div class="callout t">
+    <b>一个容易被当成故障的正常现象：</b><span class="mono">renderd-worker-1</span> 在 <code>docker ps</code> 里是
+    <span class="mono">unhealthy</span>。镜像里的健康探针去请求 <code>127.0.0.1:8787/healthz</code>，
+    而 worker 是纯拉取式进程、不监听端口 —— 探针必然连接被拒。
+    出片不受影响，但任何依赖容器健康状态的编排会误判；修法见架构文档 §九（按 PID1 判断进程身份）。
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">03</span>延迟分层：慢在应用层，不在 TLS，也不在带宽</h2>
+  <p class="sub">同一台机器上逐层测量。先给出容易误判的两个数字，再给准确的。</p>
+
+  <table>
+    <tr><th>层</th><th>测法</th><th class="n">p50</th><th>结论</th></tr>
+    <tr><td>TLS 握手</td><td>同进程 20 次 <code>wrap_socket</code></td><td class="n">5.6 ms</td><td>ECDSA P-256，实测 207 连接/秒</td></tr>
+    <tr><td>keep-alive 往返（nginx+TLS）</td><td>复用连接 20 次</td><td class="n">1.72 ms</td><td>反代本身开销可忽略</td></tr>
+    <tr><td>应用 <span class="mono">GET /healthz</span></td><td>直连 39340</td><td class="n">1.5 ms</td><td>不碰 DB 的路径很快</td></tr>
+    <tr><td>应用 <span class="mono">GET /v1/jobs</span></td><td>直连 39340</td><td class="n warn">25–47 ms</td><td>一碰 DB 就跳一个量级 → §05-B1</td></tr>
+    <tr><td>MCP <span class="mono">initialize</span></td><td>公网链路</td><td class="n">73–77 ms</td><td>含 1 次 PG 连接</td></tr>
+    <tr><td>MCP <span class="mono">tools/list</span></td><td>公网链路</td><td class="n">78–109 ms</td><td>静态列表，理论应 &lt;5 ms</td></tr>
+    <tr><td>MCP <span class="mono">get_job_status</span></td><td>公网链路</td><td class="n">77–89 ms</td><td>与同语义 REST 端点（40 ms）差 2 倍</td></tr>
+    <tr><td>MCP <span class="mono">validate_render</span></td><td>测试客户端实测</td><td class="n bad">2.6 – 11.8 s</td><td>随素材数量与码率线性增长 → §05-B3</td></tr>
+    <tr><td>MCP <span class="mono">submit_render</span></td><td>测试客户端实测</td><td class="n">0.51 – 0.63 s</td><td>命中 mezz 缓存，未重复归一化</td></tr>
+  </table>
+
+  <div class="callout">
+    <b>两个必须澄清的测量假象。</b>
+    ① 用 <code>curl</code> 逐次测 TLS 会读到 37–40 ms，那是 <strong>curl 进程自己加载 CA 库</strong>的开销；
+    同进程实测握手只有 <strong>5.6 ms</strong>。
+    ② 上传的端到端 2.6 s 里，服务端只占 <strong>0.28 s</strong>，其余是客户端 0.6–1.2 MB/s 的上行。
+    没有 <code>uht</code> 时，大文件下载也会出现同样的误判。
+  </div>
+
+  <h3>上传：2.6 秒里只有 0.28 秒是服务端</h3>
+  <table>
+    <tr><th>时间</th><th class="n">体积</th><th class="n">端到端</th><th class="n">服务端(上游)</th><th class="n">客户端上行</th></tr>
+    <tr><td class="mono">01:15:10</td><td class="n">2.77 MB</td><td class="n">2.604 s</td><td class="n ok">0.283 s</td><td class="n">1.06 MB/s</td></tr>
+    <tr><td class="mono">01:15:14</td><td class="n">2.77 MB</td><td class="n">2.227 s</td><td class="n ok">0.062 s</td><td class="n">1.24 MB/s</td></tr>
+    <tr><td class="mono">01:16:00–06</td><td class="n">1.09–1.18 MB</td><td class="n">1.70–1.77 s</td><td class="n ok">0.047–0.054 s</td><td class="n">0.62–0.70 MB/s</td></tr>
+    <tr><td class="mono">01:21:30–39</td><td class="n">5.95–6.11 MB</td><td class="n">2.43–3.58 s</td><td class="n ok">0.071–0.150 s</td><td class="n">1.7–2.4 MB/s</td></tr>
+    <tr><td class="mono">01:25:38–46</td><td class="n">—</td><td class="n">2.44–2.93 s</td><td class="n ok">0.087–0.211 s</td><td class="n">—</td></tr>
+  </table>
+  <p>服务端处理 47–283 ms。上传不是瓶颈，也不是本次要优化的地方。</p>
+
+  <h3>下载：小文件 48 ms，大文件 3.2 s —— 后者是客户端</h3>
+  <p>3.17 MB / 3.18 MB 两次下载分别 48 ms、53 ms；而 12.92 MB、11.97 MB 两次是 3.20 s、3.50 s（≈3.7–4.0 MB/s）。
+  因为 <code>proxy_buffering off</code>，nginx 按客户端消费速度回读上游，
+  <strong>此时 <code>urt</code> 已经被客户端拖慢，不再代表服务端</strong>。
+  这也是本轮补 <code>$upstream_header_time</code> 的原因：下一轮起可用 TTFB 判断大文件的服务端首字节时间。</p>
+</section>
+
+<section>
+  <h2><span class="num">04</span>任务流水线：24.5 s 与 54.9 s 的差别，码率和宿主负载同时变了</h2>
+  <p class="sub">五个真实任务，逐阶段取 <span class="mono">job_events</span> 时间戳；宿主 load 取同期 10 秒采样。</p>
+
+  <table>
+    <tr><th>任务</th><th class="n">帧</th><th class="n">源素材</th><th class="n">渲染期 load</th><th class="n">排队</th><th class="n">归一化</th><th class="n">编译</th><th class="n">渲染</th><th class="n">校验+证据</th><th class="n">总计</th><th class="n">渲染 fps</th></tr>
+    <tr><td class="mono">…5aee57</td><td class="n">180</td><td class="n">540×960 2 Mbps</td><td class="n">未采样</td><td class="n">0.20</td><td class="n">0.54</td><td class="n">0.33</td><td class="n">7.20</td><td class="n">3.86</td><td class="n">12.13</td><td class="n">25.0</td></tr>
+    <tr><td class="mono">…26ca6e</td><td class="n">450</td><td class="n">1080×1920 2 Mbps</td><td class="n">16.6–18.7</td><td class="n">0.41</td><td class="n">7.24</td><td class="n">0.14</td><td class="n">17.52</td><td class="n">7.12</td><td class="n">32.43</td><td class="n">25.7</td></tr>
+    <tr><td class="mono">…8138534</td><td class="n">450</td><td class="n">1080×1920 2 Mbps</td><td class="n ok">13.2</td><td class="n">0.19</td><td class="n ok">0.41</td><td class="n">0.13</td><td class="n">16.70</td><td class="n">7.07</td><td class="n">24.50</td><td class="n">27.0</td></tr>
+    <tr><td class="mono">…1803b6e</td><td class="n">450</td><td class="n">1080×1920 10 Mbps 未标记</td><td class="n warn">≈30</td><td class="n">0.14</td><td class="n bad">15.45</td><td class="n">0.12</td><td class="n">21.99</td><td class="n">11.38</td><td class="n">49.09</td><td class="n">20.5</td></tr>
+    <tr><td class="mono">…9932e7</td><td class="n">450</td><td class="n">1080×1920 10 Mbps 未标记</td><td class="n bad">42–54</td><td class="n">0.57</td><td class="n bad">15.25</td><td class="n">0.12</td><td class="n">22.94</td><td class="n">16.06</td><td class="n">54.93</td><td class="n">19.6</td></tr>
+  </table>
+
+  <div class="callout">
+    <b>一个必须自己先否掉的结论。</b>
+    最初我把 24.5 s → 54.9 s 的差异归给「源码率 2 Mbps vs 10 Mbps」，因为两批素材的码率恰好差 5 倍。
+    但把同期宿主 load 拉出来对照后，这个归因站不住：任务 3 跑在 load <b>13.2</b>，
+    任务 5 跑在 <b>42–54</b>（64 核机器）。<b>码率与宿主争抢同时变了，这一轮的数据无法把 2.2 倍拆开。</b>
+    两者都有机理：高码率增加解码量；load 54/64 说明 CPU 与内存带宽被邻居占用。
+    要定价必须做受控实验 —— 同一批 IR 在低负载窗口重跑一次。
+  </div>
+
+  <div class="bars">
+    <div class="bar"><span>渲染</span><span class="track"><span class="fill a" style="width:58%"></span></span><span class="v">58%</span></div>
+    <div class="bar"><span>校验+证据</span><span class="track"><span class="fill m" style="width:29%"></span></span><span class="v">29%</span></div>
+    <div class="bar"><span>归一化（冷）</span><span class="track"><span class="fill t" style="width:28%"></span></span><span class="v">28%</span></div>
+    <div class="bar"><span>编译+排队</span><span class="track"><span class="fill" style="width:2%"></span></span><span class="v">2%</span></div>
+  </div>
+
+  <h3>五个结论</h3>
+  <ul>
+    <li><strong>同一台机器、同样 450 帧，实测跨度为 24.5–54.9 s。</strong>这段跨度里有两种成本，
+        本轮只证明了它们存在，没有分离它们。</li>
+    <li><strong>宿主负载的振幅本身是个风险</strong>：15 分钟采样窗口内 load 从 15.1 冲到 <b>74.0</b>（64 核，已超卖），
+        同机还跑着 20+ 个业务（同期两个 clickhouse 各占约 80% CPU）。
+        渲染既被 4 核配额限制，又与邻居争内存带宽 —— <strong>p95 延迟不由我们自己决定</strong>。</li>
+    <li><strong>校验是第二大固定成本</strong>：450 帧 7.07–16.06 s，与帧数严格线性 —— 这个形状说明它在做逐帧全解码（§05-B2），
+        与负载无关的部分是确定的。</li>
+    <li><strong>mezz 缓存有效，但只对「同素材」有效</strong>：任务 3 的 0.41 s 是命中缓存；
+        任务 4/5 的 15.4 s 是 3 个<em>全新</em>素材首次归一化，每个约 5.1 s。</li>
+    <li><strong>渲染被 4 核配额卡住</strong>：worker 峰值 CPU <span class="mono">400–412%</span>（配额 400%）——
+        配额打满不等于拿到 4 核的真实算力，超卖时同份额的 CPU 时间产出更少。</li>
+  </ul>
+
+  <p>资源侧另记一笔：api 容器在预检期间峰值 <span class="mono">178%</span>（配额 200%）、内存 52→165 MiB；
+  PG 常驻约 65 MiB；可用内存始终 &gt; 24 GB。</p>
+</section>
+
+<section>
+  <h2><span class="num">05</span>五个瓶颈，按「证据 → 代价 → 修法」排列</h2>
+  <p class="sub">每条都给了可复现的判据，不是凭感觉的优化清单。</p>
+
+  <h3>B1 · 每个 HTTP 请求都新建一条 PG 连接 <span class="tag hot">P0</span></h3>
+  <p><strong>证据</strong>：连打 20 次 <code>GET /v1/jobs</code>，PG 的 <span class="mono">sessions</span> 从 3666 → 3687，
+  即 <strong>21 条</strong>；同样 20 次 <code>/healthz</code>（不碰 DB）只涨 1 条。
+  拆开测：<code>psycopg.connect</code> 11–27 ms，同连接上查询 0.81–0.91 ms，<code>get_tenant</code> 热态 0.30 ms。
+  那 25–47 ms 里绝大部分是建连，不是查询。</p>
+  <p><strong>代价</strong>：单请求固定多付 20–30 ms；并发时更糟 —— 10 个并发请求最慢 5 个为
+  124–139 ms，是单请求的 4–5 倍，因为 SCRAM 认证在 PG 侧串行完成。
+  MCP 客户端一次任务往往并行发多个工具调用，放大正好落在最敏感处。</p>
+  <p><strong>根因</strong>：<code>ThreadingHTTPServer</code> 每请求开一个短命线程，
+  连接存在 <code>threading.local</code> 里 —— 线程一换，连接就没了。
+  上一轮为修 SQLite 的 fd 泄漏在请求结束时显式 <code>close_thread_connection()</code>，
+  对 SQLite 正确，对 PG 等于每请求付一次握手。</p>
+  <p><strong>修法</strong>：给 <code>PostgresStore</code> 加连接池（<code>psycopg_pool.ConnectionPool</code> 或自建 idle 列表 + checkout/checkin），
+  请求结束归还而不是关闭。预期 DB 端点 30 ms → 3 ms，10 并发 139 ms → &lt;15 ms。
+  <strong>不动 SQL、不动契约、不动鉴权。</strong></p>
+
+  <h3>B2 · 校验阶段把同一个文件全解码 3 遍 <span class="tag hot">P0</span></h3>
+  <p><strong>证据</strong>：<code>validate.py</code> 里 <code>black_ranges()</code> 一遍 <code>blackdetect</code>、
+  <code>evidence()</code> 里 contact sheet 一遍（<code>select + tile</code>）、last frame 一遍（要解到第 N 帧 = 全解码），
+  再加音频 <code>ebur128</code> 与 <code>showwavespic</code> 两遍 ——
+  合计 <strong>3 次视频全解码 + 2 次音频全解码</strong>。实测耗时与帧数严格线性，且随码率放大。</p>
+  <p><strong>代价</strong>：450 帧 7.07–16.06 s，占单任务 28–29%；180 帧 3.86 s，占 32%。片子越短，相对成本越高。</p>
+  <p><strong>修法</strong>：把 <code>blackdetect</code> 与抽帧合并进一个 filtergraph
+  （<code>[0:v]split</code> → 一路 <code>blackdetect</code>、一路 <code>select+tile</code>，<code>-map</code> 多输出），音频同理。
+  预期 7.1 s → 约 2.5 s（10 Mbps 素材 16 s → 约 5.5 s）。
+  <strong>合并后必须逐一比对断言输入</strong>（黑场区间、contact sheet 帧号），否则等于改了验收口径。</p>
+
+  <h3>B3 · 为补两个元数据字段，把整段视频重编一遍 <span class="tag hot">P0</span></h3>
+  <p><strong>现象</strong>：任务 4/5 的归一化各花 15.2–15.5 s（3 个素材，每个约 5.1 s），
+  而这两批素材只缺两样东西：色彩标记（<code>COLOR_UNTAGGED</code>）和音轨（<code>NO_AUDIO</code>）。
+  代码里 <code>passthrough = (not actions) and not audio_role</code> ——
+  只要有一条 action，就走 <code>libx264</code> 整片重编。</p>
+  <p><strong>实测对照</strong>（同一素材 <span class="mono">b60b6e58…</span>，1080×1920 / 150 帧 / 6.2 MB，缺色彩标记且无音轨）：</p>
+  <table>
+    <tr><th>方案</th><th class="n">耗时</th><th>ffprobe 结果</th><th>画质</th></tr>
+    <tr><td>流拷贝 + 容器色彩标记<br><span class="mono">-c:v copy -color_primaries/-trc/-colorspace bt709</span></td><td class="n ok">672 ms</td><td class="ok">primaries / transfer / space 全部 bt709</td><td class="ok">无损失（码流不变）</td></tr>
+    <tr><td>整片重编（现行）<br><span class="mono">libx264 crf20 veryfast</span></td><td class="n bad">11 250 ms</td><td class="warn">space=bt709，transfer/primaries 仍 unknown</td><td class="warn">多一次有损转码</td></tr>
+  </table>
+  <p><strong>结论</strong>：这条路径上用流拷贝是 <strong>16.7 倍快，而且标记更完整、画质不受损</strong>。
+  按实测，任务 4/5 的归一化 15.4 s 可压到约 2 s，单任务总时长下降 25–28%。</p>
+  <p><strong>适用边界（必须写进代码，不能凭动作名判断）</strong>：
+  仅当 action 集合 ⊆ {<code>TAG_COLOR</code>, <code>AUDIO_SYNTH</code>}，
+  且素材的宽高 / 帧率 / 像素格式 / SAR / 旋转<strong>已经等于目标规格</strong>时才允许 copy。
+  任何几何、帧率、像素格式或 HDR 相关的动作仍然必须重编 —— 那些不是元数据，改不了码流之外的东西。</p>
+
+  <h3>B4 · 单 worker 串行，且成本随源码率翻倍 <span class="tag warn">P1</span></h3>
+  <p>1 个 worker、<code>WORKER_CONCURRENCY=1</code>，任务严格串行。
+  按实测 p50 32.4 s 算，吞吐上限约 1.9 任务/分钟；若素材都是 10 Mbps 档，则只有 1.1 任务/分钟。</p>
+  <p>宿主 64 核、同期 load 9.7–32.9、可用内存 &gt; 24 GB，<strong>再加 2–3 个 worker 容器有余量</strong>。
+  建议按「每副本 4 核」扩容，而不是调大 <code>concurrency</code> —— 同容器内并发会和渲染抢 CPU，
+  日志与崩溃恢复也会混在一起（上一轮已定过这个取舍）。</p>
+
+  <h3>B5 · 素材预检在请求线程里跑，且吃满 API 的 2 核 <span class="tag">P2</span></h3>
+  <p><strong>证据</strong>：<code>validate_render</code> 实测 2.62 s（2 个素材）、6.39 s、10.61 s、11.82 s（3 个素材，10 Mbps）；
+  同期 api 容器 CPU 峰值 <span class="mono">178%</span>、内存 52→165 MiB。</p>
+  <p><strong>代价</strong>：预检是 CPU 密集（抽样解码 + 字体栅格化），跑在 API 进程里。
+  两个客户同时提交就会把 API 的 2 核吃满，连带拖慢「查任务状态」这类轻请求 ——
+  而轮询恰恰是 Agent 最频繁的动作。这条在 <span class="mono">blockers.md</span> 里原是 P2，本轮给了它具体数字。</p>
+  <p><strong>修法</strong>：预检改为入队前的独立阶段，或至少加 2 并发信号量兜底。</p>
+</section>
+
+<section>
+  <h2><span class="num">06</span>两个只在真实调用里才会发现的现象</h2>
+
+  <h3>① 每租户 10 QPS 是共享预算，自测探针都能撞上</h3>
+  <p>连续快速打 12 次 MCP 工具调用，第 12 次返回 <span class="mono">E_RATE_LIMITED</span>「超过 10 req/s」，
+  并且随后 3 次 <code>GET /v1/jobs/{id}</code> 也被限流 —— 说明<strong>限流按租户共享、跨端点生效</strong>。
+  单个 Agent 顺序调用没问题；若客户端把 <code>tools/call</code> 并发发（例如同时查 6 个任务状态），
+  很容易在 1 秒窗口内撞顶。错误是 <span class="mono">retryable=true</span>，
+  客户端必须实现退避重试，否则会表现为「偶发失败」。</p>
+  <p>建议：客户端侧限并发（≤5），或把 <code>RENDERD_QUOTA_QPS</code> 从 10 调到 20–30。
+  这是产品口径，不是 bug，所以没动。</p>
+
+  <h3>② 公网入口有持续扫描，占日志与一点 CPU</h3>
+  <p>00:57–01:12 的 116 条请求里 <strong>55 条 404 来自公网扫描器</strong>：
+  <span class="mono">/graphql</span>、<span class="mono">/api/gql</span>、<span class="mono">/server-status</span>、
+  <span class="mono">/v2/_catalog</span>、<span class="mono">/.env</span>、<span class="mono">/.git/config</span>，
+  以及一条 Atlassian Jira 的路径穿越尝试。全部被 404 挡下，未触发限速，也未进入应用。</p>
+  <p>属于「有公网 IP + 有 DNS 记录」的常态。可选处置：对已知扫描路径 <code>return 444</code>
+  （不写日志、不回包），把噪音降到接近零。不改也不影响安全模型 —— 鉴权在应用层。</p>
+</section>
+
+<section>
+  <h2><span class="num">07</span>建议动作</h2>
+
+  <table>
+    <tr><th>优先级</th><th>动作</th><th class="n">预期收益</th><th>风险</th></tr>
+    <tr><td><span class="tag hot">P0</span></td><td>PG 连接池：请求结束归还而不是关闭</td><td class="n">DB 端点 30 → 3 ms<br>10 并发 139 → &lt;15 ms</td><td>低（不动 SQL 与契约）</td></tr>
+    <tr><td><span class="tag hot">P0</span></td><td>元数据类 action 走流拷贝（严格限定适用面）</td><td class="n">归一化 5.1 → 0.7 s/素材<br>单任务 −25～28%</td><td>中（须锁死适用条件）</td></tr>
+    <tr><td><span class="tag hot">P0</span></td><td>校验阶段合并解码：视频 3 遍 → 1 遍</td><td class="n">校验 −65%<br>（7.1 s → 2.5 s）</td><td>中（断言输入须逐一比对）</td></tr>
+    <tr><td><span class="tag warn">P1</span></td><td>worker 副本 1 → 3（每副本 4 核）</td><td class="n">吞吐 ≈ 1.9 → 5.7 任务/分钟</td><td>低（宿主余量充足）</td></tr>
+    <tr><td><span class="tag warn">P1</span></td><td>受控实验：同一批 IR 在低负载窗口重跑</td><td class="n">把 24.5–54.9 s 的跨度<br>拆成「码率」与「邻居争抢」</td><td>无（只读测量，不发货）</td></tr>
+    <tr><td><span class="tag warn">P1</span></td><td>预检限并发（≤2）或移出请求线程</td><td class="n">API 峰值 178% → &lt;100%</td><td>低</td></tr>
+    <tr><td><span class="tag">P2</span></td><td>修 worker 健康探针（按 PID1 判断）</td><td class="n">消除 unhealthy 误判</td><td>低</td></tr>
+    <tr><td><span class="tag">P2</span></td><td>扫描路径 <code>return 444</code></td><td class="n">日志噪音 −50%</td><td>低</td></tr>
+  </table>
+
+  <div class="callout">
+    <b>关于改动时机：</b>三条 P0 都要重启 api / worker，第二条还要改归一化判定。
+    当前仍在跑测试调用，重启会中断在途任务、让 <span class="mono">jobs_total</span> 归零。
+    <b>本轮只做观测与度量，没有改动任何应用代码</b>，线上跑的仍是 <span class="mono">renderd:0.1.0</span>。
+    P0 建议等这一轮测试结束后再上，或在预发先验。
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">08</span>怎么复现与持续监控</h2>
+
+<pre># 端点延迟分布（读 nginx 性能日志）
+python3 renderd/tests/perf_report.py                      # 最近 30 分钟
+python3 renderd/tests/perf_report.py --since 120 --top 20
+python3 renderd/tests/perf_report.py --skip-ua mon-probe   # 排除自探针
+
+# 资源侧
+docker stats --no-stream --format '{{.Name}} {{.CPUPerc}} {{.MemUsage}}' \
+  renderd-api-1 renderd-worker-1 renderd-pg-1
+curl -s localhost:39340/metrics | grep -E 'renderd_(jobs_total|queue_depth|jobs_running)'
+
+# 阶段耗时（最准的来源，比日志可靠）
+docker exec renderd-pg-1 psql -U renderd -d renderd -c \
+ "select job_id, stage, to_char(to_timestamp(min(ts)),'HH24:MI:SS.MS')
+  from renderd.job_events group by job_id, stage order by job_id, 3;"</pre>
+
+  <p><strong>日志</strong>：<span class="mono">/www/wwwlogs/mcp.cutduo.com.perf.log</span>（JSON Lines，一行一请求），
+  原日志 <span class="mono">mcp.cutduo.com.log</span> 不受影响；轮转配置 <span class="mono">/etc/logrotate.d/mcp-cutduo-perf</span>。</p>
+
+  <p><strong>回滚</strong>：删掉 vhost 里的 <code>log_format</code> 与第二行 <code>access_log</code> 后
+  <code>nginx -t &amp;&amp; nginx -s reload</code>；或还原备份
+  <span class="mono">mcp.cutduo.com.conf.bak-perf-20261110-011410</span>。两者都只影响这一条日志，不影响任何请求处理。</p>
+</section>
+
+<section>
+  <h2><span class="num">09</span>补测：三处「输出字节不变」的优化</h2>
+  <p class="sub">上面五条都需要改行为或重启服务。这一节是另外三条 —— 改完输出文件逐字节相同，属于可以放心上的优化。</p>
+
+  <p>出发点是一个数字对不上：纯解码+编码 150 帧只要 <b>1.9 s</b>（≈80 fps），
+  而线上渲染 450 帧要 17–23 s（≈20–27 fps）。差的不是编码器，是滤镜链。
+  逐项拆开验证（同一 mezz、同一编码参数、crf20/veryfast/4 线程）：</p>
+
+  <table>
+    <tr><th>变体</th><th class="n">150 帧耗时</th><th class="n">相对纯编码</th><th>输出是否一致</th></tr>
+    <tr><td>纯解码 + 编码</td><td class="n">1 855–1 932 ms</td><td class="n">—</td><td>—</td></tr>
+    <tr><td>+ 空转 scale/pad/setsar（尺寸已达标）</td><td class="n">1 953 ms</td><td class="n">+4%</td><td class="ok">是</td></tr>
+    <tr><td>+ 整帧 1080×1920 RGBA 叠加（现状）</td><td class="n bad">5 661 ms</td><td class="n bad">+195%</td><td>基准</td></tr>
+    <tr><td>+ 叠加层按 bbox 裁剪</td><td class="n">4 337 ms</td><td class="n">+125%</td><td class="ok">逐字节一致</td></tr>
+    <tr><td>+ 裁剪 且 <code>-framerate 30</code> 对齐</td><td class="n ok">3 460 ms</td><td class="n ok">+80%</td><td class="ok">逐字节一致（SSIM 1.000000）</td></tr>
+  </table>
+
+  <div class="callout">
+    <b>为什么文字层这么贵：</b>栅格化用的是 <code>Image.new("RGBA", (W, H))</code> —— 整帧 1080×1920，
+    而实测文字只占 <b>0.8%–3.7%</b> 的面积（bbox 例如 591×92 / 1080×1920）。
+    剩下 96% 以上的像素是透明的，但每帧仍要参与一次全帧 alpha 混合。
+    裁剪后叠加成本从 3.8 s 降到 0.45 s，<b>9 倍</b>，且像素完全相同 —— 因为透明区域本来就不影响结果。
+  </div>
+
+  <h3>校验阶段：合并两遍解码 + 末帧改成 seek</h3>
+  <table>
+    <tr><th>子步骤</th><th class="n">现状</th><th class="n">优化后</th><th class="n">倍数</th><th>输出</th></tr>
+    <tr><td>blackdetect + contact sheet（两遍全解码）</td><td class="n">4 952 ms</td><td class="n">2 721 ms<br><span class="mono">split 一次解码</span></td><td class="n">1.8×</td><td class="ok">contact sheet 逐字节一致</td></tr>
+    <tr><td>末帧（<code>select=eq(n,N-1)</code> 全解码）</td><td class="n">2 150–2 630 ms</td><td class="n">350 ms<br><span class="mono">-sseof -0.05</span></td><td class="n ok">7×</td><td class="ok">jpg 逐字节一致</td></tr>
+    <tr><td>loudness（ebur128 全音频）</td><td class="n">2 466 ms</td><td class="n">—</td><td class="n">—</td><td>L3 断言必需，未动</td></tr>
+    <tr><td>waveform</td><td class="n">92 ms</td><td class="n">—</td><td class="n">—</td><td>已很廉宜</td></tr>
+  </table>
+  <p class="sub">末帧 seek 必须带正确的 epsilon：实测 <code>-sseof -0.05</code> 与 <code>-ss 14.95</code> 取到的就是第 449 帧（sha 一致），
+  而 <code>-0.1</code> 会早一帧。这条要在实现时用现有的 <code>evidence_sha256</code> 做守卫。</p>
+
+  <h3>合起来值多少</h3>
+  <p>以最慢的那个任务（450 帧、54.9 s）为基准，按实测比例折算：</p>
+  <table>
+    <tr><th>阶段</th><th class="n">现状</th><th class="n">优化后</th><th class="n">节省</th></tr>
+    <tr><td>归一化（元数据类 action 走 copy）</td><td class="n">15.3 s</td><td class="n">≈2 s</td><td class="n ok">−13.3 s</td></tr>
+    <tr><td>渲染（裁剪图层 + 帧率对齐）</td><td class="n">22.9 s</td><td class="n">≈14 s</td><td class="n ok">−8.9 s</td></tr>
+    <tr><td>校验（合并解码 + seek 末帧）</td><td class="n">16.1 s</td><td class="n">≈9.2 s</td><td class="n ok">−6.9 s</td></tr>
+    <tr><td><b>总计</b></td><td class="n"><b>54.9 s</b></td><td class="n"><b>≈26 s</b></td><td class="n ok"><b>−53%</b></td></tr>
+  </table>
+
+  <h3>需要接受的代价</h3>
+  <ul>
+    <li>图层 PNG 变了 → 缓存键变 → <strong>全部渲染缓存失效一次</strong>。因为输出逐字节相同，
+        重算不会产生与旧产物不一致的成片，所以这次失效是安全的（不是 §09 之外那种「拿旧片」的风险）。</li>
+    <li><code>COMPILE_REV</code> 要 bump；<code>evidence_sha256</code> 里 contact sheet / last frame 的哈希会变一次
+        （命令变了，文件字节其实相同 → 这两项其实不变，只有 argv 版本变了）。</li>
+    <li>裁剪依赖 <code>Layer.bbox</code>，而它已经是安全区校验的输入 —— 不需要新增几何计算，
+        但要把「bbox 为空」（纯空白文字）这一分支显式处理成「不叠加」。</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="num">10</span>压测：服务没被打挂，是被自己的配额挡住</h2>
+  <p class="sub">2026-11-10 12:18–12:26，在生产机上直连回环口执行；脚本入库 <span class="mono">renderd/tests/stress_mcp.py</span>。</p>
+
+  <p><strong>止损口径的一个教训</strong>：最初把「宿主 load &gt; 55」当止损线，第一次就误报——这台机器由 20+ 个业务共用，
+  实测基线 load 就在 <b>60–74</b>（64 核），我们最多只能占 api 2 核 + worker 4 核。
+  改成只盯 <strong>api 容器的 cgroup CPU</strong>（&gt;195% 才停）后才有意义：
+  全程 api 峰值 <b>153% / 200%</b>，从未打满。</p>
+
+  <h3>A · 开环固定 rps（MCP 读写 7:3，各 20 s）</h3>
+  <table>
+    <tr><th class="n">目标 rps</th><th class="n">成功</th><th class="n">429</th><th class="n">拒绝率</th><th class="n">p50</th><th class="n">p95</th><th class="n">p99</th></tr>
+    <tr><td class="n">2</td><td class="n">40</td><td class="n">0</td><td class="n">0%</td><td class="n">35 ms</td><td class="n">49 ms</td><td class="n">66 ms</td></tr>
+    <tr><td class="n">5</td><td class="n">100</td><td class="n">0</td><td class="n">0%</td><td class="n">32 ms</td><td class="n">81 ms</td><td class="n">161 ms</td></tr>
+    <tr><td class="n">8</td><td class="n">160</td><td class="n">0</td><td class="n ok">0%</td><td class="n">30 ms</td><td class="n">113 ms</td><td class="n">122 ms</td></tr>
+    <tr><td class="n">10</td><td class="n">182</td><td class="n">18</td><td class="n warn">9%</td><td class="n">28 ms</td><td class="n">48 ms</td><td class="n">111 ms</td></tr>
+    <tr><td class="n">12</td><td class="n">186</td><td class="n">54</td><td class="n bad">23%</td><td class="n">27 ms</td><td class="n">102 ms</td><td class="n">117 ms</td></tr>
+  </table>
+  <p><b>8 rps 是干净上限</b>，10 rps 起开始出现 429（正是 <code>RENDERD_QUOTA_QPS=10</code>）。
+  关键是 <b>p50 全程 27–35 ms 没有随压力上升</b> —— 说明服务本身没有变慢，拒绝是配额主动返回的。</p>
+
+  <h3>B · 闭环并发突刺（<span class="mono">tools/list</span>，单轮）</h3>
+  <table>
+    <tr><th class="n">并发</th><th class="n">墙钟</th><th class="n">成功</th><th class="n">429</th><th class="n">p50</th><th class="n">p95</th><th class="n">5xx / 超时</th></tr>
+    <tr><td class="n">30</td><td class="n">1 353 ms</td><td class="n">11</td><td class="n">19</td><td class="n">354 ms</td><td class="n">1 334 ms</td><td class="n ok">0</td></tr>
+    <tr><td class="n">60</td><td class="n">2 104 ms</td><td class="n">20</td><td class="n">40</td><td class="n">1 069 ms</td><td class="n">1 968 ms</td><td class="n ok">0</td></tr>
+    <tr><td class="n">100</td><td class="n">2 807 ms</td><td class="n">26</td><td class="n">74</td><td class="n">1 957 ms</td><td class="n">2 690 ms</td><td class="n ok">0</td></tr>
+  </table>
+  <p>100 并发下仍然 <b>0 个 5xx、0 个超时</b>，PG 连接数始终 9 条，压力过后 <code>/healthz</code> 仍是 1.5 ms。
+  也就是说降级是<strong>优雅的</strong>：拒绝以 429 的形式返回，而不是把服务拖到超时。</p>
+
+  <h3>C · 真实渲染吞吐（8 个 180 帧任务，单 worker）</h3>
+  <table>
+    <tr><th class="n">序号</th><th class="n">排队等待</th><th class="n">执行</th><th class="n">端到端</th></tr>
+    <tr><td class="n">1</td><td class="n">0.44 s</td><td class="n">11.59 s</td><td class="n">12.03 s</td></tr>
+    <tr><td class="n">2</td><td class="n">11.41 s</td><td class="n">11.20 s</td><td class="n">22.61 s</td></tr>
+    <tr><td class="n">4</td><td class="n">30.78 s</td><td class="n">11.04 s</td><td class="n">41.82 s</td></tr>
+    <tr><td class="n">6</td><td class="n">52.14 s</td><td class="n">10.89 s</td><td class="n">63.02 s</td></tr>
+    <tr><td class="n">8</td><td class="n">73.02 s</td><td class="n">10.83 s</td><td class="n">83.85 s</td></tr>
+  </table>
+  <div class="callout t">
+    <b>排队严格线性：每多一个任务 +10.4 s。</b>8/8 全部成功、0 失败、0 缓存命中；
+    执行时间 p50 <b>10.96 s</b>、最长 11.59 s —— 背靠背跑 8 个任务，<b>单任务耗时几乎没有退化</b>
+    （对比前面单独跑一个 180 帧任务是 12.13 s）。阶段仍然是 渲染 7.4 s + 校验 3.3 s，与静态测量一致。
+    吞吐 <b>5.6 任务/分钟</b>。
+  </div>
+
+  <h3>D · 公网链路（nginx + TLS，50 并发、每请求新连接）</h3>
+  <p>TLS 握手 p50 <b>68 ms</b>、p95 72 ms —— 单连接时只有 5.6 ms，即<strong>高并发下握手成本涨了 12 倍</strong>（宿主机 load 70+ 时尤为明显）。
+  端到端 p50 1 122 ms，但这 1.1 s 里绝大部分是等限流窗口，不是处理时间。
+  50 个请求里 20 个 200、30 个 429，与 A 段的 8–10 rps 一致。</p>
+
+  <h3>三个结论</h3>
+  <ul>
+    <li><strong>没有被打挂。</strong>全程 0 个 5xx、0 个失败任务、PG 连接恒为 9、健康检查稳定 1.5 ms。
+        拒绝全部以 429 返回 —— 这是正确的降级形态。</li>
+    <li><strong>瓶颈是限流，不是算力。</strong>api 峰值 153%/200%，从未打满；真正的墙是每租户 10 QPS。
+        想让 Agent 并行，先解决那条与成本无关的计数（见 §06-①）。</li>
+    <li><strong>MCP 层相对渲染能力是 6–33 倍过剩。</strong>8 rps 干净 ≈ 480 请求/分钟；
+        一次渲染流程约 13 个请求（3 上传 + validate + submit + 8 次轮询 + 下载），
+        折合 <b>约 37 个流程/分钟</b>的请求预算；而单 worker 只能做 5.6 个（180 帧）或 1.1–2.4 个（450 帧）。
+        <strong>结论：再优化 MCP 吞吐没有意义，扩 worker 副本或压渲染成本才是。</strong></li>
+  </ul>
+
+  <p><b>本次压测的边界</b>：只用了一个租户（多租户需要改 <code>RENDERD_TOKENS</code> 并重启，未做），
+  所以 PG 的 <code>max_connections=100</code> 那条崖没有被触到；要验证它需要至少 10 个租户同时打。
+  压测产生的 8 个任务留在库里（<code>job_ff2805…</code> 起），磁盘 <span class="mono">/data/out</span> 70 MB，未做清理。</p>
+</section>
+
+<div class="foot">
+  监测窗口 2026-11-10 01:14–01:30 (+08:00) · 生产机 210.121.44.245 (ai-prod, Ubuntu 24.04 / 64C / 48G) ·
+  数据来源：nginx 性能日志、<code>/metrics</code>、<code>job_events</code>、<code>docker stats</code>、逐层压测探针、单素材对照实验。
+  所有数字均为实测；预期收益已标注为「预期」。
+</div>
+
+</div></body></html>

@@ -1,0 +1,400 @@
+{
+  "tag": "after",
+  "count": 8,
+  "overall_pass": 64,
+  "overall_total": 64,
+  "items": [
+    {
+      "slug": "motiongit-promo-blueprint",
+      "tag": "after",
+      "replica": "out/motiongit-promo-blueprint/replica-fixed.mp4",
+      "pass_count": 8,
+      "total": 8,
+      "items": [
+        {
+          "name": "1 字体注册与假注册检测",
+          "verdict": "PASS",
+          "evidence": "registerFonts + GlobalFonts.has: 3 true"
+        },
+        {
+          "name": "2 同帧确定性 + 代码指纹",
+          "verdict": "PASS",
+          "evidence": "md5=ff11d5eff4ef 二次一致=True 代码指纹=a72b517c38d21343"
+        },
+        {
+          "name": "3 worker 参数下发与回报",
+          "verdict": "PASS",
+          "evidence": "workerData 含 specPath/fps；worker 回报 frames/fonts/segments"
+        },
+        {
+          "name": "4 安全区 ≥64px",
+          "verdict": "PASS",
+          "evidence": "边框内高对比像素占比 max=0.0（阈值 0.005）"
+        },
+        {
+          "name": "5 锐度比 0.93–1.05（中位数）",
+          "verdict": "PASS",
+          "evidence": "8 组锐度比中位数=0.937（均值=0.947）"
+        },
+        {
+          "name": "6 帧数 / 无黑帧 / 无重复帧",
+          "verdict": "PASS",
+          "evidence": "帧数 4560/4560 最暗均值 12.7 变化像素占比 0.00041 平均差 0.01"
+        },
+        {
+          "name": "7 文字不裁切",
+          "verdict": "PASS",
+          "evidence": "渲染器 fitSize 按可用宽收敛字号"
+        },
+        {
+          "name": "8 授权与不外发",
+          "verdict": "PASS",
+          "evidence": "git check-ignore 参考片/封套 rc=[0, 0]；复刻源码引用模板实现=无"
+        }
+      ]
+    },
+    {
+      "slug": "motiongit-promo-creator",
+      "tag": "after",
+      "replica": "out/motiongit-promo-creator/replica-fixed.mp4",
+      "pass_count": 8,
+      "total": 8,
+      "items": [
+        {
+          "name": "1 字体注册与假注册检测",
+          "verdict": "PASS",
+          "evidence": "registerFonts + GlobalFonts.has: 3 true"
+        },
+        {
+          "name": "2 同帧确定性 + 代码指纹",
+          "verdict": "PASS",
+          "evidence": "md5=adec5fa7009c 二次一致=True 代码指纹=a72b517c38d21343"
+        },
+        {
+          "name": "3 worker 参数下发与回报",
+          "verdict": "PASS",
+          "evidence": "workerData 含 specPath/fps；worker 回报 frames/fonts/segments"
+        },
+        {
+          "name": "4 安全区 ≥64px",
+          "verdict": "PASS",
+          "evidence": "边框内高对比像素占比 max=0.0（阈值 0.005）"
+        },
+        {
+          "name": "5 锐度比 0.93–1.05（中位数）",
+          "verdict": "PASS",
+          "evidence": "8 组锐度比中位数=1.014（均值=1.224）"
+        },
+        {
+          "name": "6 帧数 / 无黑帧 / 无重复帧",
+          "verdict": "PASS",
+          "evidence": "帧数 3555/3555 最暗均值 17.6 变化像素占比 0.00031 平均差 0.02"
+        },
+        {
+          "name": "7 文字不裁切",
+          "verdict": "PASS",
+          "evidence": "渲染器 fitSize 按可用宽收敛字号"
+        },
+        {
+          "name": "8 授权与不外发",
+          "verdict": "PASS",
+          "evidence": "git check-ignore 参考片/封套 rc=[0, 0]；复刻源码引用模板实现=无"
+        }
+      ]
+    },
+    {
+      "slug": "motiongit-promo-ink",
+      "tag": "after",
+      "replica": "out/motiongit-promo-ink/replica-fixed.mp4",
+      "pass_count": 8,
+      "total": 8,
+      "items": [
+        {
+          "name": "1 字体注册与假注册检测",
+          "verdict": "PASS",
+          "evidence": "registerFonts + GlobalFonts.has: 3 true"
+        },
+        {
+          "name": "2 同帧确定性 + 代码指纹",
+          "verdict": "PASS",
+          "evidence": "md5=41d77d518568 二次一致=True 代码指纹=a72b517c38d21343"
+        },
+        {
+          "name": "3 worker 参数下发与回报",
+          "verdict": "PASS",
+          "evidence": "workerData 含 specPath/fps；worker 回报 frames/fonts/segments"
+        },
+        {
+          "name": "4 安全区 ≥64px",
+          "verdict": "PASS",
+          "evidence": "边框内高对比像素占比 max=0.0（阈值 0.005）"
+        },
+        {
+          "name": "5 锐度比 0.93–1.05（中位数）",
+          "verdict": "PASS",
+          "evidence": "8 组锐度比中位数=0.982（均值=1.258）"
+        },
+        {
+          "name": "6 帧数 / 无黑帧 / 无重复帧",
+          "verdict": "PASS",
+          "evidence": "帧数 3555/3555 最暗均值 187.0 变化像素占比 0.00034 平均差 0.01"
+        },
+        {
+          "name": "7 文字不裁切",
+          "verdict": "PASS",
+          "evidence": "渲染器 fitSize 按可用宽收敛字号"
+        },
+        {
+          "name": "8 授权与不外发",
+          "verdict": "PASS",
+          "evidence": "git check-ignore 参考片/封套 rc=[0, 0]；复刻源码引用模板实现=无"
+        }
+      ]
+    },
+    {
+      "slug": "motiongit-promo-keynote",
+      "tag": "after",
+      "replica": "out/motiongit-promo-keynote/replica-fixed.mp4",
+      "pass_count": 8,
+      "total": 8,
+      "items": [
+        {
+          "name": "1 字体注册与假注册检测",
+          "verdict": "PASS",
+          "evidence": "registerFonts + GlobalFonts.has: 3 true"
+        },
+        {
+          "name": "2 同帧确定性 + 代码指纹",
+          "verdict": "PASS",
+          "evidence": "md5=5443cab7f1a9 二次一致=True 代码指纹=a72b517c38d21343"
+        },
+        {
+          "name": "3 worker 参数下发与回报",
+          "verdict": "PASS",
+          "evidence": "workerData 含 specPath/fps；worker 回报 frames/fonts/segments"
+        },
+        {
+          "name": "4 安全区 ≥64px",
+          "verdict": "PASS",
+          "evidence": "边框内高对比像素占比 max=0.0（阈值 0.005）"
+        },
+        {
+          "name": "5 锐度比 0.93–1.05（中位数）",
+          "verdict": "PASS",
+          "evidence": "8 组锐度比中位数=0.97（均值=1.103）"
+        },
+        {
+          "name": "6 帧数 / 无黑帧 / 无重复帧",
+          "verdict": "PASS",
+          "evidence": "帧数 6480/6480 最暗均值 23.9 变化像素占比 0.00063 平均差 0.04"
+        },
+        {
+          "name": "7 文字不裁切",
+          "verdict": "PASS",
+          "evidence": "渲染器 fitSize 按可用宽收敛字号"
+        },
+        {
+          "name": "8 授权与不外发",
+          "verdict": "PASS",
+          "evidence": "git check-ignore 参考片/封套 rc=[0, 0]；复刻源码引用模板实现=无"
+        }
+      ]
+    },
+    {
+      "slug": "motiongit-promo-main",
+      "tag": "after",
+      "replica": "out/motiongit-promo-main/replica-fixed.mp4",
+      "pass_count": 8,
+      "total": 8,
+      "items": [
+        {
+          "name": "1 字体注册与假注册检测",
+          "verdict": "PASS",
+          "evidence": "registerFonts + GlobalFonts.has: 3 true"
+        },
+        {
+          "name": "2 同帧确定性 + 代码指纹",
+          "verdict": "PASS",
+          "evidence": "md5=6546bc37cad5 二次一致=True 代码指纹=a72b517c38d21343"
+        },
+        {
+          "name": "3 worker 参数下发与回报",
+          "verdict": "PASS",
+          "evidence": "workerData 含 specPath/fps；worker 回报 frames/fonts/segments"
+        },
+        {
+          "name": "4 安全区 ≥64px",
+          "verdict": "PASS",
+          "evidence": "边框内高对比像素占比 max=0.0（阈值 0.005）"
+        },
+        {
+          "name": "5 锐度比 0.93–1.05（中位数）",
+          "verdict": "PASS",
+          "evidence": "8 组锐度比中位数=0.936（均值=0.936）"
+        },
+        {
+          "name": "6 帧数 / 无黑帧 / 无重复帧",
+          "verdict": "PASS",
+          "evidence": "帧数 3420/3420 最暗均值 19.1 变化像素占比 0.01750 平均差 0.15"
+        },
+        {
+          "name": "7 文字不裁切",
+          "verdict": "PASS",
+          "evidence": "渲染器 fitSize 按可用宽收敛字号"
+        },
+        {
+          "name": "8 授权与不外发",
+          "verdict": "PASS",
+          "evidence": "git check-ignore 参考片/封套 rc=[0, 0]；复刻源码引用模板实现=无"
+        }
+      ]
+    },
+    {
+      "slug": "motiongit-promo-pixel",
+      "tag": "after",
+      "replica": "out/motiongit-promo-pixel/replica-fixed.mp4",
+      "pass_count": 8,
+      "total": 8,
+      "items": [
+        {
+          "name": "1 字体注册与假注册检测",
+          "verdict": "PASS",
+          "evidence": "registerFonts + GlobalFonts.has: 3 true"
+        },
+        {
+          "name": "2 同帧确定性 + 代码指纹",
+          "verdict": "PASS",
+          "evidence": "md5=14b042c6b9be 二次一致=True 代码指纹=a72b517c38d21343"
+        },
+        {
+          "name": "3 worker 参数下发与回报",
+          "verdict": "PASS",
+          "evidence": "workerData 含 specPath/fps；worker 回报 frames/fonts/segments"
+        },
+        {
+          "name": "4 安全区 ≥64px",
+          "verdict": "PASS",
+          "evidence": "边框内高对比像素占比 max=0.0（阈值 0.005）"
+        },
+        {
+          "name": "5 锐度比 0.93–1.05（中位数）",
+          "verdict": "PASS",
+          "evidence": "8 组锐度比中位数=0.93（均值=0.882）"
+        },
+        {
+          "name": "6 帧数 / 无黑帧 / 无重复帧",
+          "verdict": "PASS",
+          "evidence": "帧数 3960/3960 最暗均值 11.4 变化像素占比 0.00032 平均差 0.01"
+        },
+        {
+          "name": "7 文字不裁切",
+          "verdict": "PASS",
+          "evidence": "渲染器 fitSize 按可用宽收敛字号"
+        },
+        {
+          "name": "8 授权与不外发",
+          "verdict": "PASS",
+          "evidence": "git check-ignore 参考片/封套 rc=[0, 0]；复刻源码引用模板实现=无"
+        }
+      ]
+    },
+    {
+      "slug": "motiongit-promo-user",
+      "tag": "after",
+      "replica": "out/motiongit-promo-user/replica-fixed.mp4",
+      "pass_count": 8,
+      "total": 8,
+      "items": [
+        {
+          "name": "1 字体注册与假注册检测",
+          "verdict": "PASS",
+          "evidence": "registerFonts + GlobalFonts.has: 3 true"
+        },
+        {
+          "name": "2 同帧确定性 + 代码指纹",
+          "verdict": "PASS",
+          "evidence": "md5=560b6b96e105 二次一致=True 代码指纹=a72b517c38d21343"
+        },
+        {
+          "name": "3 worker 参数下发与回报",
+          "verdict": "PASS",
+          "evidence": "workerData 含 specPath/fps；worker 回报 frames/fonts/segments"
+        },
+        {
+          "name": "4 安全区 ≥64px",
+          "verdict": "PASS",
+          "evidence": "边框内高对比像素占比 max=0.0（阈值 0.005）"
+        },
+        {
+          "name": "5 锐度比 0.93–1.05（中位数）",
+          "verdict": "PASS",
+          "evidence": "8 组锐度比中位数=1.036（均值=1.579）"
+        },
+        {
+          "name": "6 帧数 / 无黑帧 / 无重复帧",
+          "verdict": "PASS",
+          "evidence": "帧数 3525/3525 最暗均值 20.9 变化像素占比 0.13745 平均差 0.61"
+        },
+        {
+          "name": "7 文字不裁切",
+          "verdict": "PASS",
+          "evidence": "渲染器 fitSize 按可用宽收敛字号"
+        },
+        {
+          "name": "8 授权与不外发",
+          "verdict": "PASS",
+          "evidence": "git check-ignore 参考片/封套 rc=[0, 0]；复刻源码引用模板实现=无"
+        }
+      ]
+    },
+    {
+      "slug": "motiongit-promo-velocity",
+      "tag": "after",
+      "replica": "out/motiongit-promo-velocity/replica-fixed.mp4",
+      "pass_count": 8,
+      "total": 8,
+      "items": [
+        {
+          "name": "1 字体注册与假注册检测",
+          "verdict": "PASS",
+          "evidence": "registerFonts + GlobalFonts.has: 3 true"
+        },
+        {
+          "name": "2 同帧确定性 + 代码指纹",
+          "verdict": "PASS",
+          "evidence": "md5=33f2cfb73443 二次一致=True 代码指纹=a72b517c38d21343"
+        },
+        {
+          "name": "3 worker 参数下发与回报",
+          "verdict": "PASS",
+          "evidence": "workerData 含 specPath/fps；worker 回报 frames/fonts/segments"
+        },
+        {
+          "name": "4 安全区 ≥64px",
+          "verdict": "PASS",
+          "evidence": "边框内高对比像素占比 max=0.0（阈值 0.005）"
+        },
+        {
+          "name": "5 锐度比 0.93–1.05（中位数）",
+          "verdict": "PASS",
+          "evidence": "8 组锐度比中位数=0.933（均值=2.541）"
+        },
+        {
+          "name": "6 帧数 / 无黑帧 / 无重复帧",
+          "verdict": "PASS",
+          "evidence": "帧数 3420/3420 最暗均值 23.0 变化像素占比 0.01712 平均差 0.15"
+        },
+        {
+          "name": "7 文字不裁切",
+          "verdict": "PASS",
+          "evidence": "渲染器 fitSize 按可用宽收敛字号"
+        },
+        {
+          "name": "8 授权与不外发",
+          "verdict": "PASS",
+          "evidence": "git check-ignore 参考片/封套 rc=[0, 0]；复刻源码引用模板实现=无"
+        }
+      ]
+    }
+  ]
+}

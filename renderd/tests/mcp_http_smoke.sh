@@ -26,7 +26,9 @@ done
 pass=0; fail=0
 chk() { if [ "$2" = "$3" ]; then echo "  ✓ $1 ($2)"; pass=$((pass+1)); else echo "  ✗ $1 期望 $3 实际 $2"; fail=$((fail+1)); fi; }
 MCP() { curl -s -X POST "$BASE/mcp" -H "Authorization: Bearer $TOKEN" \
-          -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' "$@"; }
+          -H 'Content-Type: application/json' -H 'Accept: application/json' "$@"; }
+SSE() { curl -s -X POST "$BASE/mcp" -H "Authorization: Bearer $TOKEN" \
+          -H 'Content-Type: application/json' -H 'Accept: text/event-stream' "$@"; }
 J() { python3 -c "import json,sys;d=json.load(sys.stdin);print($1)" 2>/dev/null; }
 
 echo "── 协议协商 ──"
@@ -35,7 +37,13 @@ chk "initialize 回 2025-03-26" "$(echo "$R" | J 'd["result"]["protocolVersion"]
 chk "serverInfo.name" "$(echo "$R" | J 'd["result"]["serverInfo"]["name"]')" "renderd"
 
 R=$(MCP -d '{"jsonrpc":"2.0","id":2,"method":"initialize","params":{"protocolVersion":"1999-01-01"}}')
-chk "不支持的版本回落到默认" "$(echo "$R" | J 'd["result"]["protocolVersion"]')" "2024-11-05"
+chk "不支持的高版本回落到最高可实现" "$(echo "$R" | J 'd["result"]["protocolVersion"]')" "2025-06-18"
+
+R=$(MCP -d '{"jsonrpc":"2.0","id":22,"method":"initialize","params":{"protocolVersion":"2025-11-25"}}')
+chk "2025-11-25（tasks 版）降级到 2025-06-18" "$(echo "$R" | J 'd["result"]["protocolVersion"]')" "2025-06-18"
+
+R=$(MCP -d '{"jsonrpc":"2.0","id":23,"method":"initialize","params":{"protocolVersion":"2024-11-05"}}')
+chk "老版本按原样接受" "$(echo "$R" | J 'd["result"]["protocolVersion"]')" "2024-11-05"
 
 echo "── 工具 ──"
 R=$(MCP -d '{"jsonrpc":"2.0","id":3,"method":"tools/list"}')
@@ -70,6 +78,27 @@ chk "无 token 回 401" "$code" "401"
 code=$(curl -s -o /tmp/g.json -w '%{http_code}' "$BASE/mcp" -H "Authorization: Bearer $TOKEN")
 chk "GET /mcp 回 405" "$code" "405"
 chk "405 带 Allow: POST" "$(curl -s -D- -o /dev/null "$BASE/mcp" -H "Authorization: Bearer $TOKEN" | grep -ci '^allow: *POST')" "1"
+
+echo "── SSE 流式响应（Accept: text/event-stream）──"
+hdr=$(curl -s -D- -o /tmp/sse1.txt -X POST "$BASE/mcp" -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -H 'Accept: text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":31,"method":"tools/list"}')
+chk "Content-Type 是 text/event-stream" "$(echo "$hdr" | grep -ci 'content-type: text/event-stream')" "1"
+chk "分帧用 event: message" "$(grep -c '^event: message$' /tmp/sse1.txt)" "1"
+chk "帧内 data 是单行 JSON 且 id 正确" "$(python3 -c "
+import json
+for l in open('/tmp/sse1.txt'):
+    if l.startswith('data: '):
+        d = json.loads(l[6:]); print(d['id'], len(d['result']['tools']))
+")" "31 5"
+
+SSE -d '[{"jsonrpc":"2.0","id":32,"method":"ping"},{"jsonrpc":"2.0","id":33,"method":"ping"}]' > /tmp/sse2.txt
+chk "批量在 SSE 下变两帧" "$(grep -c '^event: message$' /tmp/sse2.txt)" "2"
+
+code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$BASE/mcp" -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -H 'Accept: text/event-stream' \
+  -d '{"jsonrpc":"2.0","method":"notifications/initialized"}')
+chk "SSE 模式下纯通知仍是 202" "$code" "202"
 
 echo "── 租户来源（环境变量不得生效）──"
 python3 - <<'PY'

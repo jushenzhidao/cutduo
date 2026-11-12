@@ -1,0 +1,283 @@
+{
+  "durationSeconds": 50.0,
+  "fps": 30,
+  "fadeOutSeconds": 0.32,
+  "theme": {
+    "pop": "#F0582A",
+    "sun": "#FFD84D",
+    "jade": "#26A38C",
+    "jadeDeep": "#0E7A5F",
+    "blue": "#2B7FD4",
+    "ink": "#2C3A3E"
+  },
+  "brand": {
+    "show": true,
+    "text": "厨房科普",
+    "tag": "SCIENCE EXPLAINER"
+  },
+  "subtitle": {
+    "size": 62,
+    "color": "#FFFFFF",
+    "stroke": 6,
+    "strokeColor": "#1B2B30",
+    "y": 1002
+  },
+  "captions": [
+    {
+      "start": 0.8,
+      "end": 3.2,
+      "text": "微波炉热个饭，家里老人总说有辐射"
+    },
+    {
+      "start": 3.4,
+      "end": 5.8,
+      "text": "这口锅，它背了整整五十年"
+    },
+    {
+      "start": 6.2,
+      "end": 8.6,
+      "text": "先搞清楚它到底靠什么加热"
+    },
+    {
+      "start": 8.8,
+      "end": 11.3,
+      "text": "不是火，也不是核，是让水分子动起来"
+    },
+    {
+      "start": 11.8,
+      "end": 15.0,
+      "text": "明火十分钟，先热的是锅和空气"
+    },
+    {
+      "start": 15.2,
+      "end": 17.8,
+      "text": "微波两分钟，直接热食物里的水"
+    },
+    {
+      "start": 18.3,
+      "end": 21.5,
+      "text": "水分子每秒振动二十四亿次"
+    },
+    {
+      "start": 21.7,
+      "end": 24.8,
+      "text": "互相摩擦生热，就这么简单"
+    },
+    {
+      "start": 25.3,
+      "end": 27.5,
+      "text": "三个真相，一次说清"
+    },
+    {
+      "start": 27.7,
+      "end": 30.2,
+      "text": "不致癌、不毁营养、不残留辐射"
+    },
+    {
+      "start": 30.8,
+      "end": 33.2,
+      "text": "它发出的是非电离辐射"
+    },
+    {
+      "start": 33.4,
+      "end": 34.8,
+      "text": "能量只够让分子发热"
+    },
+    {
+      "start": 35.3,
+      "end": 37.5,
+      "text": "第一，别放金属和带壳鸡蛋"
+    },
+    {
+      "start": 37.7,
+      "end": 39.6,
+      "text": "第二，用玻璃或微波专用盒"
+    },
+    {
+      "start": 39.8,
+      "end": 41.3,
+      "text": "第三，加热后搅一搅再吃"
+    },
+    {
+      "start": 41.8,
+      "end": 43.6,
+      "text": "它不是黑科技"
+    },
+    {
+      "start": 43.8,
+      "end": 45.3,
+      "text": "只是一个更快的加热方式"
+    }
+  ],
+  "segments": [
+    {
+      "type": "cover",
+      "dur": 6.0,
+      "note": "封面：把「辐射」这个吓人的词做成爆炸贴主角",
+      "args": {
+        "prefix": "厨房里的",
+        "title": "背锅侠",
+        "titleSize": 176,
+        "sub": "微波炉到底能不能放心用",
+        "sticker": "radiation",
+        "hint": "厨房科普 · 2 分钟看懂"
+      }
+    },
+    {
+      "type": "talk",
+      "dur": 5.5,
+      "note": "设问：把常见的误解摆出来",
+      "args": {
+        "paper": "cream",
+        "figure": "right",
+        "eyebrow": "家里最常见的争论",
+        "lines": [
+          "热个饭两分钟",
+          "怎么就致癌了？"
+        ],
+        "accentLine": 1,
+        "size": 88,
+        "sticker": "question"
+      }
+    },
+    {
+      "type": "compare",
+      "dur": 6.5,
+      "note": "对比：明火靠传导，微波直接加热食物里的水",
+      "args": {
+        "paper": "sky",
+        "title": "为什么它更快",
+        "left": {
+          "icon": "clock",
+          "label": "明火",
+          "note": "十分钟起",
+          "bad": true,
+          "badge": "no"
+        },
+        "right": {
+          "icon": "drop",
+          "label": "微波",
+          "note": "两分钟",
+          "badge": "yes"
+        },
+        "conclusion": "快，是它唯一的原罪"
+      }
+    },
+    {
+      "type": "diagram",
+      "dur": 7.0,
+      "note": "机制：水分子振动生热，不是火烧也不是核辐射",
+      "args": {
+        "paper": "mint",
+        "title": "它是怎么加热的",
+        "organ": "drop",
+        "organSize": 700,
+        "eyes": false,
+        "probe": "none",
+        "callouts": [
+          {
+            "text": "每秒 24 亿次",
+            "at": 0.55,
+            "x": 0.735,
+            "y": 0.265,
+            "size": 66,
+            "lead": [
+              0.545,
+              0.4
+            ]
+          },
+          {
+            "text": "摩擦生热",
+            "at": 1.25,
+            "x": 0.735,
+            "y": 0.735,
+            "size": 70,
+            "lead": [
+              0.545,
+              0.6
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "matrix",
+      "dur": 5.5,
+      "note": "三点真相：不致癌 / 不毁营养 / 不残留",
+      "args": {
+        "paper": "mint",
+        "title": "三个真相",
+        "items": [
+          {
+            "icon": "shield",
+            "label": "不致癌",
+            "disc": "#C8EBDD"
+          },
+          {
+            "icon": "drop",
+            "label": "营养不流失",
+            "disc": "#CFE6FB"
+          },
+          {
+            "icon": "radiation",
+            "label": "不残留辐射",
+            "disc": "#FFD1DC"
+          }
+        ]
+      }
+    },
+    {
+      "type": "focus",
+      "dur": 4.5,
+      "note": "关键概念：非电离辐射（四层信息挤 1080 高会打架，去掉旧认知标签）",
+      "args": {
+        "paper": "sky",
+        "title": "非电离",
+        "icon": "radiation",
+        "claim": "能量只够让分子发热"
+      }
+    },
+    {
+      "type": "tip",
+      "dur": 6.5,
+      "note": "实用提醒：三条使用铁律",
+      "args": {
+        "paper": "sky",
+        "head": "使用提醒",
+        "title": "微波炉三条铁律",
+        "items": [
+          "别放金属和带壳鸡蛋",
+          "用玻璃或微波专用盒",
+          "加热后搅一搅再吃"
+        ]
+      }
+    },
+    {
+      "type": "talk",
+      "dur": 4.0,
+      "note": "收观点：去神秘化",
+      "args": {
+        "paper": "cream",
+        "figure": "right",
+        "eyebrow": "记住这一句",
+        "lines": [
+          "它不是黑科技",
+          "只是更快的加热方式"
+        ],
+        "accentLine": 1,
+        "size": 78,
+        "sticker": "shield"
+      }
+    },
+    {
+      "type": "outro",
+      "dur": 4.5,
+      "note": "结尾：把真正的风险点换回来",
+      "args": {
+        "line1": "放心用",
+        "line2": "别被吓到",
+        "note": "微波炉不致癌 · 真正要躲的是油烟和烧焦"
+      }
+    }
+  ]
+}

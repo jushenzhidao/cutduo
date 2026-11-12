@@ -1,0 +1,106 @@
+[
+  {
+    "slug": "motiongit-promo-ink",
+    "version": "2.6.6",
+    "meta": {
+      "width": 1920,
+      "height": 1080,
+      "fps": 60.0,
+      "frames": 3555,
+      "duration": 59.25
+    },
+    "segments": 2,
+    "cuts": 1
+  },
+  {
+    "slug": "motiongit-promo-blueprint",
+    "version": "2.6.4",
+    "meta": {
+      "width": 1920,
+      "height": 1080,
+      "fps": 60.0,
+      "frames": 4560,
+      "duration": 76.0
+    },
+    "segments": 4,
+    "cuts": 3
+  },
+  {
+    "slug": "motiongit-promo-creator",
+    "version": "2.6.4",
+    "meta": {
+      "width": 1920,
+      "height": 1080,
+      "fps": 60.0,
+      "frames": 3555,
+      "duration": 59.25
+    },
+    "segments": 9,
+    "cuts": 8
+  },
+  {
+    "slug": "motiongit-promo-keynote",
+    "version": "2.6.4",
+    "meta": {
+      "width": 1920,
+      "height": 1080,
+      "fps": 60.0,
+      "frames": 6480,
+      "duration": 108.0
+    },
+    "segments": 31,
+    "cuts": 30
+  },
+  {
+    "slug": "motiongit-promo-main",
+    "version": "2.6.5-alpha.1",
+    "meta": {
+      "width": 1920,
+      "height": 1080,
+      "fps": 60.0,
+      "frames": 3420,
+      "duration": 57.0
+    },
+    "segments": 8,
+    "cuts": 7
+  },
+  {
+    "slug": "motiongit-promo-pixel",
+    "version": "2.6.6",
+    "meta": {
+      "width": 1920,
+      "height": 1080,
+      "fps": 60.0,
+      "frames": 3960,
+      "duration": 66.0
+    },
+    "segments": 5,
+    "cuts": 4
+  },
+  {
+    "slug": "motiongit-promo-user",
+    "version": "2.6.5",
+    "meta": {
+      "width": 1920,
+      "height": 1080,
+      "fps": 60.0,
+      "frames": 3525,
+      "duration": 58.75
+    },
+    "segments": 19,
+    "cuts": 18
+  },
+  {
+    "slug": "motiongit-promo-velocity",
+    "version": "2.6.6-alpha.1",
+    "meta": {
+      "width": 1920,
+      "height": 1080,
+      "fps": 60.0,
+      "frames": 3420,
+      "duration": 57.0
+    },
+    "segments": 15,
+    "cuts": 14
+  }
+]

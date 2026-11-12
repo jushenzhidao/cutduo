@@ -1,0 +1,10 @@
+{
+  "assets": [],
+  "fonts": [
+    { "family": "Yuanti SC", "bundled": false, "role": "标题与标签（圆润卡通感）", "note": "macOS 系统字体；缺省回退 Hiragino Sans GB / PingFang SC / Microsoft YaHei" },
+    { "family": "PingFang SC", "bundled": false, "role": "正文与字幕", "note": "macOS 系统字体；跨平台回退 Microsoft YaHei" }
+  ],
+  "slots": [
+    { "param": "segments[].args.figureImage", "kind": "image", "required": false, "note": "讲解位人物图（透明底 PNG，data URL 或包内相对路径）。缺省绘制抽象剪影，不伪造真人插画。" }
+  ]
+}

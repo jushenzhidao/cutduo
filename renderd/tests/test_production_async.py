@@ -84,6 +84,32 @@ class ProdAsync(unittest.TestCase):
             self.assertIn(name, m, name)
         self.assertIn('renderd_tenant_inflight{tenant="t"} 1', m)
 
+    def test_02b_metrics_exposition_is_consistent(self) -> None:
+        """HELP/TYPE 与样本必须一一对应，且空闲时也要有 0 值。
+
+        这两条都是踩过的坑：`renderd_tenant_inflight` 曾经只在有在途任务时才发样本，
+        队列一空整条序列就消失（面板断线、absent() 误报）；`renderd_jobs` 反过来
+        有样本却没有 HELP/TYPE。
+        """
+        import re
+
+        m = self.svc.metrics()
+        helps = [l.split()[2] for l in m.splitlines() if l.startswith("# HELP")]
+        types = [l.split()[2] for l in m.splitlines() if l.startswith("# TYPE")]
+        samples = {re.split(r"[{ ]", l)[0] for l in m.splitlines()
+                   if l and not l.startswith("#")}
+
+        self.assertEqual(sorted(helps), sorted(samples), "HELP 与样本必须一一对应")
+        self.assertEqual(sorted(types), sorted(samples), "TYPE 与样本必须一一对应")
+        # 每个指标只能有一个 HELP
+        self.assertEqual(len(helps), len(set(helps)))
+
+        # 空闲时也要有 0 值，不能整条消失
+        self.assertIn('renderd_tenant_inflight{tenant="t"} 0', m)
+        self._insert("metrics-0002")
+        m2 = self.svc.metrics()
+        self.assertIn('renderd_tenant_inflight{tenant="t"} 1', m2)
+
     # ── 2 背压 ──
     def test_03_global_queue_depth_limit(self) -> None:
         self.cfg.max_queue_depth = 2

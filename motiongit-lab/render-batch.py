@@ -14,6 +14,7 @@
 import argparse
 import json
 import pathlib
+import shutil
 import subprocess
 import sys
 import time
@@ -39,9 +40,12 @@ def tpl(inst, *args):
 
 def probe(path):
     d = sh(FFPROBE, "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(path))
-    f = sh(FFPROBE, "-v", "error", "-select_streams", "v:0", "-count_frames",
-           "-show_entries", "stream=nb_read_frames", "-of", "csv=p=0", str(path))
-    return float(d), int(f)
+    f = sh(FFPROBE, "-v", "error", "-select_streams", "v:0",
+           "-show_entries", "stream=nb_frames", "-of", "csv=p=0", str(path))
+    # ffprobe 的 csv 可能带尾逗号（如 "2573,"），统一取首个字段
+    dv = float(d.strip().splitlines()[0].split(",")[0])
+    fv = int(float(f.strip().splitlines()[0].split(",")[0]))
+    return dv, fv
 
 
 def render_one(inst, out, reuse=False):
@@ -69,7 +73,10 @@ def render_one(inst, out, reuse=False):
     d = json.loads(pv.read_text()); d["reviewed"] = True
     pv.write_text(json.dumps(d, ensure_ascii=False, indent=1))
 
-    tpl(inst, "render", project, "--out", out, "--language", "zh")
+    tmp_out = inst / "out.mp4"   # 核心要求 --out 必须留在实例内部，渲完再搬走
+    tpl(inst, "render", project, "--out", tmp_out, "--language", "zh")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    shutil.move(str(tmp_out), str(out))
     return inst.name, out, time.time() - t0
 
 

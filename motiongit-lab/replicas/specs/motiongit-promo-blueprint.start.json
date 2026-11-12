@@ -1,0 +1,957 @@
+{
+  "profile": "motiongit.assistant-start/1",
+  "verified": true,
+  "productionEntry": {
+    "guide": "guide.json",
+    "parameterSchema": "params.schema.json",
+    "instance": {
+      "create": [
+        "node",
+        "<verified-helper>",
+        "new",
+        "<original.motion>"
+      ],
+      "instruction": "For new production use new without a destination and follow the returned canonical instanceDirectory. Keep working params, media, plans, projects and rendering there, then copy the verified movie and public records to the user delivery directory. This keeps transient filesystem operations on the system volume. Explicit destinations remain supported; no existing instance is relocated."
+    },
+    "publicParameterSchemas": [
+      "locales/en/params.schema.json",
+      "locales/zh/params.schema.json",
+      "params.schema.json"
+    ],
+    "safety": "Use read on the declared public documents. Never inspect, watch, copy or retain transient runtime/core directories to discover parameters. If an advertised schema is unavailable, report the exact public path and stop that production step."
+  },
+  "assistantGuide": {
+    "profile": "motiongit.assistant-entry/1",
+    "helperVersion": "1.0.0-rc.54",
+    "materialPreparation": {
+      "states": [
+        "reuse_supplied",
+        "prepare_free",
+        "quote_needed",
+        "await_authorization",
+        "submit_existing_state",
+        "defer",
+        "unsupported",
+        "unverified",
+        "not_needed",
+        "intent_question"
+      ],
+      "narrationIntent": {
+        "yes": "Explicit voiceover/explainer goal or existing answer; no recording means consider TTS, not silent text-only output.",
+        "no": "Respect explicit no-narration choice.",
+        "unknown": "Ask one output choice only if narration changes this result; do not ask the user to choose a technical workflow."
+      },
+      "bindingEvidence": {
+        "scope": "selected workflow, not template name or a different route",
+        "requiredForSupported": [
+          "public schema/guide path",
+          "declared input path",
+          "accepted media kind",
+          "renderer/audio support",
+          "validation evidence or clearly labeled unverified state"
+        ],
+        "lottieRule": "A built-in text/icon sticker is not an external Lottie input. Unsupported/unverified bindings never trigger a sticker download.",
+        "record": {
+          "workflow": "Selected declared workflow",
+          "document": "Actual public schema/guide path and SHA256",
+          "inputPath": "Actual accepted input path; never an invented universal media path",
+          "mediaKind": "Actual accepted type",
+          "rendererSupport": "supported / unsupported / unverified",
+          "verification": "Actual preview/output evidence, otherwise explicitly unverified"
+        }
+      },
+      "freePolicy": {
+        "defaultDailyRequests": 30,
+        "scope": "account shared across Keys/templates",
+        "timezone": "Asia/Shanghai",
+        "credits": 0,
+        "requestBudget": "Plan requests, reuse verified local material, and read the actual remaining value; unknown is not 30 or unlimited."
+      },
+      "generationPolicy": {
+        "models": [
+          "volc-tts-2.0",
+          "native-image",
+          "seedance-2.0"
+        ],
+        "availability": "live ready and actual Key access; this model list is discovery guidance, not entitlement",
+        "quoteIsConsent": false,
+        "keyCeilingIsConsent": false,
+        "existingAuthorization": "Continue when the capability, current quote, single-call ceiling and remaining total are explicitly covered; no duplicate confirmation.",
+        "retry": "Reuse state file, operation UUID and task ID. Uncertain submission outcome must be reconciled before any new quote or operation.",
+        "quoteExpired": "Only after proving the previous operation was not accepted, preserve the old state and prepare a fresh quote in a new state file; recheck authorization if price changes.",
+        "currentUsageLimitation": "Generation quoting still requires readable usage.models. GENERATION_USAGE_UNAVAILABLE explains missing usage.read; do not bypass the helper or expand Key permissions. Authorized free operations remain independent."
+      },
+      "workflow": [
+        "Read verified current identity, selected workflow public inputs, user goal and supplied files.",
+        "Distinguish missing recordings from an explicit no-narration choice.",
+        "Plan needed material and reuse supplied material; resolve per-workflow binding support before online requests.",
+        "Read live status/permission/remaining allowance once when needed; unknown usage does not equal denied free operations.",
+        "Prepare suitable free material; quote needed generation and reuse explicit per-call/remaining-total authorization.",
+        "Bind actual files and specs; verify preview and encoded output, preserving reviewed design and old results."
+      ],
+      "verification": {
+        "stages": [
+          "planned",
+          "downloaded",
+          "bound",
+          "preview_verified",
+          "encoded_output_verified"
+        ],
+        "rule": "Advance only with actual evidence; do not infer finished videos from an API success. Record only minimum stage/status information in any authorized analytics."
+      },
+      "advisoryOnly": "Guidance inside the existing plan, not an automatic material service, binding implementation or new command."
+    },
+    "template": {
+      "id": "motiongit-promo-blueprint",
+      "name": "工程蓝图 · 产品拆解",
+      "version": "2.6.4",
+      "layout": "landscape",
+      "width": 1920,
+      "height": 1080
+    },
+    "templateApi": {
+      "profile": "motiongit.template-api-guide/1",
+      "purpose": "Prepare and bind material for this .motion production, using its verified bundled entry and original downloader Key.",
+      "when": "Understand the output and supplied files, resolve the selected workflow inputs, then prepare only missing material. No recording does not mean no narration. Reading usage instructions or opening a template never authorizes paid generation.",
+      "docs": "https://motiongit.com/media-api.md",
+      "credential": "The helper reads the original Key from the verified personal .motion. Do not unpack personal/, export a Key to the project, request a supplier Key or automatically widen permissions. No particular assistant product is required.",
+      "check": [
+        "node",
+        "assistant/motion.mjs",
+        "api",
+        "<original.motion>",
+        "status"
+      ],
+      "usage": [
+        "node",
+        "assistant/motion.mjs",
+        "api",
+        "<original.motion>",
+        "usage"
+      ],
+      "materialPreparation": {
+        "states": [
+          "reuse_supplied",
+          "prepare_free",
+          "quote_needed",
+          "await_authorization",
+          "submit_existing_state",
+          "defer",
+          "unsupported",
+          "unverified",
+          "not_needed",
+          "intent_question"
+        ],
+        "narrationIntent": {
+          "yes": "Explicit voiceover/explainer goal or existing answer; no recording means consider TTS, not silent text-only output.",
+          "no": "Respect explicit no-narration choice.",
+          "unknown": "Ask one output choice only if narration changes this result; do not ask the user to choose a technical workflow."
+        },
+        "bindingEvidence": {
+          "scope": "selected workflow, not template name or a different route",
+          "requiredForSupported": [
+            "public schema/guide path",
+            "declared input path",
+            "accepted media kind",
+            "renderer/audio support",
+            "validation evidence or clearly labeled unverified state"
+          ],
+          "lottieRule": "A built-in text/icon sticker is not an external Lottie input. Unsupported/unverified bindings never trigger a sticker download.",
+          "record": {
+            "workflow": "Selected declared workflow",
+            "document": "Actual public schema/guide path and SHA256",
+            "inputPath": "Actual accepted input path; never an invented universal media path",
+            "mediaKind": "Actual accepted type",
+            "rendererSupport": "supported / unsupported / unverified",
+            "verification": "Actual preview/output evidence, otherwise explicitly unverified"
+          }
+        },
+        "freePolicy": {
+          "defaultDailyRequests": 30,
+          "scope": "account shared across Keys/templates",
+          "timezone": "Asia/Shanghai",
+          "credits": 0,
+          "requestBudget": "Plan requests, reuse verified local material, and read the actual remaining value; unknown is not 30 or unlimited."
+        },
+        "generationPolicy": {
+          "models": [
+            "volc-tts-2.0",
+            "native-image",
+            "seedance-2.0"
+          ],
+          "availability": "live ready and actual Key access; this model list is discovery guidance, not entitlement",
+          "quoteIsConsent": false,
+          "keyCeilingIsConsent": false,
+          "existingAuthorization": "Continue when the capability, current quote, single-call ceiling and remaining total are explicitly covered; no duplicate confirmation.",
+          "retry": "Reuse state file, operation UUID and task ID. Uncertain submission outcome must be reconciled before any new quote or operation.",
+          "quoteExpired": "Only after proving the previous operation was not accepted, preserve the old state and prepare a fresh quote in a new state file; recheck authorization if price changes.",
+          "currentUsageLimitation": "Generation quoting still requires readable usage.models. GENERATION_USAGE_UNAVAILABLE explains missing usage.read; do not bypass the helper or expand Key permissions. Authorized free operations remain independent."
+        },
+        "workflow": [
+          "Read verified current identity, selected workflow public inputs, user goal and supplied files.",
+          "Distinguish missing recordings from an explicit no-narration choice.",
+          "Plan needed material and reuse supplied material; resolve per-workflow binding support before online requests.",
+          "Read live status/permission/remaining allowance once when needed; unknown usage does not equal denied free operations.",
+          "Prepare suitable free material; quote needed generation and reuse explicit per-call/remaining-total authorization.",
+          "Bind actual files and specs; verify preview and encoded output, preserving reviewed design and old results."
+        ],
+        "verification": {
+          "stages": [
+            "planned",
+            "downloaded",
+            "bound",
+            "preview_verified",
+            "encoded_output_verified"
+          ],
+          "rule": "Advance only with actual evidence; do not infer finished videos from an API success. Record only minimum stage/status information in any authorized analytics."
+        },
+        "advisoryOnly": "Guidance inside the existing plan, not an automatic material service, binding implementation or new command."
+      },
+      "examples": {
+        "image-generation-request": {
+          "capability": "images.generate",
+          "model": "native-image",
+          "input": {
+            "prompt": "A clean editorial photograph of a notebook on a wooden desk beside a window, soft natural light, no text.",
+            "size": "1536x1024",
+            "count": 1
+          }
+        },
+        "video-query": {
+          "kind": "video",
+          "provider": "pexels",
+          "q": "city morning walking",
+          "limit": "3"
+        },
+        "tts-en-request": {
+          "capability": "tts.speak",
+          "model": "volc-tts-2.0",
+          "input": {
+            "text": "Turn complex ideas into a clear next step.",
+            "voice": "en_male_tim_uranus_bigtts",
+            "sample_rate": 48000,
+            "explicit_language": "en"
+          }
+        },
+        "seedance-request": {
+          "capability": "videos.generate",
+          "model": "seedance-2.0",
+          "input": {
+            "prompt": "A calm sunrise over a quiet city, slow stable camera movement, soft natural light, no text.",
+            "duration": 5,
+            "resolution": "480p",
+            "ratio": "16:9",
+            "generate_audio": false
+          }
+        },
+        "tts-zh-request": {
+          "capability": "tts.speak",
+          "model": "volc-tts-2.0",
+          "input": {
+            "text": "把复杂的想法，整理成清晰的下一步。",
+            "voice": "zh_male_ruyayichen_saturn_bigtts",
+            "sample_rate": 48000,
+            "explicit_language": "zh-cn"
+          }
+        },
+        "sticker-query": {
+          "text": "这一镜头表达太阳升起，不要文字。",
+          "keywords": [
+            "太阳",
+            "sun"
+          ],
+          "limit": 3
+        },
+        "music-request": {
+          "text": "介绍一款笔记应用，语气清晰温和，配乐轻柔，不要紧张或人声。",
+          "duration_s": 45,
+          "template_category": "technology",
+          "template_style": "calm talking-head",
+          "language": "zh-CN"
+        },
+        "image-query": {
+          "kind": "image",
+          "provider": "pexels",
+          "q": "notebook desk natural light",
+          "limit": "3"
+        }
+      },
+      "quota": {
+        "freeCredits": 0,
+        "defaultDailyRequests": 30,
+        "scope": "account; shared by all Keys and templates",
+        "timezone": "Asia/Shanghai",
+        "fields": [
+          "free_material_requests.daily_limit",
+          "free_material_requests.remaining_today",
+          "free_material_requests.resets_at"
+        ],
+        "paidFields": [
+          "credits.remaining",
+          "key_limits.daily_remaining",
+          "key_limits.monthly_remaining"
+        ],
+        "rule": "Read status once when needed; it combines capabilities and usage. Daily requests and paid credits are independent. Zero credits do not block authorized free materials. An unavailable usage response means unknown allowance, not zero or unlimited, and does not deny otherwise authorized free operations. Search, selection and file download are separate requests; reuse prepared material within the instance."
+      },
+      "image": {
+        "query": {
+          "kind": "image",
+          "provider": "pexels",
+          "q": "replace with current scene keywords",
+          "limit": "3"
+        },
+        "search": [
+          "node",
+          "assistant/motion.mjs",
+          "api",
+          "<original.motion>",
+          "search",
+          "<instance/image-query.json>"
+        ],
+        "select": [
+          "node",
+          "assistant/motion.mjs",
+          "api",
+          "<original.motion>",
+          "select",
+          "<result.source_ref>"
+        ],
+        "download": [
+          "node",
+          "assistant/motion.mjs",
+          "api",
+          "<original.motion>",
+          "download",
+          "<selected.id>",
+          "<instance/inputs/assets/new-photo.jpg>"
+        ],
+        "scope": [
+          "images.search",
+          "assets.write",
+          "assets.read"
+        ],
+        "rule": "Use returned files or external_url according to the result contract; bind them to the template public image slots. Existing-image search is free; images.generate creates a new paid image. Never replace a failed search with paid generation without user authorization."
+      },
+      "video": "Use search with kind=video and provider=pexels or pixabay, then select/download and bind only to declared video slots. Needs videos.search and asset permissions.",
+      "videoSearch": {
+        "query": {
+          "kind": "video",
+          "provider": "pexels",
+          "q": "city morning walking",
+          "limit": "3"
+        },
+        "search": [
+          "node",
+          "assistant/motion.mjs",
+          "api",
+          "<original.motion>",
+          "search",
+          "<instance/video-query.json>"
+        ],
+        "select": [
+          "node",
+          "assistant/motion.mjs",
+          "api",
+          "<original.motion>",
+          "select",
+          "<result.source_ref>"
+        ],
+        "download": [
+          "node",
+          "assistant/motion.mjs",
+          "api",
+          "<original.motion>",
+          "download",
+          "<selected.id>",
+          "<instance/inputs/assets/new-clip.mp4>"
+        ]
+      },
+      "stickers": {
+        "available": true,
+        "minimumHelperVersion": "1.0.0-rc.31",
+        "when": "Optional inside the existing material planning step, only when an animation would serve the current scene. First read the selected template public guide and parameter schema: an explicitly declared Lottie JSON input and supported renderer are required. An image, video or generic path slot does not establish Lottie support. If absent, continue with the template controls; do not download an unusable asset, invent parameters, unpack protected code or add a new user confirmation gate.",
+        "query": {
+          "text": "本镜头展示太阳，不要文字。Show a sun, without text.",
+          "limit": 3
+        },
+        "input": "Send only text, keywords and limit. Supply the current scene text or positive subject keywords; preserve the user’s exclusions in text and never move an excluded concept into the positive keywords array. text: at most 2000 characters; keywords: at most 20 nonempty strings, each at most 64 characters; limit: integer 1–50. No billing metadata, conversation transcript, credential or invented has_text filter.",
+        "match": [
+          "node",
+          "assistant/motion.mjs",
+          "api",
+          "<original.motion>",
+          "sticker-match",
+          "<instance/sticker-query.json>"
+        ],
+        "download": [
+          "node",
+          "assistant/motion.mjs",
+          "api",
+          "<original.motion>",
+          "sticker-download",
+          "<result.preset>",
+          "<instance/inputs/assets/new-sticker.json>"
+        ],
+        "scope": {
+          "match": [
+            "stickers.search",
+            "local-stickers"
+          ],
+          "download": [
+            "stickers.file",
+            "local-stickers"
+          ]
+        },
+        "selection": "Inspect reasons, extracted_keywords, excluded_keywords, has_text, dimensions and duration for the actual scene. Metadata matching is a candidate ranking, not visual semantic acceptance. Keep user negation and language requirements; if has_text conflicts with a no-text request, skip that candidate. Inspect the actual animation before accepting it; do not assume has_text=false proves the absence of every visible word. Retain actual source and any returned license/attribution evidence; do not invent permission from a free price.",
+        "file": "Pass the returned preset to sticker-download, not an arbitrary file URL or a manual authenticated request. The verified helper keeps the original Key and package source, validates the response and writes a new local JSON file without overwriting existing files. Preserve its result/receipt, downloaded file and original inputs; reuse a verified suitable local file within the instance instead of downloading it again.",
+        "validation": "Download validation checks the Lottie structure, image dependencies reachable from visible layers and embedded image containers; it does not certify visual meaning or final renderer behavior. Unused external assets declarations are preserved, so the renderer must still block external resource requests before loading the animation. Do not assume a validated JSON file is safe to load with unrestricted network or file access.",
+        "quota": "Matching and successful file downloads are separate free-material requests: 0 credits, default 30 per account per day shared across Keys and templates. Read usage.free_material_requests remaining_today/resets_at; do not switch Keys/accounts or retry repeatedly to evade the limit. Already-paid generated assets and owned uploads use their existing asset delivery flow, not this free-library download action.",
+        "errors": {
+          "empty": "A successful empty result is not a download failure. Preserve it and continue with supplied material or existing template controls; refine the relevant query only when useful and within the remaining quota. Never invent a preset.",
+          "scope_denied": "403: the original Key lacks a required scope. Report the exact missing capability and continue unaffected work. Never extract or replace the Key, widen permissions, switch templates to evade it, or call the endpoint manually.",
+          "model_denied": "403: local-stickers is not allowed for this Key; preserve the original Key and report this access limit.",
+          "daily_request_limit_exceeded": "429: use resets_at or Retry-After and wait for the account daily reset; preserve prepared files and continue unaffected work. Credits or a different Key do not restore the shared request allowance.",
+          "sticker_dependencies_missing": "503: the sticker lacks required image resources and is currently unusable; this response does not consume a free-material request. Keep the error, select another suitable available candidate if needed and within quota, and do not repeatedly retry the same preset or manually patch missing resources.",
+          "STICKER_OUTPUT_ATOMIC_UNSUPPORTED": "Local destination preflight failed before any sticker API request: this filesystem does not support the required atomic publication of a new file. Use a new destination in a supported local directory and preserve the original project. Do not weaken publication to an overwriting write or delete existing files to make it pass.",
+          "other": "Report the actual code, failed step and unconfirmed outcome; never turn an optional material failure into a production blocker or silently substitute paid generation. A failed local write after a successful server download does not prove the request allowance was unchanged."
+        },
+        "bind": "Bind the returned local JSON only to the declared Lottie input of the selected workflow. Fit its real aspect ratio, duration and placement without covering subtitles, key content or the corner signature. Verify it in the actual preview and final encoded motion; an API response or valid JSON alone does not prove the animation was used. Preserve the original Key, package and project and continue the normal planning/preview/export flow."
+      },
+      "music": [
+        "node",
+        "assistant/motion.mjs",
+        "api",
+        "<original.motion>",
+        "music-prepare",
+        "<instance/music-request.json>",
+        "<instance/new-music-directory>"
+      ],
+      "tts": {
+        "voices": [
+          "node",
+          "assistant/motion.mjs",
+          "api",
+          "<original.motion>",
+          "voices",
+          "<production-language>"
+        ],
+        "model": "volc-tts-2.0",
+        "when": "Needed narration without a suitable recording, with an actual audio input. An explicit no-narration goal is respected; no presenter does not mean no voiceover.",
+        "examples": {
+          "zh": {
+            "capability": "tts.speak",
+            "model": "volc-tts-2.0",
+            "input": {
+              "text": "把复杂的想法，整理成清晰的下一步。",
+              "voice": "zh_male_ruyayichen_saturn_bigtts",
+              "sample_rate": 48000,
+              "explicit_language": "zh-cn"
+            }
+          },
+          "en": {
+            "capability": "tts.speak",
+            "model": "volc-tts-2.0",
+            "input": {
+              "text": "Turn complex ideas into a clear next step.",
+              "voice": "en_male_tim_uranus_bigtts",
+              "sample_rate": 48000,
+              "explicit_language": "en"
+            }
+          }
+        },
+        "voiceSelection": "Query voices for the actual production language; examples are replaceable, not permanent default voices.",
+        "flow": "Write capability/model/input JSON, quote to a persistent state file, submit only within existing explicit user budget, poll task, check receipt, download result and bind actual audio duration to the template. Reuse the same operation after interruption; do not resubmit with a fresh UUID."
+      },
+      "imageGeneration": {
+        "when": "Generated imagery is needed, supplied/search material is unsuitable and the selected workflow accepts images.",
+        "capability": "images.generate",
+        "model": "native-image",
+        "request": {
+          "capability": "images.generate",
+          "model": "native-image",
+          "input": {
+            "prompt": "A clean editorial photograph of a notebook on a wooden desk beside a window, soft natural light, no text.",
+            "size": "1536x1024",
+            "count": 1
+          }
+        },
+        "availability": "Check the live ready state and original Key access. Use the generation sequence below; a failed free search never authorizes paid work."
+      },
+      "videoGeneration": {
+        "when": "The user needs a generated video shot and the selected workflow has a real video input.",
+        "capability": "videos.generate",
+        "model": "seedance-2.0",
+        "request": {
+          "capability": "videos.generate",
+          "model": "seedance-2.0",
+          "input": {
+            "prompt": "A calm sunrise over a quiet city, slow stable camera movement, soft natural light, no text.",
+            "duration": 5,
+            "resolution": "480p",
+            "ratio": "16:9",
+            "generate_audio": false
+          }
+        },
+        "availability": "Check live status and limits, then use the generation sequence. Do not assume services remain ready or dispatch disabled services."
+      },
+      "generation": {
+        "quote": [
+          "node",
+          "assistant/motion.mjs",
+          "api",
+          "<original.motion>",
+          "quote",
+          "<instance/generation-request.json>",
+          "<instance/new-operation.json>"
+        ],
+        "submit": [
+          "node",
+          "assistant/motion.mjs",
+          "api",
+          "<original.motion>",
+          "submit",
+          "<same-operation.json>",
+          "<explicitly-authorized-integer-max-credits>"
+        ],
+        "task": [
+          "node",
+          "assistant/motion.mjs",
+          "api",
+          "<original.motion>",
+          "task",
+          "<actual-task-id>"
+        ],
+        "receipt": [
+          "node",
+          "assistant/motion.mjs",
+          "api",
+          "<original.motion>",
+          "receipt",
+          "<same-task-id>"
+        ],
+        "download": [
+          "node",
+          "assistant/motion.mjs",
+          "api",
+          "<original.motion>",
+          "download",
+          "<task.result_assets.id>",
+          "<instance/inputs/assets/new-result.ext>"
+        ],
+        "authorization": "A quote, balance or Key ceiling is not consent. Reuse an explicit authorization only when its capability list, per-call maximum and remaining total cover this quote. Malformed capability scopes are not authorization. Do not add budget/price fields to the capability/model/input request JSON or invent a fixed submit amount.",
+        "recovery": "Keep one request and state file per operation. If accepted or submission is uncertain, query/reconcile the same task/operation; never create a fresh UUID. On an expired quote, first prove the old operation was not accepted, preserve its state, then use a new quote file and recheck the existing budget.",
+        "usageLimitation": "Quoting currently requires readable usage.models. GENERATION_USAGE_UNAVAILABLE means this helper cannot complete quoting with unavailable usage; it does not revoke free capabilities or authorize manual HTTP, new permissions or a different Key."
+      },
+      "errors": {
+        "daily_request_limit_exceeded": "429: wait until resets_at/Retry-After. Do not ask for credits.",
+        "scope_denied": "403: the original Key lacks permission; this does not mean the endpoint is absent.",
+        "model_denied": "403: model is outside this Key allowlist.",
+        "disabled": "Service is closed; report current availability_note without dispatching or substituting a provider.",
+        "insufficient_credits": "402 on paid services: check credit balance and paid budget. Do not block authorized free material.",
+        "source_expired": "Before selection refresh the same chosen asset reference once using supported search actions, within quota; verify identity/specifications/rights. Do not repeatedly submit the expired reference. No automatic refresh action is advertised.",
+        "invalid_music_recommendation": "Check numeric duration_s and exact supported request fields locally before sending; fix this input, do not substitute paid generation.",
+        "unsupported_filter": "Use the current helper query shape and declared provider fields. Do not guess extra filters.",
+        "GENERATION_USAGE_UNAVAILABLE": "The generation helper requires readable usage.models; allowance is unknown. Preserve the original Key and continue independently authorized free operations.",
+        "unknown_submission": "Preserve operation state and reconcile its original task before creating any new quote or operation."
+      },
+      "bind": "Keep files, receipts and actual specs inside a new production instance. Read the template public guide/schema, bind its actual slots, preview and verify encoded output. A successful material API request alone is not a completed video."
+    },
+    "firstRead": "00-START-HERE.md",
+    "templateGuide": "guide.json",
+    "parameterSchema": "params.schema.json",
+    "bootstrap": {
+      "extractOnly": [
+        "00-START-HERE.md",
+        "assistant/guide.json",
+        "assistant/motion.mjs",
+        "assistant/BUILD.json",
+        "assistant/THIRD-PARTY-NOTICES.txt",
+        "README.md"
+      ],
+      "keepInsideOriginalArchive": [
+        "motion.json",
+        "personal/",
+        "content/"
+      ],
+      "directoryMode": "0700 on POSIX; current-user-only access on Windows",
+      "instruction": "Extract only the listed guide/tool files. The verified helper reads credentials and content from the original .motion; no extracted personal identifier is needed."
+    },
+    "workflowRouting": {
+      "decideBefore": "setup or plan",
+      "instruction": "Read the actual template guide and schema. Do not invent a text-only route, required media, or controls not declared by this template."
+    },
+    "intake": {
+      "readOnlyFirst": [
+        "00-START-HERE.md",
+        "assistant/guide.json"
+      ],
+      "usageQuestion": "When the user asks what this is or how to use it, first explain the declared template, required user materials, working environment and preview/export steps. Reading public instructions does not require running package code, installing tools, fetching an update or starting production. Label unverified package claims as unverified.",
+      "executionCheck": "Before production, confirm that this conversation can actually read the supplied file and run Node.js 22+. For this workflow, prefer a local work mode connected to the production files. A cloud task does not automatically have access to computer-local paths; verify its actual uploaded-file and runtime tools separately. Desktop, Chat and Work labels alone do not establish these capabilities.",
+      "failedRead": "After an actual file-access or approval failure, promptly state what was not read and provide the available usage explanation. Do not repeatedly retry the same failed action or claim a template identity you have not read.",
+      "expiredApproval": "An approval request that is no longer active cannot be reused. Explain the blocked operation and recovery; any needed fresh request must refer to the current operation and respect existing valid authorization. Never suggest disabling approval or sandbox protections.",
+      "materials": {
+        "inventory": "During the existing content/planning step, inspect the supplied readable files and user instructions first. Identify each file by its actual name, type, duration or dimensions when available, and intended role: narration, music, presenter, screen recording, image, logo or reference. Do not guess audio roles from filenames, file order or duration when the user has not identified them.",
+        "missing": "Ask one concise combined question only for an unresolved choice that changes the output, or an input actually required by the selected template. Reuse answers and files already supplied. Suggest a useful optional recording or image in plain language when it would support the content; do not turn suggestions into an upload checklist or demand every media category.",
+        "audio": "Honor an explicit mapping such as first file = narration and second file = background music. Inspect the actual recordings, preserve their separate roles and bind both to the declared inputs. Use supplied/selected music rather than requesting another track. Existing no-narration, no-music and complete-silence choices remain distinct.",
+        "timing": "Base the plan on the actual selected narration duration, including the complete intended ending. If a provisional 18-second plan receives 26 seconds of narration, adapt or split suitable scenes within the declared capacity. Do not truncate, speed up or replace narration to fit the provisional plan. Ask only when the user has specified a conflicting fixed duration or the template cannot accommodate the material.",
+        "mapping": "Within the existing plan, briefly state which real asset and source interval supports each relevant scene, its crop/window placement, and how narration and music bind to the output. Keep the original files intact. A reference asset need not appear on screen; unsupported or unreadable assets must not be presented as bound. Inspect the actual preview and encoded result for the promised material and complete audio.",
+        "continuity": "This guidance is advisory inside the current intake/plan/preview/render flow. It adds no command, required field, approval gate, mandatory media type or extra confirmation round. If materials and intent are clear, acknowledge their roles in one short sentence and continue the already authorized step. While a necessary answer is pending, continue independent planning; do not claim a placeholder preview is the final requested result."
+      }
+    },
+    "updates": {
+      "intent": "A user request to update, download the latest version, or directly complete an update already authorizes that free template update. Do not ask the same question again. A check-only or usage request does not authorize downloading. Keep update-only tasks out of content intake, setup, preview and rendering.",
+      "download": [
+        "node",
+        "assistant/motion.mjs",
+        "upgrade",
+        "<original.motion>"
+      ],
+      "minimumUpdateEntry": "1.0.0-rc.27",
+      "fileReuse": "Protected locale runtimes and ordinary author ZIPs use file-level Git reuse. Historical ordinary ZIP compression, timestamps and complete signed bytes are preserved. A bundled compressed locale core needs a one-time migration to independent file objects. Keep original packages, Keys and projects.",
+      "legacyEntry": "https://motiongit.com/update.md — for historical packages, use the fixed official verified updater described here. It reads the original archive directly; no ZIP extraction or skill installation is needed.",
+      "preserve": "Verify the bundled helper first. Use the original package identifier, save a new file, and retain the original package, existing project and .motion-update.json operation record. No website login, pasted credential, global tool installation or renderer setup is required.",
+      "retry": "The upgrade operation handles bounded retries, authenticated range downloads, private resumable fragments, progress, signature verification and reading the new package. Allow up to 15 minutes for a slow network and keep the command running while progress advances. It honors existing proxy settings without changing the system. Reuse the same destination and operation after interruption. PERSONAL_DOWNLOAD_BUSY is server signing capacity. Never edit tools, delete state, search unrelated caches, rotate identifiers or unpack protected content.",
+      "verification": "A releaseArchiveSha256/releaseSize identifies the underlying author release, not the personal .motion envelope. The update helper checks the personal file against delivery metadata personalArchiveSha256/personalBytes and verifies signed release, author, recipient and identifier identities. Never compare the personal file against the author-release hash/size. The upgrade result already includes verified start and productionEntry. Confirm the current identity before reporting success; read the declared public parameter schema before further production.",
+      "report": "Report the actual old/new version and usable new file only after verified success. On failure keep using the old file; an available update or operation record is not a downloaded update. Include any earlier mistake and cleanup accurately; do not claim a prohibited extraction never happened merely because it was later removed."
+    },
+    "failureFeedback": {
+      "profile": "motiongit.failure-feedback/1",
+      "minimumHelperVersion": "1.0.0-rc.28",
+      "endpoint": "https://motiongit.com/api/v1/template-feedback",
+      "legacyEntry": "https://motiongit.com/feedback.md",
+      "credits": 0,
+      "optional": true,
+      "trigger": "On an actual setup, update, plan, preview, render, audio, subtitle, layout or other failure, preserve the original inputs and outputs. State the failed step and offer to report it once. Feedback must not block independent work, replace recovery or change production validation. Do not submit automatically or call every error a template bug.",
+      "collect": "Use only relevant turns visible in this current authorized conversation, actual commands/errors and necessary environment details. Separate observed facts from suspected cause. Record missing evidence honestly. Never crawl chat databases, other conversations, browser profiles, environment variables or unrelated files. Do not upload the .motion, Key, protected source, complete workspace, private original media or screenshots through this text-only API.",
+      "input": {
+        "summary": "Brief problem",
+        "stage": "preview",
+        "expected": "Expected result",
+        "actual": "Observed failure",
+        "suspectedCause": "Unknown; distinguish hypothesis from fact",
+        "steps": [
+          "The actual failed step"
+        ],
+        "error": "Relevant error excerpt",
+        "conversation": [
+          {
+            "role": "user",
+            "content": "Relevant authorized request"
+          },
+          {
+            "role": "assistant",
+            "content": "Relevant result"
+          }
+        ],
+        "environment": {
+          "os": "auto",
+          "arch": "auto",
+          "node": "auto",
+          "assistant": "Actual app name or unknown",
+          "model": "Actual model if known; otherwise unknown"
+        }
+      },
+      "prepare": [
+        "node",
+        "assistant/motion.mjs",
+        "api",
+        "<original.motion>",
+        "feedback-prepare",
+        "<instance/feedback-input.json>",
+        "<instance/feedback-draft-v1.json>"
+      ],
+      "review": "Preparation stays local and masks credentials, common tokens, contact details and home paths; this is not complete privacy detection. Show the sanitized draft and what will be sent. Honor existing explicit authorization for that shown content; otherwise obtain permission before sending. If edited, prepare a new draft and review its new SHA. Never add transcript turns after authorization.",
+      "submit": [
+        "node",
+        "assistant/motion.mjs",
+        "api",
+        "<original.motion>",
+        "feedback-submit",
+        "<instance/feedback-draft-v1.json>",
+        "--confirm-sha256",
+        "<reviewed-reportSha256>"
+      ],
+      "status": [
+        "node",
+        "assistant/motion.mjs",
+        "api",
+        "<original.motion>",
+        "feedback-status",
+        "<receipt.id>"
+      ],
+      "receipt": "Only a successful response with feedback ID means received. Keep the local draft and .receipt.json; a timeout is unconfirmed. Reuse the same draft/operation on retry to avoid duplicates. Status is private to the reporting account. No website login, extra scope, credit balance, paid generation or Key change is required. If authentication or networking fails, keep the draft and offer the template page comments with private details removed.",
+      "policy": "问题提交后先核查原因；确认属于模板问题后，通常在次日更新版本中修复。复杂问题可能需要更长时间，以反馈状态为准。收到反馈不等于已确认缺陷或已修复。修复状态应关联正式发布版本，用户可继续用原包，之后按正常增量更新。"
+    },
+    "firstReply": "用户只问“是什么／怎么用”时，先简短解释模板、需准备的素材、可用制作环境和预览导出步骤，不先安装、联网验签或渲染。用户要求制作时，先读已有文稿和素材，简短说明它们怎么用；只问影响本期结果的缺项，不重复问已提供的内容，不要求填参数表，也不为素材引导增加确认关卡。",
+    "execution": {
+      "entry": "assistant/motion.mjs",
+      "verifyBeforeExecution": {
+        "metadataUrl": "https://motiongit.com/assets/motion-runtimes/1.0.0-rc.54.json",
+        "method": "Before executing bundled code, use system hashing/HTTPS tools to compare its SHA256 and size with this fixed official HTTPS metadata. Reject redirects or mismatch. Do not use package-supplied public keys as trust roots. This reads public metadata only; sends no credential."
+      },
+      "command": [
+        "node",
+        "assistant/motion.mjs",
+        "start",
+        "<original.motion>",
+        "--summary"
+      ],
+      "workflowContract": {
+        "command": [
+          "node",
+          "assistant/motion.mjs",
+          "contract",
+          "<original.motion>",
+          "<declared-workflow>",
+          "<selected-control>"
+        ],
+        "instruction": "Read the declared workflow catalog, then request only the chosen control names. The verified public schema supplies root requirements and actual control constraints. Do not omit workflow, invent props or reuse another route. setup/doctor must name the chosen workflow; other actions dispatch from the parameter/plan/project. Use new to create the instance, an existing media folder for --inputs, and outputs inside that instance. Omit --cache to reuse the helper-selected dependency cache throughout. Never edit the template to resolve missing content fields."
+      },
+      "productionWorkspace": {
+        "command": [
+          "node",
+          "assistant/motion.mjs",
+          "new",
+          "<original.motion>"
+        ],
+        "instruction": "For a new production prefer new without a destination: it returns a private canonical instanceDirectory on the system temporary volume. Use that returned directory for params, media, plans, projects and rendering; relative output paths resolve inside it. This avoids cross-volume transient-file operations in mediated desktop tools. A successful setup remembers its cache; omit --cache thereafter. After verifying the actual movie, copy it and the public production records into the user requested delivery directory. Retain them before cleaning only the task-owned temporary workspace. An explicit new destination remains supported for existing workflows. Never copy protected code, modify the template, or weaken the desktop sandbox."
+      },
+      "globalMotionCommandRequired": false,
+      "separateSkillDownloadRequired": false,
+      "websiteLoginRequired": false,
+      "credential": "Use the downloader identifier already inside this package, only after signature verification.",
+      "unlockRecovery": {
+        "minimumHelperVersion": "1.0.0-rc.50",
+        "automatic": true,
+        "primaryOrigin": "https://motiongit.com/api/v1",
+        "fallbackOrigin": "https://tokyo.motiongit.com/api/v1",
+        "scope": "Protected-content unlock only. The verified helper restarts the ticket and exchange on Tokyo only after primary transport or controlled availability failures. The package guide cannot change either origin.",
+        "instruction": "Continue the normal bundled setup/doctor/production command; do not extract the identifier, switch services manually or ask the user to log in. Other APIs, updates and payments remain on the primary origin. Authorization, disabled accounts/Keys, expiry, replay, limits and malformed responses are not bypassed. Redirects are never followed.",
+        "availability": "Tokyo requires a signed authorization projection younger than 300 seconds and rejects requests when it is stale. This is bounded recovery for temporary outages, not indefinite offline authorization. Existing verified local caches retain their normal offline behavior."
+      },
+      "core": "release.bin and core.enc are internal implementation files. Do not probe or manually unpack them. Never watch, copy or retain temporary runtime/core directories. Use the public schema paths returned in start.productionEntry instead.",
+      "environment": "Use the assistant environment’s existing Node.js 22+ for the bundled entry. Rendering uses the template’s declared Python/browser/encoder dependencies. The helper selects an installed automation browser; on Windows it can also use an existing Chrome or Edge. Native setup installs Chromium headless shell only when no browser is available. Python entries and their subprocesses use UTF-8. Do not claim dependencies are bundled or already tested. If setup fails, report the exact environment limitation and continue content planning; do not tell the user to download a MotionGit host.",
+      "browser": {
+        "selection": "installed standalone Chromium headless shell, or existing Chrome/Edge on Windows",
+        "setup": "Use the bundled setup operation only for missing dependencies. An existing supported Windows browser avoids another browser download; administrator rights or Developer Mode are not a general prerequisite.",
+        "safety": "Do not clone or modify a user Chrome app, remove code signatures, or delete user RLZ/preferences/profile files. Automation uses its own temporary profile. An explicit CHROME_PATH override is validated separately."
+      }
+    },
+    "identity": "This version and layout describe the delivered template. Inner versions are frozen source history. Read verified deliveryIdentity before describing the current package.",
+    "workflow": [
+      "Understand the user goal, actual supplied files and selected workflow public inputs",
+      "Map the declared animation phases and suitable controls to the content; account for omitted effects",
+      "Resolve needed material and real input support; reuse supplied/approved files, match background music by default when needed",
+      "Read live status once if needed; prepare supported free material, quote needed generation and reuse explicit per-call/remaining-total budget",
+      "Bind actual files, source intervals and durations to documented inputs; create the plan and show the proposed content",
+      "Prepare and inspect actual previews",
+      "Render and check complete encoded motion and audio"
+    ],
+    "productionContract": {
+      "copy": {
+        "preserve": [
+          "negation",
+          "conditions",
+          "qualifiers and frequency",
+          "numbers and units",
+          "causal relations",
+          "names"
+        ],
+        "fitOrder": [
+          "wrap by phrases",
+          "use the declared size range",
+          "split across suitable controls",
+          "show a proposed rewrite for user confirmation"
+        ],
+        "evidence": "Keep the original user copy and the actual on-screen copy in the instance; compare them before preview and after revisions. Do not silently remove words to fit a card."
+      },
+      "controls": "Choose by meaning as well as appearance. A crossed-out or completed checklist does not represent unanswered questions or required outputs. Read the actual variant contract; use a supported neutral control if completion semantics do not fit.",
+      "animationReuse": {
+        "inventory": "Read the public guide, control catalog and declared timeline before planning. Account for applicable entrances, holds, exits, transitions, particle morphs, trails, light sweeps, background/camera motion and motion SFX that the template actually provides. Do not manually unpack protected content to inspect implementation.",
+        "contentMapping": "Record each selected source effect, its role in the new user content, its output time range and its actual preview/export binding. Use the available effects as fully as the content meaning, declared capacity and requested duration allow. A fixed animation template retains its complete declared sequence; a component library uses suitable controls rather than unrelated effects.",
+        "omissions": "Record any skipped effect and the concrete reason, such as user direction, unsuitable meaning, unsupported input or a declared runtime limitation. Missing bindings or replacement with a static imitation remain unresolved; the presence of source files or an old demo does not establish reuse.",
+        "timing": "Use the final output clock and declared time units. Check the beginning, moving midpoint and end of each transition or morph, plus intended hold and fade intervals. Do not freeze a preview frame, rush through all controls, remove intentional holds, or stretch speech just to show more effects.",
+        "evidence": "Check motion on the final encoded video with the new user inputs. Preserve a phase checklist with inspected time ranges and, when needed, adjacent-frame or source-versus-output comparisons. A file hash, valid frame count, successful decode or one poster image alone does not prove animation was applied.",
+        "review": "Provide a playable motion review with clearly labeled replay/phase controls. Label static posters and snapshots as static. Record automatic frame checks, sampled visual inspection, continuous watching and listening separately; never claim an unperformed review."
+      },
+      "revisions": {
+        "preservePrevious": true,
+        "deleteToRetry": false,
+        "instruction": "Save every changed plan, preview and complete video to a fresh revision path. Reuse only verified immutable inputs; do not delete prior output or reset a review flag without inspecting the new result."
+      },
+      "sound": "Distinguish narration, music, motion sound effects and complete silence. Read the selected workflow audio controls and limitations; no narration does not imply no sound.",
+      "backgroundMusic": {
+        "default": "api-matched",
+        "trigger": "After receiving the user copy and estimating the intended duration, request one licensed background track using the verified downloader identifier already in this package.",
+        "match": [
+          "copy meaning and mood",
+          "template category and visual style",
+          "planned duration",
+          "speech clarity"
+        ],
+        "exceptions": [
+          "The user explicitly requests no background music or complete silence.",
+          "The user provides or explicitly selects a particular track; use it according to the supplied rights and instructions."
+        ],
+        "preserveReviewedMusic": "When revising an already approved video, retain its approved music unless the user requests a change.",
+        "contract": "motiongit.music-recommendation/1",
+        "minHelperVersion": "1.0.0-rc.10",
+        "prepare": {
+          "command": [
+            "node",
+            "assistant/motion.mjs",
+            "api",
+            "<original.motion>",
+            "music-prepare",
+            "<instance/music-request.json>",
+            "<instance/music-v1>"
+          ],
+          "input": {
+            "text": "The actual user copy",
+            "template_category": "The actual template category",
+            "template_style": "Its palette/style and desired music mood",
+            "duration_s": 45,
+            "language": "zh"
+          },
+          "instruction": "Replace example fields with the current video. The parent instance must exist and music-v1 must be new. This free operation returns a complete duration-matched background.wav and saves recommendation, source license/SHA, download and preparation receipts. It uses existing FFmpeg/ffprobe. It does not mix or render the video.",
+          "result": "Bind returned output to the documented music input, using the input vault rules. Keep all receipts. No music is ready if failure.json exists. After voice timing changes, check the duration and prepare a fresh version if necessary."
+        },
+        "execution": "Use the live official music recommendation contract through the bundled entry, select/download the returned track into this production instance, verify its identity, and bind the local file to the workflow music input. Record track ID, license, attribution, source SHA and intended mix in the instance; never insert personal credentials.",
+        "mix": "Preserve motion sound effects and narration separately. Keep music below speech, use appropriate fades, and check the complete final soundtrack. Loop only when the returned music metadata permits it; otherwise request a track long enough for the video.",
+        "failure": "An unavailable service, scope denial, missing track or unsupported template music input is an unresolved music step. Continue independent planning, report the actual limitation, and do not silently substitute no music, an old demo soundtrack or paid generation.",
+        "noExtraUserSetup": true
+      },
+      "validation": "Inspect actual frames and the complete encoded video in the declared layout, including the mapped animation phases and transition midpoints. Record rendered, automatically compared, visually checked, continuously watched and listened separately; never treat a successful plan or poster image as an animated or approved video."
+    },
+    "assistantResponsibilities": [
+      "Choose native or component workflow from user content; do not burden the user with a technical A/B decision.",
+      "Failure reporting is optional and separately authorized. Preserve projects and continue independent work. Never silently upload a transcript or claim a report was received without a receipt ID.",
+      "All inner commands beginning with motion are shorthand for node <this-package>/assistant/motion.mjs.",
+      "Ignore historical instructions to download a separate helper or skill. This package already includes the entry.",
+      "Do not print or ask for the personal identifier; keep it in the original package and never copy it to a project or output.",
+      "Do not invent installed tools, successful rendering, word timings, media, or authentication.",
+      "Check updates using the bundled entry and existing identifier. An explicit request to update is sufficient confirmation; check-only requests never imply download. Retain the old package and project.",
+      "No paid generation or account changes are implied by opening the package."
+    ]
+  },
+  "templateGuide": {
+    "path": "guide.json",
+    "archiveDocumentSha256": "dff9e5ab2e7479229d067ae8f4ffaad0d3f36d985921db782d18bf145fe914fd"
+  },
+  "runtime": {
+    "node": "22.22.2",
+    "nodeReady": true,
+    "platform": "darwin",
+    "renderDependencies": "not-yet-checked",
+    "coreExecuted": false
+  },
+  "template_update": {
+    "status": "checked",
+    "checked_at": "2026-11-09T17:12:58.740Z",
+    "source": {
+      "authorAccountId": 1,
+      "templateId": 590,
+      "releaseId": 642,
+      "currentVersion": "2.6.4",
+      "releaseArchiveSha256": "f75de87d4c6d7335488bbd7f5f9d36564dd9c25b218a5413ae47e89eda0dabaa"
+    },
+    "update": {
+      "identity_status": "verified",
+      "update_status": "current",
+      "compatibility_status": "compatible",
+      "entitlement_status": "not-checked",
+      "available": false,
+      "templateId": 590,
+      "currentVersion": "2.6.4",
+      "latestVersion": "2.6.4",
+      "releaseId": 642,
+      "templateUrl": "https://motiongit.com/motiongit/motiongit-promo-blueprint",
+      "downloadUrl": "https://motiongit.com/motiongit/motiongit-promo-blueprint/download/2.6.4.motion",
+      "downloadAvailable": true,
+      "authenticationRequired": true,
+      "releaseArchiveSha256": "f75de87d4c6d7335488bbd7f5f9d36564dd9c25b218a5413ae47e89eda0dabaa",
+      "releaseSize": 859488,
+      "requiredProfiles": [
+        "personal-download-v1",
+        "motiongit-host/1",
+        "protected-objects-v1",
+        "split-root-v1"
+      ],
+      "minHelperVersion": "1.0.0-rc.25",
+      "notes": [
+        "改进 Windows 环境下的依赖安装与本地制作稳定性。沿用原 Key 增量更新，保留旧包和工程。"
+      ]
+    }
+  },
+  "template_download": {
+    "profile": "motiongit.bearer-template-update/1",
+    "mode": "original",
+    "source": {
+      "downloadId": "fea33080-16f5-4a88-a09a-6a718be19bf8",
+      "receiptSha256": "0b0f442ee6c3f801ed4d6c4539844819d2b72b9ad17c0e96b6f232c585aeb912",
+      "recipientAccountId": 149,
+      "apiKeyId": 154,
+      "authorAccountId": 1,
+      "templateId": 590,
+      "releaseId": 642,
+      "templateVersion": "2.6.4",
+      "releaseArchiveSha256": "f75de87d4c6d7335488bbd7f5f9d36564dd9c25b218a5413ae47e89eda0dabaa"
+    },
+    "credentialKeyId": 154,
+    "status": "current",
+    "reason": "NO_NEWER_RELEASE",
+    "target": {
+      "releaseId": 642,
+      "templateVersion": "2.6.4",
+      "releaseArchiveSha256": "f75de87d4c6d7335488bbd7f5f9d36564dd9c25b218a5413ae47e89eda0dabaa",
+      "releaseSize": 859488
+    },
+    "prepareUrl": "https://motiongit.com/api/v1/template-updates/download",
+    "requiresWebsiteSession": false,
+    "confirmationRequired": true,
+    "credits": 0
+  },
+  "helper_refresh": {
+    "profile": "motiongit.personal-helper-refresh/1",
+    "mode": "original",
+    "source": {
+      "downloadId": "fea33080-16f5-4a88-a09a-6a718be19bf8",
+      "receiptSha256": "0b0f442ee6c3f801ed4d6c4539844819d2b72b9ad17c0e96b6f232c585aeb912",
+      "recipientAccountId": 149,
+      "apiKeyId": 154,
+      "authorAccountId": 1,
+      "templateId": 590,
+      "releaseId": 642,
+      "templateVersion": "2.6.4",
+      "releaseArchiveSha256": "f75de87d4c6d7335488bbd7f5f9d36564dd9c25b218a5413ae47e89eda0dabaa"
+    },
+    "credentialKeyId": 154,
+    "status": "current",
+    "reason": "HELPER_CURRENT",
+    "target": {
+      "releaseId": 642,
+      "templateVersion": "2.6.4",
+      "releaseArchiveSha256": "f75de87d4c6d7335488bbd7f5f9d36564dd9c25b218a5413ae47e89eda0dabaa",
+      "releaseSize": 859488,
+      "helperVersion": "1.0.0-rc.54",
+      "helperSha256": "90f00d37cafdc9a204babce24b86b683c097c8a60b74b862b28cfe1a081b2a3f",
+      "helperBytes": 852945,
+      "buildSha256": "83f85468f8a2ce72866025957fee12912a9973cabf8ef13562ca7105ccbb792b"
+    },
+    "prepareUrl": "https://motiongit.com/api/v1/template-updates/download",
+    "requiresWebsiteSession": false,
+    "confirmationRequired": true,
+    "credits": 0
+  },
+  "helper_download": {
+    "profile": "motiongit.helper-update-download/1",
+    "helperVersion": "1.0.0-rc.54",
+    "bearerUpdateSupported": true,
+    "sameReleaseHelperRefreshSupported": true,
+    "requiresWebsiteSession": false,
+    "confirmationRequired": true,
+    "credentialPolicy": "reuse-source-package-key",
+    "explicitOwnCredentialRecoverySupported": true,
+    "existingSignedPackageGuidanceOverride": "current-official-helper-capability"
+  }
+}

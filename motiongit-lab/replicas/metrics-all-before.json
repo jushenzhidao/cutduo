@@ -1,0 +1,78 @@
+{
+  "tag": "before",
+  "count": 8,
+  "items": [
+    {
+      "slug": "motiongit-promo-blueprint",
+      "means": {
+        "grid_diff": 6.522,
+        "point_diff": 4.686,
+        "sharp_ratio": 0.745,
+        "mad": 10.589
+      }
+    },
+    {
+      "slug": "motiongit-promo-creator",
+      "means": {
+        "grid_diff": 6.532,
+        "point_diff": 11.967,
+        "sharp_ratio": 1.341,
+        "mad": 10.803
+      }
+    },
+    {
+      "slug": "motiongit-promo-ink",
+      "means": {
+        "grid_diff": 9.838,
+        "point_diff": 40.065,
+        "sharp_ratio": 0.167,
+        "mad": 25.996
+      }
+    },
+    {
+      "slug": "motiongit-promo-keynote",
+      "means": {
+        "grid_diff": 9.425,
+        "point_diff": 17.229,
+        "sharp_ratio": 0.941,
+        "mad": 22.661
+      }
+    },
+    {
+      "slug": "motiongit-promo-main",
+      "means": {
+        "grid_diff": 9.806,
+        "point_diff": 4.605,
+        "sharp_ratio": 0.469,
+        "mad": 18.698
+      }
+    },
+    {
+      "slug": "motiongit-promo-pixel",
+      "means": {
+        "grid_diff": 11.695,
+        "point_diff": 8.578,
+        "sharp_ratio": 0.435,
+        "mad": 17.674
+      }
+    },
+    {
+      "slug": "motiongit-promo-user",
+      "means": {
+        "grid_diff": 21.876,
+        "point_diff": 21.569,
+        "sharp_ratio": 2.126,
+        "mad": 29.532
+      }
+    },
+    {
+      "slug": "motiongit-promo-velocity",
+      "means": {
+        "grid_diff": 6.625,
+        "point_diff": 4.195,
+        "sharp_ratio": 2.759,
+        "mad": 11.949
+      }
+    }
+  ]
+}

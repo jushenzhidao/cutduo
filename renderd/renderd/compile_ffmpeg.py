@@ -49,7 +49,7 @@ def _fit_chain(fit: str, w: int, h: int, *, alpha: bool = False) -> str:
 # 不同字节。本次就是实例 —— HEVC tag 从 hev1 改成 hvc1，IR 一个字段都没动，
 # 缓存键不变，线上继续返回旧的 hev1 产物（Safari 播不了）。
 # 只靠 IR 参数指纹救不了这种情况，必须把编译器自身的版本也编进键。
-COMPILE_REV = 4
+COMPILE_REV = 5
 
 
 def encoder_signature(ir: dict) -> str:
@@ -230,11 +230,16 @@ def build(ir: dict, media: dict[str, str], layers: list[Layer],
     cur = base_label
 
     # ── 文本层：合成已栅格化的图层 ──
+    # 图层文件只包含文字实际占据的矩形（见 textlayer 的 bbox 裁剪），
+    # 所以 overlay 必须按 bbox 左上角偏移；bbox 为 None 表示全透明，直接跳过。
     for li, layer in enumerate(layers):
+        if not layer.bbox:
+            continue
+        x, y = int(layer.bbox[0]), int(layer.bbox[1])
         t0, t1 = layer.at_frame / fps, layer.out_frame / fps
         tag = f"vt{li}"
         graph.append(f"[{layer_base + li}:v]format=rgba,setpts=PTS-STARTPTS[lyr{li}]")
-        graph.append(f"{cur}[lyr{li}]overlay=0:0:format=auto:eof_action=repeat:"
+        graph.append(f"{cur}[lyr{li}]overlay={x}:{y}:format=auto:eof_action=repeat:"
                      f"enable='between(t,{t0:.6f},{t1:.6f})',"
                      f"format={o['video']['pix_fmt']}[{tag}]")
         cur = f"[{tag}]"

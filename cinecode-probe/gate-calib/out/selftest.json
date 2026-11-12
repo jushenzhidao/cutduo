@@ -1,0 +1,78 @@
+[
+  {
+    "file": "cinecode-probe/gate-calib/out/selftest/control-healthy.mp4",
+    "w": 1920,
+    "h": 1080,
+    "fps": 24,
+    "frames": 892,
+    "dur": 37.166667,
+    "size": 6149244,
+    "vcodec": "h264",
+    "audio": {
+      "codec": "aac",
+      "dur": 37.146
+    },
+    "firstYmax": 220,
+    "samples": 38,
+    "flatPct": 0,
+    "blackPct": 0,
+    "yavg": 212,
+    "hook": 0.22,
+    "expect": 892,
+    "verdict": "PASS",
+    "fails": [],
+    "warns": []
+  },
+  {
+    "file": "cinecode-probe/gate-calib/out/selftest/defect-black-gap.mp4",
+    "w": 1920,
+    "h": 1080,
+    "fps": 24,
+    "frames": 940,
+    "dur": 39.19336,
+    "size": 3000035,
+    "vcodec": "h264",
+    "audio": {
+      "codec": "aac",
+      "dur": 39.172667
+    },
+    "firstYmax": 220,
+    "samples": 40,
+    "flatPct": 5,
+    "blackPct": 5,
+    "yavg": 202.2,
+    "hook": 0.22,
+    "expect": 941,
+    "verdict": "FAIL",
+    "fails": [
+      "黑帧 5% > 3%"
+    ],
+    "warns": []
+  },
+  {
+    "file": "cinecode-probe/gate-calib/out/selftest/defect-short-audio.mp4",
+    "w": 1920,
+    "h": 1080,
+    "fps": 24,
+    "frames": 892,
+    "dur": 37.166667,
+    "size": 5912376,
+    "vcodec": "h264",
+    "audio": {
+      "codec": "aac",
+      "dur": 34
+    },
+    "firstYmax": 220,
+    "samples": 38,
+    "flatPct": 0,
+    "blackPct": 0,
+    "yavg": 212,
+    "hook": 0.22,
+    "expect": 892,
+    "verdict": "FAIL",
+    "fails": [
+      "音画时长差 3.17s"
+    ],
+    "warns": []
+  }
+]

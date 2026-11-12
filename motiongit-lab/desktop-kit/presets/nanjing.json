@@ -1,0 +1,378 @@
+{
+  "_note": "「南京」城市介绍 v3：15 个版式镜头 + 2 段实拍视频（Pexels，预抽帧播放）+ 3 张实拍照片。数字均有出处（2024 南京统计公报、市文旅局城墙数据）。",
+  "fps": 60,
+  "durationSeconds": 73.0,
+  "brand": "城市档案 · 南京",
+  "photos": {
+    "jinling": "edits/assets/nanjing/p31074149.jpg",
+    "jiming": "edits/assets/nanjing/p36354905.jpg",
+    "night": "edits/assets/nanjing/p31133706.jpg"
+  },
+  "chapters": [
+    {
+      "name": "01 起站",
+      "wall": "blue"
+    },
+    {
+      "name": "02 城",
+      "wall": "light"
+    },
+    {
+      "name": "03 通",
+      "wall": "light"
+    },
+    {
+      "name": "04 旧",
+      "wall": "orange"
+    },
+    {
+      "name": "05 终点",
+      "wall": "blue"
+    }
+  ],
+  "shots": [
+    {
+      "type": "title",
+      "t0": 0,
+      "t1": 5,
+      "chapter": "01 起站",
+      "args": {
+        "app": "城市档案",
+        "headline": "南京",
+        "train": "金陵号",
+        "status": "已发车"
+      }
+    },
+    {
+      "type": "talk",
+      "t0": 5,
+      "t1": 10,
+      "chapter": "01 起站",
+      "args": {
+        "label": "六朝古都，十朝都会"
+      }
+    },
+    {
+      "type": "clip",
+      "t0": 10,
+      "t1": 13,
+      "chapter": "02 城",
+      "args": {
+        "key": "xuanwu",
+        "fps": 20,
+        "title": "玄武湖",
+        "fx": 0.5,
+        "fy": 0.5
+      }
+    },
+    {
+      "type": "comments",
+      "t0": 13,
+      "t1": 19,
+      "chapter": "02 城",
+      "args": {
+        "items": [
+          {
+            "text": "明城墙 · 650 多岁"
+          },
+          {
+            "text": "现存 25.1 公里"
+          },
+          {
+            "text": "秦淮河 · 十里灯火"
+          },
+          {
+            "text": "夜里坐一次画舫"
+          },
+          {
+            "text": "梧桐 · 一句诗种满城"
+          },
+          {
+            "text": "春天记得戴口罩"
+          },
+          {
+            "text": "鸭子 · 南京人的主食",
+            "hi": true
+          },
+          {
+            "text": "盐水鸭、鸭血粉丝"
+          },
+          {
+            "text": "中山陵 · 三百九十二级"
+          },
+          {
+            "text": "博物院 · 一座城的历史"
+          },
+          {
+            "text": "长江大桥 · 1968 年通车"
+          },
+          {
+            "text": "第一座自己造的双层桥"
+          }
+        ]
+      }
+    },
+    {
+      "type": "photo",
+      "t0": 19,
+      "t1": 24,
+      "chapter": "02 城",
+      "args": {
+        "key": "jinling",
+        "layout": "window",
+        "file": "金陵 · 街角.jpg"
+      }
+    },
+    {
+      "type": "station",
+      "t0": 24,
+      "t1": 28,
+      "chapter": "02 城",
+      "args": {
+        "name": "秦淮河",
+        "sub": "十里秦淮，灯火不绝"
+      }
+    },
+    {
+      "type": "clip",
+      "t0": 28,
+      "t1": 31,
+      "chapter": "02 城",
+      "args": {
+        "key": "qinhuai",
+        "fps": 20,
+        "title": "秦淮夜",
+        "fx": 0.5,
+        "fy": 0.55
+      }
+    },
+    {
+      "type": "counter",
+      "t0": 31,
+      "t1": 36,
+      "chapter": "02 城",
+      "args": {
+        "label": "明城墙 · 现存长度",
+        "value": "25.1",
+        "sub": "公里 / 全长 35.267 公里"
+      }
+    },
+    {
+      "type": "chart",
+      "t0": 36,
+      "t1": 40,
+      "chapter": "02 城",
+      "args": {
+        "title": "城墙保留比例",
+        "value": "71%",
+        "points": [
+          0.97,
+          0.94,
+          0.9,
+          0.86,
+          0.82,
+          0.78,
+          0.75,
+          0.72,
+          0.71
+        ]
+      }
+    },
+    {
+      "type": "tickets",
+      "t0": 40,
+      "t1": 45,
+      "chapter": "03 通",
+      "args": {
+        "kicker": "TICKET · 金陵通票",
+        "title": "一票通城",
+        "sub": "城墙 · 秦淮 · 中山陵",
+        "price": "¥0",
+        "stamp": "已检票"
+      }
+    },
+    {
+      "type": "checklist",
+      "t0": 45,
+      "t1": 49,
+      "chapter": "03 通",
+      "args": {
+        "title": "轨道交通",
+        "value": "15",
+        "unit": "条线",
+        "count": 15
+      }
+    },
+    {
+      "type": "ranking",
+      "t0": 49,
+      "t1": 53,
+      "chapter": "03 通",
+      "args": {
+        "rows": [
+          "明城墙",
+          "秦淮河"
+        ],
+        "sub": "本地人也常去"
+      }
+    },
+    {
+      "type": "photo",
+      "t0": 53,
+      "t1": 58,
+      "chapter": "04 旧",
+      "args": {
+        "key": "jiming",
+        "layout": "window",
+        "file": "鸡鸣寺 · 从城墙上看.jpg"
+      }
+    },
+    {
+      "type": "flipBoard",
+      "t0": 58,
+      "t1": 63,
+      "chapter": "04 旧",
+      "args": {
+        "kicker": "// 十朝 · 逐字翻牌",
+        "word": "十朝都会",
+        "sub": "东吴 · 东晋 · 宋齐梁陈 · 明初 · 民国"
+      }
+    },
+    {
+      "type": "photo",
+      "t0": 63,
+      "t1": 68,
+      "chapter": "05 终点",
+      "args": {
+        "key": "night",
+        "layout": "full",
+        "title": "城市夜色",
+        "fx": 0.5,
+        "fy": 0.5
+      }
+    },
+    {
+      "type": "outro",
+      "t0": 68,
+      "t1": 73,
+      "chapter": "05 终点",
+      "args": {
+        "title": "来一趟",
+        "lines": [
+          "白天上城墙",
+          "夜里逛秦淮"
+        ],
+        "cta": "下一站 →",
+        "brand": "城市档案"
+      }
+    }
+  ],
+  "captions": [
+    {
+      "start": 0.12,
+      "end": 4.9,
+      "zh": "南京，*六朝古都*，十朝都会。",
+      "en": "Nanjing: six dynasties, ten capitals."
+    },
+    {
+      "start": 5.12,
+      "end": 9.9,
+      "zh": "一条秦淮河，*流过一千年*。",
+      "en": "The Qinhuai has run for a millennium."
+    },
+    {
+      "start": 10.12,
+      "end": 12.9,
+      "zh": "玄武湖上，*船比人慢*。",
+      "en": "On Xuanwu Lake, boats move slower than people."
+    },
+    {
+      "start": 13.12,
+      "end": 18.9,
+      "zh": "城墙、梧桐、鸭子，*都是南京*。",
+      "en": "Walls, plane trees, duck."
+    },
+    {
+      "start": 19.12,
+      "end": 23.9,
+      "zh": "街角一块招牌，*写着金陵*。",
+      "en": "A street sign that says Jinling."
+    },
+    {
+      "start": 24.12,
+      "end": 27.9,
+      "zh": "夜里坐一次画舫，*才算到过*。",
+      "en": "Take one night boat ride."
+    },
+    {
+      "start": 28.12,
+      "end": 30.9,
+      "zh": "城墙亮起来，*水也跟着亮*。",
+      "en": "The wall lights up, and so does the water."
+    },
+    {
+      "start": 31.12,
+      "end": 35.9,
+      "zh": "明城墙现存 *25.1 公里*。",
+      "en": "25.1 km of the Ming wall remains."
+    },
+    {
+      "start": 36.12,
+      "end": 39.9,
+      "zh": "全长 35 公里，*留下七成*。",
+      "en": "Of 35 km, seventy percent survives."
+    },
+    {
+      "start": 40.12,
+      "end": 44.9,
+      "zh": "一张通票，*大半景点都到*。",
+      "en": "One pass covers most sights."
+    },
+    {
+      "start": 45.12,
+      "end": 48.9,
+      "zh": "地铁 15 条线，*483 公里*。",
+      "en": "15 metro lines, 483 km."
+    },
+    {
+      "start": 49.12,
+      "end": 52.9,
+      "zh": "这两处，*本地人也去*。",
+      "en": "Locals go to these two."
+    },
+    {
+      "start": 53.12,
+      "end": 57.9,
+      "zh": "鸡鸣寺的塔，*看着城墙六百年*。",
+      "en": "Jiming Temple has watched the wall for 600 years."
+    },
+    {
+      "start": 58.12,
+      "end": 62.9,
+      "zh": "十个朝代，*叠在一座城里*。",
+      "en": "Ten dynasties stacked in one city."
+    },
+    {
+      "start": 63.12,
+      "end": 67.9,
+      "zh": "夜里，*整座城亮起来*。",
+      "en": "At night, the whole city lights up."
+    },
+    {
+      "start": 68.12,
+      "end": 72.9,
+      "zh": "南京不吵，*但耐看*。",
+      "en": "Nanjing is quiet, but it lasts."
+    }
+  ],
+  "clips": {
+    "xuanwu": {
+      "dir": "edits/assets/nanjing/clips/xuanwu",
+      "fps": 20
+    },
+    "qinhuai": {
+      "dir": "edits/assets/nanjing/clips/qinhuai",
+      "fps": 20
+    }
+  }
+}

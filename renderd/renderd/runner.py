@@ -522,16 +522,19 @@ class Runner:
 
             meta = render.probe_json(self.cfg.ffprobe, out_tmp)
             struct = validate.structural(meta, out_tmp)
-            ev = validate.evidence(self.cfg.ffmpeg, out_tmp, work / "evidence",
-                                   struct["frames"])
+            # 黑场与接触表在同一次解码里产出，末帧用 seek：
+            # 原来三遍全解码约 7 s（450 帧），合并后约 2.5 s。
+            _fps = float(ir["output"]["fps"]["num"]) / float(ir["output"]["fps"]["den"])
+            va = validate.video_analysis(self.cfg.ffmpeg, out_tmp, work / "evidence",
+                                         struct["frames"], fps=_fps)
             receipt = validate.build_receipt(
                 ir=ir, ir_hash=job["ir_hash"], render_path=out_tmp, struct=struct,
                 layers=layers, font_coverage=cov,
                 loud=validate.loudness(
                     self.cfg.ffmpeg, out_tmp,
                     ir["output"]["audio"].get("target_lufs", -14.0)),
-                black=validate.black_ranges(self.cfg.ffmpeg, out_tmp),
-                ev=ev,
+                black=va["black"],
+                ev=va["evidence"],
                 warnings=(plan.warnings + font_warnings
                           + ingest_report.get("warnings", [])),
                 has_audio_track=any(t["kind"] == "audio" for t in ir["tracks"]),

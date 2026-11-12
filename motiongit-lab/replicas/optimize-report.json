@@ -1,0 +1,322 @@
+{
+  "method": "逐 compare 采样点 3 探针标定 + 渲染器按 t 线性插值",
+  "count": 4,
+  "items": [
+    {
+      "slug": "motiongit-promo-blueprint",
+      "points": 8,
+      "mean_predict_err": 0.081,
+      "grain_range": [
+        0.0,
+        0.056
+      ],
+      "flat_range": [
+        0.0,
+        0.9
+      ],
+      "curve": [
+        {
+          "t": 4.75,
+          "grain": 0.0,
+          "flat": 0.8184,
+          "s0": 1.244,
+          "target": 1.05,
+          "predicted": 1.05
+        },
+        {
+          "t": 14.25,
+          "grain": 0.056,
+          "flat": 0.0,
+          "s0": 1.249,
+          "target": 2.148,
+          "predicted": 2.148
+        },
+        {
+          "t": 23.75,
+          "grain": 0.0,
+          "flat": 0.9,
+          "s0": 1.25,
+          "target": 0.704,
+          "predicted": 1.036
+        },
+        {
+          "t": 33.25,
+          "grain": 0.0,
+          "flat": 0.9,
+          "s0": 1.251,
+          "target": 0.777,
+          "predicted": 1.038
+        },
+        {
+          "t": 42.75,
+          "grain": 0.0,
+          "flat": 0.9,
+          "s0": 1.249,
+          "target": 0.982,
+          "predicted": 1.035
+        },
+        {
+          "t": 52.25,
+          "grain": 0.0407,
+          "flat": 0.0,
+          "s0": 1.168,
+          "target": 1.816,
+          "predicted": 1.816
+        },
+        {
+          "t": 61.75,
+          "grain": 0.0034,
+          "flat": 0.0,
+          "s0": 1.097,
+          "target": 1.153,
+          "predicted": 1.153
+        },
+        {
+          "t": 71.25,
+          "grain": 0.0,
+          "flat": 0.4749,
+          "s0": 1.096,
+          "target": 0.96,
+          "predicted": 0.96
+        }
+      ]
+    },
+    {
+      "slug": "motiongit-promo-keynote",
+      "points": 8,
+      "mean_predict_err": 0.133,
+      "grain_range": [
+        0.0,
+        0.0426
+      ],
+      "flat_range": [
+        0.0,
+        0.9
+      ],
+      "curve": [
+        {
+          "t": 6.75,
+          "grain": 0.0,
+          "flat": 0.9,
+          "s0": 0.858,
+          "target": 0.353,
+          "predicted": 0.79
+        },
+        {
+          "t": 20.25,
+          "grain": 0.0,
+          "flat": 0.9,
+          "s0": 0.667,
+          "target": 0.624,
+          "predicted": 0.652
+        },
+        {
+          "t": 33.75,
+          "grain": 0.0182,
+          "flat": 0.0,
+          "s0": 1.124,
+          "target": 1.415,
+          "predicted": 1.415
+        },
+        {
+          "t": 47.25,
+          "grain": 0.0426,
+          "flat": 0.0,
+          "s0": 1.167,
+          "target": 1.849,
+          "predicted": 1.849
+        },
+        {
+          "t": 60.75,
+          "grain": 0.0239,
+          "flat": 0.0,
+          "s0": 1.14,
+          "target": 1.526,
+          "predicted": 1.526
+        },
+        {
+          "t": 74.25,
+          "grain": 0.0,
+          "flat": 0.9,
+          "s0": 0.877,
+          "target": 0.291,
+          "predicted": 0.792
+        },
+        {
+          "t": 87.75,
+          "grain": 0.0405,
+          "flat": 0.0,
+          "s0": 1.143,
+          "target": 1.791,
+          "predicted": 1.791
+        },
+        {
+          "t": 101.25,
+          "grain": 0.0,
+          "flat": 0.9,
+          "s0": 1.175,
+          "target": 0.825,
+          "predicted": 0.919
+        }
+      ]
+    },
+    {
+      "slug": "motiongit-promo-pixel",
+      "points": 8,
+      "mean_predict_err": 0.063,
+      "grain_range": [
+        0.0,
+        0.1622
+      ],
+      "flat_range": [
+        0.0,
+        0.9
+      ],
+      "curve": [
+        {
+          "t": 4.125,
+          "grain": 0.0229,
+          "flat": 0.0,
+          "s0": 1.047,
+          "target": 1.417,
+          "predicted": 1.417
+        },
+        {
+          "t": 12.375,
+          "grain": 0.0851,
+          "flat": 0.0,
+          "s0": 1.054,
+          "target": 2.425,
+          "predicted": 2.425
+        },
+        {
+          "t": 20.625,
+          "grain": 0.0731,
+          "flat": 0.0,
+          "s0": 1.055,
+          "target": 2.234,
+          "predicted": 2.234
+        },
+        {
+          "t": 28.875,
+          "grain": 0.0935,
+          "flat": 0.0,
+          "s0": 1.057,
+          "target": 2.565,
+          "predicted": 2.565
+        },
+        {
+          "t": 37.125,
+          "grain": 0.046,
+          "flat": 0.0,
+          "s0": 1.052,
+          "target": 1.793,
+          "predicted": 1.793
+        },
+        {
+          "t": 45.375,
+          "grain": 0.0518,
+          "flat": 0.0,
+          "s0": 1.098,
+          "target": 1.931,
+          "predicted": 1.931
+        },
+        {
+          "t": 53.625,
+          "grain": 0.1622,
+          "flat": 0.0,
+          "s0": 1.099,
+          "target": 3.704,
+          "predicted": 3.704
+        },
+        {
+          "t": 61.875,
+          "grain": 0.0,
+          "flat": 0.9,
+          "s0": 1.162,
+          "target": 0.645,
+          "predicted": 1.15
+        }
+      ]
+    },
+    {
+      "slug": "motiongit-promo-velocity",
+      "points": 8,
+      "mean_predict_err": 0.297,
+      "grain_range": [
+        0.0,
+        0.0323
+      ],
+      "flat_range": [
+        0.0,
+        0.9
+      ],
+      "curve": [
+        {
+          "t": 3.562,
+          "grain": 0.0,
+          "flat": 0.9,
+          "s0": 0.921,
+          "target": 0.048,
+          "predicted": 0.834
+        },
+        {
+          "t": 10.688,
+          "grain": 0.0,
+          "flat": 0.9,
+          "s0": 1.165,
+          "target": 0.878,
+          "predicted": 1.107
+        },
+        {
+          "t": 17.812,
+          "grain": 0.0,
+          "flat": 0.9,
+          "s0": 1.12,
+          "target": 1.043,
+          "predicted": 1.055
+        },
+        {
+          "t": 24.938,
+          "grain": 0.0,
+          "flat": 0.9,
+          "s0": 0.895,
+          "target": 0.356,
+          "predicted": 0.806
+        },
+        {
+          "t": 32.062,
+          "grain": 0.0,
+          "flat": 0.9,
+          "s0": 1.166,
+          "target": 0.809,
+          "predicted": 1.102
+        },
+        {
+          "t": 39.188,
+          "grain": 0.0323,
+          "flat": 0.0,
+          "s0": 0.774,
+          "target": 1.172,
+          "predicted": 1.172
+        },
+        {
+          "t": 46.312,
+          "grain": 0.0099,
+          "flat": 0.0,
+          "s0": 1.102,
+          "target": 1.261,
+          "predicted": 1.261
+        },
+        {
+          "t": 53.438,
+          "grain": 0.0,
+          "flat": 0.9,
+          "s0": 1.187,
+          "target": 0.52,
+          "predicted": 1.125
+        }
+      ]
+    }
+  ]
+}

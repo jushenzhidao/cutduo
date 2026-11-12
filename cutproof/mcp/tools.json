@@ -159,6 +159,14 @@
         "properties": {
           "ir": {
             "$ref": "#/$defs/IR"
+          },
+          "assets": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/Asset"
+            },
+            "description": "素材清单"
           }
         },
         "additionalProperties": false
@@ -300,6 +308,14 @@
             "type": "string",
             "format": "uri",
             "description": "任务终态 webhook；提交期解析并钉住公网 IP"
+          },
+          "assets": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/Asset"
+            },
+            "description": "素材清单"
           }
         },
         "additionalProperties": false
@@ -418,6 +434,134 @@
           "delivery": {
             "type": "object",
             "description": "成片交付结果：mode / egress / status / http_status"
+          }
+        }
+      }
+    },
+    {
+      "name": "upload_asset",
+      "description": "上传素材，返回 upload:<sha256>.<ext> 形式的 uri。内容寻址：同一份字节重复上传不重复计费。",
+      "input": {
+        "type": "object",
+        "required": [
+          "filename",
+          "content_base64"
+        ],
+        "properties": {
+          "filename": {
+            "type": "string",
+            "example": "clip.mp4"
+          },
+          "content_base64": {
+            "type": "string",
+            "description": "base64 内容，上限按 max_upload_mb"
+          },
+          "kind": {
+            "enum": [
+              "video",
+              "audio",
+              "image",
+              "subtitle"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "asset_id",
+          "sha256",
+          "uri",
+          "bytes"
+        ],
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "uri": {
+            "type": "string",
+            "example": "upload:8f3d9d13….mp4"
+          },
+          "bytes": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "name": "list_jobs",
+      "description": "列出本租户任务；丢了 job_id 时用它找回上一次提交。",
+      "input": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200,
+            "default": 50
+          },
+          "status": {
+            "enum": [
+              "accepted",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "jobs",
+          "count"
+        ],
+        "properties": {
+          "jobs": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "count": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "name": "cancel_job",
+      "description": "取消排队中的任务；已开始渲染的不能取消（返回 E_CANCELLED 并说明原因）。",
+      "input": {
+        "type": "object",
+        "required": [
+          "job_id"
+        ],
+        "properties": {
+          "job_id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "required": [
+          "job_id",
+          "status"
+        ],
+        "properties": {
+          "job_id": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/$defs/JobStatus"
           }
         }
       }
@@ -747,6 +891,41 @@
           "format": "date-time"
         }
       }
+    },
+    "Asset": {
+      "type": "object",
+      "description": "素材引用。先用 upload_asset 拿到 uri，再填进 assets[]。",
+      "required": [
+        "id",
+        "uri"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "example": "a1",
+          "description": "时间线内引用名，同一 IR 内唯一"
+        },
+        "uri": {
+          "type": "string",
+          "example": "upload:8f3d9d13….mp4",
+          "description": "upload:<sha256>.<ext>（upload_asset 的返回值）或 media 目录下的文件名"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "可选：内容校验；填了就核对实际文件"
+        },
+        "kind": {
+          "enum": [
+            "video",
+            "audio",
+            "image",
+            "subtitle"
+          ],
+          "description": "可选：不确定就省略，服务端会探针判定"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "resources": [

@@ -1,0 +1,787 @@
+{
+  "variant": "v1",
+  "compare_name": "compare.mp4",
+  "replica_name": "replica-fixed.mp4",
+  "method": "从每条对比成片按拼接时间点抽帧，裁出左右画面；与两源片在对应原片时间点抽帧缩放后算 MAD。判定：左更接近官方、右更接近复刻，且各有 10% 裕度。",
+  "note": "compare.mp4 是 8×2s 拼接（16s），不可直接用原片时间点 seek；映射 concat_t=8i+1。",
+  "pass_count": 8,
+  "total": 8,
+  "items": [
+    {
+      "slug": "motiongit-promo-blueprint",
+      "compare_video": "out/motiongit-promo-blueprint/compare.mp4",
+      "container": {
+        "w": 1280,
+        "h": 420,
+        "fps": "60/1",
+        "n": 960,
+        "dur": 16.0
+      },
+      "shape_ok": true,
+      "pass_groups": 8,
+      "total_groups": 8,
+      "verdict": "PASS",
+      "rows": [
+        {
+          "group": 1,
+          "source_t": 4.75,
+          "concat_t": 1.0,
+          "left_vs_official": 2.34,
+          "left_vs_replica": 9.72,
+          "right_vs_official": 9.8,
+          "right_vs_replica": 1.65,
+          "verdict": "PASS"
+        },
+        {
+          "group": 2,
+          "source_t": 14.25,
+          "concat_t": 3.0,
+          "left_vs_official": 2.32,
+          "left_vs_replica": 9.11,
+          "right_vs_official": 9.26,
+          "right_vs_replica": 1.99,
+          "verdict": "PASS"
+        },
+        {
+          "group": 3,
+          "source_t": 23.75,
+          "concat_t": 5.0,
+          "left_vs_official": 2.11,
+          "left_vs_replica": 5.25,
+          "right_vs_official": 5.57,
+          "right_vs_replica": 1.66,
+          "verdict": "PASS"
+        },
+        {
+          "group": 4,
+          "source_t": 33.25,
+          "concat_t": 7.0,
+          "left_vs_official": 2.06,
+          "left_vs_replica": 6.49,
+          "right_vs_official": 6.62,
+          "right_vs_replica": 1.73,
+          "verdict": "PASS"
+        },
+        {
+          "group": 5,
+          "source_t": 42.75,
+          "concat_t": 9.0,
+          "left_vs_official": 2.33,
+          "left_vs_replica": 10.68,
+          "right_vs_official": 11.0,
+          "right_vs_replica": 1.64,
+          "verdict": "PASS"
+        },
+        {
+          "group": 6,
+          "source_t": 52.25,
+          "concat_t": 11.0,
+          "left_vs_official": 2.83,
+          "left_vs_replica": 25.81,
+          "right_vs_official": 25.84,
+          "right_vs_replica": 2.17,
+          "verdict": "PASS"
+        },
+        {
+          "group": 7,
+          "source_t": 61.75,
+          "concat_t": 13.0,
+          "left_vs_official": 2.22,
+          "left_vs_replica": 8.02,
+          "right_vs_official": 8.47,
+          "right_vs_replica": 1.64,
+          "verdict": "PASS"
+        },
+        {
+          "group": 8,
+          "source_t": 71.25,
+          "concat_t": 15.0,
+          "left_vs_official": 2.18,
+          "left_vs_replica": 8.58,
+          "right_vs_official": 9.03,
+          "right_vs_replica": 1.6,
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "slug": "motiongit-promo-creator",
+      "compare_video": "out/motiongit-promo-creator/compare.mp4",
+      "container": {
+        "w": 1280,
+        "h": 420,
+        "fps": "60/1",
+        "n": 960,
+        "dur": 16.0
+      },
+      "shape_ok": true,
+      "pass_groups": 8,
+      "total_groups": 8,
+      "verdict": "PASS",
+      "rows": [
+        {
+          "group": 1,
+          "source_t": 3.703,
+          "concat_t": 1.0,
+          "left_vs_official": 1.93,
+          "left_vs_replica": 7.79,
+          "right_vs_official": 8.01,
+          "right_vs_replica": 1.48,
+          "verdict": "PASS"
+        },
+        {
+          "group": 2,
+          "source_t": 11.109,
+          "concat_t": 3.0,
+          "left_vs_official": 2.78,
+          "left_vs_replica": 23.47,
+          "right_vs_official": 23.55,
+          "right_vs_replica": 1.63,
+          "verdict": "PASS"
+        },
+        {
+          "group": 3,
+          "source_t": 18.516,
+          "concat_t": 5.0,
+          "left_vs_official": 2.04,
+          "left_vs_replica": 10.23,
+          "right_vs_official": 10.43,
+          "right_vs_replica": 1.48,
+          "verdict": "PASS"
+        },
+        {
+          "group": 4,
+          "source_t": 25.922,
+          "concat_t": 7.0,
+          "left_vs_official": 2.5,
+          "left_vs_replica": 8.43,
+          "right_vs_official": 8.47,
+          "right_vs_replica": 1.58,
+          "verdict": "PASS"
+        },
+        {
+          "group": 5,
+          "source_t": 33.328,
+          "concat_t": 9.0,
+          "left_vs_official": 1.91,
+          "left_vs_replica": 5.27,
+          "right_vs_official": 5.51,
+          "right_vs_replica": 1.47,
+          "verdict": "PASS"
+        },
+        {
+          "group": 6,
+          "source_t": 40.734,
+          "concat_t": 11.0,
+          "left_vs_official": 2.46,
+          "left_vs_replica": 11.86,
+          "right_vs_official": 11.76,
+          "right_vs_replica": 1.82,
+          "verdict": "PASS"
+        },
+        {
+          "group": 7,
+          "source_t": 48.141,
+          "concat_t": 13.0,
+          "left_vs_official": 2.1,
+          "left_vs_replica": 7.23,
+          "right_vs_official": 7.12,
+          "right_vs_replica": 1.82,
+          "verdict": "PASS"
+        },
+        {
+          "group": 8,
+          "source_t": 55.547,
+          "concat_t": 15.0,
+          "left_vs_official": 2.39,
+          "left_vs_replica": 14.47,
+          "right_vs_official": 14.37,
+          "right_vs_replica": 1.83,
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "slug": "motiongit-promo-ink",
+      "compare_video": "out/motiongit-promo-ink/compare.mp4",
+      "container": {
+        "w": 1280,
+        "h": 420,
+        "fps": "60/1",
+        "n": 960,
+        "dur": 16.0
+      },
+      "shape_ok": true,
+      "pass_groups": 8,
+      "total_groups": 8,
+      "verdict": "PASS",
+      "rows": [
+        {
+          "group": 1,
+          "source_t": 3.703,
+          "concat_t": 1.0,
+          "left_vs_official": 2.43,
+          "left_vs_replica": 24.95,
+          "right_vs_official": 25.06,
+          "right_vs_replica": 2.82,
+          "verdict": "PASS"
+        },
+        {
+          "group": 2,
+          "source_t": 11.109,
+          "concat_t": 3.0,
+          "left_vs_official": 2.68,
+          "left_vs_replica": 31.57,
+          "right_vs_official": 31.8,
+          "right_vs_replica": 2.82,
+          "verdict": "PASS"
+        },
+        {
+          "group": 3,
+          "source_t": 18.516,
+          "concat_t": 5.0,
+          "left_vs_official": 2.37,
+          "left_vs_replica": 25.56,
+          "right_vs_official": 25.79,
+          "right_vs_replica": 2.82,
+          "verdict": "PASS"
+        },
+        {
+          "group": 4,
+          "source_t": 25.922,
+          "concat_t": 7.0,
+          "left_vs_official": 2.31,
+          "left_vs_replica": 24.77,
+          "right_vs_official": 24.99,
+          "right_vs_replica": 2.82,
+          "verdict": "PASS"
+        },
+        {
+          "group": 5,
+          "source_t": 33.328,
+          "concat_t": 9.0,
+          "left_vs_official": 2.59,
+          "left_vs_replica": 31.58,
+          "right_vs_official": 31.83,
+          "right_vs_replica": 2.81,
+          "verdict": "PASS"
+        },
+        {
+          "group": 6,
+          "source_t": 40.734,
+          "concat_t": 11.0,
+          "left_vs_official": 2.69,
+          "left_vs_replica": 26.31,
+          "right_vs_official": 26.47,
+          "right_vs_replica": 2.8,
+          "verdict": "PASS"
+        },
+        {
+          "group": 7,
+          "source_t": 48.141,
+          "concat_t": 13.0,
+          "left_vs_official": 2.49,
+          "left_vs_replica": 26.14,
+          "right_vs_official": 26.31,
+          "right_vs_replica": 2.82,
+          "verdict": "PASS"
+        },
+        {
+          "group": 8,
+          "source_t": 55.547,
+          "concat_t": 15.0,
+          "left_vs_official": 2.73,
+          "left_vs_replica": 27.82,
+          "right_vs_official": 27.98,
+          "right_vs_replica": 2.81,
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "slug": "motiongit-promo-keynote",
+      "compare_video": "out/motiongit-promo-keynote/compare.mp4",
+      "container": {
+        "w": 1280,
+        "h": 420,
+        "fps": "60/1",
+        "n": 960,
+        "dur": 16.0
+      },
+      "shape_ok": true,
+      "pass_groups": 8,
+      "total_groups": 8,
+      "verdict": "PASS",
+      "rows": [
+        {
+          "group": 1,
+          "source_t": 6.75,
+          "concat_t": 1.0,
+          "left_vs_official": 2.09,
+          "left_vs_replica": 5.48,
+          "right_vs_official": 5.67,
+          "right_vs_replica": 1.64,
+          "verdict": "PASS"
+        },
+        {
+          "group": 2,
+          "source_t": 20.25,
+          "concat_t": 3.0,
+          "left_vs_official": 2.14,
+          "left_vs_replica": 9.05,
+          "right_vs_official": 9.1,
+          "right_vs_replica": 2.02,
+          "verdict": "PASS"
+        },
+        {
+          "group": 3,
+          "source_t": 33.75,
+          "concat_t": 5.0,
+          "left_vs_official": 2.51,
+          "left_vs_replica": 16.22,
+          "right_vs_official": 16.07,
+          "right_vs_replica": 2.14,
+          "verdict": "PASS"
+        },
+        {
+          "group": 4,
+          "source_t": 47.25,
+          "concat_t": 7.0,
+          "left_vs_official": 2.44,
+          "left_vs_replica": 38.0,
+          "right_vs_official": 37.98,
+          "right_vs_replica": 1.93,
+          "verdict": "PASS"
+        },
+        {
+          "group": 5,
+          "source_t": 60.75,
+          "concat_t": 9.0,
+          "left_vs_official": 2.47,
+          "left_vs_replica": 23.38,
+          "right_vs_official": 23.27,
+          "right_vs_replica": 1.88,
+          "verdict": "PASS"
+        },
+        {
+          "group": 6,
+          "source_t": 74.25,
+          "concat_t": 11.0,
+          "left_vs_official": 2.05,
+          "left_vs_replica": 5.26,
+          "right_vs_official": 5.37,
+          "right_vs_replica": 1.74,
+          "verdict": "PASS"
+        },
+        {
+          "group": 7,
+          "source_t": 87.75,
+          "concat_t": 13.0,
+          "left_vs_official": 4.57,
+          "left_vs_replica": 52.93,
+          "right_vs_official": 53.6,
+          "right_vs_replica": 2.31,
+          "verdict": "PASS"
+        },
+        {
+          "group": 8,
+          "source_t": 101.25,
+          "concat_t": 15.0,
+          "left_vs_official": 2.34,
+          "left_vs_replica": 12.63,
+          "right_vs_official": 12.52,
+          "right_vs_replica": 1.77,
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "slug": "motiongit-promo-main",
+      "compare_video": "out/motiongit-promo-main/compare.mp4",
+      "container": {
+        "w": 1280,
+        "h": 420,
+        "fps": "60/1",
+        "n": 960,
+        "dur": 16.0
+      },
+      "shape_ok": true,
+      "pass_groups": 8,
+      "total_groups": 8,
+      "verdict": "PASS",
+      "rows": [
+        {
+          "group": 1,
+          "source_t": 3.562,
+          "concat_t": 1.0,
+          "left_vs_official": 2.15,
+          "left_vs_replica": 16.5,
+          "right_vs_official": 16.35,
+          "right_vs_replica": 2.03,
+          "verdict": "PASS"
+        },
+        {
+          "group": 2,
+          "source_t": 10.688,
+          "concat_t": 3.0,
+          "left_vs_official": 2.25,
+          "left_vs_replica": 22.95,
+          "right_vs_official": 23.21,
+          "right_vs_replica": 1.76,
+          "verdict": "PASS"
+        },
+        {
+          "group": 3,
+          "source_t": 17.812,
+          "concat_t": 5.0,
+          "left_vs_official": 2.21,
+          "left_vs_replica": 12.61,
+          "right_vs_official": 12.53,
+          "right_vs_replica": 1.97,
+          "verdict": "PASS"
+        },
+        {
+          "group": 4,
+          "source_t": 24.938,
+          "concat_t": 7.0,
+          "left_vs_official": 2.2,
+          "left_vs_replica": 13.55,
+          "right_vs_official": 13.41,
+          "right_vs_replica": 1.98,
+          "verdict": "PASS"
+        },
+        {
+          "group": 5,
+          "source_t": 32.062,
+          "concat_t": 9.0,
+          "left_vs_official": 2.39,
+          "left_vs_replica": 17.04,
+          "right_vs_official": 17.06,
+          "right_vs_replica": 1.97,
+          "verdict": "PASS"
+        },
+        {
+          "group": 6,
+          "source_t": 39.188,
+          "concat_t": 11.0,
+          "left_vs_official": 2.8,
+          "left_vs_replica": 36.66,
+          "right_vs_official": 36.54,
+          "right_vs_replica": 2.02,
+          "verdict": "PASS"
+        },
+        {
+          "group": 7,
+          "source_t": 46.312,
+          "concat_t": 13.0,
+          "left_vs_official": 2.27,
+          "left_vs_replica": 10.41,
+          "right_vs_official": 10.4,
+          "right_vs_replica": 2.01,
+          "verdict": "PASS"
+        },
+        {
+          "group": 8,
+          "source_t": 53.438,
+          "concat_t": 15.0,
+          "left_vs_official": 2.01,
+          "left_vs_replica": 10.02,
+          "right_vs_official": 9.91,
+          "right_vs_replica": 2.01,
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "slug": "motiongit-promo-pixel",
+      "compare_video": "out/motiongit-promo-pixel/compare.mp4",
+      "container": {
+        "w": 1280,
+        "h": 420,
+        "fps": "60/1",
+        "n": 960,
+        "dur": 16.0
+      },
+      "shape_ok": true,
+      "pass_groups": 8,
+      "total_groups": 8,
+      "verdict": "PASS",
+      "rows": [
+        {
+          "group": 1,
+          "source_t": 4.125,
+          "concat_t": 1.0,
+          "left_vs_official": 2.44,
+          "left_vs_replica": 12.44,
+          "right_vs_official": 12.63,
+          "right_vs_replica": 1.87,
+          "verdict": "PASS"
+        },
+        {
+          "group": 2,
+          "source_t": 12.375,
+          "concat_t": 3.0,
+          "left_vs_official": 3.6,
+          "left_vs_replica": 15.42,
+          "right_vs_official": 16.08,
+          "right_vs_replica": 2.21,
+          "verdict": "PASS"
+        },
+        {
+          "group": 3,
+          "source_t": 20.625,
+          "concat_t": 5.0,
+          "left_vs_official": 3.09,
+          "left_vs_replica": 13.67,
+          "right_vs_official": 13.89,
+          "right_vs_replica": 2.05,
+          "verdict": "PASS"
+        },
+        {
+          "group": 4,
+          "source_t": 28.875,
+          "concat_t": 7.0,
+          "left_vs_official": 3.62,
+          "left_vs_replica": 17.73,
+          "right_vs_official": 18.32,
+          "right_vs_replica": 2.08,
+          "verdict": "PASS"
+        },
+        {
+          "group": 5,
+          "source_t": 37.125,
+          "concat_t": 9.0,
+          "left_vs_official": 2.65,
+          "left_vs_replica": 13.96,
+          "right_vs_official": 14.25,
+          "right_vs_replica": 1.93,
+          "verdict": "PASS"
+        },
+        {
+          "group": 6,
+          "source_t": 45.375,
+          "concat_t": 11.0,
+          "left_vs_official": 2.75,
+          "left_vs_replica": 19.96,
+          "right_vs_official": 20.13,
+          "right_vs_replica": 1.98,
+          "verdict": "PASS"
+        },
+        {
+          "group": 7,
+          "source_t": 53.625,
+          "concat_t": 13.0,
+          "left_vs_official": 7.43,
+          "left_vs_replica": 27.49,
+          "right_vs_official": 29.42,
+          "right_vs_replica": 2.71,
+          "verdict": "PASS"
+        },
+        {
+          "group": 8,
+          "source_t": 61.875,
+          "concat_t": 15.0,
+          "left_vs_official": 1.73,
+          "left_vs_replica": 8.59,
+          "right_vs_official": 8.7,
+          "right_vs_replica": 1.74,
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "slug": "motiongit-promo-user",
+      "compare_video": "out/motiongit-promo-user/compare.mp4",
+      "container": {
+        "w": 1280,
+        "h": 420,
+        "fps": "60/1",
+        "n": 960,
+        "dur": 16.0
+      },
+      "shape_ok": true,
+      "pass_groups": 8,
+      "total_groups": 8,
+      "verdict": "PASS",
+      "rows": [
+        {
+          "group": 1,
+          "source_t": 3.672,
+          "concat_t": 1.0,
+          "left_vs_official": 1.66,
+          "left_vs_replica": 18.64,
+          "right_vs_official": 18.74,
+          "right_vs_replica": 1.37,
+          "verdict": "PASS"
+        },
+        {
+          "group": 2,
+          "source_t": 11.016,
+          "concat_t": 3.0,
+          "left_vs_official": 2.27,
+          "left_vs_replica": 9.62,
+          "right_vs_official": 10.03,
+          "right_vs_replica": 1.95,
+          "verdict": "PASS"
+        },
+        {
+          "group": 3,
+          "source_t": 18.359,
+          "concat_t": 5.0,
+          "left_vs_official": 2.7,
+          "left_vs_replica": 37.56,
+          "right_vs_official": 37.84,
+          "right_vs_replica": 1.71,
+          "verdict": "PASS"
+        },
+        {
+          "group": 4,
+          "source_t": 25.703,
+          "concat_t": 7.0,
+          "left_vs_official": 2.32,
+          "left_vs_replica": 6.41,
+          "right_vs_official": 6.5,
+          "right_vs_replica": 1.87,
+          "verdict": "PASS"
+        },
+        {
+          "group": 5,
+          "source_t": 33.047,
+          "concat_t": 9.0,
+          "left_vs_official": 2.03,
+          "left_vs_replica": 69.87,
+          "right_vs_official": 70.25,
+          "right_vs_replica": 1.64,
+          "verdict": "PASS"
+        },
+        {
+          "group": 6,
+          "source_t": 40.391,
+          "concat_t": 11.0,
+          "left_vs_official": 2.58,
+          "left_vs_replica": 12.54,
+          "right_vs_official": 12.45,
+          "right_vs_replica": 1.68,
+          "verdict": "PASS"
+        },
+        {
+          "group": 7,
+          "source_t": 47.734,
+          "concat_t": 13.0,
+          "left_vs_official": 3.14,
+          "left_vs_replica": 13.35,
+          "right_vs_official": 13.04,
+          "right_vs_replica": 1.98,
+          "verdict": "PASS"
+        },
+        {
+          "group": 8,
+          "source_t": 55.078,
+          "concat_t": 15.0,
+          "left_vs_official": 1.44,
+          "left_vs_replica": 7.92,
+          "right_vs_official": 7.89,
+          "right_vs_replica": 1.59,
+          "verdict": "PASS"
+        }
+      ]
+    },
+    {
+      "slug": "motiongit-promo-velocity",
+      "compare_video": "out/motiongit-promo-velocity/compare.mp4",
+      "container": {
+        "w": 1280,
+        "h": 420,
+        "fps": "60/1",
+        "n": 960,
+        "dur": 16.0
+      },
+      "shape_ok": true,
+      "pass_groups": 8,
+      "total_groups": 8,
+      "verdict": "PASS",
+      "rows": [
+        {
+          "group": 1,
+          "source_t": 3.562,
+          "concat_t": 1.0,
+          "left_vs_official": 1.71,
+          "left_vs_replica": 5.76,
+          "right_vs_official": 5.85,
+          "right_vs_replica": 1.78,
+          "verdict": "PASS"
+        },
+        {
+          "group": 2,
+          "source_t": 10.688,
+          "concat_t": 3.0,
+          "left_vs_official": 2.4,
+          "left_vs_replica": 14.04,
+          "right_vs_official": 14.21,
+          "right_vs_replica": 1.7,
+          "verdict": "PASS"
+        },
+        {
+          "group": 3,
+          "source_t": 17.812,
+          "concat_t": 5.0,
+          "left_vs_official": 2.4,
+          "left_vs_replica": 10.78,
+          "right_vs_official": 11.0,
+          "right_vs_replica": 1.83,
+          "verdict": "PASS"
+        },
+        {
+          "group": 4,
+          "source_t": 24.938,
+          "concat_t": 7.0,
+          "left_vs_official": 5.92,
+          "left_vs_replica": 12.25,
+          "right_vs_official": 12.3,
+          "right_vs_replica": 1.82,
+          "verdict": "PASS"
+        },
+        {
+          "group": 5,
+          "source_t": 32.062,
+          "concat_t": 9.0,
+          "left_vs_official": 2.19,
+          "left_vs_replica": 12.04,
+          "right_vs_official": 12.32,
+          "right_vs_replica": 1.65,
+          "verdict": "PASS"
+        },
+        {
+          "group": 6,
+          "source_t": 39.188,
+          "concat_t": 11.0,
+          "left_vs_official": 8.25,
+          "left_vs_replica": 10.08,
+          "right_vs_official": 9.58,
+          "right_vs_replica": 2.28,
+          "verdict": "PASS"
+        },
+        {
+          "group": 7,
+          "source_t": 46.312,
+          "concat_t": 13.0,
+          "left_vs_official": 2.55,
+          "left_vs_replica": 13.29,
+          "right_vs_official": 13.52,
+          "right_vs_replica": 1.79,
+          "verdict": "PASS"
+        },
+        {
+          "group": 8,
+          "source_t": 53.438,
+          "concat_t": 15.0,
+          "left_vs_official": 2.2,
+          "left_vs_replica": 12.42,
+          "right_vs_official": 12.72,
+          "right_vs_replica": 1.64,
+          "verdict": "PASS"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "README.md": "05d8c5e6c9babb71739381ab2557a4a0dae42e0112d37b66ff99af99d1587960",
+    "SKILL.md": "76ccf23456dd4fb2c8930fe59107e0096e468b92665612562b0904eea61f9243",
+    "SPEC.md": "8d2778eb78e8ce57734f5597f96cc237792c2d631cea3fab626bdcca5206a71d",
+    "asset-manifest.json": "ab2aab964ba05347233d447465242a7c498efcc4e3f2a5c28653fba0477812ff",
+    "guide.json": "4d28c8a43a4a83fe09cd149dbf1fe291431e0d4af083fd2910fcd0386fb1b269",
+    "licenses/TEMPLATE-LICENSE.txt": "c013b72fd4043aad45170e00ad71b98f4957bb7988b74335aeca9675d22ef40c",
+    "motion.json": "1ebc89ffaed4748b7a67d42331da03d5d9b8920d1ae8b80f2183156957539f24",
+    "motion.lock.json": "222d8d6459c8400dfa4b2da144c9f069242d668ff5070b6f15a1a31f5e7c2e47",
+    "params.schema.json": "b644d375981d75aec433cabe4daa711228f08afd3121924aca6c05d32e9d65ab",
+    "presets/demo.json": "0cf106e72046121e877df6eae092ba0f047755d953dcc409e01cdf1507aaff49",
+    "presets/demo.vo.json": "f1faad74745ec5b2ceffb1d7f24166d1541191219a7efd88db7e18d9caeeb67a",
+    "presets/microwave.json": "7a270eb428605612196b19e2c625cf92d418f187d776cda58d58e40e8834b5b8",
+    "presets/microwave.vo.json": "15505494dd3a4a12425f2fe3218e4750a9d166e0b72a0012d0faf611777fa84c",
+    "src/index.html": "96bd82097cb0290ec584f92d5e33f0fd1709af0179f9e009726d1bd95bcf719a",
+    "src/kit.js": "03c43f7fb122a948dc3aa25fbcfd2484d333d732603941dcf7028c312c468c1b",
+    "src/layouts.js": "5471497983c695e8d94c97100ca7ed5d09bf13ae4e49c75ed7a6b368a43ae227",
+    "src/main.js": "010484464fda129c5e276ca4a8a7e27416f72d39b1238da98288574f4778c14f",
+    "tools/vo.py": "4e4d1ca65172afa22fa138d0046d0453895f46c39a1fb21952e7ca5c2a67285b"
+  }
+}

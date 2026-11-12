@@ -85,7 +85,7 @@ def synth(text, i, tts, voice, rate, say_rate=195):
     for _ in range(3):
         try:
             r = subprocess.run(
-                ["edge-tts", "--voice", voice, "--rate", rate,
+                ["edge-tts", "--voice", voice, f"--rate={rate}",
                  "--text", text, "--write-media", str(out)],
                 capture_output=True, text=True, timeout=40)
         except subprocess.TimeoutExpired:
@@ -121,8 +121,10 @@ def main():
     ap.add_argument("--voices", default=None, help="JSON 数组文件：每段一句旁白，覆盖内置 VOICES")
     ap.add_argument("--scenes", default="edits/inputs-v2.json", help="分镜来源（只读其 scenes 数组）")
     ap.add_argument("--tts-jobs", type=int, default=4, help="TTS 并发数（默认 4）")
+    ap.add_argument("--scene-min", default=None, help='分镜最短时长 JSON，如 {\"compare\":4.2}（模板硬约束用）')
     args = ap.parse_args()
     voices = json.loads(pathlib.Path(args.voices).read_text()) if args.voices else VOICES
+    mins = json.loads(args.scene_min) if args.scene_min else {}
     v2 = json.loads((ROOT / args.scenes).read_text())
     scenes = v2["scenes"]
     assert len(scenes) == len(voices), "分镜数与旁白句数必须一致"
@@ -143,6 +145,10 @@ def main():
     cursor = 0.35  # 片头留一点呼吸
     for i, d in enumerate(durations):
         L = d + (args.pad + 0.15 if i in (0, len(voices) - 1) else args.pad)
+        floor = float(mins.get(scenes[i]["type"], 0))
+        if L < floor:
+            print(f"  分镜 {i + 1}（{scenes[i]['type']}）{L:.2f}s 不足下限 {floor:.2f}s，补静音")
+            L = floor
         starts.append(round(cursor, 3))
         lengths.append(round(L, 3))
         cursor += L

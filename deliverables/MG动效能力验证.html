@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MG 动效能力验证 · 从文章到可播放成片</title>
+<style>
+  :root{
+    --bg:#0b0f16; --panel:#121924; --panel2:#17202e; --line:rgba(150,180,220,.16);
+    --txt:#e8eef7; --dim:#9aabc2; --faint:#6f8098;
+    --ok:#3fa37a; --warn:#e8b23a; --no:#e06a55; --blue:#5b9bd5; --accent:#8fb8e8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;
+    line-height:1.75;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:56px 28px 100px}
+  header{border-bottom:1px solid var(--line);padding-bottom:28px;margin-bottom:34px}
+  .kicker{font:600 12px/1.4 ui-monospace,Menlo,monospace;letter-spacing:.18em;color:var(--accent);text-transform:uppercase}
+  h1{font-size:34px;line-height:1.35;margin:14px 0 10px;font-weight:700;letter-spacing:-.01em}
+  .sub{color:var(--dim);font-size:15px;margin:0}
+  h2{font-size:22px;margin:52px 0 18px;padding-left:14px;border-left:3px solid var(--blue);font-weight:650}
+  h3{font-size:16px;margin:0 0 10px;font-weight:650}
+  p{margin:0 0 14px;color:var(--dim);font-size:14.5px}
+  strong{color:var(--txt);font-weight:650}
+  code{font:13px/1.6 ui-monospace,Menlo,monospace;background:rgba(120,160,210,.10);
+    padding:2px 6px;border-radius:4px;color:#b9d4f2}
+  pre{background:#080c13;border:1px solid var(--line);border-radius:10px;padding:18px 20px;
+    overflow-x:auto;font:12.5px/1.85 ui-monospace,Menlo,monospace;color:#b9d4f2;margin:0 0 16px}
+  pre .c{color:#6f8098}
+  .lead{background:linear-gradient(135deg,rgba(63,163,122,.12),rgba(91,155,213,.08));
+    border:1px solid rgba(63,163,122,.34);border-radius:12px;padding:22px 26px;margin-bottom:30px}
+  .lead p{margin:0;color:#d5e4f2;font-size:16px;line-height:1.8}
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}
+  .card p{font-size:13.5px;margin:0}
+  .tag{display:inline-block;font:600 11px/1.5 ui-monospace,Menlo,monospace;letter-spacing:.08em;
+    padding:3px 9px;border-radius:999px;border:1px solid;margin-bottom:12px}
+  .t-ok{color:#7fd8b0;border-color:rgba(63,163,122,.5);background:rgba(63,163,122,.10)}
+  .t-warn{color:#f0cd76;border-color:rgba(232,178,58,.5);background:rgba(232,178,58,.10)}
+  .t-no{color:#f2a08e;border-color:rgba(224,106,85,.5);background:rgba(224,106,85,.10)}
+  video{width:100%;display:block;border-radius:10px;background:#000;border:1px solid var(--line)}
+  .specbar{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .spec{background:var(--panel2);border:1px solid var(--line);border-radius:7px;
+    padding:7px 12px;font:12px/1.4 ui-monospace,Menlo,monospace;color:var(--dim)}
+  .spec b{color:var(--txt);font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:0 0 18px}
+  th{text-align:left;font-weight:600;color:var(--faint);font-size:12px;letter-spacing:.06em;
+    padding:10px 12px;border-bottom:1px solid var(--line);text-transform:uppercase}
+  td{padding:13px 12px;border-bottom:1px solid rgba(150,180,220,.09);color:var(--dim);vertical-align:top}
+  td:first-child{color:var(--txt);font-weight:600;width:23%}
+  tr:last-child td{border-bottom:none}
+  .shot{width:100%;border-radius:9px;border:1px solid var(--line);display:block;margin-bottom:12px}
+  .shotrow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0 4px}
+  .shotrow img{width:100%;border-radius:6px;border:1px solid var(--line);display:block}
+  .cap{font:11.5px/1.6 ui-monospace,Menlo,monospace;color:var(--faint);margin-top:6px}
+  .num{font:600 20px/1.2 ui-monospace,Menlo,monospace;color:var(--txt);display:block;margin-bottom:4px}
+  .metric{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+  .metric .lbl{font-size:12px;color:var(--faint);margin:0}
+  .arrow{color:var(--ok);font-weight:600}
+  ul{margin:0;padding-left:20px;color:var(--dim);font-size:14px}
+  li{margin-bottom:8px}
+  .foot{margin-top:56px;padding-top:22px;border-top:1px solid var(--line);color:var(--faint);font-size:12.5px}
+  @media(max-width:820px){.g2,.g3{grid-template-columns:1fr}.wrap{padding:32px 18px 70px}h1{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">WorkBuddy / Motion Graphics / Capability Proof</div>
+  <h1>能不能做出文章里这些「动态」？</h1>
+  <p class="sub">针对微信公众号文章《自媒体人的效率革命！Fotor Agent 用代码写视频，零门槛搞定 MG 动画视频》（2026-11-09，北茗 / AI 机器人茶馆）——不是回答，而是交一支可播放、可复跑、可验证的成片。</p>
+</header>
+
+<div class="lead">
+  <p><strong>结论：能做出其中绝大部分，而且已经做出来了。</strong>文章里的「动态」实质是三类东西：纯 MG 排版动效、2.5D 数学可视化、以及 Fotor Agent 的编辑器交互界面。前两类属于画面，可以用代码逐帧渲染复现；第三类是软件产品功能，不是动效。本页附带的 32 秒样片用本工作区已有的 Skia 引擎加新写的场景代码，把前两类的五种典型效果都做了一遍，全程未调用任何生成式视频模型。</p>
+</div>
+
+<h2>01 · 验证成片</h2>
+<video controls preload="metadata" poster="../motiongit-lab/mg-kit/out/frames/blackhole.png">
+  <source src="../motiongit-lab/mg-kit/out/mg-demo.mp4" type="video/mp4">
+  浏览器不支持内嵌播放，请直接打开同目录下的 mg-demo.mp4。
+</video>
+<div class="specbar">
+  <div class="spec"><b>1920×1080</b> / 60fps</div>
+  <div class="spec"><b>32.000s</b> / 1920 帧</div>
+  <div class="spec">H.264 yuv420p / <b>8.87 MB</b></div>
+  <div class="spec">8 worker 并行，出片 <b>6.6s</b></div>
+  <div class="spec">5 个镜头 / <b>纯代码，零模型</b></div>
+  <div class="spec">中文由 Noto Sans SC 栅格化 · <b>无乱码</b></div>
+</div>
+
+<h2>02 · 文章里的动态 → 本片镜头</h2>
+<table>
+  <thead><tr><th>文章中的出处</th><th>本片对应镜头</th><th>实现手段（全部解析式、逐帧纯函数）</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>开头 Slogan 引导图<br><span class="cap">GIF 01 · 白底绿字</span></td>
+      <td>0.0–4.6s <strong>文字动效</strong></td>
+      <td>逐字遮罩揭示、强调色分段、缓动位移入场、绿色下划线生长、旋转方框与公转光点。</td>
+    </tr>
+    <tr>
+      <td>Case 1 图灵的故事<br><span class="cap">GIF 04 · 复古档案风</span></td>
+      <td>4.6–11.0s <strong>档案时间轴</strong></td>
+      <td>做旧纸张与确定性斑点、打字机标题、档案照片卡、5 节点推进时间轴与涟漪、Enigma 三转子差速旋转。</td>
+    </tr>
+    <tr>
+      <td>Case 2 黑洞的原理<br><span class="cap">GIF 08 · 吸积盘 / 时空网格</span></td>
+      <td>11.0–19.5s <strong>2.5D 科学可视化</strong></td>
+      <td>3D 透视投影的弯曲时空网格（解析势阱）、620 个开普勒差速粒子构成吸积盘、相对论喷流、光子环与引力透镜色差、相机轨道缓慢改变视角、动力学读数与引线标注。</td>
+    </tr>
+    <tr>
+      <td>Case 3 Token 概念科普<br><span class="cap">GIF 09 / 10 · 五色等轴积木</span></td>
+      <td>19.5–26.5s <strong>等轴微缩模型</strong></td>
+      <td>等轴投影矩阵绘制三面立方体、五色体系、每块积木按 BPM 120 拍点逐个弹出并持续浮动、漂浮光点、节拍指示条。</td>
+    </tr>
+    <tr>
+      <td>文章结论段<br><span class="cap">文字精准 / 可编辑 / 不抽卡</span></td>
+      <td>26.5–32.0s <strong>信息卡收尾</strong></td>
+      <td>三张卡错峰滑入、边框流光、柱状图按进度生长并持续脉冲、实时帧号与时间码。</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="grid g2" style="margin-top:22px">
+  <div class="card">
+    <h3>黑洞镜头：三个时间点的实际画面</h3>
+    <div class="shotrow">
+      <img src="../motiongit-lab/mg-kit/out/frames/blackhole_a.png" alt="t=12s">
+      <img src="../motiongit-lab/mg-kit/out/frames/blackhole.png" alt="t=15.5s">
+      <img src="../motiongit-lab/mg-kit/out/frames/blackhole_b.png" alt="t=18s">
+    </div>
+    <div class="cap">t = 12.0s / 15.5s / 18.0s · 相机视角、粒子相位、读数均随时间变化</div>
+  </div>
+  <div class="card">
+    <h3>Token 镜头：积木逐块生长</h3>
+    <div class="shotrow">
+      <img src="../motiongit-lab/mg-kit/out/frames/token_a.png" alt="t=20.3s">
+      <img src="../motiongit-lab/mg-kit/out/frames/token.png" alt="t=23.5s">
+      <img src="../motiongit-lab/mg-kit/out/frames/token_b.png" alt="t=25.5s">
+    </div>
+    <div class="cap">t = 20.3s / 23.5s / 25.5s · 积木按 0.5s 拍点依次弹出</div>
+  </div>
+</div>
+
+<h2>03 · 能力边界：三分类，不混为一谈</h2>
+<div class="grid g3">
+  <div class="card">
+    <span class="tag t-ok">已复现 · 有实测</span>
+    <h3>2D / 2.5D 动效</h3>
+    <ul>
+      <li>中文文字遮罩揭示、逐字、打字机、缓动位移</li>
+      <li>时间轴推进、节点涟漪、连线生长</li>
+      <li>数据图表、数字读数、柱状生长</li>
+      <li>等轴投影立方体、拍点驱动生长</li>
+      <li>透视网格形变、程序化粒子（解析轨道）</li>
+      <li>镜头擦除转场、动力学文字</li>
+      <li>参数化改文案 / 配色 / 时长，改完重出片</li>
+      <li>MP4、静帧 PNG、逐帧 seek、逐帧确定性</li>
+    </ul>
+  </div>
+  <div class="card">
+    <span class="tag t-warn">可补 · 本片未做或只做近似</span>
+    <h3>需要额外工程或素材</h3>
+    <ul>
+      <li><strong>真 3D</strong>：本片是 2D Canvas 上的数学投影，没有 z-buffer、遮挡、材质与光照</li>
+      <li><strong>写实素材</strong>：文章里手表产品图、吸积盘写实画面是生成式 / 实拍素材打底，本片用几何与粒子近似</li>
+      <li><strong>音频节拍检测</strong>：本片 BPM 是参数解析生成，不是 onset / 词级时间戳对齐</li>
+      <li><strong>旁白与配乐</strong>：工作区已有 edge-tts + 按句时长重排分镜的链路，本片未接</li>
+      <li><strong>4K / 1 分钟成片</strong>：规格可改，本片只做 1080p / 32s 验证</li>
+      <li>贝塞尔路径动画、形变、任意 SVG 遮罩</li>
+      <li>Case 1 结尾「肖像拼成圆形时间轴」的拼贴未做</li>
+    </ul>
+  </div>
+  <div class="card">
+    <span class="tag t-no">不是动效 · 是产品交互</span>
+    <h3>编辑器本身</h3>
+    <ul>
+      <li>多轨时间轴精准编辑（拖拽轨道）</li>
+      <li>画布上点选 / 拖拽 MG 元素</li>
+      <li>右侧参数面板实时调整</li>
+      <li>框选时间段或画面区域后「引用」对话修改</li>
+      <li>积分预估、工程文件导出、智能剪辑</li>
+    </ul>
+    <p style="margin-top:12px;font-size:13px">这些是 Fotor Agent 的软件功能，用代码出片无法「做出来」；但可以用前端原型实现，属于另一个交付物。</p>
+  </div>
+</div>
+
+<h2>04 · 实测与对抗性自检</h2>
+<div class="grid g3" style="margin-bottom:20px">
+  <div class="metric"><span class="num">6.6 s</span><p class="lbl">1920 帧 1080p60 全片渲染耗时（8 worker）</p></div>
+  <div class="metric"><span class="num">0 / 39</span><p class="lbl">乱序渲染同一帧的哈希不一致数（纯函数）</p></div>
+  <div class="metric"><span class="num">0.796</span><p class="lbl">分片边界最大相邻帧差，远低于镜头切点 225 / 181 / 212，无接缝</p></div>
+  <div class="metric"><span class="num"><span class="arrow">615 → 117</span></span><p class="lbl">近似静止帧数（补持续动效前 → 后，−81%）</p></div>
+  <div class="metric"><span class="num"><span class="arrow">3.08s → 0.40s</span></span><p class="lbl">最长连续静止段（185 帧 → 24 帧，上限 30 帧）</p></div>
+  <div class="metric"><span class="num">1920 / 1920</span><p class="lbl">成片解码帧数与计划帧数一致，无丢帧</p></div>
+</div>
+<p><strong>自检抓到并修复了一个真实缺陷。</strong>第一版成片里 615 帧相邻差接近零，最长一段连续 185 帧（3.08 秒）画面完全不动，集中在 intro、token、outro 三个落版段。这不是判据误报，是 60fps 输出里塞了静帧：补上公转光点、积木浮动、漂浮光点、卡片流光、柱状脉冲和全局解析扫光后重出片，最长静止降到 0.40 秒。同时把判据从「零静止帧」改为「最长连续静止 ≤ 0.5 秒」——落版保持是 MG 的正常设计，用绝对零值当门禁本身不成立。</p>
+<p>数字来源：<code>mg-kit/out/verify-video.json</code>、<code>mg-kit/verify.mjs</code> 输出、<code>ffprobe</code>。全部可用下方命令复跑核对。</p>
+
+<h2>05 · 复跑与改稿</h2>
+<pre><span class="c"># 出片（在工作区 motiongit-lab/ 下执行）</span>
+node mg-kit/render.mjs --params mg-kit/params.json \
+  --out mg-kit/out/mg-demo.mp4 --workers 8
+
+<span class="c"># 抽任意一帧检查排版（探针，不需要重出整片）</span>
+node mg-kit/render.mjs --params mg-kit/params.json \
+  --probe mg-kit/out/frames/check.png --at 15.5
+
+<span class="c"># 两套自检</span>
+node mg-kit/verify.mjs
+uv run --with numpy python mg-kit/verify-video.py
+
+<span class="c"># 改文案 / 配色 / 节拍 / 时长：只改 params.json 与 scenes.mjs 内的常量，重跑第一条</span></pre>
+<p>输入只有一份 <code>params.json</code>（分镜时间轴、字幕、BPM）加一个 <code>scenes.mjs</code>（画法）。渲染器 <code>render.mjs</code> 沿用工作区 <code>skia-kit</code> 的 8-worker 分片框架；字体复用 <code>assets/fonts/NotoSansSC-*.otf</code>。依赖只有 Node 22、<code>@napi-rs/canvas</code>、FFmpeg，<strong>不需要浏览器、不需要 GPU、不需要任何 API 密钥</strong>。</p>
+
+<h2>06 · 诚实边界与依据</h2>
+<ul>
+  <li>复刻的是<strong>动效类型</strong>，不是文章里三条成片的逐帧像素复刻。MG 的价值在信息表达方式，不在某一支具体片子。</li>
+  <li>文章内嵌的 5 段完整视频直链带鉴权参数，本次未取到；判断依据是 <strong>10 个内嵌 GIF、5 张视频封面与正文描述</strong>。若需要逐镜头比对原片，请提供可下载的视频文件或录屏。</li>
+  <li>档案「照片」是半色调网点加几何剪影，不是真实图灵肖像；黑洞是 2.5D 数学投影，不是 3D 引擎渲染；手表产品镜头未复刻。</li>
+  <li>节拍是 <code>BPM 120</code> 的参数化拍点，不是从音频里检测出来的 onset；配音、字幕词级对齐、配乐均未接入本片。</li>
+  <li>本片无音轨。工作区已有 <code>desktop-kit/tools/build-voices.py</code>（edge-tts + ffprobe 逐句时长重排分镜）与 <code>build-sync.py</code>（时间轴按比例重映射 + SRT），接上即可出带旁白版本。</li>
+  <li>未使用 Fotor Agent、Claude Opus 或任何生成式视频模型；也未注册或登录任何第三方服务。</li>
+</ul>
+
+<h2>07 · 下一步</h2>
+<p>如果目标是<strong>一条能发的完整视频</strong>，需要你定三件事：主题与文案、画幅（横版 16:9 / 竖版 9:16）、要不要旁白配乐。现有的五类动效原语可以直接组装成分镜，改 <code>params.json</code> 即可，不需要重写渲染器。如果目标是<strong>复刻 Fotor Agent 那套编辑器</strong>（多轨时间轴、画布拖拽、参数面板、框选引用），那是另一个前端工程，与「做动效」是两条不同的路径，可以另行开工。</p>
+
+<div class="foot">
+  生成时间：2026-11-10 · 工作区 <code>/Users/macstudio/WorkBuddy/2026-11-08-21-08-09</code><br>
+  交付物：<code>motiongit-lab/mg-kit/{scenes.mjs, render.mjs, params.json, verify.mjs, verify-video.py}</code>、<code>motiongit-lab/mg-kit/out/mg-demo.mp4</code>、<code>motiongit-lab/mg-kit/out/frames/*.png</code>、本页。
+</div>
+
+</div>
+</body>
+</html>

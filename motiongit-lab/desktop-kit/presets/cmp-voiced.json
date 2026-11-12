@@ -1,0 +1,183 @@
+{
+  "_note": "由 build-voices.py 按真实配音时长重排；音轨 edits/audio-cmp.m4a",
+  "fps": 60,
+  "durationSeconds": 23.658,
+  "brand": "desktop-kit · pipeline compare",
+  "chapters": [
+    {
+      "name": "01 起站",
+      "wall": "blue"
+    },
+    {
+      "name": "02 分工",
+      "wall": "orange"
+    },
+    {
+      "name": "03 收尾",
+      "wall": "blue"
+    }
+  ],
+  "shots": [
+    {
+      "type": "title",
+      "t0": 0.0,
+      "t1": 3.43,
+      "chapter": "01 起站",
+      "args": {
+        "app": "渲染管线",
+        "headline": "三种引擎",
+        "train": "对比专列",
+        "status": "已发车"
+      }
+    },
+    {
+      "type": "comments",
+      "t0": 3.43,
+      "t1": 7.642,
+      "chapter": "01 起站",
+      "args": {
+        "items": [
+          {
+            "text": "传输 · JPEG 还是 RAW"
+          },
+          {
+            "text": "绘制 · Skia 还是 GL"
+          },
+          {
+            "text": "编码 · H264 还是 HEVC"
+          },
+          {
+            "text": "同一条片，只换引擎",
+            "hi": true
+          },
+          {
+            "text": "同帧同规格"
+          },
+          {
+            "text": "同一条音轨"
+          },
+          {
+            "text": "数字不靠体感"
+          },
+          {
+            "text": "靠实测"
+          },
+          {
+            "text": "1440 × 1080 · 60fps"
+          },
+          {
+            "text": "720 帧对齐"
+          },
+          {
+            "text": "逐帧比对"
+          },
+          {
+            "text": "差异要能解释"
+          }
+        ]
+      }
+    },
+    {
+      "type": "flipBoard",
+      "t0": 7.642,
+      "t1": 11.23,
+      "chapter": "02 分工",
+      "args": {
+        "kicker": "// 谁适合画什么 · 逐字翻牌",
+        "word": "分工作画",
+        "sub": "GPU 蒸氛围，Skia 排文字"
+      }
+    },
+    {
+      "type": "terminal",
+      "t0": 11.23,
+      "t1": 14.41,
+      "chapter": "02 分工",
+      "args": {
+        "title": "同帧同规格",
+        "lines": [
+          "$ render --bg skia --pipe jpeg",
+          "OK  基线 · 现状",
+          "$ render --bg gpu  --pipe raw",
+          "OK  综合 · GPU 氛围层",
+          "$ compare --ssim --psnr",
+          "OK  差异全部可解释"
+        ]
+      }
+    },
+    {
+      "type": "chart",
+      "t0": 14.41,
+      "t1": 17.59,
+      "chapter": "03 收尾",
+      "args": {
+        "title": "同片吞吐",
+        "value": "3.5 ×",
+        "points": [
+          0.12,
+          0.2,
+          0.3,
+          0.42,
+          0.55,
+          0.66,
+          0.78,
+          0.88,
+          0.97
+        ]
+      }
+    },
+    {
+      "type": "outro",
+      "t0": 17.59,
+      "t1": 23.658,
+      "chapter": "03 收尾",
+      "args": {
+        "title": "选对引擎",
+        "lines": [
+          "静态壁纸用 Skia",
+          "流动氛围用 GPU"
+        ],
+        "cta": "下一期 →",
+        "brand": "desktop-kit"
+      }
+    }
+  ],
+  "captions": [
+    {
+      "start": 0.23,
+      "end": 3.43,
+      "zh": "*同一条片*，交给三种引擎。",
+      "en": "One film, three engines."
+    },
+    {
+      "start": 3.53,
+      "end": 7.642,
+      "zh": "传输、绘制、编码，*三处可优化*。",
+      "en": "Transport, draw, encode."
+    },
+    {
+      "start": 7.742,
+      "end": 11.23,
+      "zh": "GPU 蒸氛围，*Skia 排文字*。",
+      "en": "GPU for mood, Skia for type."
+    },
+    {
+      "start": 11.33,
+      "end": 14.41,
+      "zh": "同帧同规格，*只换引擎*。",
+      "en": "Same frames, swap the engine."
+    },
+    {
+      "start": 14.51,
+      "end": 17.59,
+      "zh": "数字不靠体感，*靠实测*。",
+      "en": "Numbers, not vibes."
+    },
+    {
+      "start": 17.69,
+      "end": 21.238,
+      "zh": "选对引擎，*比换框架更值*。",
+      "en": "Pick the right engine."
+    }
+  ]
+}

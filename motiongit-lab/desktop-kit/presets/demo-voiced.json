@@ -1,0 +1,385 @@
+{
+  "_note": "由 build-voices.py 按真实配音时长重排；音轨 edits/audio-desktop.m4a",
+  "fps": 60,
+  "durationSeconds": 68.778,
+  "brand": "desktop-kit · Skia",
+  "chapters": [
+    {
+      "name": "01 起站",
+      "wall": "blue"
+    },
+    {
+      "name": "02 前靠站",
+      "wall": "light"
+    },
+    {
+      "name": "03 平视",
+      "wall": "light"
+    },
+    {
+      "name": "04 对立面",
+      "wall": "orange"
+    },
+    {
+      "name": "05 终点",
+      "wall": "blue"
+    }
+  ],
+  "shots": [
+    {
+      "type": "title",
+      "t0": 0.0,
+      "t1": 4.15,
+      "chapter": "01 起站",
+      "args": {
+        "app": "时代列车",
+        "headline": "桌面片场",
+        "train": "Skia 快车",
+        "status": "已发车"
+      }
+    },
+    {
+      "type": "talk",
+      "t0": 4.15,
+      "t1": 9.466,
+      "chapter": "01 起站",
+      "args": {
+        "label": "一整片，都是一台 Mac",
+        "notify": {
+          "title": "背景音乐",
+          "body": "已暂停 · 播放器在播放",
+          "icon": "♪",
+          "iconBg": "#FA2B56"
+        }
+      }
+    },
+    {
+      "type": "comments",
+      "t0": 9.466,
+      "t1": 14.206,
+      "chapter": "02 前靠站",
+      "args": {
+        "items": [
+          {
+            "text": "这个桌面是怎么做出来的？窗口和 Dock 都是画出来的吗"
+          },
+          {
+            "text": "翻牌动画好舒服，能换成我的文案吗"
+          },
+          {
+            "text": "字幕是中英双语，逐字跟读，节奏很准"
+          },
+          {
+            "text": "渲染要多久？我改一句话要重跑一整条吗"
+          },
+          {
+            "text": "不用浏览器，这点很关键，服务器也能跑"
+          },
+          {
+            "text": "人物窗口能换成我自己的口播视频吗"
+          },
+          {
+            "text": "参考片是 1440 乘以 1080，四比三"
+          },
+          {
+            "text": "章节路线图在菜单栏中间，这个细节好"
+          },
+          {
+            "text": "想看代码，最好能一个命令出片",
+            "hi": true
+          },
+          {
+            "text": "站牌砸入那一下太爽了"
+          },
+          {
+            "text": "能不能批量出十条"
+          },
+          {
+            "text": "配色能改吗"
+          }
+        ]
+      }
+    },
+    {
+      "type": "rating",
+      "t0": 14.206,
+      "t1": 18.394,
+      "chapter": "02 前靠站",
+      "args": {
+        "title": "评估 — 前辈的作品",
+        "phoneTitle": "我给自己组建了7人AI员工队伍",
+        "verdict": "一般",
+        "barLabel": "模板能力",
+        "filled": 2,
+        "foot": "部分"
+      }
+    },
+    {
+      "type": "terminal",
+      "t0": 18.394,
+      "t1": 23.038,
+      "chapter": "02 前靠站",
+      "args": {
+        "title": "desktop-kit — render",
+        "lines": [
+          "$ node render.mjs --params demo.json",
+          "fps 60  1440x1080  3420 frames",
+          "$ workers 8  ·  jpeg 94  ·  crf 20",
+          "OK 17 shots composed",
+          "$ ffmpeg -i silent.mp4 -i voice.m4a",
+          "done in 6.1s"
+        ]
+      }
+    },
+    {
+      "type": "flipBoard",
+      "t0": 23.038,
+      "t1": 26.362,
+      "chapter": "03 平视",
+      "args": {
+        "kicker": "// STILL BOARD · 逐字翻牌",
+        "word": "不用等",
+        "sub": "不启动浏览器，不排队等模板核心"
+      }
+    },
+    {
+      "type": "counter",
+      "t0": 26.362,
+      "t1": 29.974,
+      "chapter": "03 平视",
+      "args": {
+        "label": "单帧绘制",
+        "value": "2ms",
+        "sub": "1440×1080 · 8 worker 并行"
+      }
+    },
+    {
+      "type": "chart",
+      "t0": 29.974,
+      "t1": 33.73,
+      "chapter": "03 平视",
+      "args": {
+        "title": "出片速度",
+        "value": "× 45",
+        "points": [
+          0.05,
+          0.08,
+          0.13,
+          0.2,
+          0.3,
+          0.44,
+          0.6,
+          0.78,
+          0.96
+        ]
+      }
+    },
+    {
+      "type": "ranking",
+      "t0": 33.73,
+      "t1": 37.366,
+      "chapter": "03 平视",
+      "args": {
+        "rows": [
+          "自建引擎",
+          "原模板"
+        ],
+        "sub": "非常快地 · 超过"
+      }
+    },
+    {
+      "type": "station",
+      "t0": 37.366,
+      "t1": 40.93,
+      "chapter": "04 对立面",
+      "args": {
+        "name": "对立面",
+        "sub": "但复刻不是复制，边界要说清"
+      }
+    },
+    {
+      "type": "tickets",
+      "t0": 40.93,
+      "t1": 45.358,
+      "chapter": "04 对立面",
+      "args": {
+        "kicker": "TICKET · 车票",
+        "title": "换你的内容",
+        "sub": "单程 · 先上车",
+        "price": "¥ 0",
+        "stamp": "已检票"
+      }
+    },
+    {
+      "type": "checklist",
+      "t0": 45.358,
+      "t1": 49.306,
+      "chapter": "04 对立面",
+      "args": {
+        "title": "组件清单",
+        "value": "16",
+        "unit": "个镜头",
+        "count": 16
+      }
+    },
+    {
+      "type": "chat",
+      "t0": 49.306,
+      "t1": 53.662,
+      "chapter": "04 对立面",
+      "args": {
+        "title": "群聊 · 交付",
+        "messages": [
+          "分镜表发你了",
+          "文案直接改 JSON",
+          "一条命令出片"
+        ]
+      }
+    },
+    {
+      "type": "notify",
+      "t0": 53.662,
+      "t1": 58.378,
+      "chapter": "05 终点",
+      "args": {
+        "title": "渲染完成",
+        "body": "3420 帧 · QA 全通过",
+        "icon": "✓",
+        "iconBg": "#34C759",
+        "message": "回执已生成",
+        "messageTitle": "通知",
+        "cursor": {
+          "x": 1180,
+          "y": 78,
+          "at": 0.4,
+          "from": [
+            820,
+            620
+          ]
+        }
+      }
+    },
+    {
+      "type": "files",
+      "t0": 58.378,
+      "t1": 62.446,
+      "chapter": "05 终点",
+      "args": {
+        "count": 9
+      }
+    },
+    {
+      "type": "outro",
+      "t0": 62.446,
+      "t1": 68.778,
+      "chapter": "05 终点",
+      "args": {
+        "title": "轮到你了",
+        "lines": [
+          "把分镜表换成你的内容",
+          "一条命令，出片"
+        ],
+        "cta": "去试试 →",
+        "brand": "desktop-kit"
+      }
+    }
+  ],
+  "captions": [
+    {
+      "start": 0.23,
+      "end": 4.15,
+      "zh": "我们把*一整台 Mac 桌面*，重写成了模板。",
+      "en": "We rebuilt an entire Mac desktop as a template."
+    },
+    {
+      "start": 4.25,
+      "end": 9.466,
+      "zh": "壁纸、菜单栏、Dock、*人物摄像头窗口*，全都在。",
+      "en": "Wallpaper, menu bar, Dock and the camera window."
+    },
+    {
+      "start": 9.566,
+      "end": 14.206,
+      "zh": "先看评论：大家最关心的其实是*出片速度*。",
+      "en": "Most comments ask about rendering speed."
+    },
+    {
+      "start": 14.306,
+      "end": 18.394,
+      "zh": "原来的模板很好看，但只发挥了*部分能力*。",
+      "en": "The original was good, but only partly used."
+    },
+    {
+      "start": 18.494,
+      "end": 23.038,
+      "zh": "现在是*一条命令*，不用浏览器，也不用等核心。",
+      "en": "One command. No browser, no protected core."
+    },
+    {
+      "start": 23.138,
+      "end": 26.362,
+      "zh": "所以结论很简单：*不用等*。",
+      "en": "So the answer is simple: no waiting."
+    },
+    {
+      "start": 26.462,
+      "end": 29.974,
+      "zh": "单帧两毫秒，*八路并行*同时画。",
+      "en": "Two milliseconds per frame, eight workers."
+    },
+    {
+      "start": 30.074,
+      "end": 33.73,
+      "zh": "同样一条片子，速度差了*四十五倍*。",
+      "en": "Forty-five times faster for the same film."
+    },
+    {
+      "start": 33.83,
+      "end": 37.366,
+      "zh": "排名翻牌，把旧流程*挤到第二行*。",
+      "en": "The flip ranking pushes the old flow to row two."
+    },
+    {
+      "start": 37.466,
+      "end": 40.93,
+      "zh": "但复刻不是复制，*边界要说清*。",
+      "en": "Replication is not copying. State the limits."
+    },
+    {
+      "start": 41.03,
+      "end": 45.358,
+      "zh": "换上你的文案、截图和配音，*车票就生效*。",
+      "en": "Swap in your copy and voice, and the ticket works."
+    },
+    {
+      "start": 45.458,
+      "end": 49.306,
+      "zh": "十六个镜头，都是同一套*组件*拼出来的。",
+      "en": "Sixteen shots, all from the same components."
+    },
+    {
+      "start": 49.406,
+      "end": 53.662,
+      "zh": "分镜表是 JSON，*改一行就能重渲*。",
+      "en": "The storyboard is JSON; one line triggers a rerender."
+    },
+    {
+      "start": 53.762,
+      "end": 58.378,
+      "zh": "渲染完成，回执里写着*帧数和校验结果*。",
+      "en": "Render done, with frames and checks in the receipt."
+    },
+    {
+      "start": 58.478,
+      "end": 62.446,
+      "zh": "文件散开，剩下的是*你自己的产线*。",
+      "en": "Files fan out; what's left is your own pipeline."
+    },
+    {
+      "start": 62.546,
+      "end": 66.358,
+      "zh": "桌面还是那张桌面，*主角换成你*。",
+      "en": "Same desktop. This time, you are the presenter."
+    }
+  ]
+}

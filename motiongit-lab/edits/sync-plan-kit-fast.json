@@ -1,0 +1,70 @@
+{
+  "totalSeconds": 34.458,
+  "fps": 24,
+  "segments": [
+    {
+      "i": 1,
+      "scene": "hero",
+      "t0": 0.35,
+      "t1": 5.368,
+      "voiceSeconds": 4.368,
+      "caption": "一条 43 秒的片子，浏览器渲四分半，画布只要六秒。"
+    },
+    {
+      "i": 2,
+      "scene": "point",
+      "t0": 5.368,
+      "t1": 9.804,
+      "voiceSeconds": 3.936,
+      "caption": "慢的不是画面，是每帧都要搬出浏览器再编码一次。"
+    },
+    {
+      "i": 3,
+      "scene": "number",
+      "t0": 9.804,
+      "t1": 14.6,
+      "voiceSeconds": 4.296,
+      "caption": "八个线程各画一块画布，中间没有浏览器，也没有截图层。"
+    },
+    {
+      "i": 4,
+      "scene": "compare",
+      "t0": 14.6,
+      "t1": 18.868,
+      "voiceSeconds": 3.768,
+      "caption": "以前改一句整条重渲，现在只重算改过的那一段。"
+    },
+    {
+      "i": 5,
+      "scene": "steps",
+      "t0": 18.868,
+      "t1": 23.28,
+      "voiceSeconds": 3.912,
+      "caption": "三步就能出片：写旁白、合成语音、一条命令。"
+    },
+    {
+      "i": 6,
+      "scene": "quote",
+      "t0": 23.28,
+      "t1": 26.828,
+      "voiceSeconds": 3.048,
+      "caption": "工具的价值，是把等待从流程里删掉。"
+    },
+    {
+      "i": 7,
+      "scene": "checklist",
+      "t0": 26.828,
+      "t1": 31.216,
+      "voiceSeconds": 3.888,
+      "caption": "交付前自检三样：版式、黑帧、音画对齐。"
+    },
+    {
+      "i": 8,
+      "scene": "outro",
+      "t0": 31.216,
+      "t1": 34.458,
+      "voiceSeconds": 2.592,
+      "caption": "改一句文案，六秒后就是新版。"
+    }
+  ]
+}

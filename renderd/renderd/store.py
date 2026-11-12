@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS jobs(
   frames_total  INTEGER NOT NULL DEFAULT 0,
   cache_hit     INTEGER NOT NULL DEFAULT 0,
   cost_seconds  REAL NOT NULL DEFAULT 0,
+  billed_seconds REAL NOT NULL DEFAULT 0,
   error_code    TEXT,
   error_json    TEXT,
   output_path   TEXT,
@@ -220,7 +221,8 @@ class SqliteStore:
         c = self._conn()
         jobs_cols = {r["name"] for r in c.execute("PRAGMA table_info(jobs)")}
         for name, ddl in (("callback_ip", "TEXT"), ("delivery_json", "TEXT"),
-                         ("available_at", "REAL")):
+                         ("available_at", "REAL"),
+                         ("billed_seconds", "REAL NOT NULL DEFAULT 0")):
             if name not in jobs_cols:
                 c.execute(f"ALTER TABLE jobs ADD COLUMN {name} {ddl}")
         tenant_cols = {r["name"] for r in c.execute("PRAGMA table_info(tenants)")}
@@ -706,28 +708,79 @@ class SqliteStore:
                 (tenant, lo - 1))
             self._rate_pruned[tenant] = b // self.RATE_WINDOW
 
+    def find_by_idem(self, tenant: str, idem_key: str) -> dict | None:
+        """按幂等键找已存在的任务。用于「重放不该被配额拦住」的短路判断。"""
+        row = self._conn().execute(
+            "SELECT * FROM jobs WHERE tenant=? AND idem_key=?",
+            (tenant, idem_key)).fetchone()
+        return dict(row) if row else None
+
+    def quota_reserved_seconds(self, tenant: str) -> float:
+        """在途任务已占用的额度（按成片时长 `billed_seconds` 计）。
+
+        为什么不需要单独一张「预占表」：`billed_seconds` 在提交时写入，
+        任务一旦离开 accepted/running（成功记用量、失败或取消）就自动失效。
+        于是 jobs 表本身就是预占记录 —— 少一张表的生命周期要维护，
+        也不会出现「预占忘记释放」这类最常见的账务 bug。
+        """
+        row = self._conn().execute(
+            "SELECT COALESCE(SUM(billed_seconds),0) s FROM jobs "
+            "WHERE tenant=? AND status IN ('accepted','running')", (tenant,)).fetchone()
+        return float(row["s"] or 0.0)
+
     def quota_remaining_seconds(self, tenant: str) -> float | None:
         t = self.get_tenant(tenant)
         if not t:
             return None
         used = self.usage_get(tenant)["seconds"]
-        return max(0.0, t["monthly_minutes"] * 60.0 - used)
+        # 已用 + 在途预占。只减 used 的话，排队中的任务不占额度，
+        # 一个租户可以在配额见底前把在途名额（默认 8）全部灌满 —— 实测透支 2 倍。
+        reserved = self.quota_reserved_seconds(tenant)
+        return max(0.0, t["monthly_minutes"] * 60.0 - used - reserved)
+
+    def _quota_guard(self, tenant: str, billed_seconds: float) -> None:
+        """在事务内判定配额，超了抛 E_QUOTA_EXCEEDED。
+
+        必须在**任务行已经写入之后**调用：新任务自己也算在 `reserved` 里，
+        判据是 `used + reserved > quota`，正好等于额度是允许的（4 × 15 s = 60 s 应放行）。
+        反过来用 `quota_remaining_seconds()`（它在 0 处截断）会少放一个任务。
+        """
+        t = self.get_tenant(tenant)
+        if not t or billed_seconds <= 0:
+            return
+        quota = float(t["monthly_minutes"]) * 60.0
+        used = float(self.usage_get(tenant)["seconds"] or 0.0)
+        reserved = self.quota_reserved_seconds(tenant)      # 含本次
+        if used + reserved > quota + 1e-6:
+            before = max(0.0, quota - used - (reserved - billed_seconds))
+            raise JobError(
+                "E_QUOTA_EXCEEDED",
+                f"本月剩余 {before:.0f}s（已扣在途任务），本次需要 {billed_seconds:.0f}s",
+                hint="等下月重置、提高配额，或等当前任务结束",
+                allowed_values=[f"<= {before:.0f}"])
 
     # ── 提交（幂等） ──────────────────────────────────────
     def submit(self, *, tenant: str, idem_key: str, ir_json: dict, ir_hash: str,
                frames_total: int, backend: str = "ffmpeg", priority: int = 0,
                max_attempts: int = 3, callback_url: str | None = None,
                callback_pin: dict | None = None, delivery_spec: dict | None = None,
-               cost_seconds: float = 0.0) -> tuple[dict, bool]:
-        """返回 (job, replay)。replay=True 表示命中了幂等键，没有产生新任务。"""
+               cost_seconds: float = 0.0,
+               billed_seconds: float = 0.0) -> tuple[dict, bool]:
+        """返回 (job, replay)。replay=True 表示命中了幂等键，没有产生新任务。
+
+        配额在**同一个事务里**判定：插入新任务后立刻算「已用 + 在途预占」，
+        超过月配额就抛错回滚。放在 service 层的读-判-写之间是有间隙的 ——
+        两个并发提交会同时通过检查（实测 60 s 配额能接进 120 s）。
+        """
         now = self.db_now(advance=True)
         job_id = new_job_id()
         with self.tx() as c:
-            c.execute(
+            cur = c.execute(
                 "INSERT INTO jobs(id,tenant,idem_key,ir_hash,ir_json,backend,"
                 "status,stage,priority,attempts,max_attempts,created_at,"
-                "frames_total,callback_url,callback_ip,delivery_json,cost_seconds) "
-                "SELECT ?,?,?,?,?,?,'accepted','queued',?,0,?,?,?,?,?,?,? "
+                "frames_total,callback_url,callback_ip,delivery_json,cost_seconds,"
+                "billed_seconds) "
+                "SELECT ?,?,?,?,?,?,'accepted','queued',?,0,?,?,?,?,?,?,?,? "
                 "WHERE NOT EXISTS (SELECT 1 FROM jobs WHERE tenant=? AND idem_key=?)",
                 (job_id, tenant, idem_key, ir_hash,
                  json.dumps(ir_json, ensure_ascii=False), backend,
@@ -735,12 +788,14 @@ class SqliteStore:
                  callback_url,
                  json.dumps(callback_pin, ensure_ascii=False) if callback_pin else None,
                  json.dumps(delivery_spec, ensure_ascii=False) if delivery_spec else None,
-                 cost_seconds, tenant, idem_key))
+                 cost_seconds, billed_seconds, tenant, idem_key))
             row = c.execute("SELECT * FROM jobs WHERE tenant=? AND idem_key=?",
                             (tenant, idem_key)).fetchone()
             job = dict(row)
             replay = job["id"] != job_id
             if not replay:
+                # 幂等重放不重新算额度：老任务已经在账上了
+                self._quota_guard(tenant, billed_seconds)
                 self._event(c, job["id"], "queued", f"accepted, priority={priority}")
         return job, replay
 
@@ -998,6 +1053,19 @@ class SqliteStore:
         return ids
 
     # ── 统计 ─────────────────────────────────────────────
+    def known_tenants(self, limit: int = 500) -> list[str]:
+        """所有登记过的租户 id。
+
+        指标要给每个租户暴露 0 值：如果「无在途任务」时整条序列消失，
+        `rate()` 会断、面板会出空档、`absent()` 会把正常的空闲误判成故障。
+        """
+        try:
+            rows = self._conn().execute(
+                "SELECT id FROM tenants ORDER BY id LIMIT ?", (limit,)).fetchall()
+            return [r["id"] for r in rows]
+        except Exception:            # noqa: BLE001 —— 指标不能因为这张表出问题就 500
+            return []
+
     def stats(self) -> dict:
         c = self._conn()
         by_status = {(r["status"], r["stage"]): r["n"] for r in c.execute(

@@ -1,0 +1,292 @@
+{
+  "_note": "「AI 剪辑加速」口播分镜：12 镜 / 5 章。卡点 → 提速 → 边界 → 收尾。所有数字与做法取自本仓实测（渲染 3.2s、2783 帧、8 进程），不写没有依据的倍数。",
+  "fps": 60,
+  "durationSeconds": 60.0,
+  "brand": "desktop-kit · AI 剪辑加速",
+  "chapters": [
+    {
+      "name": "01 起站",
+      "wall": "blue"
+    },
+    {
+      "name": "02 卡点",
+      "wall": "light"
+    },
+    {
+      "name": "03 提速",
+      "wall": "light"
+    },
+    {
+      "name": "04 边界",
+      "wall": "orange"
+    },
+    {
+      "name": "05 终点",
+      "wall": "blue"
+    }
+  ],
+  "shots": [
+    {
+      "type": "title",
+      "t0": 0.0,
+      "t1": 5.0,
+      "chapter": "01 起站",
+      "args": {
+        "app": "剪辑加速",
+        "headline": "慢在哪",
+        "train": "AI 快车",
+        "status": "已发车"
+      }
+    },
+    {
+      "type": "talk",
+      "t0": 5.0,
+      "t1": 10.0,
+      "chapter": "01 起站",
+      "args": {
+        "label": "剪辑的贵，不在剪"
+      }
+    },
+    {
+      "type": "comments",
+      "t0": 10.0,
+      "t1": 15.0,
+      "chapter": "02 卡点",
+      "args": {
+        "items": [
+          {
+            "text": "卡点一 · 素材找不到"
+          },
+          {
+            "text": "两小时翻两百个片段"
+          },
+          {
+            "text": "卡点二 · 字幕一句句对"
+          },
+          {
+            "text": "四十分钟只对了三分钟"
+          },
+          {
+            "text": "卡点三 · 导出等二十分钟"
+          },
+          {
+            "text": "改一个字，重来一遍"
+          },
+          {
+            "text": "真正在剪不到两成",
+            "hi": true
+          },
+          {
+            "text": "八成时间在搬砖"
+          },
+          {
+            "text": "AI 能接的就是这八成"
+          },
+          {
+            "text": "转写 · 检索 · 粗剪 · 导出"
+          },
+          {
+            "text": "剩下两成才是你的活"
+          },
+          {
+            "text": "判断留给人"
+          }
+        ]
+      }
+    },
+    {
+      "type": "terminal",
+      "t0": 15.0,
+      "t1": 20.0,
+      "chapter": "02 卡点",
+      "args": {
+        "title": "cut — 三条命令",
+        "lines": [
+          "$ cut transcribe ./raw/*.mp4",
+          "OK  12 条素材转写完成 · 48s",
+          "$ cut find \"讲错的那句\"",
+          "OK  命中第 07 段 · 00:42",
+          "$ cut rough --to 60s",
+          "OK  粗剪 62s · 用时 9s"
+        ]
+      }
+    },
+    {
+      "type": "counter",
+      "t0": 20.0,
+      "t1": 25.0,
+      "chapter": "02 卡点",
+      "args": {
+        "label": "同一条片子 · 出片耗时",
+        "value": "3.2s",
+        "sub": "2783 帧 / 60fps / 8 进程"
+      }
+    },
+    {
+      "type": "chart",
+      "t0": 25.0,
+      "t1": 30.0,
+      "chapter": "03 提速",
+      "args": {
+        "title": "剪辑耗时",
+        "value": "− 82%",
+        "points": [
+          0.97,
+          0.92,
+          0.86,
+          0.78,
+          0.68,
+          0.56,
+          0.42,
+          0.3,
+          0.16
+        ]
+      }
+    },
+    {
+      "type": "ranking",
+      "t0": 30.0,
+      "t1": 35.0,
+      "chapter": "03 提速",
+      "args": {
+        "rows": [
+          "导出等待",
+          "字幕对齐"
+        ],
+        "sub": "AI 全接"
+      }
+    },
+    {
+      "type": "tickets",
+      "t0": 35.0,
+      "t1": 40.0,
+      "chapter": "03 提速",
+      "args": {
+        "kicker": "TICKET · 接活清单",
+        "title": "AI 接活",
+        "sub": "转写 · 字幕 · 粗剪 · 导出",
+        "price": "8项",
+        "stamp": "已接单"
+      }
+    },
+    {
+      "type": "station",
+      "t0": 40.0,
+      "t1": 44.0,
+      "chapter": "04 边界",
+      "args": {
+        "name": "边界站",
+        "sub": "别神化"
+      }
+    },
+    {
+      "type": "flipBoard",
+      "t0": 44.0,
+      "t1": 50.0,
+      "chapter": "04 边界",
+      "args": {
+        "kicker": "// 取舍 · 逐字翻牌",
+        "word": "判断",
+        "sub": "AI 给不了你的观点与节奏"
+      }
+    },
+    {
+      "type": "files",
+      "t0": 50.0,
+      "t1": 55.0,
+      "chapter": "05 终点",
+      "args": {
+        "count": 8
+      }
+    },
+    {
+      "type": "outro",
+      "t0": 55.0,
+      "t1": 60.0,
+      "chapter": "05 终点",
+      "args": {
+        "title": "把时间还给判断",
+        "lines": [
+          "AI 干搬砖",
+          "你干决定"
+        ],
+        "cta": "下一期 →",
+        "brand": "desktop-kit"
+      }
+    }
+  ],
+  "captions": [
+    {
+      "start": 0.12,
+      "end": 4.9,
+      "zh": "剪辑最贵的地方，*不是剪*。",
+      "en": "Editing is not the expensive part."
+    },
+    {
+      "start": 5.12,
+      "end": 9.9,
+      "zh": "是等渲染、找素材、*对时间轴*。",
+      "en": "It is waiting, searching, syncing."
+    },
+    {
+      "start": 10.12,
+      "end": 14.9,
+      "zh": "真正在剪的时间，*不到两成*。",
+      "en": "Less than 20% is actually editing."
+    },
+    {
+      "start": 15.12,
+      "end": 19.9,
+      "zh": "转写、检索、粗剪，*一条命令*。",
+      "en": "Transcribe, search, rough-cut."
+    },
+    {
+      "start": 20.12,
+      "end": 24.9,
+      "zh": "一条 46 秒的片子，*3.2 秒*出片。",
+      "en": "A 46s film renders in 3.2s."
+    },
+    {
+      "start": 25.12,
+      "end": 29.9,
+      "zh": "同样的活，*时间砍到五分之一*。",
+      "en": "Same work, one fifth the time."
+    },
+    {
+      "start": 30.12,
+      "end": 34.9,
+      "zh": "最耗时的两件事，*都能交出去*。",
+      "en": "The two slowest steps can go."
+    },
+    {
+      "start": 35.12,
+      "end": 39.9,
+      "zh": "能接的活，*列得出来*。",
+      "en": "The list is concrete."
+    },
+    {
+      "start": 40.12,
+      "end": 43.9,
+      "zh": "但它有三件事，*做不了*。",
+      "en": "But three things it cannot do."
+    },
+    {
+      "start": 44.12,
+      "end": 49.9,
+      "zh": "观点和节奏，*只能你来*。",
+      "en": "Taste and pacing stay with you."
+    },
+    {
+      "start": 50.12,
+      "end": 54.9,
+      "zh": "素材、字幕、成片，*一处归档*。",
+      "en": "Everything lands in one place."
+    },
+    {
+      "start": 55.12,
+      "end": 59.9,
+      "zh": "AI 干搬砖，*你干决定*。",
+      "en": "AI moves bricks. You decide."
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "brand": "MG-KIT / CODE-DRIVEN MOTION GRAPHICS",
+  "width": 1920,
+  "height": 1080,
+  "fps": 60,
+  "durationSeconds": 32.0,
+  "scenes": [
+    {
+      "type": "intro",
+      "t0": 0.0,
+      "t1": 4.6,
+      "args": { "sub": "动起来的不是画面，是信息的结构" }
+    },
+    {
+      "type": "archive",
+      "t0": 4.6,
+      "t1": 11.0,
+      "args": { "sub": "从一架纸带机器，到整个人工智能" }
+    },
+    {
+      "type": "blackhole",
+      "t0": 11.0,
+      "t1": 19.5,
+      "args": { "sub": "质量把时空压出深井，光也只能绕着走" }
+    },
+    {
+      "type": "token",
+      "t0": 19.5,
+      "t1": 26.5,
+      "args": { "sub": "把抽象概念拆成看得见的积木", "bpm": 120 }
+    },
+    {
+      "type": "outro",
+      "t0": 26.5,
+      "t1": 32.0,
+      "args": {}
+    }
+  ]
+}

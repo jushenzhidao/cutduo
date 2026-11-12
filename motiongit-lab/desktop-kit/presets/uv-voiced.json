@@ -1,0 +1,301 @@
+{
+  "_note": "由 build-voices.py 按真实配音时长重排；音轨 edits/audio-uv.m4a",
+  "fps": 60,
+  "durationSeconds": 52.122,
+  "brand": "uv · 两条命令",
+  "chapters": [
+    {
+      "name": "01 起站",
+      "wall": "blue"
+    },
+    {
+      "name": "02 装环境",
+      "wall": "light"
+    },
+    {
+      "name": "03 三步",
+      "wall": "light"
+    },
+    {
+      "name": "04 常见坑",
+      "wall": "orange"
+    },
+    {
+      "name": "05 出发",
+      "wall": "blue"
+    }
+  ],
+  "shots": [
+    {
+      "type": "title",
+      "t0": 0.0,
+      "t1": 4.534,
+      "chapter": "01 起站",
+      "args": {
+        "app": "环境特快",
+        "headline": "环境别踩坑",
+        "train": "uv 快车",
+        "status": "已发车"
+      }
+    },
+    {
+      "type": "talk",
+      "t0": 4.534,
+      "t1": 8.986,
+      "chapter": "01 起站",
+      "args": {
+        "label": "最先卡住的，不是代码",
+        "notify": {
+          "title": "系统 Python",
+          "body": "检测到 3 个解释器版本",
+          "icon": "!",
+          "iconBg": "#F5B321"
+        }
+      }
+    },
+    {
+      "type": "terminal",
+      "t0": 8.986,
+      "t1": 13.654,
+      "chapter": "02 装环境",
+      "args": {
+        "title": "uv — 终端",
+        "lines": [
+          "$ uv init",
+          "Initialized project `demo`",
+          "$ uv add requests",
+          "Installed 4 packages in 210ms",
+          "$ uv run main.py",
+          "OK · Python 3.13"
+        ]
+      }
+    },
+    {
+      "type": "flipBoard",
+      "t0": 13.654,
+      "t1": 18.01,
+      "chapter": "02 装环境",
+      "args": {
+        "kicker": "// 环境初始化 · 逐字翻牌",
+        "word": "别折腾",
+        "sub": "不手工建虚拟环境，也不记 activate"
+      }
+    },
+    {
+      "type": "checklist",
+      "t0": 18.01,
+      "t1": 23.158,
+      "chapter": "02 装环境",
+      "args": {
+        "title": "三步清单",
+        "value": "3",
+        "unit": "步",
+        "count": 12
+      }
+    },
+    {
+      "type": "counter",
+      "t0": 23.158,
+      "t1": 27.202,
+      "chapter": "03 三步",
+      "args": {
+        "label": "常用命令",
+        "value": "2步",
+        "sub": "uv init 建项目 · uv add 加依赖"
+      }
+    },
+    {
+      "type": "station",
+      "t0": 27.202,
+      "t1": 30.742,
+      "chapter": "04 常见坑",
+      "args": {
+        "name": "常见坑",
+        "sub": "换一台电脑，旧办法就全乱了"
+      }
+    },
+    {
+      "type": "ranking",
+      "t0": 30.742,
+      "t1": 34.834,
+      "chapter": "04 常见坑",
+      "args": {
+        "rows": [
+          "系统 Python",
+          "uv 管版本"
+        ],
+        "sub": "解释器版本不再靠猜"
+      }
+    },
+    {
+      "type": "comments",
+      "t0": 34.834,
+      "t1": 38.662,
+      "chapter": "04 常见坑",
+      "args": {
+        "items": [
+          {
+            "text": "老师，包装到哪儿去了？我 pip list 里没有"
+          },
+          {
+            "text": "Windows 上要不要装 Python 官网版"
+          },
+          {
+            "text": "为什么我的 python 是 3.15，同学的 3.11"
+          },
+          {
+            "text": "activate 每次都要敲吗，我老是忘"
+          },
+          {
+            "text": "Homebrew 升级之后环境全坏了"
+          },
+          {
+            "text": "虚拟环境文件夹能删吗"
+          },
+          {
+            "text": "同一个项目两台电脑结果不一样"
+          },
+          {
+            "text": "pip 和 pip3 到底用哪个"
+          },
+          {
+            "text": "uv 会不会又多一层要学的东西",
+            "hi": true
+          },
+          {
+            "text": "装包速度好像快了很多"
+          },
+          {
+            "text": "能不能一条命令复现整个环境"
+          },
+          {
+            "text": "学生电脑没有管理员权限怎么办"
+          }
+        ]
+      }
+    },
+    {
+      "type": "chart",
+      "t0": 38.662,
+      "t1": 42.154,
+      "chapter": "04 常见坑",
+      "args": {
+        "title": "跨平台一致性",
+        "value": "同一条命令",
+        "points": [
+          0.08,
+          0.14,
+          0.22,
+          0.33,
+          0.46,
+          0.58,
+          0.7,
+          0.84,
+          0.95
+        ]
+      }
+    },
+    {
+      "type": "tickets",
+      "t0": 42.154,
+      "t1": 46.174,
+      "chapter": "05 出发",
+      "args": {
+        "kicker": "TICKET · 通行证",
+        "title": "Windows 也行",
+        "sub": "无需预装 Python · 无需管理员权限",
+        "price": "¥ 0",
+        "stamp": "可直接用"
+      }
+    },
+    {
+      "type": "outro",
+      "t0": 46.174,
+      "t1": 52.122,
+      "chapter": "05 出发",
+      "args": {
+        "title": "先跑起来",
+        "lines": [
+          "两条命令，环境就有了",
+          "再写第一行代码"
+        ],
+        "cta": "开始 →",
+        "brand": "uv"
+      }
+    }
+  ],
+  "captions": [
+    {
+      "start": 0.23,
+      "end": 4.534,
+      "zh": "很多人学 Python，*第一天就卡在装环境*。",
+      "en": "Many beginners get stuck on day one: installing Python."
+    },
+    {
+      "start": 4.634,
+      "end": 8.986,
+      "zh": "系统自带的、官网下的，*三个 Python 打架*。",
+      "en": "The system one and the installer one end up fighting."
+    },
+    {
+      "start": 9.086,
+      "end": 13.654,
+      "zh": "其实只要两条命令：*uv init*，再 *uv add*。",
+      "en": "Two commands are enough: uv init, then uv add."
+    },
+    {
+      "start": 13.754,
+      "end": 18.01,
+      "zh": "不用手工建虚拟环境，*也不用记 activate*。",
+      "en": "No manual venv, no remembering to activate it."
+    },
+    {
+      "start": 18.11,
+      "end": 23.158,
+      "zh": "建项目、加依赖、跑脚本，*三步都在 uv 里*。",
+      "en": "Create, add, run — all three stay inside uv."
+    },
+    {
+      "start": 23.258,
+      "end": 27.202,
+      "zh": "版本由 uv 管，*换台机器也能复现*。",
+      "en": "uv pins the version, so another machine reproduces it."
+    },
+    {
+      "start": 27.302,
+      "end": 30.742,
+      "zh": "但换一台电脑，*旧办法就全乱了*。",
+      "en": "But the old way falls apart on a different computer."
+    },
+    {
+      "start": 30.842,
+      "end": 34.834,
+      "zh": "系统 Python 升一次级，*依赖就跟着漂*。",
+      "en": "One system upgrade and your dependencies drift."
+    },
+    {
+      "start": 34.934,
+      "end": 38.662,
+      "zh": "学生最常问的，还是*包装到哪儿去了*。",
+      "en": "The top question: where did my package actually go?"
+    },
+    {
+      "start": 38.762,
+      "end": 42.154,
+      "zh": "同一条命令，*三个平台都一样*。",
+      "en": "One command works the same on all three platforms."
+    },
+    {
+      "start": 42.254,
+      "end": 46.174,
+      "zh": "不用预装 Python，*也不用管理员权限*。",
+      "en": "No preinstalled Python, no admin rights required."
+    },
+    {
+      "start": 46.274,
+      "end": 49.702,
+      "zh": "先让代码跑起来，*再谈原理*。",
+      "en": "Get the code running first. Then talk theory."
+    }
+  ]
+}

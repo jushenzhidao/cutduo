@@ -217,6 +217,36 @@ fi
 
 ok "服务已就绪"
 
+# ── 备份定时任务（幂等）────────────────────────────────────────
+# 只在结尾「建议加进 crontab」是不够的：实测线上跑了两周，/var/backups/renderd
+# 根本不存在 —— 没人手动加过。备份这件事必须由安装脚本自己装上。
+BACKUP_LINE="30 4 * * * BACKUP_DIR=/var/backups/renderd KEEP_DAYS=7 ${PROJECT_DIR}/deploy/linux/backup.sh >> /var/log/renderd-backup.log 2>&1"
+if command -v crontab >/dev/null 2>&1; then
+  if crontab -l 2>/dev/null | grep -qF "${PROJECT_DIR}/deploy/linux/backup.sh"; then
+    ok "备份定时任务已存在（每日 04:30）"
+  else
+    ( crontab -l 2>/dev/null; echo "$BACKUP_LINE" ) | crontab - \
+      && ok "已安装备份定时任务（每日 04:30，保留 7 天）" \
+      || warn "备份定时任务安装失败，请手动添加：$BACKUP_LINE"
+  fi
+  if [ -d /etc/logrotate.d ] && [ ! -f /etc/logrotate.d/renderd-backup ]; then
+    cat > /etc/logrotate.d/renderd-backup <<'ROT'
+/var/log/renderd-backup.log {
+    su root root
+    weekly
+    rotate 8
+    missingok
+    notifempty
+    compress
+    copytruncate
+}
+ROT
+    ok "已配置备份日志轮转"
+  fi
+else
+  warn "系统没有 crontab，请自行安排 backup.sh 的定时执行"
+fi
+
 # ── 验收 ──────────────────────────────────────────────
 BASE="http://127.0.0.1:${RENDERD_PORT:-8787}"
 TOKEN_VAL="${RENDERD_TOKENS%%:*}"

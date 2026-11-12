@@ -1,0 +1,202 @@
+{
+  "purpose": "中文科普视频版式模板。把一条口播/文案拆成 8 类镜头，逐段渲染成 1080p 横屏成片；字幕烧录，无需后期。适用于医学科普、知识讲解、产品原理说明。",
+  "distilledFrom": {
+    "file": "d6ef49c88c4766217c388678d9ba7aca_raw.mp4",
+    "durationSeconds": 153.64,
+    "size": "960x544",
+    "fps": 28,
+    "shots": 48,
+    "medianShotSeconds": 2.75,
+    "note": "只反推版式语法与节奏，不复制画面素材、插画、文案、品牌标识。"
+  },
+  "duration": {
+    "policy": "fixed",
+    "seconds": 54.5,
+    "fps": {
+      "num": 30,
+      "den": 1
+    },
+    "adaptation": "总时长 = segments[].dur 之和，必须与 durationSeconds 一致。参考片实测中位镜头 2.75s：信息型镜头（diagram/matrix/compare）5–8s，讲解位（talk）4–6s，封面 5–7s，结尾 4–5s。超过 90s 建议拆成两集而不是拉长单镜。"
+  },
+  "materials": [
+    {
+      "role": "text.script",
+      "mappedParameters": [
+        "captions",
+        "segments[].args"
+      ],
+      "required": true,
+      "ifMissing": "停止渲染。字幕与版面文案必须来自本期内容，不得用演示文案兜底。"
+    },
+    {
+      "role": "image.figure",
+      "mappedParameters": [
+        "segments[].args.figureImage"
+      ],
+      "required": false,
+      "ifMissing": "绘制内置扁平插画讲解员（可换 hair/skin/coat 三色），不插入占位图或虚构真人照片。"
+    },
+    {
+      "role": "audio.voiceover",
+      "mappedParameters": [
+        "audio"
+      ],
+      "required": false,
+      "ifMissing": "导出无音轨视频（默片）。有配音需求跑 tools/vo.py：它逐句 TTS、按语音重算段落时长与句子起止、生成 -16 LUFS 音轨，并写回 *.vo.json。渲染时用 --audio 传入。"
+    }
+  ],
+  "layout": {
+    "ratio": "16:9",
+    "pixels": "1920x1080",
+    "safeArea": "左右 96px；底部 940px 以下为字幕禁区，任何版式元素不得进入",
+    "notes": "竖屏需另建 portrait 版本，不要裁切横屏。"
+  },
+  "rhythm": {
+    "hardCut": "段与段之间硬切，无转场；所有入场动画在段首即已推进 20–30%，避免切点出现空帧",
+    "captionLag": "字幕比画面晚 0.2–0.5s 出现，句间留 0.1s 以上间隙",
+    "beatPattern": "参考片结构比例：讲解位 37% / 图解释意 33% / 标签强调 10% / 阵列 6% / 对比 4% / 首尾 10%"
+  },
+  "layouts": [
+    {
+      "type": "cover",
+      "role": "封面 / 开场钩子",
+      "maxPerFilm": 1,
+      "args": {
+        "prefix": "爆炸贴左侧的前缀词，白字蓝边，如「急诊室里的」",
+        "title": "爆炸贴内的主词，4–6 字最佳，如「火眼金睛」",
+        "sub": "副标，黄底蓝斜边标签，一句话说清主题",
+        "sticker": "内置贴纸：eyes / question / star / drop",
+        "hint": "底部小字，可留空",
+        "scene": "soft（默认，柔光色块）| hallway（抽象医院走廊，注意会显得空）",
+        "burstR": "爆炸贴半径，默认 384",
+        "titleSize": "主词字号，默认 148"
+      },
+      "capacity": "title ≤ 6 字；sub ≤ 16 字；超长会被 maxW 自动缩字号"
+    },
+    {
+      "type": "talk",
+      "role": "讲解位 / 观点陈述",
+      "maxPerFilm": 6,
+      "args": {
+        "figure": "right（默认）| left",
+        "figureImage": "可选，透明底 PNG 的 data URL；缺省画内置扁平讲解员",
+        "hair": "讲解员发色",
+        "skin": "肤色",
+        "coat": "外套色",
+        "eyebrow": "小眉标，如「家长最常见的困惑」",
+        "lines": "主句数组，1–3 行，每行 ≤ 9 字",
+        "accentLine": "哪一行用红字 + 荧光笔，默认 0",
+        "sticker": "可选贴纸",
+        "paper": "cream（默认）| mint | sky",
+        "label": "可选标签 {text, at, x, y, size}"
+      },
+      "capacity": "lines ≤ 3 行，每行 ≤ 9 字（86px）；figure 在右时段落左边界 202px"
+    },
+    {
+      "type": "diagram",
+      "role": "圆框解剖 / 原理图解",
+      "maxPerFilm": 5,
+      "args": {
+        "title": "顶部梯形标题条",
+        "organ": "gut / stomach / gallbladder / appendix / kidney / uterus / intussusception / scanner / probe / child",
+        "eyes": "器官是否拟人化加眼睛，默认 true",
+        "mark": "[x,y] 归一化病灶坐标，配合 pulse 呼吸闪烁",
+        "probe": "left | right | none，探头会朝圆心发声波",
+        "callouts": "[{text, at, x, y, size, lead:[x,y], underline, markColor}]，lead 用画布归一化坐标指向病灶",
+        "paper": "mint（默认）| sky",
+        "r": "圆半径，默认 352",
+        "cx": "圆心 x 归一化，默认 0.48",
+        "cy": "圆心 y 归一化，默认 0.505"
+      },
+      "capacity": "callouts ≤ 2 条；每条 ≤ 10 字（70px）；lead 必须落在器官内部，否则引线会悬空"
+    },
+    {
+      "type": "compare",
+      "role": "新旧方案对比",
+      "maxPerFilm": 2,
+      "args": {
+        "title": "顶部标题条，如「为什么首选超声」",
+        "left": "{icon, label, note, bad:true, badge:'no'}",
+        "right": "{icon, label, note, badge:'yes'}",
+        "conclusion": "底部金句标签，留空则不画",
+        "paper": "sky（默认）"
+      },
+      "capacity": "label ≤ 4 字；note ≤ 8 字；conclusion ≤ 10 字"
+    },
+    {
+      "type": "matrix",
+      "role": "图标阵列 / 清单枚举",
+      "maxPerFilm": 2,
+      "args": {
+        "title": "顶部标题条",
+        "items": "[{icon, label, disc, stone, strike}]，3–4 项单行，5–6 项折两行",
+        "paper": "mint（默认）"
+      },
+      "capacity": "items ≤ 6；label ≤ 5 字；strike:true 会在图标上画红叉（用于被否定的旧认知）"
+    },
+    {
+      "type": "focus",
+      "role": "单点强调 / 卖点卡",
+      "maxPerFilm": 4,
+      "args": {
+        "title": "顶部梯形标题条，如「快速实时」",
+        "icon": "圆卡内的图标",
+        "strike": "可选，左侧被划掉的旧认知标签，如「要等半天」",
+        "claim": "底部手写感结论，如「十几分钟出结果」",
+        "paper": "sky（默认）",
+        "r": "圆卡半径，默认 268"
+      },
+      "capacity": "title ≤ 5 字；claim ≤ 9 字（78px）；strike ≤ 5 字"
+    },
+    {
+      "type": "tip",
+      "role": "便签 / 知识小贴士",
+      "maxPerFilm": 1,
+      "args": {
+        "head": "小眉标，默认「知识小贴士」",
+        "title": "便签标题，如「为什么儿科急诊偏爱超声」",
+        "items": "条目数组，2–3 条，每条 ≤ 12 字",
+        "paper": "sky（默认）"
+      },
+      "capacity": "items ≤ 3（纸高 594px 只能容 3 行）；title ≤ 12 字"
+    },
+    {
+      "type": "outro",
+      "role": "结尾 / 关注引导",
+      "maxPerFilm": 1,
+      "args": {
+        "line1": "斜切条一，如「感谢观看」",
+        "line2": "斜切条二，如「下期再会」",
+        "note": "底部免责声明/引导语；此处不要再放同义字幕"
+      },
+      "capacity": "line1 ≤ 6 字（118px）；line2 ≤ 6 字（96px）；note ≤ 24 字"
+    }
+  ],
+  "runtime": {
+    "profile": "html-canvas/1",
+    "entry": "src/index.html",
+    "dependencies": [
+      "Node.js 22+",
+      "Chromium headless (Playwright)",
+      "FFmpeg"
+    ],
+    "network": false,
+    "fonts": "依赖系统 PingFang SC / Hiragino Sans GB；未随包分发字体。粗标题靠同色描边膨胀（heavy=size*0.05）补足字重。"
+  },
+  "voicing": {
+    "tool": "tools/vo.py",
+    "principle": "时间轴跟随配音，不是配音迁就时间轴",
+    "lead": 0.45,
+    "gap": 0.28,
+    "end": 0.55,
+    "tailHold": 0.14,
+    "loudnessI": -16,
+    "autoFilled": [
+      "captions[].start",
+      "captions[].end",
+      "segments[].dur",
+      "segments[].args.itemAt（tip）",
+      "durationSeconds"
+    ]
+  }
+}

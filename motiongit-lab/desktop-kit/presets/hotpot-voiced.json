@@ -1,0 +1,331 @@
+{
+  "_note": "由 build-voices.py 按真实配音时长重排；音轨 edits/audio-hotpot.m4a",
+  "fps": 60,
+  "durationSeconds": 41.574,
+  "brand": "desktop-kit · 一顿火锅",
+  "photos": {
+    "mine": "edits/assets/hotpot/my-photo.jpg",
+    "ingredients": "edits/assets/hotpot/p29479438.jpg",
+    "pot": "edits/assets/hotpot/p29479439.jpg"
+  },
+  "clips": {
+    "boil": {
+      "dir": "edits/assets/hotpot/clips/boil",
+      "fps": 20
+    },
+    "table": {
+      "dir": "edits/assets/hotpot/clips/table",
+      "fps": 20
+    }
+  },
+  "chapters": [
+    {
+      "name": "01 开锅",
+      "wall": "blue"
+    },
+    {
+      "name": "02 上桌",
+      "wall": "light"
+    },
+    {
+      "name": "03 涮",
+      "wall": "orange"
+    },
+    {
+      "name": "04 一桌",
+      "wall": "orange"
+    },
+    {
+      "name": "05 收尾",
+      "wall": "blue"
+    }
+  ],
+  "shots": [
+    {
+      "type": "title",
+      "t0": 0.0,
+      "t1": 2.902,
+      "chapter": "01 开锅",
+      "args": {
+        "app": "今晚吃啥",
+        "headline": "开锅了",
+        "train": "红汤号",
+        "status": "已发车"
+      }
+    },
+    {
+      "type": "talk",
+      "t0": 2.902,
+      "t1": 6.058,
+      "chapter": "01 开锅",
+      "args": {
+        "label": "锅先开，事稍后"
+      }
+    },
+    {
+      "type": "photo",
+      "t0": 6.058,
+      "t1": 8.974,
+      "chapter": "02 上桌",
+      "args": {
+        "key": "mine",
+        "layout": "full",
+        "title": "这一桌",
+        "sub": "蒸汽先到，筷子随后",
+        "credit": "本人实拍",
+        "fx": 0.5,
+        "fy": 0.48
+      }
+    },
+    {
+      "type": "comments",
+      "t0": 8.974,
+      "t1": 12.034,
+      "chapter": "02 上桌",
+      "args": {
+        "items": [
+          {
+            "text": "一口锅，正冒着气"
+          },
+          {
+            "text": "红筷子横在碗上"
+          },
+          {
+            "text": "青菜还带着水"
+          },
+          {
+            "text": "一碟腌菜，先开胃"
+          },
+          {
+            "text": "蘑菇、白菜、萝卜"
+          },
+          {
+            "text": "蘸料碗里还有小米辣"
+          },
+          {
+            "text": "左边那盘炸物别错过"
+          },
+          {
+            "text": "汤滚了，先别急"
+          },
+          {
+            "text": "手机先放一边"
+          },
+          {
+            "text": "话比菜先上桌"
+          },
+          {
+            "text": "谁也不看时间"
+          },
+          {
+            "text": "这顿，慢慢吃",
+            "hi": true
+          }
+        ]
+      }
+    },
+    {
+      "type": "photo",
+      "t0": 12.034,
+      "t1": 15.046,
+      "chapter": "02 上桌",
+      "args": {
+        "key": "ingredients",
+        "layout": "window",
+        "file": "食材 · 上桌.jpg",
+        "title": "菜先摆好",
+        "credit": "Pexels"
+      }
+    },
+    {
+      "type": "clip",
+      "t0": 15.046,
+      "t1": 18.034,
+      "chapter": "03 涮",
+      "args": {
+        "key": "boil",
+        "fps": 20,
+        "title": "锅在滚",
+        "sub": "汤面一直没停过",
+        "credit": "Pexels 素材",
+        "fx": 0.5,
+        "fy": 0.5
+      }
+    },
+    {
+      "type": "terminal",
+      "t0": 18.034,
+      "t1": 20.71,
+      "chapter": "03 涮",
+      "args": {
+        "title": "今晚的下锅顺序",
+        "lines": [
+          "$ 开火，等汤滚",
+          "OK 蒸汽先到",
+          "$ 下肉，别一次倒完",
+          "$ 下青菜，捞起来",
+          "$ 加汤，再坐一会儿",
+          "OK 谁也不着急"
+        ]
+      }
+    },
+    {
+      "type": "tickets",
+      "t0": 20.71,
+      "t1": 23.674,
+      "chapter": "03 涮",
+      "args": {
+        "kicker": "TICKET · 今晚这一桌",
+        "title": "一起吃",
+        "sub": "人数不拘，菜随便加",
+        "price": "开动",
+        "stamp": "已上桌"
+      }
+    },
+    {
+      "type": "clip",
+      "t0": 23.674,
+      "t1": 26.614,
+      "chapter": "04 一桌",
+      "args": {
+        "key": "table",
+        "fps": 20,
+        "title": "一桌热气",
+        "sub": "说话都得大点声",
+        "credit": "Pexels 素材",
+        "fx": 0.5,
+        "fy": 0.5
+      }
+    },
+    {
+      "type": "photo",
+      "t0": 26.614,
+      "t1": 29.218,
+      "chapter": "04 一桌",
+      "args": {
+        "key": "pot",
+        "layout": "window",
+        "file": "砂锅 · 还在滚.jpg",
+        "title": "砂锅里还在滚",
+        "credit": "Pexels"
+      }
+    },
+    {
+      "type": "flipBoard",
+      "t0": 29.218,
+      "t1": 32.35,
+      "chapter": "04 一桌",
+      "args": {
+        "kicker": "// 今晚 · 逐字翻牌",
+        "word": "慢点",
+        "sub": "不赶时间的一顿"
+      }
+    },
+    {
+      "type": "station",
+      "t0": 32.35,
+      "t1": 35.338,
+      "chapter": "05 收尾",
+      "args": {
+        "name": "收摊",
+        "sub": "汤还剩一点"
+      }
+    },
+    {
+      "type": "outro",
+      "t0": 35.338,
+      "t1": 41.574,
+      "chapter": "05 收尾",
+      "args": {
+        "title": "下次还来",
+        "lines": [
+          "锅要滚，人要齐",
+          "照片留着，热气留不住",
+          "今晚这顿，记一笔"
+        ],
+        "cta": "再约 →",
+        "brand": "一顿火锅"
+      }
+    }
+  ],
+  "captions": [
+    {
+      "start": 0.23,
+      "end": 2.902,
+      "zh": "今晚这顿，*锅先开*。",
+      "en": "The pot comes first tonight."
+    },
+    {
+      "start": 3.002,
+      "end": 6.058,
+      "zh": "事情稍后再说，*先坐下*。",
+      "en": "Everything else can wait."
+    },
+    {
+      "start": 6.158,
+      "end": 8.974,
+      "zh": "蒸汽一起，*筷子就到了*。",
+      "en": "Steam rises, chopsticks arrive."
+    },
+    {
+      "start": 9.074,
+      "end": 12.034,
+      "zh": "桌上摆得满满的，*不急*。",
+      "en": "The table is full. No rush."
+    },
+    {
+      "start": 12.134,
+      "end": 15.046,
+      "zh": "菜先摆好，*汤还在滚*。",
+      "en": "Dishes out, broth still boiling."
+    },
+    {
+      "start": 15.146,
+      "end": 18.034,
+      "zh": "锅一直没停，*也没人催*。",
+      "en": "The pot keeps going; nobody hurries."
+    },
+    {
+      "start": 18.134,
+      "end": 20.71,
+      "zh": "一筷一筷，*慢慢来*。",
+      "en": "One bite at a time."
+    },
+    {
+      "start": 20.81,
+      "end": 23.674,
+      "zh": "人多一点，*菜就多一点*。",
+      "en": "More people, more dishes."
+    },
+    {
+      "start": 23.774,
+      "end": 26.614,
+      "zh": "热气糊了镜头，*正好*。",
+      "en": "Steam fogs the lens. Good."
+    },
+    {
+      "start": 26.714,
+      "end": 29.218,
+      "zh": "砂锅里，*还在滚*。",
+      "en": "Still bubbling in the pot."
+    },
+    {
+      "start": 29.318,
+      "end": 32.35,
+      "zh": "不赶时间，*是这顿的规矩*。",
+      "en": "No rush is the rule tonight."
+    },
+    {
+      "start": 32.45,
+      "end": 35.338,
+      "zh": "汤剩一点，*话还没说完*。",
+      "en": "Soup's nearly gone; talking isn't."
+    },
+    {
+      "start": 35.438,
+      "end": 39.154,
+      "zh": "下次还来，*锅要滚，人要齐*。",
+      "en": "Next time: same pot, same people."
+    }
+  ]
+}

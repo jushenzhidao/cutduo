@@ -5,9 +5,13 @@
  *
  * 用法: node render-parallel.mjs --package packages/editorial-sync.motion \
  *         --inputs edits/inputs-v5-xiaoxiao.json --out out/parallel.mp4 --jobs 4
+ *
+ * 可选：--fps 60 覆盖模板声明的帧率；--frames N 只渲前 N 帧（做微基准）；
+ *       --browser chromium|chrome|shell|shell1208 选浏览器（chrome = 系统 Chrome，shell = headless shell）
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { spawn, execFileSync } from 'node:child_process';
 import { once } from 'node:events';
 import { chromium } from 'playwright';
@@ -18,7 +22,20 @@ const PKG = path.resolve(get('package', 'packages/editorial-sync.motion'));
 const INPUTS = path.resolve(get('inputs', 'edits/inputs-v5-xiaoxiao.json'));
 const OUT = path.resolve(get('out', 'out/parallel.mp4'));
 const JOBS = Number(get('jobs', 4));
+const FPS_OVERRIDE = get('fps', null);
+const FRAMES = Number(get('frames', 0)) || 0;
+const BROWSER = get('browser', 'chromium');
 const FFMPEG = '/opt/homebrew/bin/ffmpeg';
+
+const PW = path.join(os.homedir(), 'Library/Caches/ms-playwright');
+const SHELL = (rev) => path.join(PW, `chromium_headless_shell-${rev}`, 'chrome-headless-shell-mac-arm64/chrome-headless-shell');
+const LAUNCH = {
+  chromium: {},
+  chrome: { channel: 'chrome' },
+  shell: { executablePath: SHELL(1254) },
+  shell1208: { executablePath: SHELL(1208) },
+}[BROWSER] ?? {};
+if (BROWSER !== 'chromium' && !Object.keys(LAUNCH).length) throw new Error(`unknown --browser ${BROWSER}`);
 
 const tmp = fs.mkdtempSync('/tmp/mg-par-');
 execFileSync('python3', ['safe-unpack.py', PKG, tmp]);
@@ -35,15 +52,16 @@ html = html.replace(/<head[^>]*>/i, (h) =>
   h + `<script>window.MOTION_INPUTS=${JSON.stringify(inputs).replace(/</g, '\\u003c')};</script>`);
 
 const W = m.output.width, H = m.output.height;
-const NUM = m.output.fps.num, DEN = m.output.fps.den;
-const TOTAL = Math.round((inputs.durationSeconds || m.output.durationSeconds) * NUM / DEN);
+const NUM = FPS_OVERRIDE ? Number(FPS_OVERRIDE) : m.output.fps.num, DEN = FPS_OVERRIDE ? 1 : m.output.fps.den;
+const TOTAL_FULL = Math.round((inputs.durationSeconds || m.output.durationSeconds) * NUM / DEN);
+const TOTAL = FRAMES ? Math.min(TOTAL_FULL, FRAMES) : TOTAL_FULL;
 const clip = { x: 0, y: 0, width: W, height: H };
 const t0 = Date.now();
 
 function partPath(i) { return path.join(tmp, `part-${i}.ts`); }
 
 async function renderSegment(i, start, end) {
-  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
+  const browser = await chromium.launch({ headless: true, ...LAUNCH, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
   const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
   await page.setContent(html, { waitUntil: 'load' });
   await page.evaluate(() => (window.READY || Promise.resolve()).then(() => document.fonts.ready));

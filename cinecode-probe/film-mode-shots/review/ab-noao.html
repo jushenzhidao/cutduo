@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>film mode: one parametric world, several shots</title>
+<style>html,body{margin:0;background:#000;color:#888;font:12px/1.4 ui-monospace,Menlo,monospace}canvas{display:block;max-width:100vw;max-height:100vh;height:auto;margin:0 auto}#hud{position:fixed;left:8px;bottom:6px;opacity:.7}</style>
+</head>
+<body>
+<canvas id="c"></canvas><div id="hud"></div>
+<script>
+// Film-mode world, parameterised. The starter's world (terrain, one monolith, a low sun, haze, dust) is kept, but every
+// choice a shot makes — sun, palette, tower count, lens, camera path, exposure — is a uniform set from a preset, so one
+// file renders any number of shots and each one stays a pure function of the frame index.
+//
+// Frame contract (tools/capture.mjs): window.READY / renderFrame(i) / captureFrame(i) / renderAudio().
+// URL params: shot=<id from SHOTS>, w, h, seed, capture=1.
+//
+// Shots are declared below; `node tools/capture.mjs --url engine/scene.html --params "shot=dawn-push"`.
+
+const q = new URLSearchParams(location.search);
+const SHOT_ID = q.get('shot') || 'dawn-push';
+const SHOTS = {
+  // backlit monolith at first light: the sun sits just above the horizon behind the stone, so the subject is a
+  // silhouette in a warm fog and the camera pushes in along the shadow.
+  'dawn-push': {
+    mood: 'dawn', towers: 1, mono: [0.9, 4.2, 0.28], focal: 35, exposure: 0.85, grain: 0.045,
+    sun: [-0.30, 0.045, 0.95], sunCol: [1.00, 0.52, 0.26], sunPow: 8.5,
+    skyA: [1.05, 0.46, 0.24], skyB: [0.07, 0.11, 0.24], sand: [0.63, 0.47, 0.33], stone: [0.025, 0.024, 0.026],
+    fogA: [0.33, 0.19, 0.16], stars: 0,
+    cam: 'push', eye: [2.4, 1.7], pos: [[-13, -54], [-2.5, -25]], target: [0.4, 7.2, 0], horizon: 0.0,
+  },
+  // two towers at dusk, side light: long parallel shadows, camera cranes up and drifts right so the plain opens.
+  'dusk-crane': {
+    mood: 'dusk', towers: 2, mono: [0.62, 5.6, 0.42], focal: 42, exposure: 0.95, grain: 0.04,
+    sun: [-0.86, 0.13, 0.49], sunCol: [1.00, 0.45, 0.36], sunPow: 7.0,
+    skyA: [0.95, 0.42, 0.45], skyB: [0.10, 0.09, 0.23], sand: [0.55, 0.42, 0.38], stone: [0.03, 0.026, 0.028],
+    fogA: [0.36, 0.20, 0.22], stars: 0.0,
+    cam: 'crane', eye: [1.6, 4.6], pos: [[-5, -44], [4, -29]], target: [-1.5, 8.3, -2], horizon: 0.0,
+  },
+  // moonlit night, stars on: a slow orbit around the pair, so the far tower slides behind the near one.
+  'night-orbit': {
+    mood: 'night', towers: 2, mono: [0.55, 5.0, 0.34], focal: 34, exposure: 1.6, grain: 0.06,
+    sun: [-0.52, 0.44, 0.73], sunCol: [0.34, 0.44, 0.78], sunPow: 5.0,
+    skyA: [0.020, 0.030, 0.070], skyB: [0.004, 0.008, 0.020], sand: [0.10, 0.12, 0.16], stone: [0.020, 0.022, 0.030],
+    fogA: [0.05, 0.07, 0.12], stars: 1.0,
+    cam: 'orbit', eye: [2.2, 2.2], pos: [[-16, 34], [26, 28]], target: [0, 6.6, -3], horizon: 0.0,
+  },
+  // vertical, noon, 28 mm: the camera skates low past the towers, the plain burns, dust in the air.
+  'noon-skate': {
+    mood: 'noon', towers: 2, mono: [0.75, 4.6, 0.30], focal: 30, exposure: 0.8, grain: 0.05,
+    sun: [0.26, 0.70, 0.62], sunCol: [1.00, 0.95, 0.84], sunPow: 10.0,
+    skyA: [0.55, 0.72, 0.95], skyB: [0.12, 0.30, 0.65], sand: [0.85, 0.72, 0.52], stone: [0.04, 0.038, 0.036],
+    fogA: [0.75, 0.80, 0.90], stars: 0,
+    cam: 'skate', eye: [1.2, 0.95], pos: [[-36, -17], [14, -11]], target: [0, 6.4, -4], horizon: 0.0,
+  },
+};
+const S = SHOTS[SHOT_ID];
+if (!S) throw new Error(`unknown shot "${SHOT_ID}"; choose one of ${Object.keys(SHOTS).join(', ')}`);
+
+const W = +q.get('w') || 1920;
+const H = +q.get('h') || 1080;
+const SEED = +q.get('seed') || 7;
+const FPS = 24;
+const DURATION = 6;
+const FRAMES = Math.round(FPS * DURATION);
+
+const canvas = document.getElementById('c');
+canvas.width = W; canvas.height = H;
+const gl = canvas.getContext('webgl2', { antialias: false, preserveDrawingBuffer: true, alpha: false });
+if (!gl) throw new Error('WebGL2 not available');
+
+const VERT = `#version 300 es
+in vec2 p; void main() { gl_Position = vec4(p, 0.0, 1.0); }`;
+
+const FRAG = `#version 300 es
+precision highp float;
+uniform vec2  uRes;
+uniform float uTime;
+uniform float uFrame;
+uniform float uDur;
+uniform float uSeed;
+uniform float uFocal;
+uniform vec2  uCamXZ;
+uniform float uEye;
+uniform vec3  uCamTgt;
+uniform vec3  uSun;
+uniform vec3  uSunCol;
+uniform vec3  uSkyA;
+uniform vec3  uSkyB;
+uniform vec3  uSand;
+uniform vec3  uStone;
+uniform vec3  uFogA;
+uniform vec3  uMono;
+uniform float uTowers;
+uniform float uStars;
+uniform float uExposure;
+uniform float uGrain;
+out vec4 outColor;
+
+float hash12(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+float noise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  vec2 s = vec2(uSeed * 17.13, uSeed * 7.31);
+  float a = hash12(i + s), b = hash12(i + vec2(1, 0) + s);
+  float c = hash12(i + vec2(0, 1) + s), d = hash12(i + vec2(1, 1) + s);
+  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+}
+float fbm(vec2 p) {
+  float h = 0.0, a = 0.5;
+  for (int i = 0; i < 5; i++) { h += a * noise(p); p = p * 2.03 + vec2(1.7, 9.2); a *= 0.5; }
+  return h;
+}
+
+float terrain(vec2 p) {
+  float base = fbm(p * 0.035) * 6.0;
+  float dunes = 1.0 - abs(sin(p.x * 0.05 + p.y * 0.012 + fbm(p * 0.02) * 4.0));
+  float h = base + dunes * dunes * 1.6 + fbm(p * 0.6) * 0.08;
+  float away = smoothstep(4.0, 14.0, length(p));
+  return mix(fbm(vec2(0.0)) * 6.0 + 0.3, h, away);
+}
+float BASE_Y;
+vec3 T1_C, T2_C;
+
+float boxHit(vec3 ro, vec3 rd, vec3 c, vec3 b, out vec3 n) {
+  vec3 m = 1.0 / rd, o = ro - c, k = abs(m) * b;
+  vec3 t1 = -m * o - k, t2 = -m * o + k;
+  float tN = max(max(t1.x, t1.y), t1.z), tF = min(min(t2.x, t2.y), t2.z);
+  if (tN > tF || tF < 0.0) return -1.0;
+  n = -sign(rd) * step(t1.yzx, t1.xyz) * step(t1.zxy, t1.xyz);
+  return tN;
+}
+// nearest of the two towers (the second is absent when uTowers < 1.5)
+float towerHit(vec3 ro, vec3 rd, out vec3 n, out float which) {
+  vec3 n1, n2;
+  float a = boxHit(ro, rd, T1_C, uMono, n1);
+  float b = uTowers > 1.5 ? boxHit(ro, rd, T2_C, uMono * vec3(0.78, 0.66, 0.9), n2) : -1.0;
+  if (a < 0.0 && b < 0.0) { n = n1; which = 0.0; return -1.0; }
+  if (a > 0.0 && (b < 0.0 || a <= b)) { n = n1; which = 1.0; return a; }
+  n = n2; which = 2.0; return b;
+}
+
+float terrainHit(vec3 ro, vec3 rd, float tmax) {
+  float t = 0.5;
+  for (int i = 0; i < 320; i++) {
+    vec3 p = ro + rd * t;
+    float h = p.y - terrain(p.xz);
+    if (h < 0.0015 * t) return t;
+    t += max(h * 0.42, 0.004 * t);
+    if (t > tmax) return -1.0;
+  }
+  return t < tmax ? t : -1.0;
+}
+vec3 terrainNormal(vec2 p, float t) {
+  float e = 0.02 + 0.0015 * t;
+  return normalize(vec3(terrain(p - vec2(e, 0)) - terrain(p + vec2(e, 0)), 2.0 * e,
+                        terrain(p - vec2(0, e)) - terrain(p + vec2(0, e))));
+}
+
+vec3 sky(vec3 rd) {
+  vec3 sn = normalize(uSun);
+  float h = max(rd.y, 0.0);
+  vec3 col = mix(uSkyA, uSkyB, pow(h, 0.45));
+  float s = max(dot(rd, sn), 0.0);
+  col += uSunCol * 0.04 * pow(s, 12.0);
+  col += uSunCol * 0.09 * pow(s, 90.0);
+  col += uSunCol * smoothstep(0.99994, 0.99997, s) * 3.0;
+  if (uStars > 0.001) {
+    vec2 sp = vec2(atan(rd.z, rd.x), asin(clamp(rd.y, -1.0, 1.0))) * 72.0;
+    vec2 cell = floor(sp), f = fract(sp) - 0.5;
+    float r = hash12(cell + 11.0);
+    vec2 off = (vec2(hash12(cell + 2.3), hash12(cell + 5.1)) - 0.5) * 0.7;
+    float m = smoothstep(0.16, 0.0, length(f - off)) * step(0.90, r) * smoothstep(0.02, 0.25, rd.y);
+    col += vec3(0.85, 0.9, 1.0) * m * uStars * (0.35 + 0.65 * hash12(cell + 9.9)) * 1.6;
+  }
+  return col;
+}
+
+float sunShadow(vec3 p) {
+  vec3 sn = normalize(uSun), n;
+  float which;
+  if (towerHit(p, sn, n, which) > 0.0) return 0.0;
+  // A near-vertical sun over a flat plain is the worst case for a fixed-step shadow march: the penumbra bands into
+  // concentric rings. Starting a little closer, stepping finer, and dithering the start per pixel turns that banding
+  // into grain instead (still deterministic: the dither is a hash of the pixel, not of time).
+  float jit = hash12(gl_FragCoord.xy + uSeed * 3.7) * 0.06;
+  float res = 1.0, t = 0.18 + jit;
+  for (int i = 0; i < 40; i++) {
+    vec3 q = p + sn * t;
+    float h = q.y - terrain(q.xz);
+    res = min(res, 11.0 * h / t);
+    t += clamp(h * 0.45, 0.12, 2.5);
+    if (res < 0.01 || t > 80.0) break;
+  }
+  return clamp(res, 0.0, 1.0);
+}
+
+vec3 aces(vec3 x) { return clamp(x * (2.51 * x + 0.03) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
+
+vec3 shadeRay(vec2 uv, float aspect) {
+  vec3 sn = normalize(uSun);
+  vec3 ro = vec3(uCamXZ.x, terrain(uCamXZ) + uEye, uCamXZ.y);
+  vec3 fw = normalize(uCamTgt - ro);
+  vec3 rt = normalize(cross(fw, vec3(0, 1, 0)));
+  vec3 up = cross(rt, fw);
+  float tanH = 18.0 / uFocal;
+  vec3 rd = normalize(fw + uv.x * tanH * rt + uv.y * (tanH / aspect) * up);
+
+  vec3 nM; float which;
+  float tM = towerHit(ro, rd, nM, which);
+  float tT = terrainHit(ro, rd, tM > 0.0 ? tM : 600.0);
+
+  vec3 col;
+  float t = tT > 0.0 ? tT : tM;
+  if (t > 0.0) {
+    vec3 p = ro + rd * t;
+    vec3 amb;
+    if (tT > 0.0) {
+      vec3 n = terrainNormal(p.xz, t);
+      float dif = max(dot(n, sn), 0.0) * sunShadow(p + n * 0.05);
+      amb = mix(vec3(0.10, 0.08, 0.10) * (0.4 + 0.6 * max(uSunCol.r, 0.2)), vec3(0.16, 0.20, 0.32) * (0.5 + uSkyA.b), n.y * 0.5 + 0.5);
+      float r = length(max(abs(p.xz - T1_C.xz) - uMono.xz, 0.0));
+      if (uTowers > 1.5) r = min(r, length(max(abs(p.xz - T2_C.xz) - uMono.xz, 0.0)));
+      float ao = 1.0;
+      vec3 sand = uSand * (0.85 + 0.3 * fbm(p.xz * 3.0));
+      col = sand * (uSunCol * 0.12 * dif + amb * 0.9 * ao);
+    } else {
+      vec3 n = nM;
+      amb = mix(vec3(0.10, 0.08, 0.10), vec3(0.16, 0.20, 0.32), n.y * 0.5 + 0.5);
+      float dif = max(dot(n, sn), 0.0);
+      float lift = smoothstep(0.0, 2.0, p.y - BASE_Y);
+      vec3 stone = uStone * (0.8 + 0.4 * fbm(p.xy * 4.0 + p.z));
+      float rim = pow(1.0 - abs(dot(n, rd)), 4.0) * pow(max(dot(rd, sn), 0.0), 2.0);
+      col = stone * (amb * 0.6 * mix(0.5, 1.0, lift) + uSunCol * 0.05 * dif) + uSunCol * 0.03 * rim;
+    }
+    float fogAmt = 1.0 - exp(-max(t - 10.0, 0.0) * 0.0065);
+    vec3 fogCol = mix(uFogA, uSunCol * 0.07, pow(max(dot(rd, sn), 0.0), 5.0));
+    col = mix(col, fogCol, fogAmt);
+  } else {
+    col = sky(rd);
+  }
+
+  for (int k = 0; k < 2; k++) {
+    float sc = k == 0 ? 90.0 : 45.0;
+    vec2 g2 = gl_FragCoord.xy / uRes.y * sc + vec2(uTime * (k == 0 ? 2.2 : 4.0), -uTime * 0.6) + float(k) * 31.7;
+    vec2 cell = floor(g2), f = fract(g2) - 0.5;
+    float r = hash12(cell + uSeed);
+    vec2 off = vec2(hash12(cell + 3.1), hash12(cell + 7.7)) - 0.5;
+    float m = smoothstep(0.06, 0.0, length(f - off * 0.6)) * step(0.93, r);
+    col += m * uSunCol * 0.010 * (0.3 + pow(max(dot(rd, sn), 0.0), 3.0));
+  }
+
+  col = aces(col * uExposure);
+  col = pow(col, vec3(1.0 / 2.2));
+  float vig = smoothstep(1.55, 0.35, length(uv * vec2(1.0, 0.75)));
+  col *= mix(0.72, 1.0, vig);
+  float g = hash12(gl_FragCoord.xy + vec2(uFrame * 37.0, uFrame * 91.0) + uSeed) - 0.5;
+  float luma = dot(col, vec3(0.2126, 0.7152, 0.0722));
+  col += g * uGrain * (0.35 + 0.65 * (1.0 - abs(luma * 2.0 - 1.0)));
+  return clamp(col, 0.0, 1.0);
+}
+
+void main() {
+  BASE_Y = terrain(vec2(0.0));
+  T1_C = vec3(0.0, BASE_Y + uMono.y - 0.4, 0.0);
+  T2_C = vec3(-7.0, BASE_Y + uMono.y * 0.66 - 0.4, 9.0);
+  vec2 uv = (gl_FragCoord.xy / uRes) * 2.0 - 1.0;
+  float aspect = uRes.x / uRes.y;
+  outColor = vec4(shadeRay(uv, aspect), 1.0);
+}`;
+
+function compile(type, src) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  return s;
+}
+const prog = gl.createProgram();
+gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+gl.linkProgram(prog);
+if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+gl.useProgram(prog);
+
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+const loc = gl.getAttribLocation(prog, 'p');
+gl.enableVertexAttribArray(loc);
+gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+const U = {};
+for (const n of ['uRes', 'uTime', 'uFrame', 'uDur', 'uSeed', 'uFocal', 'uCamXZ', 'uEye', 'uCamTgt', 'uSun', 'uSunCol',
+                 'uSkyA', 'uSkyB', 'uSand', 'uStone', 'uFogA', 'uMono', 'uTowers', 'uStars', 'uExposure', 'uGrain'])
+  U[n] = gl.getUniformLocation(prog, n);
+gl.viewport(0, 0, W, H);
+
+const lerp = (a, b, k) => a + (b - a) * k;
+// The camera path, one continuous move per shot. u is eased out so frame 0 is already the fastest (hook rule).
+function camera(s) {
+  const u = 1 - (1 - s) * (1 - s);
+  const [e0, e1] = S.eye;
+  if (S.cam === 'orbit') {
+    const a = lerp(S.pos[0][0], S.pos[1][0], u) * Math.PI / 180;   // degrees around the target
+    const r = lerp(S.pos[0][1], S.pos[1][1], u);
+    return { xz: [Math.sin(a) * r, Math.cos(a) * r + S.target[2]], eye: lerp(e0, e1, u) };
+  }
+  return {
+    xz: [lerp(S.pos[0][0], S.pos[1][0], u), lerp(S.pos[0][1], S.pos[1][1], u)],
+    eye: lerp(e0, e1, u),
+  };
+}
+const camAt = (t) => camera(Math.min(1, Math.max(0, t / DURATION)));
+
+window.renderFrame = (frame) => {
+  const t = frame / FPS;
+  const c = camAt(t);
+  gl.uniform2f(U.uRes, W, H);
+  gl.uniform1f(U.uTime, t);
+  gl.uniform1f(U.uFrame, frame);
+  gl.uniform1f(U.uDur, DURATION);
+  gl.uniform1f(U.uSeed, SEED);
+  gl.uniform1f(U.uFocal, S.focal);
+  gl.uniform2f(U.uCamXZ, c.xz[0], c.xz[1]);
+  gl.uniform1f(U.uEye, c.eye);
+  gl.uniform3f(U.uCamTgt, S.target[0], S.target[1] + (S.target[1] > 0 ? 0 : 0), S.target[2]);
+  gl.uniform3f(U.uSun, S.sun[0], S.sun[1], S.sun[2]);
+  gl.uniform3f(U.uSunCol, S.sunCol[0] * S.sunPow, S.sunCol[1] * S.sunPow, S.sunCol[2] * S.sunPow);
+  gl.uniform3f(U.uSkyA, S.skyA[0], S.skyA[1], S.skyA[2]);
+  gl.uniform3f(U.uSkyB, S.skyB[0], S.skyB[1], S.skyB[2]);
+  gl.uniform3f(U.uSand, S.sand[0], S.sand[1], S.sand[2]);
+  gl.uniform3f(U.uStone, S.stone[0], S.stone[1], S.stone[2]);
+  gl.uniform3f(U.uFogA, S.fogA[0], S.fogA[1], S.fogA[2]);
+  gl.uniform3f(U.uMono, S.mono[0], S.mono[1], S.mono[2]);
+  gl.uniform1f(U.uTowers, S.towers);
+  gl.uniform1f(U.uStars, S.stars);
+  gl.uniform1f(U.uExposure, S.exposure);
+  gl.uniform1f(U.uGrain, S.grain);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.finish();
+};
+
+window.captureFrame = (frame, type = 'image/jpeg', quality = 0.95) => {
+  window.renderFrame(frame);
+  return canvas.toDataURL(type, quality);
+};
+
+// Sound: one designed bed per mood — air under everything, a low drone for weight, and (except at night) one soft
+// impact when the move commits. Rendered offline, so the picture and the sound come from the same timeline.
+const SR = 48000;
+function noiseBuffer(ctx, secs, salt) {
+  const n = Math.ceil(secs * SR), b = ctx.createBuffer(1, n, SR), d = b.getChannelData(0);
+  let s = salt | 0 || 1;
+  for (let i = 0; i < n; i++) { s = (s * 1664525 + 1013904223) >>> 0; d[i] = (s / 4294967296) * 2 - 1; }
+  return b;
+}
+window.renderAudio = async () => {
+  const ctx = new OfflineAudioContext(2, Math.round(DURATION * SR), SR);
+  const bus = ctx.createGain(); bus.gain.value = 0.9; bus.connect(ctx.destination);
+  const night = S.mood === 'night';
+  // air
+  const air = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), ag = ctx.createGain(), ap = ctx.createStereoPanner();
+  air.buffer = noiseBuffer(ctx, DURATION + 0.5, 9); bp.type = 'bandpass'; bp.Q.value = night ? 0.9 : 0.7;
+  bp.frequency.setValueAtTime(night ? 620 : 380, 0); bp.frequency.linearRampToValueAtTime(night ? 900 : 1250, DURATION);
+  ag.gain.setValueAtTime(0.0001, 0); ag.gain.exponentialRampToValueAtTime(night ? 0.05 : 0.075, 0.8);
+  ag.gain.exponentialRampToValueAtTime(0.0001, DURATION);
+  ap.pan.setValueAtTime(-0.5, 0); ap.pan.linearRampToValueAtTime(0.5, DURATION);
+  air.connect(bp).connect(ag).connect(ap).connect(bus); air.start(0);
+  // weight
+  const roots = { dawn: 55, dusk: 61.7, night: 43.7, noon: 82.4 };
+  const f0 = roots[S.mood] || 55;
+  for (const [m, g] of [[1, 0.10], [1.5, 0.05], [2.01, 0.03]]) {
+    const o = ctx.createOscillator(), v = ctx.createGain(), lp = ctx.createBiquadFilter();
+    o.type = 'sawtooth'; o.frequency.value = f0 * m; lp.type = 'lowpass'; lp.frequency.value = 260;
+    v.gain.setValueAtTime(0.0001, 0); v.gain.exponentialRampToValueAtTime(g, 1.2);
+    v.gain.exponentialRampToValueAtTime(0.0001, DURATION);
+    o.connect(lp).connect(v).connect(bus); o.start(0); o.stop(DURATION);
+  }
+  // one soft impact, where the move commits
+  if (!night) {
+    const o = ctx.createOscillator(), v = ctx.createGain();
+    o.frequency.setValueAtTime(120, 0.95); o.frequency.exponentialRampToValueAtTime(38, 1.35);
+    v.gain.setValueAtTime(0.0001, 0.95); v.gain.exponentialRampToValueAtTime(0.16, 0.98);
+    v.gain.exponentialRampToValueAtTime(0.0001, 1.9);
+    o.connect(v).connect(bus); o.start(0.95); o.stop(1.95);
+    const h = ctx.createBufferSource(), hp = ctx.createBiquadFilter(), hv = ctx.createGain();
+    h.buffer = noiseBuffer(ctx, 0.5, 31); hp.type = 'highpass'; hp.frequency.value = 3200;
+    hv.gain.setValueAtTime(0.0001, 0.94); hv.gain.exponentialRampToValueAtTime(0.05, 0.965);
+    hv.gain.exponentialRampToValueAtTime(0.0001, 1.5);
+    h.connect(hp).connect(hv).connect(bus); h.start(0.94);
+  }
+  return ctx.startRendering();
+};
+
+const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+const renderer = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+window.READY = Promise.resolve({ frames: FRAMES, fps: FPS, width: W, height: H, renderer, title: SHOT_ID });
+
+if (!q.get('capture')) {
+  let frame = 0, playing = true, last = performance.now(), acc = 0;
+  const hud = document.getElementById('hud');
+  addEventListener('keydown', (e) => {
+    if (e.code === 'Space') playing = !playing;
+    if (e.code === 'ArrowRight') { playing = false; frame = Math.min(FRAMES - 1, frame + 1); }
+    if (e.code === 'ArrowLeft') { playing = false; frame = Math.max(0, frame - 1); }
+  });
+  const loop = (now) => {
+    if (playing) { acc += now - last; while (acc >= 1000 / FPS) { frame = (frame + 1) % FRAMES; acc -= 1000 / FPS; } }
+    last = now;
+    window.renderFrame(frame);
+    hud.textContent = `${SHOT_ID}  frame ${frame}/${FRAMES - 1}  t=${(frame / FPS).toFixed(2)}s  ${renderer}`;
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>

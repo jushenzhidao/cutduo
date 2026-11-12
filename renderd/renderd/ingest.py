@@ -49,6 +49,20 @@ ACT_DESC = {
 
 HDR_TRANSFERS = ("arib-std-b67", "smpte2084", "smpte428")
 
+# 只影响元数据、不影响像素的动作。出现任何别的动作都意味着画面要变，必须重编。
+METADATA_ONLY_ACTIONS = {"TAG_COLOR", "AUDIO_SYNTH"}
+
+
+def can_copy_video(actions, audio_role: bool = False) -> bool:
+    """这组动作能否用 `-c:v copy` 完成（跳过整片重编）。
+
+    decide() 会给所有影响几何/帧率/像素格式/SAR/旋转/时长的情况加对应动作，
+    因此「动作集合 ⊆ 元数据类」等价于「视频流本身已经合规」。
+    实测同一素材：copy 672 ms vs 重编 11 250 ms（16.7×），
+    且 copy 写出的容器色彩标记（primaries/transfer/space）比重编更完整。
+    """
+    return (not audio_role) and set(actions) <= METADATA_ONLY_ACTIONS
+
 # zscale 线性光 + hable tone mapping。比 colorspace 直转保留更多高光层次。
 # 实测宿主机 ffmpeg 9.0.2 与容器 ffmpeg 7.1.5 均可用。
 HDR_CHAIN = ("zscale=t=linear:npl=100,format=gbrpf32le,"
@@ -408,6 +422,12 @@ def normalize(pr: dict, plan: dict, out: Path, cfg: Config, *,
     synth = "AUDIO_SYNTH" in plan["actions"]
     dur = min(pr["duration_s"] or 0, cfg.max_asset_seconds)
     passthrough = (not plan["actions"]) and not audio_role
+    # 「只补元数据」不重编视频。
+    # decide() 会给所有影响画面几何/帧率/像素格式/SAR/旋转的情况加对应动作，
+    # 所以「动作集合 ⊆ {TAG_COLOR, AUDIO_SYNTH}」就等价于「视频流本身已经合规」。
+    # 实测同一素材：copy 672 ms vs 重编 11 250 ms，而且 copy 出来的容器色彩标记
+    # （primaries/transfer/space 三项）比重编更完整 —— 重编反而只写成了一项。
+    copy_video = can_copy_video(plan["actions"], audio_role)
 
     argv = [cfg.ffmpeg, "-y", "-v", "error", "-nostdin", "-i", str(pr["path"])]
     if synth:
@@ -422,6 +442,14 @@ def normalize(pr: dict, plan: dict, out: Path, cfg: Config, *,
 
     if passthrough:
         argv += ["-c", "copy"]
+    elif copy_video:
+        # 视频流原样搬，只改容器头的色彩标记；音频要么原样搬，要么补一条静音
+        argv += ["-c:v", "copy"] + COLOR_TAG_BT709
+        if synth:
+            argv += ["-c:a", "aac", "-ar", str(cfg.target.sample_rate),
+                     "-ac", str(cfg.target.channels), "-b:a", "192k"]
+        else:
+            argv += ["-c:a", "copy"]
     else:
         if audio_role:
             if plan["actions"]:

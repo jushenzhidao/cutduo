@@ -300,14 +300,18 @@ class Service:
 
         norm = IR.normalize(ir)
         dur = IR.duration_seconds(norm)
-        remaining = self.store.quota_remaining_seconds(tenant)
-        if remaining is not None and dur > remaining:
-            raise JobError("E_QUOTA_EXCEEDED",
-                           f"本月剩余 {remaining:.0f}s，本次需要 {dur:.0f}s",
-                           hint="下月重置或联系管理员提额",
-                           allowed_values=[f"<= {remaining:.0f}"])
-        if remaining is not None and remaining <= 0:
-            raise JobError("E_QUOTA_EXCEEDED", "本月配额已用完")
+        # 幂等重放没有产生新任务，不该被配额拦住 —— 否则「配额用尽」会让调用方
+        # 连自己上一秒提交的任务都查不回来。权威判定在 store.submit() 的事务里，
+        # 这里只是提前给一个更快的失败（省掉后面的预检开销）。
+        if self.store.find_by_idem(tenant, idem) is None:
+            remaining = self.store.quota_remaining_seconds(tenant)
+            if remaining is not None and dur > remaining:
+                raise JobError("E_QUOTA_EXCEEDED",
+                               f"本月剩余 {remaining:.0f}s（已扣在途任务），本次需要 {dur:.0f}s",
+                               hint="等下月重置、提高配额，或等当前任务结束",
+                               allowed_values=[f"<= {remaining:.0f}"])
+            if remaining is not None and remaining <= 0:
+                raise JobError("E_QUOTA_EXCEEDED", "本月配额已用完（含在途任务）")
 
         if payload.get("dry_run"):
             return {"dry_run": True, "status": "accepted", "job_id": None,
@@ -344,7 +348,7 @@ class Service:
             priority=prio, max_attempts=self.cfg.max_attempts,
             callback_url=payload.get("callback_url"),
             callback_pin=pin, delivery_spec=delivery_spec,
-            cost_seconds=estimate(norm).render_s)
+            cost_seconds=estimate(norm).render_s, billed_seconds=dur)
 
         self.store.audit(action="render.submit", tenant=tenant, target=job["id"],
                          data={"template": meta.get("template_id"), "replay": replay})
@@ -580,12 +584,28 @@ class Service:
         for name, help_text, value in gauges:
             lines += [f"# HELP {name} {help_text}",
                       f"# TYPE {name} gauge", f"{name} {value}"]
-        lines += ["# HELP renderd_tenant_inflight Jobs in flight per tenant",
-                  "# TYPE renderd_tenant_inflight gauge"]
-        for tenant_name, n in sorted(q["inflight_by_tenant"].items()):
-            lines.append(f'renderd_tenant_inflight{{tenant="{tenant_name}"}} {n}')
-        for item in s["by_status"]:
-            lines.append(f'renderd_jobs{{status="{item["status"]}",stage="{item["stage"]}"}} '
-                         f'{item["count"]}')
+        # 租户在途：对**所有登记过的租户**都发一条（无在途发 0）。
+        # 只在有在途时才发，会让这条序列在空闲时整条消失 —— 面板断线、
+        # rate() 失效、absent() 把正常空闲误判成故障。
+        # 注意 HELP/TYPE 只在真的有样本时才发：声明了却零样本同样是坏味道。
+        inflight = q["inflight_by_tenant"]
+        tenants = sorted(set(self.store.known_tenants()) | set(inflight))
+        if tenants:
+            lines += ["# HELP renderd_tenant_inflight Jobs in flight per tenant",
+                      "# TYPE renderd_tenant_inflight gauge"]
+            for tenant_name in tenants:
+                label = str(tenant_name).replace("\\", "\\\\").replace('"', '\\"')
+                lines.append(f'renderd_tenant_inflight{{tenant="{label}"}} '
+                             f'{inflight.get(tenant_name, 0)}')
+        # 分组指标：没有任何任务时不存在任何分组，此时整块都不发，
+        # 而不是留一个没有样本的 HELP（空库启动时就会被自己坑到）。
+        if s["by_status"]:
+            lines += ["# HELP renderd_jobs Jobs by status and stage",
+                      "# TYPE renderd_jobs gauge"]
+            for item in s["by_status"]:
+                lines.append(f'renderd_jobs{{status="{item["status"]}",'
+                             f'stage="{item["stage"]}"}} {item["count"]}')
+        lines += ["# HELP renderd_uptime_seconds Process uptime in seconds",
+                  "# TYPE renderd_uptime_seconds gauge"]
         lines.append(f"renderd_uptime_seconds {round(time.time() - self.started_at, 1)}")
         return "\n".join(lines) + "\n"

@@ -1,0 +1,120 @@
+{
+  "note": "每个模板取官网详情页中属于自身 templateId 且非 -card 的预览视频；仅本地校验",
+  "items": [
+    {
+      "index": 1,
+      "slug": "motiongit-promo-ink",
+      "title": "Paper Scroll · Brand Story",
+      "version": "2.6.6",
+      "sha256_prefix": "27923ea0ca52ec61",
+      "declared_size": "16 MB",
+      "runtime": "html-canvas/1",
+      "output": "1920x1080 @60fps, 00:59",
+      "download_url": "https://motiongit.com/motiongit/motiongit-promo-ink/download/2.6.6",
+      "user_example": true,
+      "templateId": 592,
+      "preview_url": "https://media.openaicut.com/previews/592/draft-en-1f98c9f9df3c.mp4",
+      "all_candidates": [
+        "https://media.openaicut.com/previews/592/draft-en-1f98c9f9df3c.mp4"
+      ]
+    },
+    {
+      "index": 2,
+      "slug": "motiongit-promo-blueprint",
+      "title": "",
+      "version": "2.6.4",
+      "sha256_prefix": "f75de87d4c6d7335",
+      "declared_size": "839 KB",
+      "download_url": "https://motiongit.com/motiongit/motiongit-promo-blueprint/download/2.6.4",
+      "templateId": 590,
+      "preview_url": "https://media.openaicut.com/previews/590/draft-en-99059891101e.mp4",
+      "all_candidates": [
+        "https://media.openaicut.com/previews/590/draft-en-99059891101e.mp4"
+      ]
+    },
+    {
+      "index": 3,
+      "slug": "motiongit-promo-creator",
+      "title": "",
+      "version": "2.6.4",
+      "sha256_prefix": "618b713ad7935ece",
+      "declared_size": "7 MB",
+      "download_url": "https://motiongit.com/motiongit/motiongit-promo-creator/download/2.6.4",
+      "templateId": 589,
+      "preview_url": "https://media.openaicut.com/previews/589/draft-en-9fbec6ff121c.mp4",
+      "all_candidates": [
+        "https://media.openaicut.com/previews/589/draft-en-9fbec6ff121c.mp4"
+      ]
+    },
+    {
+      "index": 4,
+      "slug": "motiongit-promo-keynote",
+      "title": "",
+      "version": "2.6.4",
+      "sha256_prefix": "7be15eee5b416769",
+      "declared_size": "11 MB",
+      "download_url": "https://motiongit.com/motiongit/motiongit-promo-keynote/download/2.6.4",
+      "templateId": 591,
+      "preview_url": "https://media.openaicut.com/previews/591/draft-en-28eb07a5a332.mp4",
+      "all_candidates": [
+        "https://media.openaicut.com/previews/591/draft-en-28eb07a5a332.mp4"
+      ]
+    },
+    {
+      "index": 5,
+      "slug": "motiongit-promo-main",
+      "title": "Screen Collage · Brand Story",
+      "version": "2.6.5-alpha.1",
+      "sha256_prefix": "d5a66e54e0fe6efa",
+      "declared_size": "2 MB",
+      "download_url": "https://motiongit.com/motiongit/motiongit-promo-main/download/2.6.5-alpha.1",
+      "templateId": 585,
+      "preview_url": "https://media.openaicut.com/previews/585/draft-en-3d2b6bdce3c7.mp4",
+      "all_candidates": [
+        "https://media.openaicut.com/previews/585/draft-en-3d2b6bdce3c7.mp4"
+      ]
+    },
+    {
+      "index": 6,
+      "slug": "motiongit-promo-pixel",
+      "title": "Pixel Platformer · Product Introduction",
+      "version": "2.6.6",
+      "sha256_prefix": "96df0ac75843a83c",
+      "declared_size": "8 MB",
+      "download_url": "https://motiongit.com/motiongit/motiongit-promo-pixel/download/2.6.6",
+      "templateId": 586,
+      "preview_url": "https://media.openaicut.com/previews/586/draft-en-45375e2037e0.mp4",
+      "all_candidates": [
+        "https://media.openaicut.com/previews/586/draft-en-45375e2037e0.mp4"
+      ]
+    },
+    {
+      "index": 7,
+      "slug": "motiongit-promo-user",
+      "title": "",
+      "version": "2.6.5",
+      "sha256_prefix": "e44d35f97e665db8",
+      "declared_size": "7 MB",
+      "download_url": "https://motiongit.com/motiongit/motiongit-promo-user/download/2.6.5",
+      "templateId": 588,
+      "preview_url": "https://media.openaicut.com/previews/588/draft-en-2422d5a878da.mp4",
+      "all_candidates": [
+        "https://media.openaicut.com/previews/588/draft-en-2422d5a878da.mp4"
+      ]
+    },
+    {
+      "index": 8,
+      "slug": "motiongit-promo-velocity",
+      "title": "Light and Dark Cuts · Product Promotion",
+      "version": "2.6.6-alpha.1",
+      "sha256_prefix": "e7f43b7aca6395c1",
+      "declared_size": "1 MB",
+      "download_url": "https://motiongit.com/motiongit/motiongit-promo-velocity/download/2.6.6-alpha.1",
+      "templateId": 587,
+      "preview_url": "https://media.openaicut.com/previews/587/draft-en-389d2163ab5f.mp4",
+      "all_candidates": [
+        "https://media.openaicut.com/previews/587/draft-en-389d2163ab5f.mp4"
+      ]
+    }
+  ]
+}

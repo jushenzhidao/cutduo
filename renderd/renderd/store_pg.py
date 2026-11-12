@@ -115,6 +115,10 @@ def _pg_ddl() -> list[str]:
 _PG_ALTERS = [
     "ALTER TABLE usage ALTER COLUMN bytes TYPE BIGINT",
     "ALTER TABLE rate_window ALTER COLUMN bucket TYPE BIGINT",
+    # 配额预占（2026-11-10）：CREATE TABLE IF NOT EXISTS 不会给存量表加列。
+    # 少了这条，新版 INSERT 会直接报 column "billed_seconds" does not exist。
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS billed_seconds DOUBLE PRECISION "
+    "NOT NULL DEFAULT 0",
 ]
 
 
@@ -236,15 +240,17 @@ class PostgresStore(_sqlite_store.SqliteStore):
                frames_total: int, backend: str = "ffmpeg", priority: int = 0,
                max_attempts: int = 3, callback_url: str | None = None,
                callback_pin: dict | None = None, delivery_spec: dict | None = None,
-               cost_seconds: float = 0.0) -> tuple[dict, bool]:
+               cost_seconds: float = 0.0,
+               billed_seconds: float = 0.0) -> tuple[dict, bool]:
         now = time.time()
         job_id = _sqlite_store.new_job_id()
         with self.tx() as c:
-            c.execute(
+            cur = c.execute(
                 "INSERT INTO jobs(id,tenant,idem_key,ir_hash,ir_json,backend,"
                 "status,stage,priority,attempts,max_attempts,created_at,"
-                "frames_total,callback_url,callback_ip,delivery_json,cost_seconds) "
-                "VALUES(?,?,?,?,?,?,'accepted','queued',?,0,?,?,?,?,?,?,?) "
+                "frames_total,callback_url,callback_ip,delivery_json,cost_seconds,"
+                "billed_seconds) "
+                "VALUES(?,?,?,?,?,?,'accepted','queued',?,0,?,?,?,?,?,?,?,?) "
                 "ON CONFLICT (tenant,idem_key) DO NOTHING",
                 (job_id, tenant, idem_key, ir_hash,
                  json.dumps(ir_json, ensure_ascii=False), backend,
@@ -252,11 +258,14 @@ class PostgresStore(_sqlite_store.SqliteStore):
                  callback_url,
                  json.dumps(callback_pin, ensure_ascii=False) if callback_pin else None,
                  json.dumps(delivery_spec, ensure_ascii=False) if delivery_spec else None,
-                 cost_seconds))
+                 cost_seconds, billed_seconds))
             row = c.execute("SELECT * FROM jobs WHERE tenant=? AND idem_key=?",
                             (tenant, idem_key)).fetchone()
-        job = dict(row)
-        replay = job["id"] != job_id
+            job = dict(row)
+            replay = job["id"] != job_id
+            if not replay and cur.rowcount:
+                # 与 SQLite 后端同一语义：插入后在同一事务里判额度，超了就回滚
+                self._quota_guard(tenant, billed_seconds)
         if not replay:
             self.event(job["id"], "queued", f"accepted, priority={priority}")
         return job, replay

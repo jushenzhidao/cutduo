@@ -1,0 +1,213 @@
+{
+  "method": "v1（骨架渲染器）与 v2（160×90 颜色场 + OCR 文字层）在同一 compare 口径下的 8 点均值；两侧均从原视频按精确时间点抽无损 PNG，编码条件一致。",
+  "note": "MAD / 色差越低越好；锐度比接近 1.0 表示纹理复杂度匹配。v2 的锐度比不作为优化目标（颜色场本身平滑），仅留痕。",
+  "count": 8,
+  "means": {
+    "grid_diff": {
+      "v1": 6.462,
+      "v2": 4.649,
+      "delta": -1.813
+    },
+    "point_diff": {
+      "v1": 12.838,
+      "v2": 4.175,
+      "delta": -8.663
+    },
+    "mad": {
+      "v1": 17.437,
+      "v2": 8.621,
+      "delta": -8.816
+    },
+    "sharp_ratio": {
+      "v1": 1.309,
+      "v2": 0.753,
+      "delta": -0.555
+    }
+  },
+  "rows": [
+    {
+      "slug": "motiongit-promo-blueprint",
+      "v1": {
+        "grid_diff": 4.705,
+        "point_diff": 4.279,
+        "sharp_ratio": 0.947,
+        "mad": 10.519
+      },
+      "v2": {
+        "grid_diff": 5.149,
+        "point_diff": 2.538,
+        "sharp_ratio": 0.422,
+        "mad": 7.607
+      },
+      "delta": {
+        "grid_diff": 0.444,
+        "point_diff": -1.741,
+        "mad": -2.912,
+        "sharp_ratio": -0.525
+      },
+      "improvement_mad": 27.7,
+      "improvement_grid": -9.4
+    },
+    {
+      "slug": "motiongit-promo-creator",
+      "v1": {
+        "grid_diff": 4.105,
+        "point_diff": 12.269,
+        "sharp_ratio": 1.224,
+        "mad": 11.268
+      },
+      "v2": {
+        "grid_diff": 4.631,
+        "point_diff": 3.341,
+        "sharp_ratio": 0.956,
+        "mad": 6.998
+      },
+      "delta": {
+        "grid_diff": 0.526,
+        "point_diff": -8.928,
+        "mad": -4.27,
+        "sharp_ratio": -0.268
+      },
+      "improvement_mad": 37.9,
+      "improvement_grid": -12.8
+    },
+    {
+      "slug": "motiongit-promo-ink",
+      "v1": {
+        "grid_diff": 8.151,
+        "point_diff": 36.947,
+        "sharp_ratio": 1.258,
+        "mad": 28.46
+      },
+      "v2": {
+        "grid_diff": 2.922,
+        "point_diff": 3.572,
+        "sharp_ratio": 0.143,
+        "mad": 7.83
+      },
+      "delta": {
+        "grid_diff": -5.229,
+        "point_diff": -33.375,
+        "mad": -20.63,
+        "sharp_ratio": -1.115
+      },
+      "improvement_mad": 72.5,
+      "improvement_grid": 64.2
+    },
+    {
+      "slug": "motiongit-promo-keynote",
+      "v1": {
+        "grid_diff": 4.893,
+        "point_diff": 14.915,
+        "sharp_ratio": 1.103,
+        "mad": 20.723
+      },
+      "v2": {
+        "grid_diff": 4.724,
+        "point_diff": 5.2,
+        "sharp_ratio": 0.602,
+        "mad": 8.806
+      },
+      "delta": {
+        "grid_diff": -0.169,
+        "point_diff": -9.715,
+        "mad": -11.917,
+        "sharp_ratio": -0.501
+      },
+      "improvement_mad": 57.5,
+      "improvement_grid": 3.5
+    },
+    {
+      "slug": "motiongit-promo-main",
+      "v1": {
+        "grid_diff": 6.809,
+        "point_diff": 7.504,
+        "sharp_ratio": 0.936,
+        "mad": 17.806
+      },
+      "v2": {
+        "grid_diff": 3.502,
+        "point_diff": 2.663,
+        "sharp_ratio": 0.424,
+        "mad": 8.5
+      },
+      "delta": {
+        "grid_diff": -3.307,
+        "point_diff": -4.841,
+        "mad": -9.306,
+        "sharp_ratio": -0.512
+      },
+      "improvement_mad": 52.3,
+      "improvement_grid": 48.6
+    },
+    {
+      "slug": "motiongit-promo-pixel",
+      "v1": {
+        "grid_diff": 7.839,
+        "point_diff": 7.668,
+        "sharp_ratio": 0.882,
+        "mad": 17.258
+      },
+      "v2": {
+        "grid_diff": 2.2,
+        "point_diff": 2.655,
+        "sharp_ratio": 0.263,
+        "mad": 8.881
+      },
+      "delta": {
+        "grid_diff": -5.639,
+        "point_diff": -5.013,
+        "mad": -8.377,
+        "sharp_ratio": -0.619
+      },
+      "improvement_mad": 48.5,
+      "improvement_grid": 71.9
+    },
+    {
+      "slug": "motiongit-promo-user",
+      "v1": {
+        "grid_diff": 12.296,
+        "point_diff": 13.863,
+        "sharp_ratio": 1.579,
+        "mad": 22.176
+      },
+      "v2": {
+        "grid_diff": 8.668,
+        "point_diff": 9.18,
+        "sharp_ratio": 2.081,
+        "mad": 11.742
+      },
+      "delta": {
+        "grid_diff": -3.628,
+        "point_diff": -4.683,
+        "mad": -10.434,
+        "sharp_ratio": 0.502
+      },
+      "improvement_mad": 47.1,
+      "improvement_grid": 29.5
+    },
+    {
+      "slug": "motiongit-promo-velocity",
+      "v1": {
+        "grid_diff": 2.9,
+        "point_diff": 5.259,
+        "sharp_ratio": 2.541,
+        "mad": 11.283
+      },
+      "v2": {
+        "grid_diff": 5.4,
+        "point_diff": 4.249,
+        "sharp_ratio": 1.137,
+        "mad": 8.604
+      },
+      "delta": {
+        "grid_diff": 2.5,
+        "point_diff": -1.01,
+        "mad": -2.679,
+        "sharp_ratio": -1.404
+      },
+      "improvement_mad": 23.7,
+      "improvement_grid": -86.2
+    }
+  ]
+}

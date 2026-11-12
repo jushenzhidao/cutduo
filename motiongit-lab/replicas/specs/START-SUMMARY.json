@@ -1,0 +1,66 @@
+[
+  {
+    "slug": "motiongit-promo-ink",
+    "verified": true,
+    "profile": "motiongit.assistant-start/1",
+    "guide": "guide.json",
+    "schema": "params.schema.json",
+    "bytes": 60245
+  },
+  {
+    "slug": "motiongit-promo-blueprint",
+    "verified": true,
+    "profile": "motiongit.assistant-start/1",
+    "guide": "guide.json",
+    "schema": "params.schema.json",
+    "bytes": 60239
+  },
+  {
+    "slug": "motiongit-promo-creator",
+    "verified": true,
+    "profile": "motiongit.assistant-start/1",
+    "guide": "guide.json",
+    "schema": "params.schema.json",
+    "bytes": 60239
+  },
+  {
+    "slug": "motiongit-promo-keynote",
+    "verified": true,
+    "profile": "motiongit.assistant-start/1",
+    "guide": "guide.json",
+    "schema": "params.schema.json",
+    "bytes": 60242
+  },
+  {
+    "slug": "motiongit-promo-main",
+    "verified": true,
+    "profile": "motiongit.assistant-start/1",
+    "guide": "guide.json",
+    "schema": "params.schema.json",
+    "bytes": 60465
+  },
+  {
+    "slug": "motiongit-promo-pixel",
+    "verified": true,
+    "profile": "motiongit.assistant-start/1",
+    "guide": "guide.json",
+    "schema": "params.schema.json",
+    "bytes": 60230
+  },
+  {
+    "slug": "motiongit-promo-user",
+    "verified": true,
+    "profile": "motiongit.assistant-start/1",
+    "guide": "guide.json",
+    "schema": "params.schema.json",
+    "bytes": 60186
+  },
+  {
+    "slug": "motiongit-promo-velocity",
+    "verified": true,
+    "profile": "motiongit.assistant-start/1",
+    "guide": "guide.json",
+    "schema": "params.schema.json",
+    "bytes": 60459
+  }
+]

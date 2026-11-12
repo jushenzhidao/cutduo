@@ -1,0 +1,21 @@
+{
+  "slug": "motiongit-promo-blueprint",
+  "width": 1920,
+  "height": 1080,
+  "fps": 60.0,
+  "frames": 4560,
+  "duration": 76.0,
+  "field_w": 160,
+  "field_h": 90,
+  "field_dt": 0.25,
+  "ocr_dt": 1.0,
+  "field_count": 304,
+  "ocr_count": 76,
+  "text_total": 583,
+  "shape_total": 132,
+  "hard_cuts": 2,
+  "time_offset_note": "ffmpeg fps=N 的 PTS 标签是 i*DT，但取用的帧内容经精确帧号验证为区间中点 (i+0.5)*DT（FIELD_DT=0.5 时 field/0001 与源帧 n=15/t=0.25 完全一致 MAD=0）。忽略该偏移会让快速切换模板整片错帧（velocity 网格色差 2.90→17.50）。FIELD_DT 收紧到 0.25s 以提高密集硬切的切点定位精度。",
+  "hard_cut_note": "相邻颜色场平均差 >20 标记为镜头硬切；渲染时该区间不插值，在区间中点硬切，避免合成原片不存在的混合画面。",
+  "method": "颜色场 = 公开成片 0.25s 粒度 160×90 面积平均测量；文字 = Vision OCR 测得文本/bbox/色值/字号后本机字体独立重绘；图形连通块仅测量留档，实测矢量重绘会劣化画面故不渲染。",
+  "boundary": "颜色场是低分辨率色彩布局参数（每格约 12×12 原像素，不含可读文字），不是原帧像素搬运；文字层为独立重建。未读取模板包 core/实现。"
+}

@@ -1,0 +1,10 @@
+import { chromium } from 'playwright';
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1180, height: 1200 } });
+await p.goto('file://' + process.cwd() + '/out/report-v9.html');
+await p.waitForTimeout(500);
+await p.evaluate(() => window.scrollTo(0, document.body.scrollHeight - 1300));
+await p.waitForTimeout(300);
+await p.screenshot({ path: 'out/cmp/report-tail.png' });
+console.log('h', await p.evaluate(() => document.body.scrollHeight));
+await b.close();

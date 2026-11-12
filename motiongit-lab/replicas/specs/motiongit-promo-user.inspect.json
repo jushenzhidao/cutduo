@@ -1,0 +1,21 @@
+{
+  "profile": "personal-download-v1",
+  "specVersion": "1.0.0-rc.1",
+  "recipientAccountId": 149,
+  "apiKeyId": 154,
+  "authorAccountId": 1,
+  "templateId": 588,
+  "templateSlug": "motiongit-promo-user",
+  "releaseId": 1053,
+  "templateVersion": "2.6.5",
+  "downloadId": "4e79b803-3f05-4857-a866-63888df24588",
+  "issuedAt": 1794244200,
+  "protection": "protected",
+  "releaseArchiveSha256": "e44d35f97e665db89ba2cd2959e2403c996eb3b65ca1beb197241f0f2850bb60",
+  "personalDownloadSha256": "c0fbc086873b4aaa5d6098459a0e2e41e1f73a2421a5d5d68b187360256a90db",
+  "receiptSha256": "304a15b88463940c09e4476b5e6bbf695de277bc679ec3f4c8e0389058dc58e7",
+  "descriptorSha256": "02f1d44ec9c25521c995fb43f35a3bf73c35557048b122a5733f7a2d607bc2ab",
+  "signingKeyId": "personal-20261011-7b234fbb",
+  "releaseBytes": 2827872,
+  "personalBytes": 3835946
+}

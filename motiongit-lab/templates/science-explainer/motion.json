@@ -1,0 +1,51 @@
+{
+  "$schema": "https://motiongit.com/schema/motion/0.1.json",
+  "format": "motiongit-template",
+  "specVersion": "0.1.0-draft.1",
+  "template": {
+    "id": "workbuddy-science-explainer",
+    "version": "1.0.0",
+    "name": "科普版式 · 医学科普知识讲解",
+    "status": "draft",
+    "distilledFrom": {
+      "source": "d6ef49c88c4766217c388678d9ba7aca_raw.mp4",
+      "durationSeconds": 153.64,
+      "resolution": "960x544",
+      "fps": 28,
+      "shots": 49,
+      "medianShotSeconds": 2.75,
+      "note": "从单支中文医学科普片反推版式语法，不复制其画面素材与文案"
+    }
+  },
+  "runtime": {
+    "profile": "html-canvas/1",
+    "engine": "motiongit-reference",
+    "entry": "src/index.html",
+    "dependencyLock": "motion.lock.json"
+  },
+  "parameters": {
+    "schema": "params.schema.json",
+    "defaultPreset": "presets/demo.json"
+  },
+  "assets": { "manifest": "asset-manifest.json" },
+  "output": {
+    "width": 1920,
+    "height": 1080,
+    "fps": { "num": 30, "den": 1 },
+    "durationPolicy": "fixed",
+    "durationSeconds": 54.5
+  },
+  "preview": { "preset": "presets/demo.json" },
+  "license": { "file": "licenses/TEMPLATE-LICENSE.txt" },
+  "permissions": {
+    "network": false,
+    "read": ["package", "instance-inputs"],
+    "write": ["instance-output"]
+  },
+  "ai": {
+    "entry": "SKILL.md",
+    "guide": "guide.json",
+    "summary": "中文科普视频版式模板：九个版式（封面/讲解位/圆框图解/对比/图标阵列/单卡强调/便签/结尾），强字幕烧录，零外部素材可跑；素材位可替换为自有插画或生成图。"
+  },
+  "integrity": "integrity.json"
+}

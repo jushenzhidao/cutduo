@@ -1,0 +1,36 @@
+{
+  "method": "成片级 grain 斜率标定 + 逐点残差反馈",
+  "delta_grain": 0.12,
+  "encoded_kg": 20.81,
+  "median_gain": 2.498,
+  "count": 3,
+  "items": [
+    {
+      "slug": "motiongit-promo-blueprint",
+      "points": 8,
+      "mean_residual": 0.344,
+      "grain_range": [
+        0.0053,
+        0.0762
+      ]
+    },
+    {
+      "slug": "motiongit-promo-keynote",
+      "points": 8,
+      "mean_residual": 0.235,
+      "grain_range": [
+        0,
+        0.0614
+      ]
+    },
+    {
+      "slug": "motiongit-promo-velocity",
+      "points": 8,
+      "mean_residual": 0.069,
+      "grain_range": [
+        0,
+        0.0602
+      ]
+    }
+  ]
+}

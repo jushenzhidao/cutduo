@@ -328,7 +328,9 @@ class TestMCP(unittest.TestCase):
         resp = self.mcp.handle({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         names = {t["name"] for t in resp["result"]["tools"]}
         self.assertEqual(names, {"list_templates", "validate_render",
-                                 "submit_render", "get_job_status", "get_receipt"})
+                                 "submit_render", "get_job_status", "get_receipt",
+                                 # 2026-11-10 补：素材上传与任务管理，让 MCP 契约自洽
+                                 "upload_asset", "list_jobs", "cancel_job"})
 
     def test_list_templates(self):
         err, data = self.call("list_templates", {})

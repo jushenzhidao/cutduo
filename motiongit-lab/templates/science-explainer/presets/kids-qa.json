@@ -1,0 +1,337 @@
+{
+  "durationSeconds": 52.0,
+  "fps": 30,
+  "fadeOutSeconds": 0.32,
+  "voices": {
+    "kid": "zh-CN-YunxiaNeural",
+    "mom": "zh-CN-XiaoxiaoNeural",
+    "default": "zh-CN-XiaoxiaoNeural"
+  },
+  "theme": {
+    "pop": "#FD2551",
+    "sun": "#FFD84D",
+    "jade": "#26A38C",
+    "jadeDeep": "#0E7A5F",
+    "blue": "#2B7FD4",
+    "ink": "#2C3A3E"
+  },
+  "brand": {
+    "show": true,
+    "text": "亲子科普",
+    "tag": "SCIENCE EXPLAINER"
+  },
+  "subtitle": {
+    "size": 62,
+    "color": "#FFFFFF",
+    "stroke": 6,
+    "strokeColor": "#1B2B30",
+    "y": 1002
+  },
+  "captions": [
+    {
+      "seg": 0,
+      "speaker": "default",
+      "start": 0,
+      "end": 0,
+      "text": "肚子为什么会自己唱歌"
+    },
+    {
+      "seg": 0,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "这声咕咕，其实是肠子在说话"
+    },
+    {
+      "seg": 1,
+      "speaker": "kid",
+      "start": 0,
+      "end": 0,
+      "text": "妈妈，我刚才肚子叫了一声"
+    },
+    {
+      "seg": 1,
+      "speaker": "kid",
+      "start": 0,
+      "end": 0,
+      "text": "是不是饿坏了呀？"
+    },
+    {
+      "seg": 2,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "不一定，饿只是其中一个原因"
+    },
+    {
+      "seg": 2,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "肠道里一直有气体和消化液"
+    },
+    {
+      "seg": 3,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "肠子一蠕动，就把它们推着走"
+    },
+    {
+      "seg": 3,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "气和水挤在一起，就发出咕噜声"
+    },
+    {
+      "seg": 3,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "就像水管里混进了空气"
+    },
+    {
+      "seg": 4,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "三种情况最常见"
+    },
+    {
+      "seg": 4,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "饿了、吃太快、还有正在消化"
+    },
+    {
+      "seg": 4,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "大多数时候，几分钟就停了"
+    },
+    {
+      "seg": 5,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "这声音说明肠子在正常工作"
+    },
+    {
+      "seg": 5,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "不是病，别一响就紧张"
+    },
+    {
+      "seg": 6,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "但这三种情况要当心"
+    },
+    {
+      "seg": 6,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "疼得打滚、伴着呕吐"
+    },
+    {
+      "seg": 6,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "或者连续几小时不停"
+    },
+    {
+      "seg": 7,
+      "speaker": "mom",
+      "start": 0,
+      "end": 0,
+      "text": "会叫说明它在干活，一直叫才要看医生"
+    }
+  ],
+  "segments": [
+    {
+      "type": "cover",
+      "dur": 6.2,
+      "note": "封面：把「咕咕叫」做成声音拟态的爆炸贴",
+      "args": {
+        "prefix": "肚子里的",
+        "title": "咕咕叫",
+        "sub": "它到底在说什么",
+        "sticker": "question",
+        "hint": "亲子科普 · 2 分钟讲明白"
+      }
+    },
+    {
+      "type": "talk",
+      "dur": 6.4,
+      "note": "孩子发问：一个人小声嘀咕，语气要轻",
+      "args": {
+        "paper": "cream",
+        "figure": "right",
+        "coat": "#5AA9E6",
+        "hair": "#3A2A22",
+        "figureScale": 0.9,
+        "eyebrow": "小满 · 七岁",
+        "eyebrowColor": "#2B7FD4",
+        "lines": [
+          "妈妈，我肚子叫了",
+          "是不是饿坏了？"
+        ],
+        "accentLine": 1,
+        "size": 84,
+        "gesture": "idle",
+        "sticker": "question"
+      }
+    },
+    {
+      "type": "talk",
+      "dur": 7.6,
+      "note": "妈妈解答：抬手比划，像在解释",
+      "args": {
+        "paper": "cream",
+        "figure": "right",
+        "coat": "#C9703A",
+        "eyebrow": "妈妈 · 儿科医生",
+        "eyebrowColor": "#26A38C",
+        "lines": [
+          "不一定，饿只是其中一种",
+          "肠子里本来就有气和液"
+        ],
+        "accentLine": 0,
+        "size": 76,
+        "gesture": "explain",
+        "sticker": "drop"
+      }
+    },
+    {
+      "type": "diagram",
+      "dur": 8.2,
+      "note": "机制：气 + 液被肠蠕动挤压",
+      "args": {
+        "paper": "mint",
+        "title": "咕噜声是怎么来的",
+        "organ": "gut",
+        "eyes": true,
+        "mark": [
+          0.2,
+          0.8
+        ],
+        "pulse": true,
+        "probe": "none",
+        "callouts": [
+          {
+            "text": "气 + 液被推着走",
+            "at": 0.6,
+            "x": 0.735,
+            "y": 0.26,
+            "size": 62,
+            "lead": [
+              0.3,
+              0.52
+            ]
+          },
+          {
+            "text": "挤过狭窄处就响",
+            "at": 1.5,
+            "x": 0.735,
+            "y": 0.74,
+            "size": 62,
+            "lead": [
+              0.44,
+              0.62
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "matrix",
+      "dur": 6.6,
+      "note": "三种常见场景",
+      "args": {
+        "paper": "mint",
+        "title": "三种最常见",
+        "items": [
+          {
+            "icon": "clock",
+            "label": "肚子饿了",
+            "disc": "#FFE770"
+          },
+          {
+            "icon": "drop",
+            "label": "吃得太快",
+            "disc": "#CFE6FB"
+          },
+          {
+            "icon": "gut",
+            "label": "正在消化",
+            "disc": "#C8EBDD"
+          }
+        ]
+      }
+    },
+    {
+      "type": "focus",
+      "dur": 6.4,
+      "note": "定性：正常现象，别紧张",
+      "args": {
+        "paper": "sky",
+        "title": "正常现象",
+        "icon": "check",
+        "claim": "说明肠子在正常工作"
+      }
+    },
+    {
+      "type": "tip",
+      "dur": 7.8,
+      "note": "红旗提示：三种要看医生",
+      "args": {
+        "paper": "sky",
+        "head": "什么时候要看医生",
+        "title": "这三种情况别拖",
+        "items": [
+          "疼得打滚、蜷着腿",
+          "伴着呕吐或发烧",
+          "超过几小时不停"
+        ]
+      }
+    },
+    {
+      "type": "talk",
+      "dur": 6.0,
+      "note": "妈妈收口：去神秘化",
+      "args": {
+        "paper": "cream",
+        "figure": "right",
+        "coat": "#C9703A",
+        "eyebrow": "记住这一句",
+        "eyebrowColor": "#26A38C",
+        "lines": [
+          "会叫，说明它在干活",
+          "一直叫，才要看医生"
+        ],
+        "accentLine": 1,
+        "size": 78,
+        "gesture": "nod",
+        "sticker": "shield"
+      }
+    },
+    {
+      "type": "outro",
+      "dur": 5.0,
+      "note": "结尾",
+      "args": {
+        "line1": "别紧张",
+        "line2": "它在干活",
+        "note": "科普仅供参考 · 持续腹痛请及时就医"
+      }
+    }
+  ]
+}
