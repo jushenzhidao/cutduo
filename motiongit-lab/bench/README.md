@@ -16,7 +16,7 @@ bash bench/bench-limit.sh
 两个 shell 已改成 `cd "$(dirname "$0")/.."`，自身会回到仓库根；JS 脚本不会，必须手动在根执行。
 ESM 的 `../skia-kit/paper.mjs` 不受位置影响（`motiongit-lab/skia-kit` 存在）。
 
-## 清单（21）
+## 清单（22）
 
 | 类别 | 文件 | 回答什么问题 |
 |---|---|---|
@@ -39,7 +39,8 @@ ESM 的 `../skia-kit/paper.mjs` 不受位置影响（`motiongit-lab/skia-kit` �
 | 拼图 | `mk-label.mjs` | 批量打标签 |
 | 截图 | `shot.mjs` / `shot2.mjs` | Playwright 截 HTML 报告 |
 | 字体 | `font-metrics.mjs` | 三字重实测字宽与墨迹边界 |
-| 宿主 | `motion-host/poc.mjs` | 把 `.motion` 模板镜头直接跑在 Skia 上（换宿主验证，见 `docs/motion换宿主-2026-11-13.md`） |
+| 宿主 | `motion-host/poc.mjs` | 把 `.motion` 模板**单镜头**跑在 Skia 上 |
+| 宿主 | `motion-host/poc-full.mjs` | 把 `.motion` 模板**整片宿主**（main.js）跑在 Skia 上，`--bench` 测单帧 |
 
 ## 编码对比（2026-11-13 实测，详见 `docs/编码优化-2026-11-13.md`）
 
