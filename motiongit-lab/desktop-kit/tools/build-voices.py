@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """为 desktop-kit 合成旁白，并按每句真实时长重排分镜与字幕。
 
-默认（不带参数）与首版完全一致：读 presets/demo.json → presets/demo-voiced.json
+默认（不带参数）与首版完全一致：读 content/demo.json → content/demo-voiced.json
 + edits/audio-desktop.m4a。换内容只要给 --preset，输出路径自动按文件名推导：
 
-  uv run python desktop-kit/tools/build-voices.py --preset desktop-kit/presets/uv.json
-  → presets/uv-voiced.json + edits/audio-uv.m4a
+  uv run python desktop-kit/tools/build-voices.py --preset content/uv.json
+  → content/uv-voiced.json + edits/audio-uv.m4a
 
 只用标准库 + edge-tts + ffmpeg；同一句 + 同一音色/语速命中本地缓存。
 """
@@ -20,7 +20,7 @@ import wave
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 KIT = ROOT / "desktop-kit"
-DEFAULT_PRESET = KIT / "presets" / "demo.json"
+DEFAULT_PRESET = ROOT / "content" / "demo.json"
 CACHE = ROOT / "edits" / "tts-cache"
 FFMPEG = "/opt/homebrew/bin/ffmpeg"
 EDGE = str(pathlib.Path.home() / ".local" / "bin" / "edge-tts")

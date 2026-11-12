@@ -24,7 +24,7 @@ const N = Number(get('frames', 300));
 const T = loadTokens(), W = T.width, H = T.height, FPS = 60;
 
 registerFonts(path.join(ROOT, 'assets', 'fonts'));
-const P = JSON.parse(fs.readFileSync(path.join(KIT, 'presets', 'md.json'), 'utf8'));
+const P = JSON.parse(fs.readFileSync(path.join(ROOT, 'content', 'md.json'), 'utf8'));
 
 async function run(mode) {
   const out = path.join(ROOT, 'out', `bench-pipe-${mode}.mp4`);

@@ -61,9 +61,9 @@ function probeStreams(file) {
 
 fs.mkdirSync(OUT, { recursive: true });
 registerFonts(path.join(ROOT, 'assets', 'fonts'));
-const P = JSON.parse(fs.readFileSync(path.join(KIT, 'presets', 'demo.json'), 'utf8'));
+const P = JSON.parse(fs.readFileSync(path.join(ROOT, 'content', 'demo.json'), 'utf8'));
 const VOICED = ['demo', 'uv'].map((n) => JSON.parse(
-  fs.readFileSync(path.join(KIT, 'presets', `${n}-voiced.json`), 'utf8')));
+  fs.readFileSync(path.join(ROOT, 'content', `${n}-voiced.json`), 'utf8')));
 
 /* ───────────── A 组 · 输入鲁棒性 ───────────── */
 {
@@ -248,7 +248,7 @@ const VOICED = ['demo', 'uv'].map((n) => JSON.parse(
   // 字体 cmap 覆盖：渲染会用到的所有字符
   const chars = new Set();
   for (const name of ['demo', 'uv']) {
-    const d = JSON.parse(fs.readFileSync(path.join(KIT, 'presets', `${name}.json`), 'utf8'));
+    const d = JSON.parse(fs.readFileSync(path.join(ROOT, 'content', `${name}.json`), 'utf8'));
     const walk = (o) => {
       if (typeof o === 'string') for (const ch of o) if (ch.charCodeAt(0) > 127) chars.add(ch);
       else if (o && typeof o === 'object') for (const v of Object.values(o)) walk(v);

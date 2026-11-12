@@ -5,6 +5,7 @@
 
 - 1920×1080 @60fps，跟随配音时长
 - 8 个版式：`hero` `point` `number` `compare` `steps` `quote` `checklist` `outro`
+- 另带一套 `--kit science` 科普版式（9 个版面，移植自 `templates/science-explainer`，见该目录 `SKIA-SPEC.md`）
 - 常驻头像卡、烧录字幕、右上时间码、`*强调词*`、自动折行、字号自适应
 - 全片 42.9s / 2573 帧，**6.1s** 出片（8 worker），峰值内存 < 1GB
 
@@ -103,6 +104,7 @@ uv run python qa-gate.py --video out/mine.mp4 --expect-frames <帧数>
 node skia-kit/render.mjs --params <json> --audio <m4a> --out <mp4>
   [--fps 60] [--workers 8] [--crf 20] [--jpeg 94] [--preset veryfast]
   [--avatar edits/assets/avatar.png|off] [--probe out/frame.png --at 2.5]
+  [--kit paper|science] [--x264-threads 1]
 ```
 
 - `--crf` 默认 20：42.9s 片 ≈ 2.8MB / 540kbps（视频 367 + 音频 160），100% 裁切看不出压缩痕迹
@@ -183,6 +185,7 @@ node skia-kit/render.mjs --params <json> --audio <m4a> --out <mp4>
 ```
 skia-kit/
   paper.mjs          渲染器（createPaperRenderer / registerFonts / loadTokens）
+  science.mjs        科普版式渲染器（createScienceRenderer，宿主移植 templates/science-explainer/src）
   render.mjs         出片 CLI（params + audio → mp4）
   verify.mjs         版式自检
   tokens.json        几何规格 + 可调项

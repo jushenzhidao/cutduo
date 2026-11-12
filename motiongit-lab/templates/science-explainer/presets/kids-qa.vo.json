@@ -1,5 +1,5 @@
 {
-  "durationSeconds": 63.928,
+  "durationSeconds": 65.312,
   "fps": 30,
   "fadeOutSeconds": 0.32,
   "voices": {
@@ -29,106 +29,112 @@
   },
   "captions": [
     {
+      "speaker": "default",
       "start": 0.45,
       "end": 2.894,
-      "speaker": "default",
       "text": "肚子为什么会自己唱歌"
     },
     {
+      "speaker": "mom",
       "start": 3.034,
       "end": 6.222,
-      "speaker": "mom",
       "text": "这声咕咕，其实是肠子在说话"
     },
     {
+      "speaker": "kid",
       "start": 7.082,
       "end": 10.39,
-      "speaker": "kid",
       "text": "妈妈，我刚才肚子叫了一声"
     },
     {
+      "speaker": "kid",
       "start": 10.53,
       "end": 12.758,
-      "speaker": "kid",
       "text": "是不是饿坏了呀？"
     },
     {
-      "start": 12.898,
-      "end": 16.134,
       "speaker": "mom",
+      "start": 13.618,
+      "end": 16.854,
       "text": "不一定，饿只是其中一个原因"
     },
     {
+      "speaker": "mom",
       "start": 16.994,
       "end": 20.038,
-      "speaker": "mom",
       "text": "肠道里一直有气体和消化液"
     },
     {
-      "start": 20.178,
-      "end": 23.198,
       "speaker": "mom",
+      "start": 20.898,
+      "end": 23.918,
       "text": "肠子一蠕动，就把它们推着走"
     },
     {
+      "speaker": "mom",
       "start": 24.058,
       "end": 27.39,
-      "speaker": "mom",
       "text": "气和水挤在一起，就发出咕噜声"
     },
     {
+      "speaker": "mom",
       "start": 27.53,
       "end": 30.118,
-      "speaker": "mom",
       "text": "就像水管里混进了空气"
     },
     {
-      "start": 30.258,
-      "end": 32.582,
-      "speaker": "kid",
-      "text": "原来是这个声音"
-    },
-    {
-      "start": 33.442,
-      "end": 35.67,
       "speaker": "mom",
+      "start": 30.978,
+      "end": 33.206,
       "text": "三种情况最常见"
     },
     {
-      "start": 35.81,
-      "end": 39.166,
       "speaker": "mom",
+      "start": 33.346,
+      "end": 36.702,
       "text": "饿了、吃太快、还有正在消化"
     },
     {
-      "start": 40.026,
-      "end": 43.046,
       "speaker": "mom",
+      "start": 36.842,
+      "end": 39.862,
       "text": "大多数时候，几分钟就停了"
     },
     {
-      "start": 43.186,
-      "end": 46.014,
       "speaker": "mom",
-      "text": "它说明肠子在正常工作"
+      "start": 40.722,
+      "end": 43.862,
+      "text": "这声音说明肠子在正常工作"
     },
     {
-      "start": 46.154,
-      "end": 48.598,
       "speaker": "mom",
+      "start": 44.002,
+      "end": 46.614,
+      "text": "不是病，别一响就紧张"
+    },
+    {
+      "speaker": "mom",
+      "start": 47.474,
+      "end": 49.918,
       "text": "但这三种情况要当心"
     },
     {
-      "start": 49.458,
-      "end": 52.934,
       "speaker": "mom",
-      "text": "疼得打滚、伴着呕吐、一直不停"
+      "start": 50.058,
+      "end": 52.574,
+      "text": "疼得打滚、伴着呕吐"
     },
     {
-      "start": 53.794,
-      "end": 58.518,
       "speaker": "mom",
-      "text": "会叫，说明它在干活；一直叫，才需要看医生"
+      "start": 52.714,
+      "end": 55.182,
+      "text": "或者连续几小时不停"
+    },
+    {
+      "speaker": "mom",
+      "start": 56.042,
+      "end": 59.902,
+      "text": "会叫说明它在干活，一直叫才要看医生"
     }
   ],
   "segments": [
@@ -146,14 +152,13 @@
     },
     {
       "type": "talk",
-      "dur": 9.912,
-      "note": "孩子发问：一个人小声嘀咕，语气要轻",
+      "dur": 6.536,
+      "note": "孩子发问：一个人小声嘀咕，语气要轻（不缩小：缩了会让人物下沉，靠衣服色区分角色）",
       "args": {
         "paper": "cream",
         "figure": "right",
         "coat": "#5AA9E6",
         "hair": "#3A2A22",
-        "figureScale": 0.9,
         "eyebrow": "小满 · 七岁",
         "eyebrowColor": "#2B7FD4",
         "lines": [
@@ -172,17 +177,13 @@
           [
             3.9,
             6.13
-          ],
-          [
-            6.27,
-            9.5
           ]
         ]
       }
     },
     {
       "type": "talk",
-      "dur": 7.064,
+      "dur": 7.28,
       "note": "妈妈解答：抬手比划，像在解释",
       "args": {
         "paper": "cream",
@@ -201,18 +202,18 @@
         "talking": [
           [
             0.45,
-            3.49
+            3.69
           ],
           [
-            3.63,
-            6.65
+            3.83,
+            6.87
           ]
         ]
       }
     },
     {
       "type": "diagram",
-      "dur": 9.384,
+      "dur": 10.08,
       "note": "机制：气 + 液被肠蠕动挤压",
       "args": {
         "paper": "mint",
@@ -228,7 +229,7 @@
         "callouts": [
           {
             "text": "气 + 液被推着走",
-            "at": 0.6,
+            "at": 3.61,
             "x": 0.735,
             "y": 0.26,
             "size": 62,
@@ -239,7 +240,7 @@
           },
           {
             "text": "挤过狭窄处就响",
-            "at": 1.5,
+            "at": 7.08,
             "x": 0.735,
             "y": 0.74,
             "size": 62,
@@ -253,7 +254,7 @@
     },
     {
       "type": "matrix",
-      "dur": 6.584,
+      "dur": 9.744,
       "note": "三种常见场景",
       "args": {
         "paper": "mint",
@@ -274,12 +275,17 @@
             "label": "正在消化",
             "disc": "#C8EBDD"
           }
+        ],
+        "itemAt": [
+          0.45,
+          2.82,
+          6.31
         ]
       }
     },
     {
       "type": "focus",
-      "dur": 9.432,
+      "dur": 6.752,
       "note": "定性：正常现象，别紧张",
       "args": {
         "paper": "sky",
@@ -290,7 +296,7 @@
     },
     {
       "type": "tip",
-      "dur": 4.336,
+      "dur": 8.568,
       "note": "红旗提示：三种要看医生",
       "args": {
         "paper": "sky",
@@ -300,12 +306,17 @@
           "疼得打滚、蜷着腿",
           "伴着呕吐或发烧",
           "超过几小时不停"
+        ],
+        "itemAt": [
+          0.45,
+          3.03,
+          5.69
         ]
       }
     },
     {
       "type": "talk",
-      "dur": 5.584,
+      "dur": 4.72,
       "note": "妈妈收口：去神秘化",
       "args": {
         "paper": "cream",
@@ -324,7 +335,7 @@
         "talking": [
           [
             0.45,
-            5.17
+            4.31
           ]
         ]
       }

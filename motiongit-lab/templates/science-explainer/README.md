@@ -3,8 +3,10 @@
 把一条中文医学科普片蒸馏成**可换文案的 `.motion` 模板包**。8 类版式、字幕烧录、零外部素材可跑。
 
 - 画幅 1920×1080 / 30fps / 54.5s（demo）
-- 运行时 `html-canvas/1`：Node 22+ / Chromium headless / FFmpeg
-- 依赖：系统 `PingFang SC`、`Hiragino Sans GB`（不随包分发字体）
+- 两条运行路径（同一份 `src/`，画面一致）：
+  - `html-canvas/1`：Node 22+ / Chromium headless / FFmpeg，字体用系统 `PingFang SC`
+  - `skia/1`：Node 22+ / `@napi-rs/canvas` / FFmpeg，**零浏览器**，字体用随包 Noto Sans SC
+- Skia 直出实测快 20–27%，详见 [SKIA-SPEC.md](SKIA-SPEC.md)
 
 ## 蒸馏自
 
@@ -36,6 +38,17 @@ node skia-kit/gate.mjs out/demo.mp4
 
 实测：1635 帧 / 10.1s（≈162 fps）/ 5.14 MB / 门禁 PASS。
 
+Skia 直出（不需要 Chromium）：
+
+```bash
+node skia-kit/render.mjs --kit science \
+  --params templates/science-explainer/presets/demo.vo.json \
+  --audio out/demo.vo.wav --out out/demo-skia.mp4 --fps 30 --workers 20
+```
+
+实测：2215 帧 / 11.3s（≈196 fps）/ 6.88 MB / 门禁 PASS；同片 canvas 版 14.37s（154 fps）。
+单帧探针用 `--probe out/f.png --at 12.5`，调版式时秒级出图。
+
 ## 配音（关键：配音决定时间轴）
 
 模板只出画面。音轨用 `tools/vo.py` 生成，而且**让配音反过来决定时间轴**：
@@ -62,6 +75,26 @@ node motion-render.mjs render --package . --style microwave.vo \
 `tip` 版式的 `itemAt` 由 `vo.py` 自动写入 —— 第 i 句开播就点亮第 i 条，长镜头不再静止。
 
 实测：原 50s 脚本配完音变 64.8s，各段按语音重新分配；医学版 54.5s → 73.8s。
+
+## 双人对白 + 会动的人物
+
+`talk` 段现在支持三种东西，足够做「一问一答」的亲子/医患对话：
+
+| 能力 | 参数 | 说明 |
+|---|---|---|
+| 两个音色 | `voices: {kid, mom}` + `captions[].speaker` | 每个角色一个 TTS 音色，`vo.py` 按 speaker 分配 |
+| 角色区分 | `coat` / `hair` / `eyebrowColor` | 孩子蓝外套、妈妈橙外套，眉标竖条同色 |
+| 人物动作 | `gesture` = `idle / explain / open / point / count / nod` | 手会抬起来比划；呼吸、眨眼常驻；说话时嘴型开合 |
+| 口型同步 | `talking` | 由 `vo.py` 按配音写入说话区间，不播的时候闭嘴 |
+
+人物是**分层骨骼**（躯干 / 手臂 / 颈头三层），不是逐帧插画：
+
+- 躯干：呼吸起伏 ±3px
+- 头：绕脖根旋转（点头/摇头），每 3.9s 眨一次眼
+- 嘴：`mouth` 0..1 控制开合，说人话时用 11Hz + 5Hz 双谐波，避免机械匀速
+- 手臂：肩→手端点用二次贝塞尔连接，`gesture` 控制抬到胸前
+
+**做不到的**：原片那种逐帧手绘的微表情和身体转动。这是程序化骨骼的边界——想要那种精度只能上插画素材（`figureImage` 槽位已经留好）。
 
 ## 换内容
 

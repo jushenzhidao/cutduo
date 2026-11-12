@@ -14,8 +14,8 @@ import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { createDesktopRenderer, registerFonts, loadTokens, SHOT_TYPES } from './desktop.mjs';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
-const REF = path.join(ROOT, 'ref', 'mac-desktop', 'frames', 't104.jpg');
-const PARAMS = path.join(ROOT, 'desktop-kit', 'presets', 'demo.json');
+const REF = path.join(ROOT, 'ref', 'mac-desktop', 't104.jpg');
+const PARAMS = path.join(ROOT, 'content', 'demo.json');
 const T = loadTokens();
 const W = T.width, H = T.height;
 
@@ -134,7 +134,7 @@ async function main() {
     for (const s of P.shots) { frameAt(P, (s.t0 + s.t1) / 2); rendered++; }
   } catch (e) { err = String(e.message || e); }
   let vCount = 0, vDiff = 0, vErr = '';
-  const VOICED_PARAMS = path.join(ROOT, 'desktop-kit', 'presets', 'demo-voiced.json');
+  const VOICED_PARAMS = path.join(ROOT, 'content', 'demo-voiced.json');
   if (fs.existsSync(VOICED_PARAMS)) {
     try {
       const V = JSON.parse(fs.readFileSync(VOICED_PARAMS, 'utf8'));

@@ -9,6 +9,9 @@
 > `entry.mjs:36 isAbsolute(undefined)`，标准 CLI 驱动不了（见 `MOTIONGIT-PLAYBOOK.md` §22）。
 > 复刻之后，同一套视觉变成可脚本化、可批量、可增量改稿的产线。
 
+> **分镜与代码分离（2026-11-12）**：内容分镜在 `motiongit-lab/content/`，本目录只放渲染器与工具。
+> `desktop-kit/presets` 是指向 `../content` 的过渡软链，旧命令仍可用。
+
 ## 30 秒上手
 
 ```bash
@@ -19,12 +22,12 @@
 node desktop-kit/verify.mjs                       # 11 项
 
 # 出片：用 nominal 分镜
-node desktop-kit/render.mjs --params desktop-kit/presets/demo.json --out out/desktop.mp4
+node desktop-kit/render.mjs --params content/demo.json --out out/desktop.mp4
 
 # 出片：按真实配音时长重排（推荐）
 uv run python desktop-kit/tools/build-voices.py --rate +8%
 node desktop-kit/render.mjs \
-  --params desktop-kit/presets/demo-voiced.json \
+  --params content/demo-voiced.json \
   --audio edits/audio-desktop.m4a \
   --presenter edits/assets/your-face.png \
   --out out/desktop.mp4 --fps 60
@@ -33,7 +36,7 @@ node desktop-kit/render.mjs \
 单帧探针（改版式时最快回路）：
 
 ```bash
-node desktop-kit/render.mjs --params desktop-kit/presets/demo.json \
+node desktop-kit/render.mjs --params content/demo.json \
   --probe out/probe.png --at 12.5
 ```
 
@@ -43,16 +46,16 @@ node desktop-kit/render.mjs --params desktop-kit/presets/demo.json \
 「用 uv 装 Python 环境」（12 镜头 / 12 句 / 52.117s），渲染器一行没改：
 
 ```bash
-# 1) 写新分镜 desktop-kit/presets/uv.json（shots 与 captions 一一对应）
+# 1) 写新分镜 content/uv.json（shots 与 captions 一一对应）
 # 2) 配音 + 按真实语音时长重排；输出路径按文件名自动推导
-uv run python desktop-kit/tools/build-voices.py --preset desktop-kit/presets/uv.json --rate +5%
+uv run python desktop-kit/tools/build-voices.py --preset content/uv.json --rate +5%
 # 3) 出片（--presenter 换自己的摄像头图/逐帧视频）
-node desktop-kit/render.mjs --params desktop-kit/presets/uv-voiced.json \
+node desktop-kit/render.mjs --params content/uv-voiced.json \
   --audio edits/audio-uv.m4a --presenter edits/assets/avatar.png \
   --out out/desktop-uv.mp4 --fps 60
 # 4) 全片抽帧总览（12 格，一眼看遮挡 / 空镜）
 uv run --with pillow python desktop-kit/tools/contact.py \
-  --video out/desktop-uv.mp4 --params desktop-kit/presets/uv-voiced.json \
+  --video out/desktop-uv.mp4 --params content/uv-voiced.json \
   --out out/uv-contact.jpg
 ```
 
@@ -157,12 +160,12 @@ node desktop-kit/render.mjs --params <json> [--audio <m4a>] --out <mp4>
 ## 出片路径对比（5 条管线，同一分镜）
 
 ```bash
-node desktop-kit/tools/render-bench.mjs --preset desktop-kit/presets/cmp-voiced.json \
+node desktop-kit/tools/render-bench.mjs --preset content/cmp-voiced.json \
   --bg static|gpu|js --pipe jpeg|raw --audio edits/audio-cmp.m4a \
   --workers 8 --out out/cmp-x.mp4 --json out/cmp-x.json
 ```
 
-同一分镜 `presets/cmp-voiced.json`（6 镜 / 3 章节 / 2 次翻牌转场 / 1419 帧 / 23.658s /
+同一分镜 `content/cmp-voiced.json`（6 镜 / 3 章节 / 2 次翻牌转场 / 1419 帧 / 23.658s /
 1440×1080@60 / 同一条音轨），只换管线：
 
 | 变体 | 壁纸层 | 传帧 | 墙钟 | 吞吐 | 单帧绘制 | 单帧传帧 | 体积 |
@@ -335,16 +338,16 @@ desktop-kit/
   verify.mjs           11 项自检
   tokens.json          几何 + 配色规格（全部来自成片测量）
   params.schema.json   参数契约
-  presets/demo.json        nominal 分镜 A（讲 desktop-kit，16 镜头）
-  presets/demo-voiced.json 按真实配音重排（由 build-voices.py 生成）
-  presets/uv.json          nominal 分镜 B（讲 uv，12 镜头）
-  presets/uv-voiced.json   分镜 B 的音画同步版本
-  presets/cmp.json         nominal 对比分镜（12s，覆盖三面壁纸 + 2 次转场）
-  presets/cmp-voiced.json  对比分镜的音画同步版本（五条管线共用）
-  presets/ai-cut.json      内容分镜 C（AI 剪辑加速，12 镜）
-  presets/nanjing.json     内容分镜 D（南京城市介绍，13 镜）
-  presets/period.json      内容分镜 E（经期应对科普，13 镜）
-  presets/hotpot.json      内容分镜 F（吃火锅，13 镜 + 本人实拍 + 2 段视频）
+  ../content/demo.json        nominal 分镜 A（讲 desktop-kit，16 镜头）
+  ../content/demo-voiced.json 按真实配音重排（由 build-voices.py 生成）
+  ../content/uv.json          nominal 分镜 B（讲 uv，12 镜头）
+  ../content/uv-voiced.json   分镜 B 的音画同步版本
+  ../content/cmp.json         nominal 对比分镜（12s，覆盖三面壁纸 + 2 次转场）
+  ../content/cmp-voiced.json  对比分镜的音画同步版本（五条管线共用）
+  ../content/ai-cut.json      内容分镜 C（AI 剪辑加速，12 镜）
+  ../content/nanjing.json     内容分镜 D（南京城市介绍，13 镜）
+  ../content/period.json      内容分镜 E（经期应对科普，13 镜）
+  ../content/hotpot.json      内容分镜 F（吃火锅，13 镜 + 本人实拍 + 2 段视频）
   tools/build-voices.py   TTS + 逐句时长 + 音画重排（--preset 可换片）
   tools/compare.py        参考片 ↔ 复刻片 8 组分区锐度对照页
   tools/contact.py        按分镜中点抽帧拼全片总览

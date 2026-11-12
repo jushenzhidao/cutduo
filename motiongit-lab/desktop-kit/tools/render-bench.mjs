@@ -2,7 +2,7 @@
 /**
  * desktop-kit · 出片路径对比跑测（同内容 / 同规格 / 只换一段管线）
  *
- *   node desktop-kit/tools/render-bench.mjs --preset desktop-kit/presets/cmp.json \
+ *   node desktop-kit/tools/render-bench.mjs --preset content/cmp.json \
  *     --bg static --pipe jpeg --workers 8 --out out/cmp-a.mp4 --json out/cmp-a.json
  *
  * 三条可换的轴：
@@ -144,7 +144,7 @@ async function loadPhotos(P) {
 
 /* ───────────────────────────── 主进程 ───────────────────────────── */
 async function main() {
-  const preset = resolveInput(get('preset', 'desktop-kit/presets/cmp.json'));
+  const preset = resolveInput(get('preset', 'content/cmp.json'));
   const out = path.resolve(get('out', 'out/cmp.mp4'));
   const jsonOut = get('json', null);
   const audio = resolveInput(get('audio', null), false);

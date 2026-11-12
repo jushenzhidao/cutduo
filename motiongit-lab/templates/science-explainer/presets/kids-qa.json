@@ -171,13 +171,12 @@
     {
       "type": "talk",
       "dur": 6.4,
-      "note": "孩子发问：一个人小声嘀咕，语气要轻",
+      "note": "孩子发问：一个人小声嘀咕，语气要轻（不缩小：缩了会让人物下沉，靠衣服色区分角色）",
       "args": {
         "paper": "cream",
         "figure": "right",
         "coat": "#5AA9E6",
         "hair": "#3A2A22",
-        "figureScale": 0.9,
         "eyebrow": "小满 · 七岁",
         "eyebrowColor": "#2B7FD4",
         "lines": [

@@ -2,7 +2,7 @@
 """按分镜中点抽帧，拼一张全片总览图（改稿后快速看有没有遮挡/空镜）。
 
 用法：uv run --with pillow python desktop-kit/tools/contact.py \
-        --video out/desktop-uv.mp4 --params desktop-kit/presets/uv-voiced.json \
+        --video out/desktop-uv.mp4 --params content/uv-voiced.json \
         --out out/uv-contact.jpg [--cols 3] [--cell 420]
 """
 import argparse

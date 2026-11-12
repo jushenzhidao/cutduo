@@ -114,7 +114,7 @@ def main():
 </div>
 
 <h2>1. 测试口径</h2>
-<p>分镜固定为 <code>desktop-kit/presets/cmp-voiced.json</code>：6 镜 / 3 章节 / 2 次整屏翻牌转场，覆盖蓝、橙、浅三面壁纸与翻牌、评论墙、终端、图表、结尾五类组件。配音由 <code>build-voices.py</code> 生成并把镜头边界重排到真实语音长度，因此<b>五条片的时间轴逐帧一致</b>，任何差异都不来自内容。</p>
+<p>分镜固定为 <code>content/cmp-voiced.json</code>：6 镜 / 3 章节 / 2 次整屏翻牌转场，覆盖蓝、橙、浅三面壁纸与翻牌、评论墙、终端、图表、结尾五类组件。配音由 <code>build-voices.py</code> 生成并把镜头边界重排到真实语音长度，因此<b>五条片的时间轴逐帧一致</b>，任何差异都不来自内容。</p>
 <table><tr><th>变体</th><th>墙钟</th><th>吞吐</th><th>相对 A</th><th>单帧绘制</th><th>单帧传帧</th><th>体积</th><th>Mbps</th></tr>{rows}</table>
 <p class="small">单帧绘制 = <code>renderFrame()</code>（含壁纸层与全部 UI）；单帧传帧 = 取像素 + 写进 ffmpeg 管道。两者都是 8 个 worker 的加权均值。</p>
 
@@ -165,7 +165,7 @@ A↔C 的 SSIM 低不是画质问题——两边的壁纸内容本来就不同�
 # 五条管线（同分镜、同音轨）
 for v in "a:static:jpeg" "b:static:raw" "c:gpu:jpeg" "d:js:jpeg" "e:gpu:raw"; do
   n=${{v%%:*}}; rest=${{v#*:}}; bg=${{rest%%:*}}; pipe=${{rest##*:}}
-  node desktop-kit/tools/render-bench.mjs --preset desktop-kit/presets/cmp-voiced.json \\
+  node desktop-kit/tools/render-bench.mjs --preset content/cmp-voiced.json \\
     --bg $bg --pipe $pipe --audio edits/audio-cmp.m4a --workers 8 \\
     --out out/cmp-$n.mp4 --json out/cmp-$n.json
 done

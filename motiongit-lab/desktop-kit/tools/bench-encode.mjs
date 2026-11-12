@@ -19,7 +19,7 @@ const N = Number(get('frames', 60));
 const T = loadTokens();
 
 registerFonts(path.join(ROOT, 'assets', 'fonts'));
-const P = JSON.parse(fs.readFileSync(path.join(KIT, 'presets', 'md.json'), 'utf8'));
+const P = JSON.parse(fs.readFileSync(path.join(ROOT, 'content', 'md.json'), 'utf8'));
 const c = createCanvas(T.width, T.height), g = c.getContext('2d');
 const r = createDesktopRenderer({ ctx: g });
 r.setContent(P);

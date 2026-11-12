@@ -1,6 +1,6 @@
 # 剪辑渲染工作区
 
-围绕「视频剪辑 / 渲染」的三个项目 + 验收材料。当前总 **2.7 GB**（2026-11-12 实测）。11-09 曾从 1.0 GB 清到 566 MB，此后几轮基准、复刻与成片把它推回 2.7 GB。体积治理记录见 `docs/仓库清理-2026-11-09.md` 与 `docs/仓库清理-2026-11-12.md`。
+围绕「视频剪辑 / 渲染」的三个项目 + 验收材料。当前总 **2.1 GB**（2026-11-12 清理后；清理前 2.7 GB）。11-09 曾从 1.0 GB 清到 566 MB，此后几轮基准、复刻与成片又推高，本轮按同一口径再清一次。体积治理记录见 `docs/仓库清理-2026-11-09.md` 与 `docs/仓库清理-2026-11-12.md`。
 
 ## 地图
 
@@ -11,6 +11,7 @@
 | `motiongit-lab/` | MotionGit `.motion` 模板（ZIP 源码包）的运行时实验与基准：解包、改参、逐帧渲染、并行/进程模型测量 | `motiongit-lab/MOTIONGIT-PLAYBOOK.md` |
 | `skia-kit/` | 纸面口播模板（Skia，无浏览器）：一条命令出片、版式自检、新模板测量工具。`./skia-kit` 是指向 `motiongit-lab/skia-kit` 的软链，从工作区根或 motiongit-lab 里都能直接跑 | `skia-kit/README.md`、`skia-kit/REPLICATION.md` |
 | `desktop-kit/` | Mac Desktop 模板的 Skia 复刻：1440×1080 / 60fps，桌面骨架 + 16 个版式镜头 + `photo`/`clip` 两类素材镜头、13 项量化自检、按真实配音重排分镜。出片经验已蒸馏成用户级 skill `~/.workbuddy/skills/desktop-video-pipeline/` | `motiongit-lab/desktop-kit/README.md`、`motiongit-lab/out/desktop-compare.html`、`out/desktop.mp4` |
+| `motiongit-lab/content/` | **内容分镜**（15 个 JSON）：每支片的镜头、文案、素材引用；与渲染代码分离，改内容不进代码目录 | `content/hotpot.json` |
 | `motiongit-lab/mg-kit/` | MG 动效验证：纯 Skia 逐帧、5 类镜头（文字 / 档案时间轴 / 黑洞 2.5D 粒子 / 等轴积木 / 信息卡），带确定性自检 | `node mg-kit/render.mjs`、`deliverables/MG动效能力验证.html` |
 | `deliverables/` | 7 份 HTML 交付报告（浏览器打开） | `deliverables/落地总报告.html` |
 | `docs/` | 跨项目文档（外部仓库体检等） | — |
@@ -42,6 +43,7 @@ motiongit-lab       真实模板运行时与性能基准（含 SKIA / Chromium �
 | 还差什么 | `blockers.md`（每条写清卡在哪、需要什么才能解） |
 | MotionGit 模板怎么用 | `motiongit-lab/MOTIONGIT-PLAYBOOK.md` |
 | 体积治理与清理记录 | `docs/仓库清理-2026-11-09.md`、`docs/仓库清理-2026-11-12.md` |
+| 模板（内容）与代码如何分层 | `docs/模板与代码分离-2026-11-12.md` |
 | 一键出片的编排脚本 | `~/.workbuddy/skills/desktop-video-pipeline/scripts/make_film.py` |
 
 ## 常用命令
@@ -81,15 +83,15 @@ node desktop-kit/render.mjs \
 
 2026-11-09 做过一次清理：1.0 GB → 566 MB；2026-11-12 再做一轮，口径不变：**只删「跑一遍就能再生成」的媒体产物**，源码、模板、语料、证据 JSON、参考片与唯一副本一件不动。完整清单与重跑命令见两份 `docs/仓库清理-*.md`。
 
-| 位置 | 2026-11-12 实测 | 性质 |
+| 位置 | 2026-11-12 清理后 | 性质 |
 |---|---|---|
-| `motiongit-lab/out/` | 887 MB | 104 支 mp4（442 MB）+ 报告/总览；可重跑，已忽略 |
-| `motiongit-lab/replicas/` | 752 MB | `out/` 465 MB、`reference/` 187 MB、`downloads/` 50 MB；媒体可重跑，参考片是本地校验唯一副本 |
-| `motiongit-lab/ref/` | 211 MB | mac-desktop 官方 demo 与抽帧，本地 1:1 校验用 |
+| `motiongit-lab/out/` | 696 MB | 104 支 mp4（442 MB）+ 报告/总览；可重跑，已忽略 |
+| `motiongit-lab/replicas/` | 288 MB | `out/` 465 MB、`reference/` 187 MB、`downloads/` 50 MB；媒体可重跑，参考片是本地校验唯一副本 |
+| `motiongit-lab/ref/` | 203 MB | mac-desktop 官方 demo 与抽帧，本地 1:1 校验用 |
 | `cutproof/`（含 `res/` + `corpus/`） | 208 MB | 回归基线语料，**删了就没法复现** |
 | `motiongit-lab/templates/` | 166 MB | `.motion` 模板与解包素材，**核心资产** |
 | `cinecode-probe/` | 163 MB | 管线对比实验产物（html/json 为证据） |
-| `motiongit-lab/edits/` | 158 MB | 编辑工程；含 `render-cache/` 82 MB 缓存、素材 38 MB |
+| `motiongit-lab/edits/` | 76 MB | 编辑工程；含 `render-cache/` 82 MB 缓存、素材 38 MB |
 | `renderd/` | 86 MB | 服务源码 + `var/sample/` 唯一副本 |
 | `motiongit-lab/node_modules/` | 73 MB | `npm ci` 可重建 |
 | `deliverables/` | 308 KB | 交付报告 + skill 分发包 |

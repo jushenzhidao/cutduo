@@ -76,3 +76,21 @@
 - **三个必踩坑**：① `env.T` 必须是"完整调色板 + theme 覆盖"，只传 theme 会让 `T.white` 等 undefined；
   ② `MK.icon` 内部按 (x±size/2) 平移，外层已 translate 到中心时再传 cx/cy 会二次偏移飞出画面；
   ③ 硬切段首入场一律从 -0.1s 起、容器缩放下限 0.86，否则切点首帧是"缩成一点"甚至空帧。
+
+## 科普模板的两条运行路径（2026-11-12 落地）
+
+同一份 `templates/science-explainer/src/`（kit.js + layouts.js，纯 Canvas2D）有两个宿主：
+
+| 路径 | 命令 | 字体 | 2215 帧 / 73.8s |
+|---|---|---|---|
+| canvas/Chrome | `node motion-render.mjs render --package . --style X --jobs 6` | 系统 PingFang | 14.37s / 154 fps |
+| **Skia** | `node skia-kit/render.mjs --kit science --params X.json --workers 20` | 随包 Noto Sans SC | **11.3s / 196 fps** |
+
+- **只快 20–27%，别照抄 paper-kit 的「6.9 倍」结论**：科普版式栅格化密集，@napi-rs/canvas 是
+  CPU 光栅化，Chrome canvas2d 走 GPU，差距被吃掉。收益在零浏览器、内存 1.3GB、确定性。
+- **字体必须按字号分流**，否则字幕糊死：`≥800 或 (≥700 且 ≥64px) → Black`，
+  其余 700 → Medium + 保留原 heavy 描边（PingFang 原设计是 SemiBold+2.2px 膨胀）。
+- **绘制调用是 Skia 记账，代价在 `canvas.data()` 结算**。单看 renderFrame 的 1ms 是假象，
+  真实 10–16ms（封面 45ms）。有效优化只有并行度：6/8/12/16/20 worker → 132/141/172/186/192 fps。
+- 改 kit.js 的三处注入（`__FONTS` / `__createCanvas` / heavy）都做了浏览器端零回归，
+  同帧比对 MAE 0.00；以后动这两个文件先跑这个回归。

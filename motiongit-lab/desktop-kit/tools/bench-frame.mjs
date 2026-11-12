@@ -16,7 +16,7 @@ const KIT = path.resolve(HERE, '..');
 const ROOT = path.resolve(KIT, '..');
 const argv = process.argv.slice(2);
 const get = (k, d) => { const i = argv.indexOf('--' + k); return i >= 0 ? argv[i + 1] : d; };
-const paramsPath = path.resolve(get('params', path.join(KIT, 'presets', 'md.json')));
+const paramsPath = path.resolve(get('params', path.join(ROOT, 'content', 'md.json')));
 const N = Number(get('frames', 120));
 const JPEG = Number(get('jpeg', 94));
 const T = loadTokens();

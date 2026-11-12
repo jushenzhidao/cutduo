@@ -129,6 +129,18 @@ def main():
             items = seg_args.get('items') or []
             if len(idxs) == len(items):
                 seg_args['itemAt'] = [round(caps[i]['start'] - cursor, 2) for i in idxs]
+        # 图标阵列：一句一卡
+        if s['type'] == 'matrix':
+            items = seg_args.get('items') or []
+            if len(idxs) == len(items):
+                seg_args['itemAt'] = [round(caps[i]['start'] - cursor, 2) for i in idxs]
+        # 圆框图解：第 2 句起依次放出标注（第 1 句留给画面入场）
+        if s['type'] == 'diagram':
+            cos = seg_args.get('callouts') or []
+            if len(idxs) >= len(cos) + 1:
+                seg_args['callouts'] = [
+                    {**c, 'at': round(caps[idxs[i + 1]]['start'] - cursor, 2)} for i, c in enumerate(cos)
+                ]
         # 讲解位：把本段每句的说话区间写进去，人物嘴型只在说话时动
         if s['type'] == 'talk' and idxs:
             seg_args['talking'] = [

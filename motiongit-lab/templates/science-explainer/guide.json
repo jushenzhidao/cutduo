@@ -80,17 +80,21 @@
       "args": {
         "figure": "right（默认）| left",
         "figureImage": "可选，透明底 PNG 的 data URL；缺省画内置扁平讲解员",
-        "hair": "讲解员发色",
+        "hair": "发色",
         "skin": "肤色",
-        "coat": "外套色",
+        "coat": "外套色，双人对白时用颜色区分角色",
         "eyebrow": "小眉标，如「家长最常见的困惑」",
         "lines": "主句数组，1–3 行，每行 ≤ 9 字",
         "accentLine": "哪一行用红字 + 荧光笔，默认 0",
         "sticker": "可选贴纸",
         "paper": "cream（默认）| mint | sky",
-        "label": "可选标签 {text, at, x, y, size}"
+        "label": "可选标签 {text, at, x, y, size}",
+        "gesture": "idle | explain（单手比划）| open（双手摊开）| point | count | nod（点头）",
+        "gestureAt": "手势起始秒（段内），默认 0.9",
+        "talking": "[[起,止],...] 说话区间，嘴型只在区间内开合；由 tools/vo.py 自动写入，不必手填",
+        "eyebrowColor": "眉标竖条颜色，用来区分角色（孩子蓝 / 妈妈绿）"
       },
-      "capacity": "lines ≤ 3 行，每行 ≤ 9 字（86px）；figure 在右时段落左边界 202px"
+      "capacity": "lines ≤ 3 行，每行 ≤ 9 字（86px）；figure 在右时段落左边界 202px；人物会呼吸、眨眼、说话时开口、按 gesture 抬手"
     },
     {
       "type": "diagram",
@@ -198,5 +202,14 @@
       "segments[].args.itemAt（tip）",
       "durationSeconds"
     ]
+  },
+  "voices": {
+    "mapping": "preset.voices 里按角色名映射音色；captions[].speaker 指向它",
+    "profiles": {
+      "kid": "zh-CN-YunxiaNeural（男童）或 zh-CN-XiaoyiNeural（活泼女声）",
+      "mom": "zh-CN-XiaoxiaoNeural（温暖女声）",
+      "narrator": "zh-CN-YunyangNeural（新闻腔，适合正片旁白）",
+      "default": "zh-CN-XiaoxiaoNeural"
+    }
   }
 }

@@ -935,29 +935,28 @@
     ctx.translate(0, breath);
 
     // ---- 手臂（先画，被身体压住，只露外侧）----
+    // 不用旋转：旋转会把手臂转到身体背后或穿过画面。直接算肩→手的端点，用曲线连接。
     const arm = (side, k) => {
       const sx = side * 126, sy = -366;
-      const ang = side * (-0.06 - k * 1.02);   // 最大约 60°，手能抬到胸前
-      ctx.save();
-      ctx.translate(sx, sy);
-      ctx.rotate(ang);
-      const gArm = ctx.createLinearGradient(-20, 0, 26, 170);
+      const hx = sx + side * (12 + k * 104);
+      const hy = sy + 188 - k * 236;
+      const qx = sx + side * (34 + k * 44), qy = sy + 96 - k * 58;
+      const gArm = ctx.createLinearGradient(sx, sy, hx, hy);
       gArm.addColorStop(0, shade(coat, 1.06));
       gArm.addColorStop(0.55, coat);
       gArm.addColorStop(1, shade(coat, 0.84));
       ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.quadraticCurveTo(side * 20, 100, side * 10, 172);
+      ctx.moveTo(sx, sy);
+      ctx.quadraticCurveTo(qx, qy, hx, hy);
       ctx.lineWidth = 52; ctx.lineCap = 'round'; ctx.strokeStyle = '#8A4A22'; ctx.stroke();
       ctx.lineWidth = 42; ctx.strokeStyle = gArm; ctx.stroke();
       // 袖口
-      ctx.beginPath(); ctx.arc(side * 10, 176, 24, 0, Math.PI * 2);
+      ctx.beginPath(); ctx.arc(hx, hy, 24, 0, Math.PI * 2);
       ctx.fillStyle = '#FBF6EE'; ctx.fill();
       // 手
-      ctx.beginPath(); ctx.ellipse(side * 10, 198, 22, 25, 0, 0, Math.PI * 2);
+      ctx.beginPath(); ctx.ellipse(hx + side * 9, hy + 34, 23, 26, 0, 0, Math.PI * 2);
       ctx.fillStyle = '#EFC1A8'; ctx.fill();
       ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(180,120,90,0.45)'; ctx.stroke();
-      ctx.restore();
     };
     arm(-1, clamp(o.armL || 0, 0, 1));
     arm(1, clamp(o.armR || 0, 0, 1));

@@ -568,7 +568,8 @@
       const c = i % cols, r = Math.floor(i / cols);
       const cx = startX + c * cellW;
       const cy = startY + r * gapY;
-      const k = enter((t + 0.02 - i * 0.15) / 0.45, 0.82);
+      const at = (a.itemAt && a.itemAt[i] !== undefined) ? Number(a.itemAt[i]) : 0.02 + i * 0.15;
+      const k = enter((t - at) / 0.45, 0.82);
       if (k <= 0) return;
       const R = Math.min(cellW * 0.36, H * 0.168);
       ctx.save();
@@ -589,7 +590,7 @@
       }
       ctx.restore();
       // 标签
-      const kl = ease((t + 0.06 - i * 0.15) / 0.4);
+      const kl = ease((t - at - 0.12) / 0.4);
       if (kl > 0) {
         ctx.save();
         ctx.globalAlpha *= kl;

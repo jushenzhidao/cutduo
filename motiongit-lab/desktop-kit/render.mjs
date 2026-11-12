@@ -2,7 +2,7 @@
 /**
  * desktop-kit · 一条命令出片（Skia，无浏览器）
  *
- *   node desktop-kit/render.mjs --params desktop-kit/presets/demo.json \
+ *   node desktop-kit/render.mjs --params content/demo.json \
  *     --audio edits/audio-desktop.m4a --out out/desktop.mp4
  *
  * 只依赖 @napi-rs/canvas + ffmpeg。分片并行 + mpegts concat + 音轨封装。
@@ -33,7 +33,7 @@ function resolveInput(p, mustExist = true) {
 function parseArgs(argv) {
   const get = (k, d) => { const i = argv.indexOf('--' + k); return i >= 0 && argv[i + 1] ? argv[i + 1] : d; };
   return {
-    params: resolveInput(get('params', 'desktop-kit/presets/demo.json')),
+    params: resolveInput(get('params', 'content/demo.json')),
     audio: resolveInput(get('audio', null), false),
     out: path.resolve(get('out', 'out/desktop.mp4')),
     workers: Math.max(1, Number(get('workers', Math.min(8, os.cpus().length)))),

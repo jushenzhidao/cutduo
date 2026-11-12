@@ -180,6 +180,6 @@ export function createScienceRenderer(opts = {}) {
     /** 素材解码完成后再出片，避免首几帧缺图 */
     ready: () => (primed || Promise.resolve()),
     width: W, height: H,
-    layouts: Object.keys(L).filter((k) => typeof L[k] === 'function'),
+    layouts: ['cover', 'talk', 'diagram', 'compare', 'matrix', 'focus', 'tip', 'outro'],
   };
 }
