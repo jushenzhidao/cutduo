@@ -49,7 +49,7 @@
 
 ### 超参预设（把四个维度打包成档）
 
-`desktop-kit/profiles.json` 定义 5 档：`standard`（默认）/ `small` / `archive` / `tiny` / `flat`。
+`desktop-kit/profiles.json` 定义 5 档：`standard`（默认，肉眼无损）/ `quality`（crf15+film，质量优先）/ `small` / `tiny` / `flat`。
 `--profile <name>` 选用，任意单项可用 CLI 覆盖（优先级：CLI > profile > 默认）。
 运行时会打印生效配置。**没有比 `standard` 更快的档**——换 preset 换不来速度，编码不是瓶颈。
 

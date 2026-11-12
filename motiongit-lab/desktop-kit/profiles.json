@@ -1,5 +1,5 @@
 {
-  "_note": "出片超参预设。用法：--profile <name>，任意单项可用 --bg/--pipe/--crf/--tune 覆盖。实测依据 docs/编码优化-2026-11-13.md。注意：不存在比 standard 更快的档 —— 换 ultrafast 只快 2.7% 但体积大 2.5 倍，已删除。",
+  "_note": "出片超参预设。--profile <name> 选用，任意单项可用 --bg/--pipe/--crf/--tune 覆盖。实测见 docs/编码优化-2026-11-13.md：quality 是画质拐点（再降 CRF 体积翻倍只换 0.0014 SSIM）。",
   "default": "standard",
   "profiles": {
     "standard": {
@@ -11,6 +11,15 @@
       "crf": 20,
       "tune": "animation"
     },
+    "quality": {
+      "label": "质量优先：slower + crf 15 + tune film（SSIM 0.9953 / PSNR 52.2，体积约 4× standard）",
+      "bg": "gpu",
+      "pipe": "raw",
+      "codec": "libx264",
+      "x264": "slower",
+      "crf": 15,
+      "tune": "film"
+    },
     "small": {
       "label": "小体积：CRF 25，速度不变，体积约 0.65×",
       "bg": "gpu",
@@ -18,15 +27,6 @@
       "codec": "libx264",
       "x264": "veryfast",
       "crf": 25,
-      "tune": "animation"
-    },
-    "archive": {
-      "label": "归档：更慢的 preset + 低 CRF，画质最稳",
-      "bg": "gpu",
-      "pipe": "raw",
-      "codec": "libx264",
-      "x264": "slower",
-      "crf": 17,
       "tune": "animation"
     },
     "tiny": {
