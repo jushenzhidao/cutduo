@@ -16,7 +16,7 @@ bash bench/bench-limit.sh
 两个 shell 已改成 `cd "$(dirname "$0")/.."`，自身会回到仓库根；JS 脚本不会，必须手动在根执行。
 ESM 的 `../skia-kit/paper.mjs` 不受位置影响（`motiongit-lab/skia-kit` 存在）。
 
-## 清单（19）
+## 清单（20）
 
 | 类别 | 文件 | 回答什么问题 |
 |---|---|---|
@@ -24,6 +24,7 @@ ESM 的 `../skia-kit/paper.mjs` 不受位置影响（`motiongit-lab/skia-kit` �
 | 成本 | `bench-enc.mjs` | 只测编码：同帧推 300 次 |
 | 成本 | `bench-pipe.mjs` | JPEG 中间帧 vs RAW 直供 |
 | 成本 | `bench-ffmpeg.py` | 编码档位耗时/体积/PSNR |
+| 成本 | `enc-probe.mjs` | **单帧成本分解**：绘制 / 取帧 / 四种编码器（含硬件编码、`-threads 1`） |
 | 并发 | `bench-limit.sh` | worker 数 / 峰值内存极限 |
 | 并发 | `bench-three.sh` | 串行 / 4 路 / 8 路对比 |
 | 并发 | `mem-monitor.py` | 进程树 RSS 峰值 |
