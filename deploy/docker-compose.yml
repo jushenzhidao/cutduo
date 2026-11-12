@@ -1,0 +1,44 @@
+# cutduo MCP · ai-prod 部署
+#
+# 端口只绑回环：对外一律走 nginx（证书与上传体积都在那一层管）。
+# 渲染是 CPU 密集，容器内并发上限 3（每个 job 8 worker），与 64 核机器匹配。
+
+services:
+  cutduo-mcp:
+    build:
+      context: ..
+      dockerfile: mcp/Dockerfile
+    image: cutduo-mcp:2.0.0
+    container_name: cutduo-mcp
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8787:8787"
+    environment:
+      # 必填：否则任何人都能往服务器传文件、烧 CPU
+      CUTDUO_TOKEN: ${CUTDUO_TOKEN:?CUTDUO_TOKEN 未设置，先 export}
+      CUTDUO_PUBLIC_URL: https://cut-mcp.1task.cn
+      CUTDUO_MAX_JOBS: "3"
+      CUTDUO_WAIT_SECONDS: "90"
+      CUTDUO_MAX_UPLOAD_MB: "64"
+      CUTDUO_ASSET_TTL_DAYS: "7"
+      # 容器里没有 .git，仓库根只能显式给
+      CUTDUO_ROOT: /app
+      CUTDUO_OUT: /data/out
+      CUTDUO_DATA: /data
+    volumes:
+      - /opt/cutduo/data:/data
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8787/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"

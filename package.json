@@ -18,10 +18,13 @@
     "doctor": "node tools/motion-render.mjs doctor",
     "inspect": "node tools/motion-render.mjs inspect --package templates/fixtures/workbuddy-distill.motion",
     "tpl:render": "node tools/motion-render.mjs render --package templates/fixtures/workbuddy-distill.motion --inputs content/inputs.json --out out/distill.mp4",
-    "tpl:build": "python3 tools/build-template.py"
+    "tpl:build": "python3 tools/build-template.py",
+    "mcp": "node mcp/server.mjs"
   },
   "dependencies": {
-    "@napi-rs/canvas": "^1.1.0",
+    "@napi-rs/canvas": "^1.1.0"
+  },
+  "devDependencies": {
     "playwright": "^1.65.0"
   }
 }

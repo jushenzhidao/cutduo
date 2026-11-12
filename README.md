@@ -13,9 +13,9 @@ node render.mjs --kit science --params kits/science/template/presets/demo.json -
 node kits/desk/render.mjs --params content/demo.json --audio assets/audio/audio-desktop.m4a --out out/desk.mp4 --fps 60
 ```
 
-## 两种用法
+## 三种用法
 
-人用 CLI，agent 用 API。**API 是唯一实现，CLI 是它的一个宿主。**
+人用 CLI，程序 import API，agent 走远程 MCP。**API 是唯一实现，其余都是宿主。**
 
 ```bash
 node api/cli.mjs capabilities            # 五支版式：id / 画幅 / 帧率 / 内容模型 / schema 状态
@@ -31,6 +31,16 @@ echo '{"kit":"paper","preset":"v8t"}' | node api/cli.mjs render --stdin --json
 
 长片或调用方可能断线时用异步：`render --async` 拿 jobId，`status --id <id>` 轮询，
 `jobs` 列出最近任务，`cancel --id <id>` 终止。job 状态落在 `out/jobs/`，跨进程可查。
+
+### 远程 MCP
+
+```bash
+node mcp/server.mjs        # 本地默认 :8787，POST /mcp
+```
+
+云服务端 MCP（Streamable HTTP，零依赖）：七个工具覆盖选版式 → 校验 → 出片 → 查任务 → 门禁，
+音频走 `POST /assets` 上传拿 assetId，产物从 `GET /files/<name>` 下载。
+部署见 [`docs/MCP-DEPLOY.md`](docs/MCP-DEPLOY.md)。
 
 回执里的帧数、时长、分辨率一律由 ffprobe 读产物得出，**不是渲染器的自述计划值**；
 错误带 `code` / `hint` / `fix`，调用方能据此自行纠正。契约细节见 [`docs/API.md`](docs/API.md)。
@@ -89,6 +99,8 @@ uv run python tools/check-template.py --src templates/own/my-template        # �
 | 目录 | 装什么 | 改它会影响 |
 |---|---|---|
 | `api/` | **契约层**：能力清单、参数校验、统一回执、五支 adapter | agent 的全部调用面 |
+| `mcp/` | **云服务端 MCP**：Streamable HTTP + 上传 + 产物下载 | 远程调用面 |
+| `deploy/` | compose 与 nginx 配置（端口只绑回环） | 上线方式 |
 | `render.mjs` | 主 CLI，按 `--kit` 分发 | 全部版式 |
 | `src/` | 引擎：仓库根探测、字体注册、门禁、参数校验、计时账本 | 全部版式 |
 | `kits/` | 五套版式，每支自治（渲染器 + 参数 schema + presets） | 只影响自己 |

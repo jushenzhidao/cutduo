@@ -1,0 +1,18 @@
+# 构建上下文瘦身：refs/ 与 out/ 合计 1.5G，且都是本机素材，进镜像毫无意义
+.git
+node_modules
+refs
+out
+data
+deliverables
+bench
+docs
+tools
+templates
+**/*.mp4
+**/*.mov
+*.log
+.DS_Store
+
+# 字体必须保留：assets/fonts 被 .gitignore 排除（*.otf），但镜像里没有字体就
+# 会静默回退系统字体，画面与本地不一致且不报错。所以这里不能排除 assets/。

@@ -24,7 +24,13 @@ function findRepoRoot(start) {
   }
 }
 
-export const REPO_ROOT = findRepoRoot(SRC_DIR);
+/**
+ * 容器里没有 .git，向上探测会一直走到 / 然后退回 SRC_DIR，路径全错。
+ * 所以部署时用 CUTDUO_ROOT 显式指定；产物目录同理用 CUTDUO_OUT 指到可写卷。
+ */
+export const REPO_ROOT = process.env.CUTDUO_ROOT
+  ? path.resolve(process.env.CUTDUO_ROOT)
+  : findRepoRoot(SRC_DIR);
 
 /**
  * 相对路径解析：先按 cwd，再按仓库根。
@@ -51,6 +57,7 @@ export const DIRS = {
   assets: path.join(REPO_ROOT, 'assets'),
   fonts: path.join(REPO_ROOT, 'assets', 'fonts'),
   audio: path.join(REPO_ROOT, 'assets', 'audio'),
-  out: path.join(REPO_ROOT, 'out'),
+  // 容器里挂的是只读代码卷 + 可写数据卷，产物与 job 状态必须落到后者
+  out: process.env.CUTDUO_OUT ? path.resolve(process.env.CUTDUO_OUT) : path.join(REPO_ROOT, 'out'),
   refs: path.join(REPO_ROOT, 'refs'),
 };
