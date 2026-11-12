@@ -40,6 +40,7 @@ MotionGit `.motion` 模板的运行时实验与出片产线。两条主线：
 ## 4. 根目录脚本索引
 
 根目录脚本是历史实验的扁平堆积。**按用途查表，不要按名字猜**。迁移前先看「可移植性」。
+`bench/` 下的脚本依赖 `process.cwd()`，**必须从仓库根运行**（详见 `bench/README.md`）。
 
 ### 入口 / 必需
 
@@ -67,7 +68,7 @@ MotionGit `.motion` 模板的运行时实验与出片产线。两条主线：
 | 文件 | 用途 | 可移植性 |
 |---|---|---|
 | `bench-draw.mjs` | 绘制成本 | **硬编码绝对路径**，换机器/移动即断 |
-| `bench-enc.mjs` | 纯编码成本 | 无外部依赖 |
+| `bench/bench-enc.mjs` | 纯编码成本 | 已移入 `bench/`，须从仓库根运行 |
 | `bench-pipe.mjs` | JPEG vs RAW 管道 A/B | 用 `path.resolve('.')`，须在根运行 |
 | `bench-ffmpeg.py` | FFmpeg 编码档位 + PSNR | 参数化 |
 | `bench-limit.sh` | worker 数 / 内存极限压测 | `cd $(dirname)`，**移动会断** |
@@ -78,7 +79,7 @@ MotionGit `.motion` 模板的运行时实验与出片产线。两条主线：
 | 文件 | 用途 |
 |---|---|
 | `cankit-probe.mjs` | CanvasKit / SkSL 可行性（三问） |
-| `grain-probe.mjs` | SkSL 烘颗粒 tile 的正确用法 |
+| `bench/grain-probe.mjs` | SkSL 烘颗粒 tile 的正确用法 | 已移入 `bench/` |
 | `probe-kit.mjs` | 按分镜中点抽帧成 PNG（唯一有相对 import 的脚本） |
 | `profile-chrome.mjs` | Chrome 逐帧截图路径对比 |
 | `profile-engines.mjs` | Chromium / WebKit / Firefox 引擎对比 |
@@ -93,7 +94,7 @@ MotionGit `.motion` 模板的运行时实验与出片产线。两条主线：
 | `mk-compare-skia.mjs` | 三版 Skia 对比图 | — |
 | `mk-label.mjs` | 批量打标签 | 依赖 `assets/fonts` |
 | `shot.mjs` / `shot2.mjs` | 用 Playwright 截 HTML 报告 | 依赖 `process.cwd()` |
-| `t.mjs` | 字体渲染小样 | 临时文件，可删 |
+| `bench/font-metrics.mjs` | 字体度量小样（原 `t.mjs`） | 已移入 `bench/` |
 
 ## 5. 禁区
 
@@ -115,9 +116,11 @@ MotionGit `.motion` 模板的运行时实验与出片产线。两条主线：
 
 不为整齐而大搬家——移动会破坏文档引用与脚本内的相对/绝对路径。按「先索引、再小步移动、每步验证」推进：
 
-- **已完成**：内容与代码分离（`presets/` → `content/`，保留软链）；README 体积表与清理记录；本索引。
+- **已完成**：内容与代码分离（`presets/` → `content/`，保留软链）；README 体积表与清理记录；本索引；
+  第一批 3 个脚本移入 `bench/`（`font-metrics` / `bench-enc` / `grain-probe`），三个都已实跑通过。
 - **下一步（每次 ≤5 个文件）**：只移动「无文档引用 + 无相对 import + 不依赖 cwd」的脚本，移动后跑一次探针 + `verify`。
-  优先候选：`t.mjs`（临时）、`bench-enc.mjs`、`grain-probe.mjs`。
+  下一批要先修依赖：`bench-draw.mjs` 的硬编码绝对路径、`bench-limit.sh` / `bench-three.sh` 的 `cd $(dirname)`。
+  `profile-*` / `shot*` 因文档引用多、依赖 cwd，暂留根目录。
 - **暂不移动**：`bench-draw.mjs`（绝对路径）、`bench-limit.sh` / `bench-three.sh`（`cd $(dirname)`）、
   `profile-*` / `shot*`（依赖 cwd）、`canvas-editorial.mjs` / `render-*.{mjs,py}`（是引擎不是脚本）。
 - **`templates/` 的 own/vendor 分离**：暂以索引标注代替物理拆分；真要拆，先改 `.gitignore` 的 5 条整包规则，
