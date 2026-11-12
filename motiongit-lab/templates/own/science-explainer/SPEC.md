@@ -174,10 +174,10 @@
 cp presets/demo.json presets/我的脚本.json   # 改 captions / segments 的文案与时长
 
 # 2. 校验 + 预览关键帧
-node motion-render.mjs preview --package templates/science-explainer --style 我的脚本 --out out/preview
+node motion-render.mjs preview --package templates/own/science-explainer --style 我的脚本 --out out/preview
 
 # 3. 出片（有配音就加 --audio）
-node motion-render.mjs render --package templates/science-explainer --style 我的脚本 --out out/我的片.mp4 --jobs 6
+node motion-render.mjs render --package templates/own/science-explainer --style 我的脚本 --out out/我的片.mp4 --jobs 6
 
 # 4. 过门禁
 node skia-kit/gate.mjs out/我的片.mp4

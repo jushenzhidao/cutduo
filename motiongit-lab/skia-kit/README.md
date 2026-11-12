@@ -5,7 +5,7 @@
 
 - 1920×1080 @60fps，跟随配音时长
 - 8 个版式：`hero` `point` `number` `compare` `steps` `quote` `checklist` `outro`
-- 另带一套 `--kit science` 科普版式（9 个版面，移植自 `templates/science-explainer`，见该目录 `SKIA-SPEC.md`）
+- 另带一套 `--kit science` 科普版式（9 个版面，移植自 `templates/own/science-explainer`，见该目录 `SKIA-SPEC.md`）
 - 常驻头像卡、烧录字幕、右上时间码、`*强调词*`、自动折行、字号自适应
 - 全片 42.9s / 2573 帧，**6.1s** 出片（8 worker），峰值内存 < 1GB
 
@@ -185,7 +185,7 @@ node skia-kit/render.mjs --params <json> --audio <m4a> --out <mp4>
 ```
 skia-kit/
   paper.mjs          渲染器（createPaperRenderer / registerFonts / loadTokens）
-  science.mjs        科普版式渲染器（createScienceRenderer，宿主移植 templates/science-explainer/src）
+  science.mjs        科普版式渲染器（createScienceRenderer，宿主移植 templates/own/science-explainer/src）
   render.mjs         出片 CLI（params + audio → mp4）
   verify.mjs         版式自检
   tokens.json        几何规格 + 可调项

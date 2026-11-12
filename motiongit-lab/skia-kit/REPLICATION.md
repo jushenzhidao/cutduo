@@ -32,7 +32,7 @@ unzip -p template.motion motion.json | jq '{runtime, output, parameters}'
 
 ```bash
 # 模板路线（示例：motion-kit）
-./templates/paper-perspective/run-tpl.sh          # 产出 out/ab3/tpl.mp4
+./templates/vendor/paper-perspective/run-tpl.sh          # 产出 out/ab3/tpl.mp4
 ```
 
 要求：

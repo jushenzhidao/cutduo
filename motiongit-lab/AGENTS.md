@@ -18,7 +18,8 @@ MotionGit `.motion` 模板的运行时实验与出片产线。两条主线：
 | 内容 | `content/` | 15 个分镜 JSON（镜头/文案/素材引用） | 可自由改，改完重跑 TTS |
 | 素材 | `edits/assets/` | 实拍照片、生成人像、Pexels 图/视频帧 | 唯一副本，**不删** |
 | 产物 | `out/`、`replicas/out/` | 成片、总览、报告 | 可重跑，已忽略入库 |
-| 第三方模板 | `templates/` | 下载包 + 自建模板 | 下载包含个人 Key，**不外传**；清单见 `templates/README.md` |
+| 自建模板 | `templates/own/` | `distill` / `editorial` / `science-explainer` + 打包产物 | 可改、可分发；保留上游 LICENSE |
+| 下载模板 | `templates/vendor/` | 5 个个人下载包（film-kit / motion-kit / html-canvas） | **不入库、不外传**，含个人 Key |
 
 `desktop-kit/presets` 是指向 `../content` 的过渡软链，旧命令仍可用；新命令请写 `content/`。
 
@@ -31,7 +32,7 @@ MotionGit `.motion` 模板的运行时实验与出片产线。两条主线：
 | 换壁纸/氛围层 | `desktop-kit/tools/bg-providers.mjs` |
 | 调出片管线/性能 | `desktop-kit/tools/render-bench.mjs`、`MOTIONGIT-PLAYBOOK.md` §42–§46 |
 | 加实拍图/视频 | `content/` 顶层 `photos` / `clips` + `edits/assets/` |
-| 复刻第三方模板 | `replicas/engine/`、`templates/`、`ref/` |
+| 复刻第三方模板 | `replicas/engine/`、`templates/vendor/`、`ref/` |
 | 看历史结论/踩坑 | `MOTIONGIT-PLAYBOOK.md`（§0–§46，按主题检索） |
 | 仓库体检/清理 | `docs/仓库清理-*.md`、`docs/模板与代码分离-2026-11-12.md` |
 
@@ -93,9 +94,8 @@ MotionGit `.motion` 模板的运行时实验与出片产线。两条主线：
 不为整齐而大搬家——移动会破坏文档引用与脚本内的相对/绝对路径。按「先索引、再小步移动、每步验证」推进：
 
 - **已完成**：内容与代码分离（`presets/` → `content/`）；脚本三层收敛（根目录 37 → 18，`bench/` 19 个）；
-  `templates/` 规则与清单就位；本索引。
-- **下一步**：`templates/` 的 own/vendor 物理拆分（`.gitignore` 规则已预留，顺序：先规则 → 再移动 →
-  `git status` 查凭据 → 回归 `build-template.py`）。
+  `templates/` 拆为 `own/`（3 个自建 + 1 个产物）与 `vendor/`（5 个个人下载包）；本索引。
+- **下一步**：可选的 `engines/` 归并——但会牵动 10+ 处文档引用，收益低，暂不做。
 - **不再移动**：`canvas-editorial` / `render-*` 是引擎；`motion-render` / `setup` / `build-template` 是入口；
   `qa-gate.py` 被 skill 写死。路径稳定性优先于目录整齐。
 - **暂不移动**：`bench-draw.mjs`（绝对路径）、`bench-limit.sh` / `bench-three.sh`（`cd $(dirname)`）、

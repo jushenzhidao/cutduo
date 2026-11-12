@@ -34,7 +34,7 @@
 
 ```bash
 cd motiongit-lab
-python3 build-template.py --src templates/editorial --out packages/editorial-cut.motion
+python3 build-template.py --src templates/own/editorial --out packages/editorial-cut.motion
 node motion-render.mjs check-params --package packages/editorial-cut.motion --inputs edits/inputs.json
 node motion-render.mjs preview     --package packages/editorial-cut.motion --inputs edits/inputs.json --out edits/preview
 node motion-render.mjs render      --package packages/editorial-cut.motion --inputs edits/inputs.json --out out/editorial-cut.mp4 --audio <可选音轨>

@@ -292,7 +292,7 @@ print(json.dumps(out,ensure_ascii=False))`;
   for (const f of files) {
     if (path.resolve(f) === self) continue;
     const s = fs.readFileSync(f, 'utf8');
-    for (const pat of ['motiongit.key', 'apiKey', 'release.bin', 'templates/mac-desktop', 'personal/']) {
+    for (const pat of ['motiongit.key', 'apiKey', 'release.bin', 'templates/vendor/', 'personal/']) {
       if (s.includes(pat)) bad.push(`${path.relative(KIT, f)}: ${pat}`);
     }
   }

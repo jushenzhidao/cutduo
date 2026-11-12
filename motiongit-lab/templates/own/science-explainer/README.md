@@ -30,9 +30,9 @@
 ## 运行
 
 ```bash
-node motion-render.mjs plan     --package templates/science-explainer
-node motion-render.mjs preview  --package templates/science-explainer --out out/preview
-node motion-render.mjs render   --package templates/science-explainer --out out/demo.mp4 --jobs 6
+node motion-render.mjs plan     --package templates/own/science-explainer
+node motion-render.mjs preview  --package templates/own/science-explainer --out out/preview
+node motion-render.mjs render   --package templates/own/science-explainer --out out/demo.mp4 --jobs 6
 node skia-kit/gate.mjs out/demo.mp4
 ```
 
@@ -42,7 +42,7 @@ Skia 直出（不需要 Chromium）：
 
 ```bash
 node skia-kit/render.mjs --kit science \
-  --params templates/science-explainer/presets/demo.vo.json \
+  --params templates/own/science-explainer/presets/demo.vo.json \
   --audio out/demo.vo.wav --out out/demo-skia.mp4 --fps 30 --workers 20
 ```
 

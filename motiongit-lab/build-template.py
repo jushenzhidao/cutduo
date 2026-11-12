@@ -3,7 +3,7 @@
 
 用法:
   python3 build-template.py                                                  # 默认 distill 模板
-  python3 build-template.py --src templates/editorial --out packages/editorial-cut.motion
+  python3 build-template.py --src templates/own/editorial --out packages/editorial-cut.motion
 
 - 生成 integrity.json：除自身外所有冻结文件的 SHA-256
 - 根目录含 motion.json；所有引用文件必须存在
@@ -16,7 +16,7 @@ import pathlib
 import zipfile
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--src", default="templates/distill")
+ap.add_argument("--src", default="templates/own/distill")
 ap.add_argument("--out", default="packages/workbuddy-distill.motion")
 a = ap.parse_args()
 

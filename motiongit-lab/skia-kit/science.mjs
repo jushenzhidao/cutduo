@@ -2,7 +2,7 @@
  * science.mjs — 科普版式渲染器（Skia / @napi-rs/canvas，无浏览器）
  *
  * 与 paper.mjs 的区别：paper 是逐像素反推后重写的版式；
- * 本文件是 templates/science-explainer 那套 canvas 2D 版式的**宿主移植**：
+ * 本文件是 templates/own/science-explainer 那套 canvas 2D 版式的**宿主移植**：
  * 版式代码（kit.js / layouts.js）逐字不动，只把运行环境从
  * 「浏览器 window + DOM canvas + new Image」换成「@napi-rs/canvas + 注入字体表」。
  *

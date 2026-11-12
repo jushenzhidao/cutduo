@@ -25,7 +25,7 @@
 
 ## 二、做法：移植，不是重写
 
-`templates/science-explainer/src/` 里是两个 IIFE：`kit.js`（绘图原语 + 图标库，888 行）和 `layouts.js`（9 个版式，890 行）。它们只依赖 `window.MK` / `window.L` 和 Canvas 2D API，**没有一处 `ctx.filter`、没有 blend 模式**。
+`templates/own/science-explainer/src/` 里是两个 IIFE：`kit.js`（绘图原语 + 图标库，888 行）和 `layouts.js`（9 个版式，890 行）。它们只依赖 `window.MK` / `window.L` 和 Canvas 2D API，**没有一处 `ctx.filter`、没有 blend 模式**。
 
 所以 `skia-kit/science.mjs` 不做重画，只做宿主替换：
 
@@ -142,7 +142,7 @@ cover / talk / compare / diagram / matrix / focus / tip / outro 全部对齐；�
 ```bash
 # 一条命令出片（params 支持 scenes[] 或 segments[] 两种结构）
 node skia-kit/render.mjs --kit science \
-  --params templates/science-explainer/presets/demo.vo.json \
+  --params templates/own/science-explainer/presets/demo.vo.json \
   --audio /path/to/vo.m4a \
   --out out/film.mp4 --fps 30 --workers 20
 
