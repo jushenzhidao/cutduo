@@ -185,7 +185,9 @@ async function doRender(args) {
     st = api.jobStatus(sub.jobId);
   }
 
-  if (st.status === 'done') return withUrl(st.receipt);
+  // 成功时也带上 jobId：调用方可以用它去查 job_status 做对账，
+  // 也能在日志里把回执与 out/jobs/<id>.json 对应起来
+  if (st.status === 'done') return { jobId: sub.jobId, ...withUrl(st.receipt) };
   if (st.status === 'failed') {
     throw new ApiError(st.error?.code || CODE.RENDER_FAILED, st.error?.message || '渲染失败', {
       hint: st.error?.hint,
