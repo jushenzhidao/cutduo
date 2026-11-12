@@ -92,8 +92,13 @@ function applySkin() {
 }
 applyTheme(String(get('theme', d.theme || 'knowledge')));
 applySkin();
-const FONT = '"PingFang SC", "Helvetica Neue", sans-serif';
-const MONO = '"Menlo", "PingFang SC", monospace';
+// 字体优先级必须是「随包字体 → 系统字体」，不能倒过来。
+// 原本写的是 "PingFang SC" 优先，本地 macOS 看着正常，但容器里没有 PingFang，
+// 也不会有 Hiragino —— 直接回退到无中文字形的 sans-serif，整屏豆腐块。
+// 云端第一次跑 editorial 就是这样：标题/副标题/字幕全是方框，且不报任何错。
+const FONT = '"NotoSC Black", "NotoSC Medium", "NotoSC Regular", "PingFang SC", "Helvetica Neue", sans-serif';
+// Menlo 同样只在 macOS 上有；等宽退到 NotoSC Regular，字宽略变但不缺字
+const MONO = '"NotoSC Regular", "Menlo", "PingFang SC", monospace';
 
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const pr = (t, a, b) => clamp((t - a) / (b - a));
