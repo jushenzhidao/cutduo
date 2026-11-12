@@ -27,8 +27,24 @@ const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../.
 const W = DEFAULT_TOKENS.width, H = DEFAULT_TOKENS.height;
 
 const argv = process.argv.slice(2);
-const get = (k, d) => { const i = argv.indexOf('--' + k); return i >= 0 && argv[i + 1] ? argv[i + 1] : d; };
+const cliGet = (k) => { const i = argv.indexOf('--' + k); return i >= 0 && argv[i + 1] ? argv[i + 1] : undefined; };
+
+// ── 超参预设：CLI 单项 > profile > 内置默认。预设表 desktop-kit/profiles.json ──
+const PROFILE_PATH = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', 'profiles.json');
+const PROFILES = JSON.parse(fs.readFileSync(PROFILE_PATH, 'utf8'));
+const profileName = cliGet('profile') || PROFILES.default;
+const PROFILE = PROFILES.profiles[profileName];
+if (!PROFILE) {
+  throw new Error(`未知 profile "${profileName}"，可选：${Object.keys(PROFILES.profiles).join(' / ')}`);
+}
+const get = (k, d) => {
+  const v = cliGet(k);
+  if (v !== undefined) return v;
+  return PROFILE[k] !== undefined ? String(PROFILE[k]) : d;
+};
 const has = (k) => argv.includes('--' + k);
+const effective = () => Object.fromEntries(
+  ['bg', 'pipe', 'codec', 'x264', 'crf', 'tune', 'bitrate', 'jpeg'].map((k) => [k, get(k, null)]));
 const resolveInput = (p, must = true) => {
   if (!p) return p;
   if (path.isAbsolute(p)) return p;
@@ -113,6 +129,9 @@ async function loadPhotos(P) {
     ? ['-c:v', 'h264_videotoolbox', '-b:v', get('bitrate', '6M'), '-pix_fmt', 'yuv420p']
     : codec === 'vthevc'
       ? ['-c:v', 'hevc_videotoolbox', '-b:v', get('bitrate', '4M'), '-pix_fmt', 'yuv420p', '-tag:v', 'hvc1']
+      : codec === 'libx265'
+        ? ['-c:v', 'libx265', '-preset', x264, '-crf', crf, '-pix_fmt', 'yuv420p', '-tag:v', 'hvc1',
+           ...(get('tune', null) ? ['-tune', get('tune')] : [])]
       : ['-c:v', 'libx264', '-preset', x264, '-crf', crf, '-pix_fmt', 'yuv420p',
          ...(get('tune', null) ? ['-tune', get('tune')] : [])];
   const ff = spawn(FFMPEG, ['-hide_banner', '-loglevel', 'error', '-y', ...input,
@@ -196,6 +215,7 @@ async function main() {
       '--start', String(seg.s), '--end', String(seg.e), '--part', seg.part,
       '--preset', preset, '--bg', bg, '--pipe', pipe,
       '--crf', String(get('crf', 20)), '--x264', get('x264', 'veryfast'), '--jpeg', String(get('jpeg', 94)),
+      '--profile', profileName,
       '--codec', get('codec', 'libx264'), '--bitrate', get('bitrate', '6M'),
       ...(get('tune', null) ? ['--tune', get('tune')] : []),
       ...(get('presenter', null) ? ['--presenter', resolveInput(get('presenter'))] : []),
@@ -212,11 +232,14 @@ async function main() {
   execFileSync(FFMPEG, ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', silent]);
   const dur = (P.frames / P.fps).toFixed(3);
   fs.mkdirSync(path.dirname(out), { recursive: true });
+  // HEVC 必须在最终 mp4 上重新打 hvc1 标：分片 mpegts 里的 tag 在 concat 后会丢成 hev1，
+  // 而 Safari / QuickTime 只认 hvc1。
+  const tagArgs = ['libx265', 'vthevc'].includes(get('codec', 'libx264')) ? ['-tag:v', 'hvc1'] : [];
   if (audio && fs.existsSync(audio)) {
     execFileSync(FFMPEG, ['-hide_banner', '-loglevel', 'error', '-y', '-i', silent, '-i', audio,
-      '-map', '0:v:0', '-map', '1:a:0', '-c:v', 'copy', '-c:a', 'copy', '-t', dur, '-movflags', '+faststart', out]);
+      '-map', '0:v:0', '-map', '1:a:0', '-c:v', 'copy', '-c:a', 'copy', ...tagArgs, '-t', dur, '-movflags', '+faststart', out]);
   } else {
-    execFileSync(FFMPEG, ['-hide_banner', '-loglevel', 'error', '-y', '-i', silent, '-c', 'copy', '-t', dur, out]);
+    execFileSync(FFMPEG, ['-hide_banner', '-loglevel', 'error', '-y', '-i', silent, '-c', 'copy', ...tagArgs, '-t', dur, out]);
   }
   fs.rmSync(TMP, { recursive: true, force: true });
 
@@ -244,6 +267,8 @@ async function main() {
   if (jsonOut) { fs.mkdirSync(path.dirname(path.resolve(jsonOut)), { recursive: true }); fs.writeFileSync(path.resolve(jsonOut), JSON.stringify(rec, null, 2)); }
   console.log(`✓ ${out}`);
   console.log(`  ${rec.pipeline}  ${rec.frames} 帧 / ${dur}s / ${rec.sizeMB}MB / 墙钟 ${rec.wallSeconds}s / ${rec.throughputFps} fps / ${workers} workers`);
+  console.log(`  profile：${profileName}（${PROFILE.label || ''}）`);
+  console.log(`  超参：${JSON.stringify(effective())}`);
   console.log(`  单帧：绘制 ${rec.frameMs}ms + 传帧 ${rec.writeMs}ms${rec.bgLayer ? `  （其中壁纸层 ${rec.bgLayer.totalMs}ms）` : ''}`);
 }
 

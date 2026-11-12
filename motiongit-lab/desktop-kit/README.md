@@ -12,6 +12,9 @@
 > **分镜与代码分离（2026-11-12）**：内容分镜在 `motiongit-lab/content/`，本目录只放渲染器与工具。
 > `desktop-kit/presets` 是指向 `../content` 的过渡软链，旧命令仍可用。
 
+> **超参预设**：`profiles.json` 提供 5 档（`--profile standard|small|archive|tiny|flat`），
+> 单项仍可用 `--bg/--pipe/--crf/--tune/--codec` 覆盖。实测依据 `docs/编码优化-2026-11-13.md`。
+
 ## 30 秒上手
 
 ```bash

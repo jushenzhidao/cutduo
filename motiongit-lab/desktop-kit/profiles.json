@@ -1,0 +1,50 @@
+{
+  "_note": "出片超参预设。用法：--profile <name>，任意单项可用 --bg/--pipe/--crf/--tune 覆盖。实测依据 docs/编码优化-2026-11-13.md。注意：不存在比 standard 更快的档 —— 换 ultrafast 只快 2.7% 但体积大 2.5 倍，已删除。",
+  "default": "standard",
+  "profiles": {
+    "standard": {
+      "label": "默认：平衡档（实测 424.9 fps / 4.72MB / 68.8s 片 / 9.71s 出片）",
+      "bg": "gpu",
+      "pipe": "raw",
+      "codec": "libx264",
+      "x264": "veryfast",
+      "crf": 20,
+      "tune": "animation"
+    },
+    "small": {
+      "label": "小体积：CRF 25，速度不变，体积约 0.65×",
+      "bg": "gpu",
+      "pipe": "raw",
+      "codec": "libx264",
+      "x264": "veryfast",
+      "crf": 25,
+      "tune": "animation"
+    },
+    "archive": {
+      "label": "归档：更慢的 preset + 低 CRF，画质最稳",
+      "bg": "gpu",
+      "pipe": "raw",
+      "codec": "libx264",
+      "x264": "slower",
+      "crf": 17,
+      "tune": "animation"
+    },
+    "tiny": {
+      "label": "极窄：H.265 CRF 30，体积约 0.57×，慢 44%，老设备可能不认",
+      "bg": "gpu",
+      "pipe": "raw",
+      "codec": "libx265",
+      "x264": "veryfast",
+      "crf": 30
+    },
+    "flat": {
+      "label": "无 GPU 壁纸回退：慢 65%（噪点壁纸编码更难），仅 headless-gl 不可用时使用",
+      "bg": "static",
+      "pipe": "raw",
+      "codec": "libx264",
+      "x264": "veryfast",
+      "crf": 20,
+      "tune": "animation"
+    }
+  }
+}

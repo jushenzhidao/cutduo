@@ -47,6 +47,12 @@
 五个模板用的是**同一个渲染库**（`@napi-rs/canvas` / Skia），所以模板不改变速度档。
 `science` 额外支持浏览器宿主（同一份 `kit.js` + `layouts.js`），那是它的双跑能力，不是另一套栈。
 
+### 超参预设（把四个维度打包成档）
+
+`desktop-kit/profiles.json` 定义 5 档：`standard`（默认）/ `small` / `archive` / `tiny` / `flat`。
+`--profile <name>` 选用，任意单项可用 CLI 覆盖（优先级：CLI > profile > 默认）。
+运行时会打印生效配置。**没有比 `standard` 更快的档**——换 preset 换不来速度，编码不是瓶颈。
+
 ### 第三、四维：传帧与封装
 
 | 维度 | 档位 | 代价 |
