@@ -42,6 +42,7 @@ motiongit-lab       真实模板运行时与性能基准（含 SKIA / Chromium �
 | 为什么这么设计 | `decisions.md`（逐条决策 + 理由） |
 | 还差什么 | `blockers.md`（每条写清卡在哪、需要什么才能解） |
 | MotionGit 模板怎么用 | `motiongit-lab/MOTIONGIT-PLAYBOOK.md` |
+| agent 找文件 / 找脚本 | `motiongit-lab/AGENTS.md`（五层结构、任务路由、根目录脚本索引、改动纪律） |
 | 体积治理与清理记录 | `docs/仓库清理-2026-11-09.md`、`docs/仓库清理-2026-11-12.md` |
 | 模板（内容）与代码如何分层 | `docs/模板与代码分离-2026-11-12.md` |
 | 一键出片的编排脚本 | `~/.workbuddy/skills/desktop-video-pipeline/scripts/make_film.py` |
