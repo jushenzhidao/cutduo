@@ -58,22 +58,7 @@ jobs:
           INPUT='${{ inputs.tag }}'
           REF='${{ github.ref }}'
 
-          # ── 逃生阀：提交信息含 [skip release] ⇒ 本次不切版本、不发版 ──
-          # 用 git log 读 HEAD 的完整 message（subject + body）。
-          # ⚠️ 两处坑：
-          #   ① 不用 `git log -1 ... | grep -q` —— pipefail 下 grep 提前退出会让 git 收到
-          #      SIGPIPE，整条管道判为失败，逃生阀反而失效。改用 case 匹配。
-          #   ② 不用 `--no-merges` —— HEAD 若是 merge commit，`git log -1 --no-merges`
-          #      返回的是上一个非 merge 提交，读到的不是 HEAD 的信息。
-          MSG="$(git log -1 --pretty=%B)"
-          case "$MSG" in
-            *"[skip release]"*)
-              echo "::notice::提交信息含 [skip release] —— 本次不切版本、不发版"
-              echo "mode=skip" >> "$GITHUB_OUTPUT"
-              exit 0
-              ;;
-          esac
-
+          # ── 先定模式，逃生阀只对自动模式生效（原因见下）──
           if [ -n "$INPUT" ]; then
             MODE=tag; TAG="$INPUT"                 # ③ 补发指定 tag
           elif [ "${REF#refs/tags/}" != "$REF" ]; then
@@ -82,12 +67,34 @@ jobs:
             MODE=auto                              # ① push main：自增 patch
           fi
 
-          # 上一个版本 tag：用 --sort=-v:refname 而非 git describe —— 后者取"最近可达的 tag"，
-          # 有合并历史时会挑错版本；字典序还会把 v1.9.0 判为新于 v1.10.0。
-          # glob 顺带排除 latest 这类滚动指针。
-          PREV="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1)"
+          # ── 逃生阀：提交信息含跳过标记 ⇒ 本次不切版本、不发版 ──
+          # 🔴 只对 MODE=auto 生效。②③ 是**人的显式决策**，不能被自动路径的标记否决。
+          #    实测（cutduo v0.2.0 / v0.2.1）：两个 tag 的提交正文里都写了该标记，于是
+          #    Build changelog / Create GitHub Release 全被跳过，而 job 结论仍是 success
+          #    —— tag 已发布、Release 零个，完全静默。人工打 tag 等于明说"要发这个版本"，
+          #    不该再被一个为自动补丁设计的开关拦下。
+          # 用 git log 读 HEAD 的完整 message（subject + body）。
+          # 另两处坑：
+          #   ① 不用 `git log -1 ... | grep -q` —— pipefail 下 grep 提前退出会让 git 收到
+          #      SIGPIPE，整条管道判为失败，逃生阀反而失效。改用 case 匹配。
+          #   ② 不用 `--no-merges` —— HEAD 若是 merge commit，`git log -1 --no-merges`
+          #      返回的是上一个非 merge 提交，读到的不是 HEAD 的信息。
+          if [ "$MODE" = "auto" ]; then
+            MSG="$(git log -1 --pretty=%B)"
+            case "$MSG" in
+              *"[skip release]"*)
+                echo "::warning::提交信息含跳过标记 —— 本次不切版本、不发版"
+                echo "mode=skip" >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+            esac
+          fi
 
           if [ "$MODE" = "auto" ]; then
+            # 上一个版本 tag：用 --sort=-v:refname 而非 git describe —— 后者取"最近可达的 tag"，
+            # 有合并历史时会挑错版本；字典序还会把 v1.9.0 判为新于 v1.10.0。
+            # glob 顺带排除 latest 这类滚动指针。
+            PREV="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1)"
             if [ -z "$PREV" ]; then
               # 零 tag 仓库的冷启动：首个版本直接 v0.1.0（与组织内 jimeng / video-adapter
               # 的 v0.1.x 起点一致）。若沿用基准 v0.0.0，首版会变成 v0.0.1，与惯例不符。
@@ -105,6 +112,15 @@ jobs:
             END=HEAD
           else
             END="$TAG"
+            # 🔴 补发旧 tag 时 PREV 必须锚定到 TAG 自身的历史：取「TAG 父提交可达的最新 tag」。
+            #    若沿用全局最新 tag，补发 v0.2.0 时 PREV 会算成 v0.2.1，range 反向成
+            #    v0.2.1..v0.2.0 —— git log 输出空，notes 只剩一行 compare 链接，且不报错。
+            PARENT="$(git rev-parse -q --verify "${TAG}^{commit}^" || true)"
+            if [ -n "$PARENT" ]; then
+              PREV="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --merged "$PARENT" --sort=-v:refname | head -n1)"
+            else
+              PREV=""     # TAG 是仓库首个提交 ⇒ 走 initial release 分支
+            fi
           fi
 
           case "$TAG" in
@@ -180,9 +196,22 @@ jobs:
 
       - name: Summary
         run: |
+          MODE='${{ steps.ver.outputs.mode }}'
+          # 跳过时不能什么都不说：绿了的运行 + 零 Release 是最难发现的失败模式。
+          if [ "$MODE" = "skip" ]; then
+            {
+              echo "### 本次未发版（mode=skip）"
+              echo ""
+              echo "提交信息含跳过标记，按约定不切版本、不建 Release。"
+              echo "确需发版时用 workflow_dispatch 指定已存在的 tag 补发（入口 ③）。"
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::mode=skip —— 本次未切版本、未建 Release"
+            exit 0
+          fi
           {
-            echo "### 已发布 ${{ steps.ver.outputs.tag }}（mode=${{ steps.ver.outputs.mode }}）"
+            echo "### 已发布 ${{ steps.ver.outputs.tag }}（mode=${MODE}）"
             echo ""
             echo "- Release: https://github.com/${{ github.repository }}/releases/tag/${{ steps.ver.outputs.tag }}"
+            echo "- 上一版本: ${{ steps.ver.outputs.prev }}"
             echo "- commit: ${{ steps.ver.outputs.sha }}"
           } >> "$GITHUB_STEP_SUMMARY"
