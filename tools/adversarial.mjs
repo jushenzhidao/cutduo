@@ -32,7 +32,9 @@ if (!VIDEO || !PARAMS) {
 }
 
 const P = JSON.parse(fs.readFileSync(PARAMS, 'utf8'));
-const fps = Number(P.fps || 30);
+// fps 先按 params 兜底，探测到视频后以**成片实测帧率**为准（见下方 ffprobe 段）：
+// 用 params 的 30 去切 60fps 的帧序列，切点索引会整体减半，8 个切点全被判成"重复帧"。
+let fps = Number(P.fps || 30);
 const rows = [];
 const add = (level, id, msg) => rows.push({ level, id, msg });
 
@@ -144,12 +146,18 @@ if (maleVoices.length && talkWithFigure.length && !hasCustomFigure && P.figureGe
 let streams = [];
 try {
   streams = JSON.parse(execFileSync('ffprobe', ['-v', 'error', '-show_entries',
-    'stream=codec_type,codec_name,duration', '-show_entries', 'format=duration', '-of', 'json', VIDEO],
+    'stream=codec_type,codec_name,duration,r_frame_rate', '-show_entries', 'format=duration', '-of', 'json', VIDEO],
   { encoding: 'utf8', maxBuffer: 1e7 })).streams || [];
 } catch (e) {
   add('BLOCKER', 'probe.fail', `ffprobe 读不了这个文件：${e.message.split('\n')[0]}`);
 }
 const v = streams.find((s) => s.codec_type === 'video');
+// 帧号换算必须用成片自己的帧率：--fps 60 出片而 preset 写 30 是常态（规格优先版）。
+if (v && v.r_frame_rate && v.r_frame_rate !== '0/0') {
+  const [rn, rd] = String(v.r_frame_rate).split('/').map(Number);
+  const real = rd ? rn / rd : rn;
+  if (real > 0 && Math.abs(real - fps) > 0.01) fps = real;
+}
 const au = streams.find((s) => s.codec_type === 'audio');
 if (au && au.codec_name !== 'aac') {
   add('BLOCKER', 'audio.codec', `音轨是 ${au.codec_name}：mp4 里塞 PCM 会让浏览器/Safari 整轨静音（pipeline 应转 aac）`);

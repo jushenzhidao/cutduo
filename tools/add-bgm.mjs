@@ -25,6 +25,7 @@ const arg = (n, d) => {
 };
 const VIDEO = arg('video');
 const OUT = arg('out');
+const AUDIO = arg('audio', null);   // 独立人声/旁白轨：给了就不从视频里取，避免「先压 160k 再压 192k」的二次有损
 const MUSIC = arg('music', null);
 const LOOP = arg('loop', 'Mellow Drizzle Soft Pad');
 const GAIN = Number(arg('gain', -15));      // 音乐基础电平（dB）：配乐自身 RMS 约 -15dBFS，压到 -30 左右
@@ -33,7 +34,7 @@ const DUCK_THR = Number(arg('duck-thr', 0.125));   // ≈ -18dBFS：人声正常
 const DUCK_RATIO = Number(arg('duck-ratio', 2.5));
 const FADE_IN = Number(arg('fade-in', 2.0));
 const FADE_OUT = Number(arg('fade-out', 3.0));
-if (!VIDEO || !OUT) { console.error('用法: node tools/add-bgm.mjs --video in.mp4 [--loop 名字|--music 路径] --out out.mp4'); process.exit(2); }
+if (!VIDEO || !OUT) { console.error('用法: node tools/add-bgm.mjs --video in.mp4 [--audio 旁白.wav] [--loop 名字|--music 路径] --out out.mp4'); process.exit(2); }
 
 const LOOPS_ROOT = '/Library/Audio/Apple Loops';
 
@@ -53,6 +54,11 @@ if (!music) {
   process.exit(2);
 }
 if (!fs.existsSync(music)) { console.error(`配乐文件不存在：${music}`); process.exit(2); }
+if (AUDIO && !fs.existsSync(AUDIO)) { console.error(`旁白文件不存在：${AUDIO}`); process.exit(2); }
+
+// 输入槽位：有独立旁白时 0=视频 1=旁白 2=音乐，否则 0=视频（自带人声）1=音乐
+const VO_IN = AUDIO ? 1 : 0;
+const MUS_IN = AUDIO ? 2 : 1;
 
 const dur = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', VIDEO], { encoding: 'utf8' }).trim());
 const fadeOutSt = Math.max(0, dur - FADE_OUT).toFixed(2);
@@ -66,7 +72,7 @@ const copies = Math.max(2, Math.ceil((dur + XF) / Math.max(0.5, loopDur - XF)) +
 
 const parts = [];
 // 每份拷贝：统一格式 → 基础增益 → 低通去齿音
-parts.push(`[1:a]aformat=sample_rates=44100:channel_layouts=mono,volume=${GAIN}dB,lowpass=f=9000,asplit=${copies}` +
+parts.push(`[${MUS_IN}:a]aformat=sample_rates=44100:channel_layouts=mono,volume=${GAIN}dB,lowpass=f=9000,asplit=${copies}` +
   Array.from({ length: copies }, (_, i) => `[c${i}]`).join(''));
 let prev = 'c0';
 for (let i = 1; i < copies; i++) {
@@ -75,7 +81,7 @@ for (let i = 1; i < copies; i++) {
   prev = out;
 }
 parts.push(`[looped]atrim=0:${dur.toFixed(3)},asetpts=N/SR/TB,afade=t=in:st=0:d=${FADE_IN},afade=t=out:st=${fadeOutSt}:d=${FADE_OUT}[bgm]`);
-parts.push(`[0:a]aformat=sample_rates=44100:channel_layouts=mono[vo]`);
+parts.push(`[${VO_IN}:a]aformat=sample_rates=44100:channel_layouts=mono[vo]`);
 parts.push(`[vo]asplit=2[vo1][vo2]`);
 parts.push(DUCK === 'on'
   ? `[bgm][vo2]sidechaincompress=threshold=${DUCK_THR}:ratio=${DUCK_RATIO}:attack=20:release=450:makeup=1[bed]`
@@ -88,15 +94,20 @@ const chain = parts.join(';');
 execFileSync('ffmpeg', [
   '-v', 'error', '-y',
   '-i', VIDEO,
+  ...(AUDIO ? ['-i', AUDIO] : []),
   '-i', music,
   '-filter_complex', chain,
   '-map', '0:v', '-map', '[aout]',
   '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-ac', '1', '-movflags', '+faststart',
+  // 画面是主时钟：旁白 wav 常比视频长几十毫秒（vo.py 多写 0.12s 防止截掉末帧），
+  // 不裁的话容器时长跟着音轨走，帧数检查会报「4770 ≠ 79.624×60」。
+  '-t', dur.toFixed(3),
   OUT,
 ], { stdio: 'inherit' });
 
 const after = execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration,size', '-of', 'json', OUT], { encoding: 'utf8' });
 const info = JSON.parse(after).format;
 console.log(`✓ ${OUT}`);
+console.log(`  旁白 ${AUDIO ? path.basename(AUDIO) + '（独立轨，单次编码）' : '取自视频'}`);
 console.log(`  配乐 ${path.basename(music)}（${(Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', music], { encoding: 'utf8' }).trim())).toFixed(1)}s 循环）· 基础电平 ${GAIN}dB · duck=${DUCK}${DUCK === 'on' ? ` (thr ${DUCK_THR} / ratio ${DUCK_RATIO})` : ''}`);
 console.log(`  ${dur.toFixed(2)}s / ${(Number(info.size) / 1e6).toFixed(2)}MB`);
