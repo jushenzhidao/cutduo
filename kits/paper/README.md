@@ -145,7 +145,7 @@ node render.mjs --kit paper --params <json> --audio <m4a> --out <mp4>
 | `transparentBg` | 只画字幕条/时间码/头像卡，底透明 | 生成素材的**整屏插入**走这条：`overlay-pass.mjs` 出帧 → ffmpeg overlay |
 | `broll` 分镜类型 | 不画正文、只出字幕与头像卡 | 空镜插片只需要一条旁白，时间轴不破 |
 
-**实测（`tools/bg-probe.mjs`，生成纸纹底图 1920×1080）**
+**实测（`tools/bg-probe.mjs`，该脚本已移除，数据保留在此）**
 
 | wash | 底色亮度 | 纹理 σ | vs 标题 | vs 正文 |
 |---|---|---|---|---|
