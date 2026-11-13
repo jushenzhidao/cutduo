@@ -237,6 +237,7 @@ export function createCollageRenderer({ canvas, ctx, width = W, height = H, fps 
   // 媒体载体（上游 media 契约的对应物）：角色名 → { img, fit, focusX, focusY }
   const media = new Map();
   let mediaDefs = {};
+  let fadeIn = 0.35;
 
   function paintAt(t) {
     background(ctx, t);
@@ -288,9 +289,10 @@ export function createCollageRenderer({ canvas, ctx, width = W, height = H, fps 
     if (hudA > 0.01) hud(ctx, t, cur && cur.args ? cur.args.label : '', hudA, brand);
     timeline(ctx, t, total, scenes);
 
-    // 开场淡入（0.35s，只压前 21 帧，不会触发黑帧门禁）
-    if (t < 0.35) {
-      ctx.fillStyle = `rgba(0,0,0,${1 - t / 0.35})`;
+    // 开场淡入：时长由 params.fadeInSeconds 决定（默认 0.35s）。
+    // 30 秒短片里 0.35s ≈ 1.2% 帧，叠加场景首帧就会顶穿 3% 黑帧门禁。
+    if (fadeIn > 0 && t < fadeIn) {
+      ctx.fillStyle = `rgba(0,0,0,${1 - t / fadeIn})`;
       ctx.fillRect(0, 0, W, H);
     }
   }
@@ -299,6 +301,8 @@ export function createCollageRenderer({ canvas, ctx, width = W, height = H, fps 
     setContent(content) {
       scenes = (content && content.scenes) || [];
       mediaDefs = (content && content.media) || {};
+      // 开场淡入时长可配：短片总帧数少，0.35s 的黑场就会把「黑帧占比」推过 3% 的门禁线
+      if (content && content.fadeInSeconds !== undefined) fadeIn = Number(content.fadeInSeconds);
       if (content && content.brand) {
         brand = { name: content.brand.name || brand.name, initial: content.brand.initial || brand.initial };
       }

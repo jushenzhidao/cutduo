@@ -127,13 +127,33 @@ if (spec.bgm) {
   else write({ bgmSkipped: true, bgmReason: (bg.stderr || '').split('\n').filter(Boolean).slice(-2).join(' ') });
 }
 
-// ── 5. 门禁 ────────────────────────────────────────────────────────
-stage('gate', 94, '交付门禁', 99);
+// ── 5. 门禁 + 一致性检查 ────────────────────────────────────────────
+// 只跑 gate 是不够的：gate 判的是"能播"，查不出"元素永不会出现""男声配女像""素材静默退回图标"。
+// 客户拿到一支 BLOCKER 级的片，比拿不到片更糟——所以 BLOCKER 在这里就要拦下，不写 done。
+stage('checks', 93, '交付门禁与一致性检查', 99);
 const g = spawnSync('node', ['src/gate.mjs', final, '--require-audio', '--json', path.join(DIR, 'gate.json')],
   { cwd: REPO_ROOT, encoding: 'utf8' });
 log('gate rc=' + g.status + '\n' + (g.stdout || '') + (g.stderr || ''));
 let gate = null;
 try { gate = JSON.parse(fs.readFileSync(path.join(DIR, 'gate.json'), 'utf8'))[0]; } catch { /* 忽略 */ }
+
+const advRun = spawnSync('node', ['tools/adversarial.mjs', '--video', final, '--params', voPreset, '--json'],
+  { cwd: REPO_ROOT, encoding: 'utf8' });
+log('adversarial rc=' + advRun.status + '\n' + (advRun.stdout || '') + (advRun.stderr || ''));
+let adv = null;
+try { adv = JSON.parse(advRun.stdout); } catch { adv = null; }
+fs.writeFileSync(path.join(DIR, 'adversarial.json'), adv ? JSON.stringify(adv, null, 2) : '{}');
+
+if (adv && adv.blockers > 0) {
+  const top = (adv.rows || []).filter((r) => r.level === 'BLOCKER').slice(0, 3).map((r) => r.msg);
+  if (ticker) clearInterval(ticker);
+  write({
+    stage: 'checks', failed: true, msg: '成片未通过一致性检查', errors: top.map((m) => ({ msg: m })),
+    checks: { gate: gate ? { verdict: gate.verdict } : null, adversarial: { blockers: adv.blockers, warns: adv.warns } },
+    elapsedMs: Date.now() - started,
+  });
+  process.exit(1);
+}
 
 // ── 6. 完成 ────────────────────────────────────────────────────────
 if (ticker) clearInterval(ticker);
@@ -152,7 +172,9 @@ write({
   durationSeconds: dur,
   segments: voiced.segments.length,
   captions: voiced.captions.length,
-  voice, gate: gate ? { verdict: gate.verdict, frames: `${gate.frames}/${gate.expectFrames || gate.frames}`, hook: gate.hook } : null,
+  voice,
+  gate: gate ? { verdict: gate.verdict, frames: `${gate.frames}/${gate.expectFrames || gate.frames}`, hook: gate.hook } : null,
+  checks: adv ? { adversarial: { blockers: adv.blockers, warns: adv.warns } } : null,
   elapsedMs: Date.now() - started,
 });
 log(`DONE ${final} ${(stat.size / 1048576).toFixed(2)}MB ${dur}s`);

@@ -1,0 +1,389 @@
+{
+  "fps": 60,
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 30.0,
+  "brand": {
+    "name": ".cutduo",
+    "initial": "c"
+  },
+  "note": "30 秒短版：从 showreel 砍掉 open/pack/flow/adapt，只留 hero / recipe / reuse / spec / finale / end。reuse 仍带 1s 停留。素材沿用 out/showreel-frames 的 12 张真图。 无开场淡入：30 秒片的总采样只有 30 帧，首帧黑就是 3.33%，直接越过门禁线。",
+  "media": {
+    "demo": {
+      "src": "out/showreel-frames/02-science.jpg",
+      "kind": "image",
+      "start": 0,
+      "fit": "cover",
+      "focusX": 0.5,
+      "focusY": 0.5
+    },
+    "portrait": {
+      "src": "out/showreel-frames/07-nightcard.jpg",
+      "kind": "image",
+      "start": 0,
+      "fit": "cover",
+      "focusX": 0.5,
+      "focusY": 0.5
+    },
+    "wall00": {
+      "src": "out/showreel-frames/01-desk.jpg",
+      "kind": "image",
+      "start": 0,
+      "fit": "cover",
+      "focusX": 0.5,
+      "focusY": 0.5
+    },
+    "wall01": {
+      "src": "out/showreel-frames/02-science.jpg",
+      "kind": "image",
+      "start": 0,
+      "fit": "cover",
+      "focusX": 0.5,
+      "focusY": 0.5
+    },
+    "wall02": {
+      "src": "out/showreel-frames/03-paper.jpg",
+      "kind": "image",
+      "start": 0,
+      "fit": "cover",
+      "focusX": 0.5,
+      "focusY": 0.5
+    },
+    "wall03": {
+      "src": "out/showreel-frames/04-editorial.jpg",
+      "kind": "image",
+      "start": 0,
+      "fit": "cover",
+      "focusX": 0.5,
+      "focusY": 0.5
+    },
+    "wall04": {
+      "src": "out/showreel-frames/05-clay.jpg",
+      "kind": "image",
+      "start": 0,
+      "fit": "cover",
+      "focusX": 0.5,
+      "focusY": 0.5
+    },
+    "wall05": {
+      "src": "out/showreel-frames/06-mg.jpg",
+      "kind": "image",
+      "start": 0,
+      "fit": "cover",
+      "focusX": 0.5,
+      "focusY": 0.5
+    },
+    "wall06": {
+      "src": "out/showreel-frames/07-nightcard.jpg",
+      "kind": "image",
+      "start": 0,
+      "fit": "cover",
+      "focusX": 0.5,
+      "focusY": 0.5
+    },
+    "wall07": {
+      "src": "out/showreel-frames/08-collage.jpg",
+      "kind": "image",
+      "start": 0,
+      "fit": "cover",
+      "focusX": 0.5,
+      "focusY": 0.5
+    },
+    "wall08": {
+      "src": "out/showreel-frames/09-hero.jpg",
+      "kind": "image",
+      "start": 0,
+      "fit": "cover",
+      "focusX": 0.5,
+      "focusY": 0.5
+    },
+    "wall09": {
+      "src": "out/showreel-frames/10-flow.jpg",
+      "kind": "image",
+      "start": 0,
+      "fit": "cover",
+      "focusX": 0.5,
+      "focusY": 0.5
+    },
+    "wall10": {
+      "src": "out/showreel-frames/11-adapt.jpg",
+      "kind": "image",
+      "start": 0,
+      "fit": "cover",
+      "focusX": 0.5,
+      "focusY": 0.5
+    },
+    "wall11": {
+      "src": "out/showreel-frames/12-share.jpg",
+      "kind": "image",
+      "start": 0,
+      "fit": "cover",
+      "focusX": 0.5,
+      "focusY": 0.5
+    }
+  },
+  "audio": {
+    "mode": "effects-only",
+    "musicGain": 0.55,
+    "cues": [
+      {
+        "at": 0.32,
+        "src": "impact",
+        "gain": 0.32
+      },
+      {
+        "at": 1.4,
+        "src": "tick",
+        "gain": 0.2
+      },
+      {
+        "at": 4.5,
+        "src": "whoosh",
+        "gain": 0.36
+      },
+      {
+        "at": 11.0,
+        "src": "whoosh",
+        "gain": 0.36
+      },
+      {
+        "at": 17.5,
+        "src": "whoosh",
+        "gain": 0.36
+      },
+      {
+        "at": 21.5,
+        "src": "whoosh",
+        "gain": 0.36
+      },
+      {
+        "at": 21.7,
+        "src": "rise",
+        "gain": 0.28
+      },
+      {
+        "at": 22.4,
+        "src": "impact",
+        "gain": 0.28
+      },
+      {
+        "at": 25.5,
+        "src": "whoosh",
+        "gain": 0.36
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hero",
+      "t0": 0.0,
+      "t1": 4.5,
+      "args": {
+        "label": "01 / FORMAT",
+        "wordmark": ".cutduo",
+        "chip": ".cutduo · 七支版式 · 一条管线",
+        "kline": "七种片子，一条渲染管线",
+        "klineGrad": "一条渲染管线",
+        "decode": "DESK · SCIENCE · PAPER · EDITORIAL · CLAY · MG · COLLAGE",
+        "chipDot": false
+      }
+    },
+    {
+      "type": "recipe",
+      "t0": 4.5,
+      "t1": 11.0,
+      "args": {
+        "label": "02 / RECIPE",
+        "cards": [
+          {
+            "cardTag": "01 · LAYOUT",
+            "cardBadge": "版式是代码",
+            "cardChips": "• SKIA   • NODE   (LOCAL)",
+            "cardFormat": ".mjs",
+            "cardMeta": "CANVAS2D · SKIA · FFMPEG",
+            "cardSub": "版式只写一次，内容换一百次"
+          },
+          {
+            "cardTag": "02 · INPUT",
+            "cardBadge": "内容是数据",
+            "cardChips": "• JSON   • SCHEMA   (VALID)",
+            "cardFormat": ".json",
+            "cardMeta": "JSON · params · schema",
+            "cardSub": "改一句话，不用重排时间轴"
+          },
+          {
+            "cardTag": "03 · FRAMES",
+            "cardBadge": "帧直送",
+            "cardChips": "• RAW    • X264    (PIPE)",
+            "cardFormat": ".raw",
+            "cardMeta": "RGBA · 6MB/帧 · 直送编码器",
+            "cardSub": "没有截图，没有中间 JPEG"
+          }
+        ],
+        "rightFormat": ".json",
+        "panelTitle": "showreel.json",
+        "panelLines": [
+          [
+            "\"kit\"",
+            ": \"collage\","
+          ],
+          [
+            "\"scenes\"",
+            ": 8,"
+          ],
+          [
+            "\"fps\"",
+            ": 60"
+          ]
+        ],
+        "subMp4": "成片只能播放",
+        "kline": "成片只有像素，内容才是数据",
+        "klineGrad": "内容才是数据"
+      }
+    },
+    {
+      "type": "reuse",
+      "t0": 11.0,
+      "t1": 17.5,
+      "args": {
+        "label": "05 / WORK",
+        "kline": "七支版式，一条管线",
+        "klineGrad": "一条管线",
+        "decode": "7 KITS · 1 RENDER ENGINE"
+      },
+      "still": 4.0,
+      "hold": 1.0
+    },
+    {
+      "type": "spec",
+      "t0": 17.5,
+      "t1": 21.5,
+      "args": {
+        "label": "06 / SPEC",
+        "kline": "参数即契约，schema 先于渲染",
+        "klineGrad": "schema 先于渲染",
+        "fileName": "showreel.json",
+        "version": "JSON Schema · draft 2020-12",
+        "schemaUrl": "\"https://json-schema.org/draft/2020-12/schema\"",
+        "runtime": "{ \"engine\": \"skia\", \"browser\": false }",
+        "params": "{ \"scenes\": { \"type\": \"array\" } }",
+        "guide": "\"kits/collage/presets/showreel.json\"",
+        "status": "校验通过 · 8 段 / 12 张素材全部载入",
+        "tools": [
+          {
+            "label": "Node",
+            "pos": [
+              320,
+              392
+            ],
+            "side": "left",
+            "color": "#5FD08A"
+          },
+          {
+            "label": "ffmpeg",
+            "pos": [
+              268,
+              560
+            ],
+            "side": "left",
+            "color": "#8FA0FA"
+          },
+          {
+            "label": "Skia",
+            "pos": [
+              316,
+              726
+            ],
+            "side": "left",
+            "color": "#6FD3F7"
+          },
+          {
+            "label": "x264",
+            "pos": [
+              1602,
+              392
+            ],
+            "side": "right",
+            "color": "#F7A87D"
+          },
+          {
+            "label": "JSON Schema",
+            "pos": [
+              1650,
+              560
+            ],
+            "side": "right",
+            "color": "#B98CF3"
+          },
+          {
+            "label": "其他工具",
+            "pos": [
+              1607,
+              726
+            ],
+            "side": "right",
+            "color": "#8E94AC"
+          },
+          {
+            "label": "命令行",
+            "pos": [
+              587,
+              862
+            ],
+            "side": "bottom",
+            "noLink": true
+          },
+          {
+            "label": "渲染器",
+            "pos": [
+              837,
+              862
+            ],
+            "side": "bottom",
+            "noLink": true
+          },
+          {
+            "label": "编辑器",
+            "pos": [
+              1086,
+              862
+            ],
+            "side": "bottom",
+            "noLink": true
+          },
+          {
+            "label": "播放器",
+            "pos": [
+              1335,
+              862
+            ],
+            "side": "bottom",
+            "noLink": true
+          }
+        ]
+      }
+    },
+    {
+      "type": "finale",
+      "t0": 21.5,
+      "t1": 25.5,
+      "args": {
+        "label": "07 / MOTION",
+        "wordmark": ".cutduo",
+        "kline": "每一支都是同一条管线",
+        "klineGrad": "同一条管线"
+      }
+    },
+    {
+      "type": "end",
+      "t0": 25.5,
+      "t1": 30.0,
+      "args": {
+        "label": "",
+        "brand": ".cutduo",
+        "domain": "cut-mcp.1task.cn"
+      }
+    }
+  ],
+  "fadeInSeconds": 0
+}
