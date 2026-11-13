@@ -148,7 +148,7 @@ jobs:
           if [ -z "$PREV" ]; then
             {
               printf '## Initial release\n\n'
-              printf '三个项目同仓：`renderd/`（渲染服务）· `cutproof/`（可验证性闭环）· `motiongit-lab/`（模板运行时实验）。\n\n'
+              printf 'Skia 直出的视频管线：七套版式（paper / science / desk / editorial / mg / clay / collage）。\nAPI 是唯一实现，CLI 与 MCP 都只是宿主。\n\n'
               printf '## commits\n\n'
               # 首个 release 会遍历全部历史，限长以免正文过大。
               git log --no-merges --pretty='- %s (%h)' --max-count=50 "$END"
