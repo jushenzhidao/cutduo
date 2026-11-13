@@ -15,8 +15,10 @@
   `git log` 空且不报错）；③ `mode=skip` 写 Summary + `::warning::`。
 - **自身提交不能写标记字面量**，否则那次 push 自己就被跳过。
 - 组织惯例：tag-only、0 资产、标题=tag 名；自动补丁 v0.x.**y+1**，契约变化才人工打 tag。
-- **遗留**：`image.yml` 仍指 `context: renderd`，该目录已在 Skia 重构（`da0ea50`）删除 ⇒
-  镜像构建必失败。与 Release 无关，待定是删工作流还是改指向。
+- **`image.yml` 已删（`30f7e97`）**：它构建 `context: renderd`，而该目录在 Skia 重构（`da0ea50`）
+  就没了，产物 `ghcr.io/*/cutduo-renderd` 无任何消费方（MCP 是在 x86 服务器上原生构建）。
+  按发版技能 §5「镜像先推、tag 后打」，真要有容器产物就并进 `release.yml` 在打 tag **之前**构建。
+- 纯 CI / 纯文档提交用 `[skip release]`：实测 `30f7e97` job success 7s、零新 tag、Summary 带 warning。
 
 ## 二、速度口径（比较必须同片）
 
