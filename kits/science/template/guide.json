@@ -157,7 +157,8 @@
         "claim": "底部手写感结论，如「十几分钟出结果」",
         "paper": "sky（默认）",
         "r": "圆卡半径，默认 268",
-        "iconImage": "3D 道具名，优先于 icon"
+        "iconImage": "3D 道具名，优先于 icon",
+        "strikeFill": "可选，划掉标签的填充色。默认主题色下白字对比度可能不足 3:1，传深色抬到达标（如 #0E7A5F）"
       },
       "capacity": "title ≤ 5 字；claim ≤ 9 字（78px）；strike ≤ 5 字"
     },

@@ -357,6 +357,10 @@
                 "description": "可选，左侧被划掉的旧认知标签，如「要等半天」",
                 "type": "string"
               },
+              "strikeFill": {
+                "description": "可选，划掉标签的填充色。默认主题色下白字对比度可能不足 3:1，传深色抬到达标（如 #0E7A5F）",
+                "type": "string"
+              },
               "sub": {
                 "description": "副标，黄底蓝斜边标签，一句话说清主题",
                 "type": "string"
@@ -403,6 +407,14 @@
         "maximum": 1
       },
       "description": "逐帧口型包络（0..1），由 tools/vo.py 从配音音轨算 RMS 生成；有它时人物嘴型按帧开合，忽略 talking 的模拟值"
+    },
+    "snapToFrames": {
+      "type": "boolean",
+      "description": "把段边界量化到帧网格（round(t*fps)/fps）。vo.py 自动写 true；关掉后浮点边界可能差一帧。"
+    },
+    "_note": {
+      "type": "string",
+      "description": "作者注释：来源、改写理由。不参与渲染，只为审计留痕。"
     }
   }
 }
