@@ -49,6 +49,7 @@ templates/**/core.enc
 | `vendor/mac-desktop` | **换宿主**（另有全蒸馏线 `desktop-kit/`） | 24 worker 480 fps，官方 8.7× |
 | `vendor/knowledge-explainer-sketchnote` | **换宿主** | 通用图解 184 fps；手绘 native 12 worker 138.9 fps |
 | `vendor/camera-mode` | 原版 | 引擎是 DOM/CSS，换宿主不成立 |
+| `vendor/cute-character-lyric-mv` | **半蒸馏** → `own/cute-mv` | 借三字段内容模型 + 9 镜头时长；渲染层自写，990 帧 5.2 s ≈190 fps |
 | `vendor/paper-perspective` / `-11` / `promo-ink` | 原版 | 源码加密，换宿主不成立；要深入只能照片反推（3–5 天） |
 | `own/science-explainer` | **全蒸馏** | 自建 9 版式，20 worker 196 fps |
 | `own/editorial` | **全蒸馏**（改造自 MIT 项目） | 工程是 `html-dom/1`，出片用 `canvas-editorial.mjs`（Skia 直出，无浏览器） |
@@ -71,8 +72,8 @@ templates/**/core.enc
 四级是过程属性，会随投入变化（今天原版，明天换宿主）。按过程搬目录会让路径不稳定，且同一模板
 可能同时有两级产物（`mac-desktop` 既有换宿主 PoC，也有 `desktop-kit`）。用类型目录 + 这张表串起来即可。
 
-**半蒸馏目前没有实例**——如果决定把 sketchnote 做下去，它会是第一个：自写渲染 + 沿用它的
-recipe/schema，落在 `templates/own/sketchnote-distill/`。
+**半蒸馏现有三支**：`own/sketchnote`（版式枚举）、`own/chalkboard`（几何机制）、
+`own/cute-mv`（歌词对位）。判据同一条：只读它的内容层，不 import 它的渲染代码。
 
 ## 三、打包自建模板
 

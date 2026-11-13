@@ -43,8 +43,10 @@
 | `paper` | 纸感 | `kits/paper/paper.mjs` | `kits/paper/presets/` |
 | `editorial` | 杂志 | `kits/editorial/canvas-editorial.mjs` | `content/inputs*.json` |
 | `mg` | 通用 | `kits/mg/` | `kits/mg/params.json`（2026-11-10 后未改动、无交付片） |
+| `collage` | 屏拼贴 | `kits/collage/` | `kits/collage/presets/cutduo.json`（半蒸馏自 motiongit-promo-main，11 段；`demo.json` 是参考片复刻件） |
 
 五个模板用的是**同一个渲染库**（`@napi-rs/canvas` / Skia），所以模板不改变速度档。
+（2026-11-13 又加了 `clay`（换宿主）与 `collage`（半蒸馏），共七支，仍是同一个渲染库。）
 `science` 额外支持浏览器宿主（同一份 `kit.js` + `layouts.js`），那是它的双跑能力，不是另一套栈。
 
 ### 超参预设（把四个维度打包成档）
@@ -118,6 +120,8 @@ MotionGit `.motion` 模板的运行时实验与出片产线。两条主线：
 | `knowledge-explainer-sketchnote` | 可换宿主；通用图解 184 fps、手绘 native 14 fps（单核）。要多进程才划算（12 worker 138.9 fps） |
 | `camera-mode` | 引擎是 DOM/CSS，换宿主不成立；走 Chrome 或蒸馏 |
 | `paper-perspective` / `paper-perspective-11` / `promo-ink` | 源码加密，换宿主不成立；走 Chrome 或照片反推 |
+| `motiongit-promo-main`（template-585） | 源码加密（`content/release.bin` 内 158 个 `.enc`），但 `guide.json` / `copy-contract.json` 可读 ⇒ **已半蒸馏为 `kits/collage`** |
+| `cute-character-lyric-mv`（Remotion 4 + Canvas2D） | **已半蒸馏**为 `cute-mv`：只借 lyrics/keywords/notes 三字段与 9 镜头时长，渲染层自写；990 帧 5.2 s ≈190 fps |
 
 ### 1.2 自建一支新模板：从骨架生成，别手抄
 
@@ -134,6 +138,15 @@ uv run python tools/check-template.py --src templates/own/my-template      # 随
 体检器分两层：通用约束（所有模板）与形态约束（按 `runtime.profile` 与内容模型分派）。
 它不强迫所有模板同构——`editorial` 用 `scenes`、`distill` 用平铺点位、`science-explainer`
 用 `segments[].args`，三种都合法。
+
+**已自建的三件套模板**（完整清单以 `templates/README.md` 第二节为准，这里只记接入口径）：
+`--kit <名字>` 直出，**不进 `kits/`**。最新的 `night-card`（竖屏 9:16 情绪向卡片，六版式）
+全链路已验：`template-smoke` 四关 PASS、包 918KB / integrity 18/18、
+带音轨 1680 帧 / 56s / 4.6s（365 fps）/ 4.22MB、`gate --require-audio` PASS。
+
+它同时注册进了 API（`api/kits/night-card.mjs`），是**模板也能进能力清单**的第一个例子。
+`tools/smoke.sh` 的断言因此从「清单 == kits/ 目录集合」改成「kits/ 全部接入，允许模板多于目录」——
+把目录布局当契约，只要接入一个 `templates/own/` 的模板就会误报。
 
 ## 2. 仓库分层（2026-11-13 重构后）
 
@@ -161,6 +174,7 @@ uv run python tools/check-template.py --src templates/own/my-template      # 随
 | 换壁纸/氛围层 | `kits/desk/tools/bg-providers.mjs` |
 | 调出片管线/性能 | `kits/desk/tools/render-bench.mjs`、`docs/MOTIONGIT-PLAYBOOK.md` §42–§46 |
 | 加实拍图/视频 | `content/` 顶层 `photos` / `clips` + `assets/media/` |
+| 判断要不要生成 BGM/配音/图/动图/视频/数字人 | **`docs/ASSET-POLICY.md`**（先问缺什么，再问用什么；渲染期禁止调生成 API） |
 | 复刻第三方模板 | `refs/replicas/engine/`、`refs/vendor/`、`refs/reference/` |
 | 看历史结论/踩坑 | `docs/MOTIONGIT-PLAYBOOK.md`（§0–§46，按主题检索） |
 | 仓库体检/清理 | `docs/仓库清理-*.md` |
@@ -217,7 +231,7 @@ uv run python tools/check-template.py --src templates/own/my-template      # 随
 
 1. **先探针，后全片**：`render-bench.mjs --probe /tmp/p.png --at <秒>`，确认版式再出整片。
 2. **动代码必跑 `node kits/desk/verify.mjs`**（当前 13 项）与 `bash tools/smoke.sh`；几何、比色、缺素材负向断言都在里面。
-3. **改文案必重跑 TTS**：`tools/build-voices.py` 会按真实句长重排时间轴。
+3. **改文案必重跑 TTS**：`tools/build-sync.py --tts edge` 会按真实句长重排时间轴（`build-voices.py` 是旧名，已不存在）。
 4. **内容不进代码目录**：新分镜写 `content/`，不要写回 `kits/`。
 5. **一次只改一个变量**：比较管线/版式时固定分镜、音轨、分辨率。
 6. **收口前跑全套**：`tools/qa-gate.py --expect-frames <round(dur*60)>` + `node src/gate.mjs`。

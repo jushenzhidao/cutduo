@@ -1,6 +1,6 @@
 # cutduo
 
-**Skia 直出的视频管线：六套版式，一条命令出片，不经过浏览器。**
+**Skia 直出的视频管线：七套版式，一条命令出片，不经过浏览器。**
 
 Node + [`@napi-rs/canvas`](https://github.com/Brooooooklyn/canvas)（Skia）逐帧绘制 → 管道喂给 ffmpeg 编码 → 合成音轨。
 没有 Chromium，没有截图，没有中间 JPEG。4127 帧 / 1440×1080 / 60fps 出片 12.0 秒，约 **344 fps**，是实时的 5.7 倍。
@@ -48,7 +48,7 @@ node mcp/server.mjs        # 本地默认 :8787，POST /mcp
 新增一支版式只需在 `api/kits/` 声明 `capability` 与 `adapter`，CLI、能力清单、
 冒烟全部自动跟上——不需要改 API 层。
 
-## 五套版式
+## 七套版式
 
 | 代号 | 中文 | 画幅 | 入口 | 说明 |
 |---|---|---|---|---|
@@ -58,10 +58,12 @@ node mcp/server.mjs        # 本地默认 :8787，POST /mcp
 | `editorial` | 杂志 | 1920×1080 | `kits/editorial/canvas-editorial.mjs` | 8 段分镜，改造自 MIT 项目 |
 | `mg` | 通用 | 1920×1080 | `kits/mg/render.mjs` | 5 类镜头的动效验证（2026-11-10 后未改动） |
 | `clay` | 黏土图示 | 1920×1080 | `render.mjs --kit clay` | **换宿主**：原样跑 knowledge-explainer-clay 的 Canvas2D 源码，7 种物体拆合机制 |
+| `collage` | 屏拼贴 | 1920×1080@60 | `render.mjs --kit collage` | **半蒸馏**：借 motiongit-promo-main 的 11 段内容模型，渲染层自写（深色科技风 / 全息字标 / 编辑器 HUD） |
 
-六者共用同一个渲染库，所以**换版式不换速度档**。
+七者共用同一个渲染库，所以**换版式不换速度档**。
 
-前三支是反推/自建，`clay` 是换宿主（不改上游代码，只接管环境与时间轴）。
+前三支是反推/自建，`clay` 是换宿主（不改上游代码，只接管环境与时间轴），
+`collage` 是半蒸馏（上游渲染核加密，只能重写渲染层、保留内容模型）。
 
 > `desk` / `editorial` / `mg` 仍各有自己的 `render.mjs`，但**管道已不再重复**：
 > 「分片 → ffmpeg → concat → 音轨」收进了 `src/pipeline.mjs`，三个入口只剩渲染器构造与画幅参数
@@ -109,7 +111,7 @@ uv run python tools/check-template.py --src templates/own/my-template        # �
 | `deploy/` | compose 与 nginx 配置（端口只绑回环） | 上线方式 |
 | `render.mjs` | 主 CLI，按 `--kit` 分发 | 全部版式 |
 | `src/` | 引擎：仓库根探测、字体注册、门禁、参数校验、计时账本 | 全部版式 |
-| `kits/` | 六套版式，每支自治（渲染器 + 参数 schema + presets） | 只影响自己 |
+| `kits/` | 七套版式，每支自治（渲染器 + 参数 schema + presets） | 只影响自己 |
 | `content/` | 分镜 JSON：文案、镜头、素材引用、配音对齐 | 不动代码 |
 | `assets/` | 字体（Noto Sans SC 三档）、配音 m4a、字幕 srt、图片 | 全部版式 |
 | `templates/` | MotionGit `.motion` 格式模板 + 四级接入索引 | 模板格式 |
@@ -146,7 +148,7 @@ node src/gate.mjs out/*.mp4 --html report.html
 ## 改完代码的回归
 
 ```bash
-bash tools/smoke.sh      # 五套版式各出一帧，> 5KB 视为有效
+bash tools/smoke.sh      # 全部版式各出一帧（当前 8 支），> 5KB 视为有效
 
 # 单支模板四关：结构 → 单帧渲染 → 打包 → 包校验（骨架会自动实例化）
 python3 tools/template-smoke.py --template kits/science/template

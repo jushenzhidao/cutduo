@@ -36,6 +36,27 @@ api first 的做法是反过来：**先把契约定死，实现按契约补齐**
 
 `validate` 之所以不抛，是因为它的语义就是「告诉我哪里有问题」；抛异常反而逼调用方用 try/catch 取信息。
 
+## 可复用元数据（`calibration`）
+
+能力清单里有的 kit 会带一个 `calibration` 字段。它把「这条产线的外观常量」从片级档案里
+拆了出来，agent 不必读散文、也不必翻某一条片的 `elements.json`：
+
+```json
+{ "path": "kits/science/template/calibration.json",
+  "schema": "cutduo-calibration/1",
+  "profiles": ["current", "legacy-2026-11"],
+  "verify": "node tools/verify-calibration.mjs --params <preset.json>" }
+```
+
+三条使用约定：
+
+1. **`scope` 决定能不能直接抄**。`any-film` 直接当默认值；`appearance` 必须先对上
+   `params.profile`——验证器对不上时判 **SKIP**，不是 PASS。
+2. **`verify.method` 不为 null 才是可断言的**。为 null 的是「供人参考、机器不判」，
+   agent 不要拿它当回归依据。
+3. **片级数值不许回写**。某条片的实测 bbox 属于 `elements.json`（`scope: instance`），
+   往 `calibration.json` 抄一次，下一条片就会拿旧值当基线。
+
 ## 同步还是异步
 
 ```bash
