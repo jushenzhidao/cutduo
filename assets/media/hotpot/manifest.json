@@ -1,0 +1,61 @@
+{
+  "film": "hotpot",
+  "_note": "由 asset-audit.py --init-manifest 生成。source.type 必须改成 generated/synthesized/shot/stock 之一，generated 与 synthesized 还要补 prompt/script 与 seed，否则无法重跑。规范见 docs/ASSET-POLICY.md。",
+  "assets": [
+    {
+      "id": "mine",
+      "kind": "image",
+      "path": "my-photo.jpg",
+      "source": {
+        "type": "shot",
+        "note": "预填自镜头 args.credit='本人实拍'（随画面渲染的那份）"
+      },
+      "license": "本人拍摄",
+      "frozen": true
+    },
+    {
+      "id": "ingredients",
+      "kind": "image",
+      "path": "p29479438.jpg",
+      "source": {
+        "type": "stock",
+        "note": "预填自镜头 args.credit='Pexels'（随画面渲染的那份）"
+      },
+      "license": "Pexels License（免费商用、无需署名）",
+      "frozen": true
+    },
+    {
+      "id": "pot",
+      "kind": "image",
+      "path": "p29479439.jpg",
+      "source": {
+        "type": "stock",
+        "note": "预填自镜头 args.credit='Pexels'（随画面渲染的那份）"
+      },
+      "license": "Pexels License（免费商用、无需署名）",
+      "frozen": true
+    },
+    {
+      "id": "boil",
+      "kind": "video",
+      "path": "clips/boil",
+      "source": {
+        "type": "stock",
+        "note": "预填自镜头 args.credit='Pexels 素材'（随画面渲染的那份）"
+      },
+      "license": "Pexels License（免费商用、无需署名）",
+      "frozen": true
+    },
+    {
+      "id": "table",
+      "kind": "video",
+      "path": "clips/table",
+      "source": {
+        "type": "stock",
+        "note": "预填自镜头 args.credit='Pexels 素材'（随画面渲染的那份）"
+      },
+      "license": "Pexels License（免费商用、无需署名）",
+      "frozen": true
+    }
+  ]
+}

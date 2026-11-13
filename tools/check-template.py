@@ -51,6 +51,13 @@ def ok(m):
     OK.append(m)
 
 
+def Number(v):
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def rel_lum(hex_color):
     h = str(hex_color).lstrip("#")
     if len(h) == 3:
@@ -133,6 +140,63 @@ def check_manifest(root):
             good += 1
     if good == len(MANIFEST_REFS):
         ok(f"{len(MANIFEST_REFS)} 个 manifest 引用全部存在")
+
+    # 画幅一致性：manifest 的 output 与 guide 声明的比例必须对得上。
+    # 声明 16:9 却输出 1080x1920，字幕与安全区会整片错位。
+    out = m.get("output") or {}
+    w, h = Number(out.get("width")), Number(out.get("height"))
+    if w and h:
+        gp = root / "guide.json"
+        if gp.is_file():
+            try:
+                ratio = ((json.loads(gp.read_text(encoding="utf-8")).get("layout") or {}).get("ratio") or "")
+            except json.JSONDecodeError:
+                ratio = ""
+            RATIOS = {"16:9": 16 / 9, "9:16": 9 / 16, "1:1": 1.0, "4:3": 4 / 3, "3:4": 3 / 4}
+            want = RATIOS.get(ratio)
+            if want:
+                actual = w / h
+                if abs(actual - want) / want > 0.02:
+                    fail(
+                        f"motion.json output {int(w)}x{int(h)}（{actual:.2f}:1）与 "
+                        f"guide.layout.ratio={ratio}（{want:.2f}:1）不一致"
+                    )
+                else:
+                    ok(f"画幅 {int(w)}x{int(h)} 与声明的 {ratio} 一致")
+
+            # 宿主入口的 canvas 尺寸：浏览器宿主直接读 canvas.width/height 建 ctx，
+            # 与 manifest 不符会让同一份源码在两个宿主出不同画幅。
+            # night-card 真踩过：motion.json 已改竖屏、index.html 还是横屏，
+            # 体检全绿，浏览器版整片横向 1920x1080。
+            idx = root / "src" / "index.html"
+            if idx.is_file():
+                html = idx.read_text(encoding="utf-8", errors="ignore")
+                mm = re.search(r'<canvas[^>]*\bwidth="(\d+)"[^>]*\bheight="(\d+)"', html)
+                if mm:
+                    cw, ch = int(mm.group(1)), int(mm.group(2))
+                    if (cw, ch) != (int(w), int(h)):
+                        fail(
+                            f"src/index.html canvas {cw}x{ch} 与 motion.json output "
+                            f"{int(w)}x{int(h)} 不一致（浏览器宿主按 canvas 尺寸出片）"
+                        )
+                    else:
+                        ok(f"src/index.html canvas {cw}x{ch} 与 output 一致")
+
+    # guide.voicing.tool 指向的文件必须存在（相对模板根）。
+    # 2026-11-13 全仓扫描发现：骨架写 tools/vo.py 但 tools/ 里没有，
+    # chalkboard / night-card 继承了这个死引用；sketchnote / science 自带 vo.py 才是对的。
+    gp2 = root / "guide.json"
+    if gp2.is_file():
+        try:
+            gj = json.loads(gp2.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            gj = {}
+        tool = ((gj.get("voicing") or {}).get("tool") or "").strip()
+        if tool and not (root / tool).is_file():
+            warn(
+                f"guide.json: voicing.tool={tool} 不存在"
+                "（模板自带工具缺失：要么把文件放进模板，要么删掉该字段）"
+            )
 
     if get(m, ("template", "status")) == "skeleton":
         warn("motion.json: status 仍是 skeleton，正式模板应改为 draft/stable")
@@ -234,7 +298,7 @@ def check_contract(root):
             warn("guide.json: rhythm.beatPattern 为空，AI 无从知道段型配比")
 
     if not (g and sch and layout_types):
-        return layout_types
+        return layout_types, set()
 
     props = sch.get("properties") or {}
     seg_items = (props.get("segments") or {}).get("items") or {}
@@ -262,13 +326,16 @@ def check_contract(root):
             )
     unused = seg_props - declared - {"type", "dur", "figure", "note", "args"}
     if unused:
-        warn(f"params.schema.json 有未被任何版式使用的段参数：{sorted(unused)}")
+        warn(
+            f"{len(unused)} 个段参数在 schema 里但 guide.layouts[].args 没写说明：{sorted(unused)}"
+            "（不是多余——preset 确实在用，缺的是说明）"
+        )
     if "segments" not in props:
         warn("params.schema.json 顶层没有 segments 属性（该模板可能不用段模型）")
-    return layout_types
+    return layout_types, declared
 
 
-def check_presets(root, layout_types, m=None):
+def check_presets(root, layout_types, m=None, declared=None):
     default_rel = str(get(m or {}, ("parameters", "defaultPreset")) or "")
     for pj in sorted((root / "presets").glob("*.json")):
         inp = load_json(pj, f"presets/{pj.name}")
@@ -329,6 +396,18 @@ def check_presets(root, layout_types, m=None):
         else:
             ok(f"presets/{pj.name}: 时长自洽 {total:.2f}s / {len(segs)} 段")
 
+        # 参数名只差大小写 = 运行时静默失效（代码读 a.eyes，preset 写 Eyes，
+        # undefined !== false 恒真，开关永远不生效）。这类问题不会报错，只能静态查。
+        if declared:
+            for seg in segs:
+                for k in sorted(set(seg.get("args") or {}) - declared):
+                    near = [d for d in declared if d.lower() == k.lower()]
+                    if near:
+                        fail(
+                            f"presets/{pj.name}: 段参数 {k!r} 与 guide 声明的 {near[0]!r} 只差大小写"
+                            " —— 运行时静默失效，改成一个写法"
+                        )
+
         if layout_types:
             unknown = {s.get("type") for s in segs} - layout_types
             if unknown:
@@ -338,13 +417,26 @@ def check_presets(root, layout_types, m=None):
             ((float(c.get("start") or 0), float(c.get("end") or 0)) for c in inp.get("captions") or []),
             key=lambda x: x[0],
         )
-        for i in range(1, len(caps)):
-            if caps[i][0] < caps[i - 1][1]:
-                fail(
-                    f"presets/{pj.name}: 字幕重叠 {caps[i-1][0]:.2f}-{caps[i-1][1]:.2f} 与 "
-                    f"{caps[i][0]:.2f}-{caps[i][1]:.2f}（同帧会出两条）"
-                )
-                break
+        # 未对齐检测要在重叠检测**之前**：源 preset 的 captions 是等 vo.py 回填的占位，
+        # 全为 0-1，直接进重叠检查会误判成「两条字幕同帧」。两种占位都算未对齐：
+        #   start == end（草稿）  /  全部都是 (0, 1)（vo.py 回填前的占位）
+        zero = [c for c in caps if abs(c[0] - c[1]) < 1e-6]
+        placeholder = bool(caps) and all(c[0] == 0 and c[1] == 1 for c in caps)
+        unaligned = bool(caps) and (len(zero) == len(caps) or placeholder)
+        if unaligned:
+            hint = "全部为 0-1 占位，需跑 vo.py 回填" if placeholder else "start==end"
+            warn(f"presets/{pj.name}: {len(caps)} 条字幕时间轴未对齐（{hint}；草稿，别当成品用）")
+        else:
+            if zero:
+                warn(f"presets/{pj.name}: {len(zero)}/{len(caps)} 条字幕 start==end（部分未对齐）")
+            for i in range(1, len(caps)):
+                if caps[i][0] < caps[i - 1][1]:
+                    fail(
+                        f"presets/{pj.name}: 字幕重叠 {caps[i-1][0]:.2f}-{caps[i-1][1]:.2f} 与 "
+                        f"{caps[i][0]:.2f}-{caps[i][1]:.2f}（同帧会出两条）"
+                    )
+                    break
+
         over = [c for c in caps if c[1] > total + 0.05]
         if over:
             warn(f"presets/{pj.name}: {len(over)} 条字幕结束时间超过总时长 {total:.2f}s")
@@ -390,6 +482,24 @@ def check_integrity(root, m):
     else:
         ok(f"integrity {len(files)}/{len(files)} 通过")
 
+    # 反向检查：目录里有、但 integrity 没列的文件，同样说明「加完没重新打包」。
+    # 只做正向（列出的哈希）会漏掉新增文件 —— chalkboard 加了 tools/vo.py，
+    # integrity 只有 22 条不含它，却照样报「22/22 通过」。
+    SKIP_SUFFIX = ("_raw.png", "_raw.jpg", "_raw.jpeg", ".psd", ".xcf")
+    SKIP_DIRS = {"out", "render-cache", "node_modules", ".git", "__pycache__"}
+    actual = {
+        q.relative_to(root).as_posix()
+        for q in root.rglob("*")
+        if q.is_file()
+        and q.name != "integrity.json"
+        and not q.name.startswith(".")
+        and not q.name.endswith(SKIP_SUFFIX)
+        and not (set(q.relative_to(root).parts) & SKIP_DIRS)
+    }
+    extra = sorted(actual - set(files))
+    if extra:
+        warn(f"integrity 缺少 {len(extra)} 个文件（新增后没重新打包）：{extra[:3]}")
+
 
 def check_secrets(root):
     hits = [
@@ -431,8 +541,8 @@ def main():
     m = check_manifest(root)
     check_json_parse(root)
     check_purity(root, m)
-    layout_types = check_contract(root)
-    check_presets(root, layout_types, m)
+    layout_types, declared = check_contract(root)
+    check_presets(root, layout_types, m, declared)
     check_assets(root)
     check_integrity(root, m)
     check_secrets(root)

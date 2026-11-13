@@ -1,0 +1,25 @@
+{
+  "id": "hip-v4",
+  "desc": "在《儿童髋关节滑膜炎》成片上调版式时序与外观：门禁必须 PASS，时长 60–90s，对抗审查 BLOCKER=0 且 WARN≤4。",
+  "_note": "base 用已经配过音的 vo.json（不是静默 preset）——这样 --visual-only 可以只重渲画面，一轮约 16s；改文案/时长必须走完整链路（会重跑 TTS 约 45s）。",
+  "kit": "science",
+  "base": "out/hip-synovitis/hip.vo.json",
+  "vo": "out/hip-synovitis/hip.vo.json",
+  "voWav": "out/hip-synovitis/hip.wav",
+  "fps": 30,
+  "bgm": false,
+  "limits": {
+    "duration": [60, 90],
+    "maxBlocker": 0,
+    "maxWarn": 4
+  },
+  "_allowNote": "只放开视觉字段。文案与段长会牵扯配音重排，改它们必须走完整链路，不能用 --visual-only 混过去。",
+  "allow": [
+    "segments[].args.*",
+    "profile",
+    "theme.*"
+  ],
+  "budget": {
+    "rounds": 6
+  }
+}

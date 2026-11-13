@@ -137,10 +137,13 @@ def main() -> int:
             shutil.copy2(src, target)
         n_files += 1
 
-    print(f"✓ 生成 {dest.relative_to(ROOT)}  ·  {n_files} 个文件")
+    # out-dir 可能在仓库外（/tmp 下试用），此时 relative_to 会抛 ValueError；
+    # 与 distill-inspect.py / gen-schema.py 保持同一种写法。
+    shown = dest.relative_to(ROOT) if dest.is_relative_to(ROOT) else dest
+    print(f"✓ 生成 {shown}  ·  {n_files} 个文件")
 
     # 自检：结构能不能过
-    chk = ROOT / "check-template.py"
+    chk = ROOT / "tools" / "check-template.py"
     if chk.exists():
         print("\n—— 结构自检 ——")
         sys.stdout.flush()
@@ -152,8 +155,8 @@ def main() -> int:
     print(
         "\n下一步：\n"
         f"  1. 读 templates/_scaffold/README.md 第五节，按顺序填 guide → schema → preset\n"
-        f"  2. uv run python check-template.py --src {a.out_dir}/{a.id}\n"
-        f"  3. uv run python build-template.py --src {a.out_dir}/{a.id} --out packages/{a.id}.motion"
+        f"  2. uv run python tools/check-template.py --src {a.out_dir}/{a.id}\n"
+        f"  3. uv run python tools/build-template.py --src {a.out_dir}/{a.id} --out packages/{a.id}.motion"
     )
     return 0
 

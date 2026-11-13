@@ -300,16 +300,28 @@ function resolveEncoder(ff, cli) {
   return enc;
 }
 
+// 色彩参数必须显式写死。默认帧流是 JPEG（full range），ffmpeg 会把输出标成
+// yuvj420p + color_range=pc，而 Skia 侧是 raw RGBA → limited range，
+// 于是同一条片在两个宿主下亮度差 14 个 Y 单位（实测 37 vs 23），部分平台转码还会偏色。
+// bt470bg 也是错的（那是 PAL/SD 色域），1080p 一律 bt709。
+const COLOR_ARGS = [
+  '-pix_fmt', 'yuv420p',
+  '-color_range', 'tv',
+  '-colorspace', 'bt709',
+  '-color_primaries', 'bt709',
+  '-color_trc', 'bt709',
+];
+
 function encoderArgs(enc, s, cli) {
   if (enc === 'libx264') {
     return ['-c:v', 'libx264', '-preset', String(cli.preset || 'veryfast'),
-      '-crf', String(cli.crf || 18), '-pix_fmt', 'yuv420p'];
+      '-crf', String(cli.crf || 18), ...COLOR_ARGS];
   }
   if (enc.endsWith('_videotoolbox')) {
     const mb = cli.bitrate || `${Math.max(4, Math.round(s.width * s.height * (s.num / s.den) * 0.2 / 1e6))}M`;
-    return ['-c:v', enc, '-b:v', String(mb), '-pix_fmt', 'yuv420p'];
+    return ['-c:v', enc, '-b:v', String(mb), ...COLOR_ARGS];
   }
-  return ['-c:v', enc, '-pix_fmt', 'yuv420p'];
+  return ['-c:v', enc, ...COLOR_ARGS];
 }
 
 async function cmdDoctor(cli) {
