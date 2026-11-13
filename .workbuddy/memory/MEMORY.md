@@ -89,6 +89,16 @@ PATH 要有 `/opt/homebrew/bin`；`capture.mjs` 写完 video 不退出（墙钟 
 - 三个必踩坑：`env.T` 必须"完整调色板 + theme 覆盖"；`MK.icon` 外层已 translate 到中心时
   再传 cx/cy 会二次偏移；硬切段首入场从 −0.1s 起、容器缩放下限 0.86。
 - `enter()` 有 0.82 下限 ⇒ **永不返回 0**，`if (k<=0) return` 是假门禁，要用 `if (t < at) return`。
+- `vo.py` 的 `mouthCurve` 是**死数据**：写在 preset 顶层，而版式只拿 `scenes[].args` ⇒
+  `layouts.js` 里 `a.mouthCurve` 恒 undefined，口型一直走 `mouthAt()` 的 11Hz 模拟。
+  接通要同时改宿主（`science.mjs` 的 `renderFrame(t)` 不传帧号）。
+- 圆盘里的插画别用方图直塞：方形裁切边会停在盘中央，读作"骨头断了"。
+  用 `tools/circle-prop.mjs` 做圆形 alpha，配 `organSize: 765`（×0.92≈704=圆盘直径）把断口压到盘缘。
+
+## 七点五、对抗审查自身也会错
+
+- `adversarial.mjs` 曾用 `params.fps`（30）去切 60fps 帧序列 ⇒ 切点索引减半，8/8 切点报"重复帧"。
+  已改为优先 ffprobe `r_frame_rate`。**60fps 出片后必须重跑**，否则会把假警报当缺陷查。
 - 人物层：Skia 侧 `collectFigures()` 见 `document===undefined` 直接 return ⇒ 不补 `__MK_FIGS`
   会静默退化成矢量；位图姿态图更快（15.2→13.2s）；`figureHeight` 矢量 0.86 / 3D 0.92–0.96。
 - 字幕：62px 单行上限 **26 字**，超了按标点折行 + 降档（50→下限 44）；安全区用**视觉顶端**
@@ -115,6 +125,13 @@ PATH 要有 `/opt/homebrew/bin`；`capture.mjs` 写完 video 不退出（墙钟 
   3 个 mg 并行各 12s vs 单独 7s。**`status()` 不是纯查询**（lazy scheduling 会拉队首）。
 - schema 只约束 `scenes[].type/t0/t1` 骨架，**不设 `additionalProperties:false`、不校验 `args` 内部**。
 - 仓库根只能从 `src/root.mjs` 取（向上找 `.git`）；字体注册只有 `src/fonts.mjs`。
+- **API 校验面比渲染器严**：CLI 不校验 schema，API/MCP 校验 ⇒ 渲染器新加的开关不进 schema，
+  就只有云端会挂。已踩：`snapToFrames`（vo.py 每份 .vo.json 必写）、`strikeFill`、`_note`
+  ——前两个导致「任何配音片经 MCP 必被拒」。新增版式参数必须同时改 `guide.json` 并重跑
+  `python3 tools/gen-schema.py --write`；顶层开关要手补进 `params.schema.json`（生成器只换 args）。
+- MCP `cutduo_render` 已透传 `overrides`（crf/preset/pipe/theme）：`{"crf":15,"preset":"slow"}`
+  实测 PSNR 50.70 vs 本地母版 50.85，可复刻质量档。`capabilities().presets` 只是内置样例，
+  定制片走内联 `params` + `POST /assets` 上传音轨（`docs/MCP-DEPLOY.md` §十）。
 - `.gitignore` 按**身份特征**匹配（`**/core.enc`、`**/template.motion`、`/refs/`、`**/*_raw.png`），
   禁止回退成路径枚举——旧规则 7 条搬家后静默失效，其中一条保护 vendor 的账户 Key。
 - **改路径必须跑 `bash tools/smoke.sh`**（`node --check` 抓不住 404）。探针：
@@ -164,3 +181,8 @@ PATH 要有 `/opt/homebrew/bin`；`capture.mjs` 写完 video 不退出（墙钟 
   + 官方 `sfx.search/generate` disabled）；素材本身是 CC0 ⇒ 不是版权墙，是发行与通路。
 - 后续增强：① cue 改场景相对时间（加 hold 后绝对秒会错位）② loudnorm 到 −16 LUFS（现 −27）
   ③ 真实 CC0 配乐 ④ 放开 pipeline 的 `-ac 1` 才有立体声。
+
+- **加 BGM 别二次编码**：`tools/add-bgm.mjs --audio <旁白.wav>` 走独立旁白轨，人声只编码一次
+  （此前是 pipeline 先压 160k、add-bgm 再压 192k）。混音必须 `-t <视频时长>`：
+  vo.py 故意多写 0.12s 音频防截末帧，不裁会让容器时长跟着音轨走，帧数门禁直接报错。
+  循环配乐优先长素材：`Afloat Pad` 19.6s（4 个接缝）优于 `Mellow Drizzle` 8.3s（10 个）。
