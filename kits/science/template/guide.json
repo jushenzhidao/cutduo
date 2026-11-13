@@ -69,7 +69,8 @@
         "hint": "底部小字，可留空",
         "scene": "soft（默认，柔光色块）| hallway（抽象医院走廊，注意会显得空）",
         "burstR": "爆炸贴半径，默认 384",
-        "titleSize": "主词字号，默认 148"
+        "titleSize": "主词字号，默认 148",
+        "prefixSize": "前缀字号（像素），默认 116；前缀是压在爆炸贴左侧的小字"
       },
       "capacity": "title ≤ 6 字；sub ≤ 16 字；超长会被 maxW 自动缩字号"
     },
@@ -94,7 +95,8 @@
         "talking": "[[起,止],...] 说话区间，嘴型只在区间内开合；由 tools/vo.py 自动写入，不必手填",
         "eyebrowColor": "眉标竖条颜色，用来区分角色（孩子蓝 / 妈妈绿）",
         "figures": "false 时回退内置矢量人物；缺省用 assets/figures 的 3D 姿态图",
-        "figureHeight": "人物高度占画面比。矢量人物 0.86 合适；**3D 姿态图建议 0.92–0.96**（0.86 时头顶距上沿约 0.22H，偏沉）"
+        "figureHeight": "人物高度占画面比。矢量人物 0.86 合适；**3D 姿态图建议 0.92–0.96**（0.86 时头顶距上沿约 0.22H，偏沉）",
+        "size": "主句字号（像素），默认 86；行数多时调小，不要低于 64"
       },
       "capacity": "lines ≤ 3 行，每行 ≤ 9 字（86px）；figure:left 时段落左边界 902px；figure:none 时字卡右移到 0.195W、贴纸移到右侧 0.735W"
     },
@@ -113,7 +115,9 @@
         "r": "圆半径，默认 352",
         "cx": "圆心 x 归一化，默认 0.48",
         "cy": "圆心 y 归一化，默认 0.505",
-        "organImage": "用 assets/props 里的 3D 软胶道具名（gut/drop/clock/shield/check/radiation）；给了就画图，否则回退矢量器官"
+        "organImage": "用 assets/props 里的 3D 软胶道具名（gut/drop/clock/shield/check/radiation）；给了就画图，否则回退矢量器官",
+        "organSize": "器官图标直径（像素）；缺省按容器半径 ×1.62 推算",
+        "pulse": "布尔；为 true 时给病灶/标记加脉冲强调动画"
       },
       "capacity": "callouts ≤ 2 条；每条 ≤ 10 字（70px）；lead 必须落在器官内部，否则引线会悬空"
     },
@@ -137,7 +141,8 @@
       "args": {
         "title": "顶部标题条",
         "items": "[{image, icon, label, disc, stone, strike}]，image 优先（3D 道具），icon 是矢量回退",
-        "paper": "mint（默认）"
+        "paper": "mint（默认）",
+        "itemAt": "每一项的出现时间（段内秒）数组，与 items 一一对应；缺省按 0.02 + i×0.15 均分。由 tools/vo.py 按配音自动填，一般不必手写"
       },
       "capacity": "items ≤ 6；label ≤ 5 字；strike:true 会在图标上画红叉（用于被否定的旧认知）"
     },
@@ -164,7 +169,8 @@
         "head": "小眉标，默认「知识小贴士」",
         "title": "便签标题，如「为什么儿科急诊偏爱超声」",
         "items": "条目数组，2–3 条，每条 ≤ 12 字",
-        "paper": "sky（默认）"
+        "paper": "sky（默认）",
+        "itemAt": "每一条的出现时间（段内秒）数组；缺省按 0.06 + i×0.2 均分。由 tools/vo.py 按配音自动填"
       },
       "capacity": "items ≤ 3（纸高 594px 只能容 3 行）；title ≤ 12 字"
     },
@@ -212,8 +218,89 @@
     "profiles": {
       "kid": "zh-CN-YunxiaNeural（男童）或 zh-CN-XiaoyiNeural（活泼女声）",
       "mom": "zh-CN-XiaoxiaoNeural（温暖女声）",
-      "narrator": "zh-CN-YunyangNeural（新闻腔，适合正片旁白）",
-      "default": "zh-CN-XiaoxiaoNeural"
+      "narrator": "zh-CN-XiaoxiaoNeural（女声，温暖播报，适合医学科普）",
+      "default": "zh-CN-XiaoxiaoNeural",
+      "narratorMale": "zh-CN-YunyangNeural（男声新闻腔；画面默认讲解员是女性，除非 figure:none 或换 figureImage，否则不建议）"
+    },
+    "gender": {
+      "zh-CN-XiaoxiaoNeural": "female",
+      "zh-CN-XiaoyiNeural": "female",
+      "zh-CN-liaoning-XiaobeiNeural": "female",
+      "zh-CN-shaanxi-XiaoniNeural": "female",
+      "zh-CN-YunyangNeural": "male",
+      "zh-CN-YunjianNeural": "male",
+      "zh-CN-YunxiNeural": "male",
+      "zh-CN-YunxiaNeural": "male"
+    },
+    "genderRule": "画面里的默认讲解员（assets/figures 四张姿态图）是女性。旁白用男声会与画面冲突。三种解法：换女声（首选）/ figure:none / 提供 figureImage。tools/vo.py 会把实际音色写回 preset.voices，tools/adversarial.mjs 据此判 voice.gender；若确实要男声+默认人物，在 params 里写 figureGender:\"male\" 显式声明。"
+  },
+  "pitfalls": [
+    {
+      "symptom": "想让元素按 itemAt 逐项出现，写了 if (k <= 0) return 却始终显示",
+      "cause": "enter() 有 0.82 的入场下限，永不返回 0，k <= 0 是假门禁",
+      "fix": "显式按时间判断：if (t < at) return"
+    },
+    {
+      "symptom": "图标偏离预期位置，给的 cx/cy 越大偏得越远",
+      "cause": "MK.icon 内部按 (x±size/2) 平移；外层已 translate 到中心时再传 cx/cy 会二次偏移",
+      "fix": "外层已定位就不要再传 cx/cy，或改为直接传左上角坐标"
+    },
+    {
+      "symptom": "硬切段落的首帧是空帧，或元素缩成一点",
+      "cause": "入场动画从 t=0 起算，切点那一刻正好是 0；容器缩放下限也不足",
+      "fix": "段首入场从 -0.1s 起算，容器缩放下限 0.86"
+    },
+    {
+      "symptom": "换到 Skia 出片后人物变成矢量小人，与浏览器成片不是同一形象",
+      "cause": "collectFigures() 见到 document === undefined 直接 return；不补 __MK_FIGS 就静默退化",
+      "fix": "Skia 宿主预载 assets/figures/*.png 到 __MK_FIGS（kits/science/science.mjs 已做）"
     }
+  ],
+  "profiles": {
+    "_note": "外观档案：按版式分桶，只放几何/外观键，不放文案。params 里 \"profile\": \"<名字>\" 生效；args 里显式写的字段优先于档案。",
+    "current": {
+      "_desc": "2026-11-13 起的默认外观：3D 位图讲解员（assets/figures）、封面副标 0.765H。留空即用代码默认值。"
+    },
+    "legacy-2026-11": {
+      "_desc": "2026-11-13 之前成片的外观：矢量讲解员、无手臂、宽裙摆、微笑弧嘴、站位 0.7559W、封面副标 0.6031H。数值由 568×320 成片逐元素实测反推（见 out/replica-science-vo/REPORT.md）。",
+      "cover": {
+        "subY": 0.6031
+      },
+      "talk": {
+        "figures": false,
+        "figureCx": 0.7559,
+        "bodyW": 262,
+        "shoulderW": 132,
+        "flankX": 205,
+        "flankY": 382,
+        "mouth": 0,
+        "mouthStyle": "smile",
+        "smileW": 29,
+        "smileK": 0
+      }
+    }
+  },
+  "itemAtPolicy": {
+    "_note": "逐项点亮的时序由谁决定。写错会导致\"元素全在但节奏不对\"，而画面看不出错。",
+    "tip": "一句一条：由 tools/vo.py 按配音自动写 itemAt（覆盖句起点）。引入句 + N 条时对齐后 N 句。",
+    "matrix": "同上，vo.py 也会写 itemAt。参考片实测是默认节奏 0.06+i×0.2（4 项 0.7s 内出全）；若文案是一条列举句（如「阑尾炎、肠套叠、胆囊炎、肾结石」），vo.py 按字数比例切这句的语音区间。",
+    "diagram.callouts.at": "手动。参考片实测引线标注在段内 1.4–1.6s 出现，太早会与器官入场打架。",
+    "focus/compare/outro": "无逐项时序，整段入场动画即可。"
+  },
+  "newFilmChecklist": [
+    "1. 只写 presets/<name>.json：8 段骨架 + captions（每句带 seg 段号，别让它按 start 猜）+ 可选 profile。",
+    "2. 跑 tools/vo.py --preset <name>.json --out-preset <name>.vo.json --out-audio <name>.wav：逐句 TTS、重算段长、回填 captions 与 tip/matrix 的 itemAt。",
+    "3. 检查 vo.py 的容量告警（>26 字的句子会折行，折行是兜底不是设计，拆句）。",
+    "4. node render.mjs --kit science --params <name>.vo.json --audio <name>.wav --out out/<name>.mp4。",
+    "5. node src/gate.mjs out/<name>.mp4 --require-audio。",
+    "6. node tools/adversarial.mjs --video out/<name>.mp4 --params <name>.vo.json：结构/音画/画面三层对抗审查，BLOCKER 必须清零（WARN 要能解释）。",
+    "判据：第 1 步之后不该再改任何代码；改了代码就说明这份 guide 缺了一条规则。"
+  ],
+  "calibration": {
+    "file": "calibration.json",
+    "schema": "cutduo-calibration/1",
+    "what": "跨片可复用的标定值：画幅/调色板/字幕样式/各版式锚点 + 容差。",
+    "why": "本文件（guide）说\"规则是什么\"，calibration 说\"数值是多少、差多少算超差\"。分开是为了让 agent 能只取数值做断言，不必解析散文。",
+    "verify": "node tools/verify-calibration.mjs --params <preset.json>"
   }
 }

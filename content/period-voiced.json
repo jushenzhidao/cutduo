@@ -1,11 +1,11 @@
 {
-  "_note": "由 build-voices.py 按真实配音时长重排；音轨 edits/audio-period.m4a",
+  "_note": "由 build-voices.py 按真实配音时长重排；音轨 edits/audio-period.m4a。\n原版口径：「来大姨妈了怎么办」经期应对科普。口径：ACOG《Dysmenorrhea: Painful Periods》（NSAIDs 为一线、痛刚开始服用、通常只用 1–2 天、禁忌人群）、NHS《Heavy periods》（每 1–2 小时更换、超过 7 天、2.5cm 血块）、默沙东诊疗手册《阴道出血》（每小时浸湿一片持续 2 小时以上→立即就医、先排除妊娠）、腾讯医典《痛经》（热敷约 40℃ 防烫伤、第 1–2 天最重 2–3 天缓解、NSAIDs 有效率约 80%、红糖水/姜茶无证据）。本片为科普，不替代医生判断。",
   "fps": 60,
   "durationSeconds": 48.006,
   "brand": "desktop-kit · 身体使用说明",
   "photos": {
-    "warm": "edits/assets/period/warm.jpg",
-    "record": "edits/assets/period/record.jpg"
+    "warm": "assets/media/period/warm.jpg",
+    "record": "assets/media/period/record.jpg"
   },
   "chapters": [
     {

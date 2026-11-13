@@ -1,0 +1,25 @@
+{
+  "_note": "素材来源记录。同目录 male-idle.png 是 flux 生成后抠白底、按既有女性素材的画布规格（720×980、内容高 948、底对齐）排版的男性讲解员，用于 figureImage。",
+  "id": "male-idle",
+  "kind": "image",
+  "path": "male-idle.png",
+  "source": {
+    "type": "generated",
+    "provider": "apiduo MCP (mcp__apiduo__image.generate)",
+    "model": "flux-3-image",
+    "prompt": "3D clay render style character, cute stylized male pediatrician, short black hair, white doctor coat over light blue shirt, stethoscope around neck, front view, half body from waist up, standing with arms relaxed down, friendly gentle smile, soft studio lighting, clean smooth plasticine look, plain pure white background, no text, no props, no shadow on floor.",
+    "params": { "aspect_ratio": "3:4", "resolution": "1k" },
+    "seed": null,
+    "seedNote": "flux-3-image 未暴露 seed；素材已 frozen，不再重生成。",
+    "raw": "assets/media/anatomy/male-doctor-raw.png",
+    "rawUrl": "https://oss.s3ai.cn/cdn/apiduo/response/2026/11/13/2d27d70452e3943faec4c5556decf2e0.png",
+    "postProcess": "tools/trim-alpha.mjs --size 0 --tol 22（泛洪去白 + 裁内容，633×1100）→ ffmpeg scale=-1:948, pad=720:980:(ow-iw)/2:31（对齐既有 assets/figures/*.png 的画布规格）"
+  },
+  "license": "自生成素材（flux-3-image 输出），随本仓库使用",
+  "frozen": true,
+  "use": {
+    "param": "segments[].args.figureImage = \"kits/science/template/assets/figures/male-idle.png\"",
+    "why": "默认讲解员是女性；旁白为男声时必须换成男性形象，否则声音与人物不一致（tools/adversarial.mjs 的 voice.gender 会报）",
+    "sibling": "kits/science/template/assets/figures/idle.png（女性，默认）"
+  }
+}

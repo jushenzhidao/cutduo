@@ -168,7 +168,218 @@
           },
           "args": {
             "type": "object",
-            "description": "版式参数，逐版式见 guide.json 的 layouts 字段"
+            "additionalProperties": false,
+            "description": "版式参数，逐版式见 guide.json 的 layouts 字段",
+            "properties": {
+              "accentLine": {
+                "description": "哪一行用红字 + 荧光笔，默认 0",
+                "type": "number"
+              },
+              "burstR": {
+                "description": "爆炸贴半径，默认 384",
+                "type": "number"
+              },
+              "callouts": {
+                "description": "[{text, at, x, y, size, lead:[x,y], underline, markColor}]，lead 用画布归一化坐标指向病灶",
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "claim": {
+                "description": "底部手写感结论，如「十几分钟出结果」",
+                "type": "string"
+              },
+              "coat": {
+                "description": "外套色，双人对白时用颜色区分角色"
+              },
+              "conclusion": {
+                "description": "底部金句标签，留空则不画",
+                "type": "string"
+              },
+              "cx": {
+                "description": "圆心 x 归一化，默认 0.48"
+              },
+              "cy": {
+                "description": "圆心 y 归一化，默认 0.505"
+              },
+              "eyebrow": {
+                "description": "小眉标，如「家长最常见的困惑」",
+                "type": "string"
+              },
+              "eyebrowColor": {
+                "description": "眉标竖条颜色，用来区分角色（孩子蓝 / 妈妈绿）",
+                "type": "string"
+              },
+              "eyes": {
+                "description": "器官是否拟人化加眼睛，默认 true",
+                "type": "boolean"
+              },
+              "figure": {
+                "description": "right（默认）| left | none（不画人，纯字卡）",
+                "type": "string"
+              },
+              "figureHeight": {
+                "description": "人物高度占画面比。矢量人物 0.86 合适；**3D 姿态图建议 0.92–0.96**（0.86 时头顶距上沿约 0.22H，偏沉）",
+                "type": "number"
+              },
+              "figureImage": {
+                "description": "可选，透明底 PNG 的 data URL；缺省画内置扁平讲解员"
+              },
+              "figures": {
+                "description": "false 时回退内置矢量人物；缺省用 assets/figures 的 3D 姿态图",
+                "type": "boolean"
+              },
+              "gesture": {
+                "description": "idle | explain（单手比划）| open（双手摊开）| point | count | nod（点头）",
+                "type": "string"
+              },
+              "gestureAt": {
+                "description": "手势起始秒（段内），默认 0.9"
+              },
+              "hair": {
+                "description": "发色"
+              },
+              "head": {
+                "description": "小眉标，默认「知识小贴士」",
+                "type": "string"
+              },
+              "hint": {
+                "description": "底部小字，可留空",
+                "type": "string"
+              },
+              "icon": {
+                "description": "圆卡内的图标",
+                "type": "string"
+              },
+              "iconImage": {
+                "description": "3D 道具名，优先于 icon",
+                "type": "string"
+              },
+              "itemAt": {
+                "description": "每一项的出现时间（段内秒）数组，与 items 一一对应；缺省按 0.02 + i×0.15 均分。由 tools/vo.py 按配音自动填，一般不必手写",
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "items": {
+                "description": "[{image, icon, label, disc, stone, strike}]，image 优先（3D 道具），icon 是矢量回退（实测多类型，未收紧）",
+                "type": "array"
+              },
+              "label": {
+                "description": "可选标签 {text, at, x, y, size}"
+              },
+              "left": {
+                "description": "{image, icon, label, note, bad, badge}",
+                "type": "object"
+              },
+              "line1": {
+                "description": "斜切条一，如「感谢观看」",
+                "type": "string"
+              },
+              "line2": {
+                "description": "斜切条二，如「下期再会」",
+                "type": "string"
+              },
+              "lines": {
+                "description": "主句数组，1–3 行，每行 ≤ 9 字",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "mark": {
+                "description": "[x,y] 归一化病灶坐标，配合 pulse 呼吸闪烁",
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "note": {
+                "description": "底部免责声明/引导语；此处不要再放同义字幕",
+                "type": "string"
+              },
+              "organ": {
+                "description": "gut / stomach / gallbladder / appendix / kidney / uterus / intussusception / scanner / probe / child",
+                "type": "string"
+              },
+              "organImage": {
+                "description": "用 assets/props 里的 3D 软胶道具名（gut/drop/clock/shield/check/radiation）；给了就画图，否则回退矢量器官",
+                "type": "string"
+              },
+              "organSize": {
+                "description": "器官图标直径（像素）；缺省按容器半径 ×1.62 推算",
+                "type": "number"
+              },
+              "paper": {
+                "description": "cream（默认）| mint | sky",
+                "type": "string"
+              },
+              "prefix": {
+                "description": "爆炸贴左侧的前缀词，白字蓝边，如「急诊室里的」",
+                "type": "string"
+              },
+              "prefixSize": {
+                "description": "前缀字号（像素），默认 116；前缀是压在爆炸贴左侧的小字",
+                "type": "number"
+              },
+              "probe": {
+                "description": "left | right | none，探头会朝圆心发声波",
+                "type": "string"
+              },
+              "pulse": {
+                "description": "布尔；为 true 时给病灶/标记加脉冲强调动画",
+                "type": "boolean"
+              },
+              "r": {
+                "description": "圆半径，默认 352"
+              },
+              "right": {
+                "description": "{image, icon, label, note, badge}",
+                "type": "object"
+              },
+              "scene": {
+                "description": "soft（默认，柔光色块）| hallway（抽象医院走廊，注意会显得空）"
+              },
+              "size": {
+                "description": "主句字号（像素），默认 86；行数多时调小，不要低于 64",
+                "type": "number"
+              },
+              "skin": {
+                "description": "肤色"
+              },
+              "sticker": {
+                "description": "内置贴纸：eyes / question / star / drop",
+                "type": "string"
+              },
+              "strike": {
+                "description": "可选，左侧被划掉的旧认知标签，如「要等半天」",
+                "type": "string"
+              },
+              "sub": {
+                "description": "副标，黄底蓝斜边标签，一句话说清主题",
+                "type": "string"
+              },
+              "talking": {
+                "description": "[[起,止],...] 说话区间，嘴型只在区间内开合；由 tools/vo.py 自动写入，不必手填",
+                "items": {
+                  "items": {
+                    "type": "number"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              "title": {
+                "description": "爆炸贴内的主词，4–6 字最佳，如「火眼金睛」",
+                "type": "string"
+              },
+              "titleSize": {
+                "description": "主词字号，默认 148",
+                "type": "number"
+              }
+            }
           }
         }
       }

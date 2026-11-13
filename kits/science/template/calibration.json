@@ -1,0 +1,363 @@
+{
+  "schema": "cutduo-calibration/1",
+  "kit": "science",
+  "purpose": "跨片可复用的标定值：画幅、调色板、字幕样式、各版式的元素锚点。agent 读这一个文件就能取默认值并做断言，不必去翻 elements.json 里那条片专有的记录。",
+  "readingGuide": {
+    "scope": {
+      "any-film": "所有片通用，直接当默认值用",
+      "appearance": "绑定某一代外观，取用前先看 appliesTo.profile 与 params.profile 是否一致",
+      "instance": "只属于参考片，不写在本文件；见 out/replica-science-vo/elements.json"
+    },
+    "appliesTo.profile": "* = 任意外观代；具体名字 = 仅该 profile 成立（见 guide.json → profiles）",
+    "verify.method": "已实现的断言方法：image.* 看渲染结果，param.* 读 params，ink.*/mask.* 走掩膜，null = 只供人参考、机器不判",
+    "units": "px = 1080p 像素；frac = 以画幅宽(W)或高(H)归一化"
+  },
+  "measuredFrom": {
+    "file": "science-explainer-demo-vo.mp4（用户提供的 568×320 转存版）",
+    "size": "568x320",
+    "fps": 30,
+    "frames": 2215,
+    "profile": "legacy-2026-11",
+    "precision": "±3px@568 ≈ ±0.005W / ±0.009H；因此容差取 0.008–0.02",
+    "note": "锚点全部来自成片抽帧实测（tools/text-bands.mjs / replica-compare.mjs 的掩膜法），不是从代码里抄的默认值。"
+  },
+  "entries": [
+    {
+      "id": "frame.size",
+      "group": "frame",
+      "value": [
+        1920,
+        1080
+      ],
+      "unit": "px",
+      "scope": "any-film",
+      "appliesTo": {
+        "profile": "*"
+      },
+      "verify": {
+        "method": "image.size",
+        "probe": "cover",
+        "tolerance": 0
+      }
+    },
+    {
+      "id": "frame.fps",
+      "group": "frame",
+      "value": 30,
+      "unit": "fps",
+      "scope": "any-film",
+      "appliesTo": {
+        "profile": "*"
+      },
+      "verify": {
+        "method": "param.fps",
+        "probe": null,
+        "tolerance": 0
+      }
+    },
+    {
+      "id": "frame.fadeOutSeconds",
+      "group": "frame",
+      "value": 0.32,
+      "unit": "s",
+      "scope": "any-film",
+      "appliesTo": {
+        "profile": "*"
+      },
+      "verify": {
+        "method": "param.fadeOutSeconds",
+        "probe": null,
+        "tolerance": 0.001
+      },
+      "note": "末帧平均亮度 72–73/255（实测）；压暗曲线：73.5s:220 → 73.8s:72"
+    },
+    {
+      "id": "palette.pop",
+      "group": "palette",
+      "value": "#FD2551",
+      "unit": "hex",
+      "scope": "any-film",
+      "appliesTo": {
+        "profile": "*"
+      },
+      "verify": {
+        "method": null,
+        "probe": null,
+        "tolerance": null
+      }
+    },
+    {
+      "id": "palette.sun",
+      "group": "palette",
+      "value": "#FFD84D",
+      "unit": "hex",
+      "scope": "any-film",
+      "appliesTo": {
+        "profile": "*"
+      },
+      "verify": {
+        "method": null,
+        "probe": null,
+        "tolerance": null
+      }
+    },
+    {
+      "id": "palette.jade",
+      "group": "palette",
+      "value": "#26A38C",
+      "unit": "hex",
+      "scope": "any-film",
+      "appliesTo": {
+        "profile": "*"
+      },
+      "verify": {
+        "method": null,
+        "probe": null,
+        "tolerance": null
+      }
+    },
+    {
+      "id": "palette.jadeDeep",
+      "group": "palette",
+      "value": "#0E7A5F",
+      "unit": "hex",
+      "scope": "any-film",
+      "appliesTo": {
+        "profile": "*"
+      },
+      "verify": {
+        "method": null,
+        "probe": null,
+        "tolerance": null
+      }
+    },
+    {
+      "id": "palette.blue",
+      "group": "palette",
+      "value": "#2B7FD4",
+      "unit": "hex",
+      "scope": "any-film",
+      "appliesTo": {
+        "profile": "*"
+      },
+      "verify": {
+        "method": null,
+        "probe": null,
+        "tolerance": null
+      }
+    },
+    {
+      "id": "palette.ink",
+      "group": "palette",
+      "value": "#2C3A3E",
+      "unit": "hex",
+      "scope": "any-film",
+      "appliesTo": {
+        "profile": "*"
+      },
+      "verify": {
+        "method": null,
+        "probe": null,
+        "tolerance": null
+      }
+    },
+    {
+      "id": "subtitle.size",
+      "group": "subtitle",
+      "value": 62,
+      "unit": "px",
+      "scope": "any-film",
+      "appliesTo": {
+        "profile": "*"
+      },
+      "verify": {
+        "method": null,
+        "probe": null,
+        "tolerance": null
+      },
+      "note": "单行舒适上限 26 字，超了先按标点折行再降档（50 → 下限 44）"
+    },
+    {
+      "id": "subtitle.y",
+      "group": "subtitle",
+      "value": 1002,
+      "unit": "px",
+      "scope": "any-film",
+      "appliesTo": {
+        "profile": "*"
+      },
+      "verify": {
+        "method": null,
+        "probe": null,
+        "tolerance": null
+      },
+      "note": "基线位置；判安全区要用视觉顶端（基线 − 0.78em），不是基线"
+    },
+    {
+      "id": "subtitle.stroke",
+      "group": "subtitle",
+      "value": 6,
+      "unit": "px",
+      "scope": "any-film",
+      "appliesTo": {
+        "profile": "*"
+      },
+      "verify": {
+        "method": null,
+        "probe": null,
+        "tolerance": null
+      }
+    },
+    {
+      "id": "subtitle.strokeColor",
+      "group": "subtitle",
+      "value": "#1B2B30",
+      "unit": "hex",
+      "scope": "any-film",
+      "appliesTo": {
+        "profile": "*"
+      },
+      "verify": {
+        "method": null,
+        "probe": null,
+        "tolerance": null
+      }
+    },
+    {
+      "id": "subtitle.visualBottom",
+      "group": "subtitle",
+      "value": 0.925,
+      "unit": "fracH",
+      "scope": "any-film",
+      "appliesTo": {
+        "profile": "*"
+      },
+      "verify": {
+        "method": "ink.darkBBoxBottom",
+        "probe": "caption",
+        "tolerance": 0.015
+      }
+    },
+    {
+      "id": "cover.star.center",
+      "group": "cover",
+      "value": [
+        0.6303,
+        0.3641
+      ],
+      "unit": "frac",
+      "scope": "any-film",
+      "appliesTo": {
+        "profile": "*"
+      },
+      "verify": {
+        "method": "mask.hotCenter",
+        "probe": "cover",
+        "tolerance": 0.02
+      },
+      "note": "洋红爆炸贴的包围盒中心；尺寸随 title 字数变化，只锁中心"
+    },
+    {
+      "id": "cover.sub.topY",
+      "group": "cover",
+      "value": 0.6094,
+      "unit": "fracH",
+      "scope": "appearance",
+      "appliesTo": {
+        "profile": "legacy-2026-11"
+      },
+      "verify": {
+        "method": "mask.yellowTop",
+        "probe": "cover",
+        "tolerance": 0.02
+      },
+      "note": "现行外观是 0.765；这一代把副标提到标题正下方"
+    },
+    {
+      "id": "talk.eyebrow.top",
+      "group": "talk",
+      "value": 0.2969,
+      "unit": "fracH",
+      "scope": "any-film",
+      "appliesTo": {
+        "profile": "*"
+      },
+      "verify": {
+        "method": "ink.firstBandTop",
+        "probe": "talk",
+        "tolerance": 0.012
+      }
+    },
+    {
+      "id": "talk.eyebrow.firstBandLeft",
+      "group": "talk",
+      "value": 0.1052,
+      "unit": "fracW",
+      "scope": "any-film",
+      "appliesTo": {
+        "profile": "*"
+      },
+      "verify": {
+        "method": "ink.firstBandLeft",
+        "probe": "talk",
+        "tolerance": 0.008
+      },
+      "note": "第一行带（眉标）自身的左缘，实测 0.1052W。不要用\"左半区最左墨迹\"来量——纸纹/贴纸会把它拉到 0.054W。"
+    },
+    {
+      "id": "talk.line1.top",
+      "group": "talk",
+      "value": 0.3531,
+      "unit": "fracH",
+      "scope": "any-film",
+      "appliesTo": {
+        "profile": "*"
+      },
+      "verify": {
+        "method": "ink.secondBandTop",
+        "probe": "talk",
+        "tolerance": 0.015
+      }
+    },
+    {
+      "id": "talk.figure.cx",
+      "group": "talk",
+      "value": 0.7544,
+      "unit": "fracW",
+      "scope": "appearance",
+      "appliesTo": {
+        "profile": "legacy-2026-11"
+      },
+      "verify": {
+        "method": "mask.hairCenterX",
+        "probe": "talk",
+        "tolerance": 0.012
+      },
+      "note": "现行外观 0.765（figureCx 默认）；这一代左移 1%"
+    },
+    {
+      "id": "talk.figure.hairTop",
+      "group": "talk",
+      "value": 0.3125,
+      "unit": "fracH",
+      "scope": "appearance",
+      "appliesTo": {
+        "profile": "legacy-2026-11"
+      },
+      "verify": {
+        "method": "mask.hairTop",
+        "probe": "talk",
+        "tolerance": 0.015
+      }
+    }
+  ],
+  "notHere": [
+    "段长与切点（跟配音走，见 params）",
+    "字幕文案与逐句起止（跟配音走，见 params.captions）",
+    "itemAt / talking 的具体秒数（tools/vo.py 回填）",
+    "封面主标题字号、爆炸贴半径等随文案变化的量（见 guide.json → layouts[].args）",
+    "talk 的下划线与强调行位置（跟随行数与字号，是版式的函数而非常量；要断言就按具体文案定）"
+  ],
+  "assertable": 11,
+  "_assertableNote": "可断言条目数下限。验证器要求 PASS ≥ 这个数，防止有人把 verify.method 改成 null 后\"断言悄悄变少但依然全绿\"。新增/删除可断言条目时同步改这里。"
+}

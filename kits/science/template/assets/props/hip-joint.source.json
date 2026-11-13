@@ -1,0 +1,25 @@
+{
+  "_note": "素材来源记录。同目录 hip-joint.png 的来源与重跑步骤；规范见 docs/ASSET-POLICY.md（type 必须是 generated/synthesized/shot/stock 之一，generated 要 prompt + seed，frozen 置 true）。",
+  "id": "hip-joint",
+  "kind": "image",
+  "path": "hip-joint.png",
+  "source": {
+    "type": "generated",
+    "provider": "apiduo MCP (mcp__apiduo__image.generate)",
+    "model": "flux-3-image",
+    "prompt": "Flat vector medical illustration, cross-section of a child hip joint: round femoral head seated inside the cup-shaped acetabulum, a thin crescent of pale yellow joint fluid (effusion) between them. Clean thick dark outlines, soft flat shading, teal green bone with warm cream highlights, small coral red accent on the inflamed synovial lining. Educational infographic style, front view, centered, generous margins, no text, no labels, no arrows, plain pure white background.",
+    "params": { "aspect_ratio": "1:1", "resolution": "1k" },
+    "seed": null,
+    "seedNote": "flux-3-image 未暴露 seed 参数，同 prompt 可能出不同结果；因此 frozen=true，不再重生成。",
+    "raw": "assets/media/anatomy/hip-joint-raw.png",
+    "rawUrl": "https://oss.s3ai.cn/cdn/apiduo/response/2026/11/13/4118cea17897a06e85c4b916a3082dd9.png",
+    "postProcess": "ffmpeg crop=560:600:230:180（收紧密切到髋关节）→ tools/trim-alpha.mjs --size 900 --tol 22 --margin 0.03（泛洪抠白底 + 羽化 + 平方补边）"
+  },
+  "license": "自生成素材（flux-3-image 输出），随本仓库使用",
+  "frozen": true,
+  "use": {
+    "layout": "diagram",
+    "param": "segments[].args.organImage = \"hip-joint\"",
+    "consumers": ["Skia: kits/science/science.mjs → primeProps()", "浏览器: kits/science/template/src/index.html → img[data-prop]"]
+  }
+}

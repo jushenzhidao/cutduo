@@ -1,12 +1,12 @@
 {
-  "_note": "由 build-voices.py 按真实配音时长重排；音轨 edits/audio-nanjing.m4a",
+  "_note": "由 build-voices.py 按真实配音时长重排；音轨 edits/audio-nanjing.m4a。\n原版口径：「南京」城市介绍 v3：15 个版式镜头 + 2 段实拍视频（Pexels，预抽帧播放）+ 3 张实拍照片。数字均有出处（2024 南京统计公报、市文旅局城墙数据）。",
   "fps": 60,
   "durationSeconds": 55.434,
   "brand": "城市档案 · 南京",
   "photos": {
-    "jinling": "edits/assets/nanjing/p31074149.jpg",
-    "jiming": "edits/assets/nanjing/p36354905.jpg",
-    "night": "edits/assets/nanjing/p31133706.jpg"
+    "jinling": "assets/media/nanjing/p31074149.jpg",
+    "jiming": "assets/media/nanjing/p36354905.jpg",
+    "night": "assets/media/nanjing/p31133706.jpg"
   },
   "chapters": [
     {
@@ -367,11 +367,11 @@
   ],
   "clips": {
     "xuanwu": {
-      "dir": "edits/assets/nanjing/clips/xuanwu",
+      "dir": "assets/media/nanjing/clips/xuanwu",
       "fps": 20
     },
     "qinhuai": {
-      "dir": "edits/assets/nanjing/clips/qinhuai",
+      "dir": "assets/media/nanjing/clips/qinhuai",
       "fps": 20
     }
   }

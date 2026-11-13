@@ -4,9 +4,9 @@
   "durationSeconds": 73.0,
   "brand": "城市档案 · 南京",
   "photos": {
-    "jinling": "edits/assets/nanjing/p31074149.jpg",
-    "jiming": "edits/assets/nanjing/p36354905.jpg",
-    "night": "edits/assets/nanjing/p31133706.jpg"
+    "jinling": "assets/media/nanjing/p31074149.jpg",
+    "jiming": "assets/media/nanjing/p36354905.jpg",
+    "night": "assets/media/nanjing/p31133706.jpg"
   },
   "chapters": [
     {
@@ -367,11 +367,11 @@
   ],
   "clips": {
     "xuanwu": {
-      "dir": "edits/assets/nanjing/clips/xuanwu",
+      "dir": "assets/media/nanjing/clips/xuanwu",
       "fps": 20
     },
     "qinhuai": {
-      "dir": "edits/assets/nanjing/clips/qinhuai",
+      "dir": "assets/media/nanjing/clips/qinhuai",
       "fps": 20
     }
   }

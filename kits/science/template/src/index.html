@@ -15,6 +15,7 @@
 <img data-mouth="open" src="../assets/figures/mouth/m_open.png" alt="">
 <img data-mouth="round" src="../assets/figures/mouth/m_round.png" alt="">
 <img data-prop="gut" src="../assets/props/gut.png" alt="">
+<img data-prop="hip-joint" src="../assets/props/hip-joint.png" alt="">
 <img data-prop="drop" src="../assets/props/drop.png" alt="">
 <img data-prop="clock" src="../assets/props/clock.png" alt="">
 <img data-prop="shield" src="../assets/props/shield.png" alt="">
@@ -24,6 +25,19 @@
 <img data-fig="explain" src="../assets/figures/explain.png" alt="">
 <img data-fig="point" src="../assets/figures/point.png" alt="">
 <img data-fig="open" src="../assets/figures/open.png" alt="">
+<script>
+/* 浏览器宿主：把 <img data-*> 绑成按 key 取的对象。
+   绘制层（kit.js / layouts.js）不碰 DOM；Skia 宿主由 science.mjs 注入同名对象。 */
+(function () {
+  const bind = (sel, key, attr) => {
+    const into = (window[key] = window[key] || {});
+    document.querySelectorAll(sel).forEach((el) => { into[el.dataset[attr]] = el; });
+  };
+  bind('img[data-prop]', '__MK_PROPS', 'prop');
+  bind('img[data-mouth]', '__MK_MOUTHS', 'mouth');
+  bind('img[data-fig]', '__MK_FIGS', 'fig');
+})();
+</script>
 <script src="kit.js"></script>
 <script src="layouts.js"></script>
 <script src="main.js"></script>

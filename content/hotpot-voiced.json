@@ -1,20 +1,20 @@
 {
-  "_note": "由 build-voices.py 按真实配音时长重排；音轨 edits/audio-hotpot.m4a",
+  "_note": "由 build-voices.py 按真实配音时长重排；音轨 edits/audio-hotpot.m4a。\n原版口径：「吃火锅」生活短片。主视觉是用户本人实拍（assets/media/hotpot/my-photo.jpg，2133×1600）；补充素材取自 Pexels 免费许可（可商用、无需署名），画面角标与 preset 里保留来源。文案为叙事/氛围，不写未经核实的烹饪数据或疗效类断言。",
   "fps": 60,
   "durationSeconds": 41.574,
   "brand": "desktop-kit · 一顿火锅",
   "photos": {
-    "mine": "edits/assets/hotpot/my-photo.jpg",
-    "ingredients": "edits/assets/hotpot/p29479438.jpg",
-    "pot": "edits/assets/hotpot/p29479439.jpg"
+    "mine": "assets/media/hotpot/my-photo.jpg",
+    "ingredients": "assets/media/hotpot/p29479438.jpg",
+    "pot": "assets/media/hotpot/p29479439.jpg"
   },
   "clips": {
     "boil": {
-      "dir": "edits/assets/hotpot/clips/boil",
+      "dir": "assets/media/hotpot/clips/boil",
       "fps": 20
     },
     "table": {
-      "dir": "edits/assets/hotpot/clips/table",
+      "dir": "assets/media/hotpot/clips/table",
       "fps": 20
     }
   },

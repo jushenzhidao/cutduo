@@ -4,8 +4,8 @@
   "durationSeconds": 59.0,
   "brand": "desktop-kit · 身体使用说明",
   "photos": {
-    "warm": "edits/assets/period/warm.jpg",
-    "record": "edits/assets/period/record.jpg"
+    "warm": "assets/media/period/warm.jpg",
+    "record": "assets/media/period/record.jpg"
   },
   "chapters": [
     {

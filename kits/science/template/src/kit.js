@@ -907,18 +907,12 @@
 
   /* -------------------------------- 3D 道具 -------------------------------- */
   // 与人物同一套 flux-3-image 生成的软胶材质；index.html 的 <img data-prop> 会被内联成 dataURL
+  // 绑定点在宿主，不在绘制层：浏览器由 index.html 的内联脚本填充，Skia 由 science.mjs 注入。
+  // 绘制层不碰 DOM，是换宿主能成立的前提（见 SKIA-SPEC.md）。
   const PROPS = (window.__MK_PROPS = window.__MK_PROPS || {});
-  function collectProps() {
-    if (typeof document === 'undefined') return;
-    document.querySelectorAll('img[data-prop]').forEach((el) => { PROPS[el.dataset.prop] = el; });
-  }
-  collectProps();
 
   // 口型贴片：与人物同一构图的嘴部差异图（闭→半开→大张），只在变化区域有 alpha
   const MOUTHS = (window.__MK_MOUTHS = window.__MK_MOUTHS || {});
-  if (typeof document !== 'undefined') {
-    document.querySelectorAll('img[data-mouth]').forEach((el) => { MOUTHS[el.dataset.mouth] = el; });
-  }
 
   // 返回 true 表示画了图；false 时调用方回退到矢量图标
   MK.prop = function (name, ctx, x, y, size) {
@@ -947,6 +941,24 @@
     const blink = blinkPhase < 0.14 ? Math.abs(Math.cos((blinkPhase / 0.14) * Math.PI)) : 1;
     const eyeY = 1 - (1 - blink) * 0.86;
     const mouth = clamp(o.mouth || 0, 0, 1);
+    // 头部几何微调表：复刻旧版成片时按成片测量覆盖（见 presets 里 tune 字段）。
+    // 不传 tune 时每个值都等于现行版本的硬编码量，画面零变化。
+    const TN = o.tune || {};
+    const fRx = TN.faceRx === undefined ? 108 : TN.faceRx;
+    const fRy = TN.faceRy === undefined ? 126 : TN.faceRy;
+    const fY = TN.faceY === undefined ? -580 : TN.faceY;
+    const hRx = TN.hairRx === undefined ? 150 : TN.hairRx;
+    const hRy = TN.hairRy === undefined ? 176 : TN.hairRy;
+    const hY = TN.hairY === undefined ? -586 : TN.hairY;
+    const eyeY0 = TN.eyeY === undefined ? -592 : TN.eyeY;
+    const eyeR = TN.eyeR === undefined ? 15 : TN.eyeR;
+    const eyeR2 = TN.eyeR2 === undefined ? 18 : TN.eyeR2;
+    const browW = TN.browW === undefined ? 7 : TN.browW;
+    const browY = TN.browY === undefined ? -630 : TN.browY;
+    const browLift = TN.browLift === undefined ? 10 : TN.browLift;
+    const blushY = TN.blushY === undefined ? -548 : TN.blushY;
+    const blushR = TN.blushR === undefined ? 24 : TN.blushR;
+    const blushR2 = TN.blushR2 === undefined ? 15 : TN.blushR2;
     const headRot = (o.nod || 0) * 0.17 + (o.shake || 0) * 0.11 + Math.sin(t * 0.7) * 0.008;
     const look = (o.look || 0) * 7;
 
@@ -989,11 +1001,19 @@
     arm(1, clamp(o.armR || 0, 0, 1));
 
     // ---- 躯干 ----
+    // bodyW / shoulderW 可调：复刻 2026-11 之前的旧版成片时，躯干是更宽的"大裙摆"（±236），
+    // 且肩部更窄（±104）；默认值仍是现行版本，不传参就是零变化。
+    const bodyW = o.bodyW === undefined ? 206 : o.bodyW;
+    const shoulderW = o.shoulderW === undefined ? 98 : o.shoulderW;
+    // flankX/flankY：腰侧控制点。旧版成片的肩部更"满"，光拉 shoulderW 补不回来，
+    // 必须同时把侧腹控制点外移（默认 168/368 是现行版本的拟合值）。
+    const flankX = o.flankX === undefined ? 168 : o.flankX;
+    const flankY = o.flankY === undefined ? 368 : o.flankY;
     ctx.beginPath();
-    ctx.moveTo(-206, 0);
-    ctx.bezierCurveTo(-204, -252, -168, -368, -98, -404);
-    ctx.quadraticCurveTo(0, -426, 98, -404);
-    ctx.bezierCurveTo(168, -368, 204, -252, 206, 0);
+    ctx.moveTo(-bodyW, 0);
+    ctx.bezierCurveTo(-bodyW, -252, -flankX, -flankY, -shoulderW, -404);
+    ctx.quadraticCurveTo(0, -426, shoulderW, -404);
+    ctx.bezierCurveTo(flankX, -flankY, bodyW, -252, bodyW, 0);
     ctx.closePath();
     const gt = ctx.createLinearGradient(-120, -430, 120, 0);
     gt.addColorStop(0, shade(coat, 1.08)); gt.addColorStop(1, shade(coat, 0.92));
@@ -1019,9 +1039,9 @@
     // 脖子
     ctx.beginPath(); MK.rrect(ctx, -40, -486, 80, 96, 26); ctx.fillStyle = '#EFC1A8'; ctx.fill();
     // 头发后层
-    ctx.beginPath(); ctx.ellipse(0, -586, 150, 176, 0, 0, Math.PI * 2); ctx.fillStyle = hair; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0, hY, hRx, hRy, 0, 0, Math.PI * 2); ctx.fillStyle = hair; ctx.fill();
     // 脸
-    ctx.beginPath(); ctx.ellipse(0, -580, 108, 126, 0, 0, Math.PI * 2); ctx.fillStyle = skin; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0, fY, fRx, fRy, 0, 0, Math.PI * 2); ctx.fillStyle = skin; ctx.fill();
     // 刘海
     ctx.beginPath();
     ctx.moveTo(-124, -624);
@@ -1032,18 +1052,28 @@
     // 眼睛（眨眼前后压扁）
     [-46, 46].forEach((dx) => {
       ctx.save();
-      ctx.translate(dx + look, -592);
+      ctx.translate(dx + look, eyeY0);
       ctx.scale(1, eyeY);
-      ctx.beginPath(); ctx.ellipse(0, 0, 15, 18, 0, 0, Math.PI * 2); ctx.fillStyle = '#3A2A22'; ctx.fill();
+      ctx.beginPath(); ctx.ellipse(0, 0, eyeR, eyeR2, 0, 0, Math.PI * 2); ctx.fillStyle = '#3A2A22'; ctx.fill();
       if (eyeY > 0.4) { ctx.beginPath(); ctx.arc(5, -6, 5, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill(); }
       ctx.restore();
     });
     // 眉毛
-    ctx.strokeStyle = hair; ctx.lineWidth = 7; ctx.lineCap = 'round';
+    ctx.strokeStyle = hair; ctx.lineWidth = browW; ctx.lineCap = 'round';
     [-46, 46].forEach((dx) => {
-      ctx.beginPath(); ctx.moveTo(dx - 20 + look, -630); ctx.quadraticCurveTo(dx + look, -640, dx + 20 + look, -630); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(dx - 20 + look, browY); ctx.quadraticCurveTo(dx + look, browY - browLift, dx + 20 + look, browY); ctx.stroke();
     });
     // 嘴：口型开合
+    // mouthStyle='smile' 是旧版画法：一条 56 单位宽的上扬弧线，没有唇线与口腔填充。
+    // 现行版本是椭圆口径 + 上唇线；默认不变，只有显式传 style 才切换。
+    if (o.mouthStyle === 'smile') {
+      const sw = o.smileW === undefined ? 29 : o.smileW;
+      const sy = TN.smileY === undefined ? -534 : TN.smileY;
+      ctx.beginPath();
+      ctx.moveTo(-sw, sy);
+      ctx.quadraticCurveTo(0, sy + 14 - (o.smileK === undefined ? 0 : o.smileK), sw, sy);
+      ctx.lineWidth = 5.5; ctx.strokeStyle = '#8E3F33'; ctx.lineCap = 'round'; ctx.stroke();
+    } else {
     const mh = 2.2 + mouth * 8.6;
     const mw = 17 - mouth * 2.5;
     ctx.beginPath();
@@ -1057,9 +1087,10 @@
     ctx.beginPath();
     ctx.moveTo(-mw, -532 + mouth * 2); ctx.quadraticCurveTo(0, -538 + mouth * 2, mw, -532 + mouth * 2);
     ctx.lineWidth = 4; ctx.strokeStyle = '#B5603F'; ctx.lineCap = 'round'; ctx.stroke();
+    }
     // 腮红
     [-76, 76].forEach((dx) => {
-      ctx.beginPath(); ctx.ellipse(dx, -548, 24, 15, 0, 0, Math.PI * 2);
+      ctx.beginPath(); ctx.ellipse(dx, blushY, blushR, blushR2, 0, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(240,140,120,0.32)'; ctx.fill();
     });
     // 听诊器（随头轻摆）

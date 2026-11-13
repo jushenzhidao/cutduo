@@ -1,0 +1,290 @@
+{
+  "_note": "内容来源：用户提供的《儿童髋关节滑膜炎》文档（784 字正文，5 页）。段序与文案按 guide.json 的容量上限重写：cover 钩子 → 认知反转 → 鉴别 → 病因阵列 → 检查 → 就医信号 → 护理 → 收尾。未使用 diagram 版式：仓里的器官图标集只有腹腔器官，画髋关节会是假解剖。",
+  "durationSeconds": 62.0,
+  "fps": 30,
+  "fadeOutSeconds": 0.32,
+  "theme": {
+    "pop": "#FD2551",
+    "sun": "#FFD84D",
+    "jade": "#26A38C",
+    "jadeDeep": "#0E7A5F",
+    "blue": "#2B7FD4",
+    "ink": "#2C3A3E"
+  },
+  "brand": {
+    "show": true,
+    "text": "儿童骨科科普",
+    "tag": "SCIENCE EXPLAINER"
+  },
+  "subtitle": {
+    "size": 62,
+    "color": "#FFFFFF",
+    "stroke": 6,
+    "strokeColor": "#1B2B30",
+    "y": 1002
+  },
+  "captions": [
+    {
+      "start": 0,
+      "end": 1,
+      "text": "孩子突然走路一瘸一拐，家长第一反应是摔伤了",
+      "seg": 0
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "text": "但有一种常见原因，和摔伤没关系",
+      "seg": 0
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "text": "孩子说膝盖疼，问题不一定在膝盖",
+      "seg": 1
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "text": "髋关节的病变，常常表现为膝部疼痛",
+      "seg": 1
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "text": "同样是跛行，要先分清两种完全不同的情况",
+      "seg": 2
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "text": "化脓性关节炎会发热、剧痛，属于急症",
+      "seg": 2
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "text": "暂时性滑膜炎多数休息后可以恢复",
+      "seg": 2
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "text": "髋关节里积了液体，孩子就会疼、会跛",
+      "seg": 3
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "text": "滑膜炎、化脓性关节炎、股骨头缺血坏死、外伤",
+      "seg": 4
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "text": "超声没有辐射，主要看有没有关节积液",
+      "seg": 5
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "text": "但发现积液，不等于确诊滑膜炎",
+      "seg": 5
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "text": "有三种情况，不要再等",
+      "seg": 6
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "text": "完全不能站立或负重",
+      "seg": 6
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "text": "伴随发热、寒战或精神萎靡",
+      "seg": 6
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "text": "疼痛明显且在持续加重",
+      "seg": 6
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "text": "确诊暂时性滑膜炎，多数孩子休息后能恢复",
+      "seg": 7
+    },
+    {
+      "start": 0,
+      "end": 1,
+      "text": "急性期少跑跳，按医生建议用药和复查",
+      "seg": 7
+    }
+  ],
+  "segments": [
+    {
+      "type": "cover",
+      "dur": 7.6,
+      "args": {
+        "prefix": "孩子走路",
+        "title": "一瘸一拐",
+        "sub": "先别当成摔伤",
+        "sticker": "question",
+        "hint": "儿童骨科科普 · 2 分钟看懂"
+      }
+    },
+    {
+      "type": "talk",
+      "dur": 7.6,
+      "args": {
+        "paper": "cream",
+        "figure": "right",
+        "figureHeight": 0.94,
+        "eyebrow": "最容易被漏掉的一点",
+        "lines": [
+          "喊膝盖疼",
+          "问题可能在髋"
+        ],
+        "accentLine": 1,
+        "size": 86,
+        "sticker": "question",
+        "gesture": "explain"
+      }
+    },
+    {
+      "type": "compare",
+      "dur": 11.0,
+      "args": {
+        "paper": "sky",
+        "title": "要不要马上急诊",
+        "left": {
+          "icon": "drop",
+          "label": "化脓性",
+          "note": "发热 · 不敢负重",
+          "bad": true,
+          "badge": "no"
+        },
+        "right": {
+          "icon": "shield",
+          "label": "暂时性",
+          "note": "多数可恢复",
+          "badge": "yes"
+        },
+        "conclusion": "拿不准 · 先急诊排除"
+      }
+    },
+    {
+      "type": "diagram",
+      "dur": 7.6,
+      "args": {
+        "paper": "mint",
+        "title": "髋关节积液",
+        "organImage": "hip-joint",
+        "pulse": false,
+        "probe": "left",
+        "callouts": [
+          {
+            "text": "关节腔里积了液体",
+            "at": 1.5,
+            "x": 0.725,
+            "y": 0.255,
+            "size": 66,
+            "lead": [
+              0.458,
+              0.412
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "matrix",
+      "dur": 6.4,
+      "args": {
+        "paper": "mint",
+        "title": "跛行的常见原因",
+        "items": [
+          {
+            "icon": "shield",
+            "label": "滑膜炎",
+            "disc": "#C8EBDD"
+          },
+          {
+            "icon": "drop",
+            "label": "化脓性",
+            "disc": "#FFD1DC"
+          },
+          {
+            "icon": "clock",
+            "label": "缺血坏死",
+            "disc": "#FFE770"
+          },
+          {
+            "icon": "xray",
+            "label": "外伤",
+            "disc": "#CFE6FB"
+          }
+        ]
+      }
+    },
+    {
+      "type": "focus",
+      "dur": 8.2,
+      "args": {
+        "paper": "sky",
+        "title": "看积液",
+        "icon": "scanner",
+        "strike": "积液=确诊",
+        "claim": "结合体温与炎症指标",
+        "strikeFill": "#0E7A5F"
+      }
+    },
+    {
+      "type": "tip",
+      "dur": 10.8,
+      "args": {
+        "paper": "sky",
+        "head": "就医信号",
+        "title": "这三种情况立刻去",
+        "items": [
+          "完全不能负重",
+          "伴发热、精神差",
+          "疼痛持续加重"
+        ]
+      }
+    },
+    {
+      "type": "talk",
+      "dur": 7.8,
+      "args": {
+        "paper": "cream",
+        "figure": "right",
+        "figureHeight": 0.94,
+        "eyebrow": "确诊之后怎么办",
+        "lines": [
+          "多休息、少负重",
+          "按时复查"
+        ],
+        "accentLine": 1,
+        "size": 86,
+        "sticker": "shield",
+        "gesture": "open"
+      }
+    },
+    {
+      "type": "outro",
+      "dur": 5.0,
+      "args": {
+        "line1": "早发现",
+        "line2": "早评估",
+        "note": "科普内容仅供参考 · 具体诊疗请遵医嘱"
+      }
+    }
+  ]
+}

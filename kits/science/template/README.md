@@ -170,6 +170,25 @@ node motion-render.mjs render --package . --style microwave.vo \
 
 `guide.json` 里有每个版式的参数说明与容量上限。
 
+## 三个数据文件，各管一件事（别混）
+
+| 文件 | 管什么 | 什么时候改 |
+|---|---|---|
+| `guide.json` | **规则**：段序、每段容量、时序归属、外观档案 `profiles` | 换玩法/加版式/加一代外观 |
+| `calibration.json` | **数值**：画幅、调色板、字幕样式、各版式锚点 + 容差 | 重新标定参照片之后 |
+| `params.schema.json` | **契约**：参数的结构，agent 据此构造请求 | 参数结构变了 |
+
+`calibration.json` 是给 agent 用的：`api.capabilities().kits[science].calibration` 直接给出路径与
+验证命令，`entries[]` 每条都带 `scope`（`any-film` / `appearance`）、`appliesTo.profile`、
+`verify.method` 与 `tolerance`。跑一遍 `node tools/verify-calibration.mjs --params <preset>`
+就会渲染探针帧并逐条断言；`appliesTo.profile` 与 `params.profile` 不一致的条目判 **SKIP**，
+不是 PASS——这条规则存在的意义就是防止"拿错代的外观去比"。
+
+外观档案在 `guide.json → profiles`，渲染时 `params.profile` 一行生效：
+
+- `current`：3D 位图讲解员 + 封面副标 0.765H（现行默认）
+- `legacy-2026-11`：矢量讲解员、无手臂、宽裙摆、微笑弧嘴 + 副标 0.6031H（复刻 2026-11 前的成片）
+
 ## 边界
 
 - 不生成语音、不生成配乐（要配音用 `--audio` 传文件）

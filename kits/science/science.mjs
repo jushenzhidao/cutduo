@@ -128,6 +128,24 @@ async function primeFigures(win) {
 }
 
 /**
+ * 道具图（assets/props/*.png）。
+ * 浏览器由 index.html 的 <img data-prop> 提供；Skia 侧没有 DOM，
+ * 不补这一步 `MK.prop()` 恒返回 false，`organImage` 会被**静默忽略**并退回矢量图标
+ * （与 primeFigures 是同一类坑：画面能出，但和浏览器不是一个东西）。
+ */
+async function primeProps(win) {
+  const dir = path.join(TMPL_DIR, 'assets', 'props');
+  win.__MK_PROPS = win.__MK_PROPS || {};
+  if (!fs.existsSync(dir)) return [];
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.png') && !f.includes('_raw'));
+  await Promise.all(files.map(async (f) => {
+    const key = f.replace(/\.png$/, '');
+    try { win.__MK_PROPS[key] = await loadImage(path.join(dir, f)); } catch { /* 坏图就跳过 */ }
+  }));
+  return Object.keys(win.__MK_PROPS);
+}
+
+/**
  * @param {{width?:number,height?:number,fps?:number,brand?:object,subtitle?:object,
  *          theme?:object,fadeOutSeconds?:number}} opts
  */
@@ -148,6 +166,7 @@ export function createScienceRenderer(opts = {}) {
   };
   let primed = null;
   const figuresReady = primeFigures(win);
+  const propsReady = primeProps(win);
 
   function setContent(next = {}) {
     state = {
@@ -219,7 +238,7 @@ export function createScienceRenderer(opts = {}) {
   return {
     canvas, ctx, renderFrame, setContent, duration,
     /** 素材解码完成后再出片，避免首几帧缺图 */
-    ready: () => Promise.all([primed || Promise.resolve(), figuresReady]),
+    ready: () => Promise.all([primed || Promise.resolve(), figuresReady, propsReady]),
     width: W, height: H,
     layouts: ['cover', 'talk', 'diagram', 'compare', 'matrix', 'focus', 'tip', 'outro'],
   };

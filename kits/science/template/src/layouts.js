@@ -9,12 +9,9 @@
   const { clamp, lerp, ease, easeInOut, pop, rgba, hash } = MK.u;
 
   // 姿态图：由 index.html 的 <img data-fig> 提供，渲染器会把它们内联成 dataURL
+  // 浏览器侧由 index.html 填充，Skia 侧由 science.mjs 的 primeFigures() 注入。
+  // 不补会静默退化成矢量人物 —— 但绑定点属于宿主，不属于版式。
   const FIGS = (window.__MK_FIGS = window.__MK_FIGS || {});
-  function collectFigures() {
-    if (typeof document === 'undefined') return;
-    document.querySelectorAll('img[data-fig]').forEach((el) => { FIGS[el.dataset.fig] = el; });
-  }
-  collectFigures();
 
   // 手势名 → 姿态图名
   const POSE_OF = { idle: 'idle', explain: 'explain', open: 'open', point: 'point', count: 'explain', nod: 'idle' };
@@ -169,7 +166,8 @@
     if (a.figure === 'none') return;
     const side = a.figure === 'left' ? 'left' : 'right';
     const img = a.figureImage && window.__MK_IMAGES && window.__MK_IMAGES[a.figureImage];
-    const cx = (side === 'left' ? 0.255 : 0.765) * W;
+    // figureCx 可覆盖默认站位：复刻旧版成片时人物中心在 0.755W，比现行 0.765W 左 1% 画幅。
+    const cx = (a.figureCx !== undefined ? Number(a.figureCx) : (side === 'left' ? 0.255 : 0.765)) * W;
     const enter = ease((t - 0.05) / 0.55);
     ctx.save();
     ctx.globalAlpha *= enter;
@@ -187,7 +185,9 @@
     const g = a.gesture || 'idle';
     const k = gestureK(t, dur === undefined ? 6 : dur, a.gestureAt === undefined ? 0.9 : a.gestureAt);
     const env = curveAt(a.mouthCurve, frame);
-    const mouth = env === null ? mouthAt(t, a.talking) : env;
+    // 口型优先级：显式 a.mouth（静态口型，用于复刻旧版成片的"闭嘴微笑"）> 配音包络 > 说话区间模拟
+    const mouth = a.mouth !== undefined ? clamp(Number(a.mouth), 0, 1)
+      : (env === null ? mouthAt(t, a.talking) : env);
 
     // ② 姿态图（assets/figures 的四张透明 PNG）
     const imgs = a.figures === false ? null : FIGS;
@@ -274,6 +274,9 @@
       cx, baseY: H * 0.965, scale: (a.figureScale || 1) * 0.93,
       t, hair: a.hair, skin: a.skin, coat: a.coat,
       mouth, armL, armR, nod,
+      bodyW: a.bodyW, shoulderW: a.shoulderW, flankX: a.flankX, flankY: a.flankY,
+      mouthStyle: a.mouthStyle, smileW: a.smileW, smileK: a.smileK,
+      tune: a.tune,
       look: side === 'left' ? 0.35 : -0.35,
       blinkSeed: a.blinkSeed || 1.3,
     });
@@ -351,7 +354,8 @@
       const subSize = a.subSize || 54;
       const sw = MK.measure(ctx, a.sub, subSize, 700) + subSize * 1.1;
       ctx.save();
-      ctx.translate(W / 2, H * 0.765);
+      // subY 可覆盖副标纵向位置（默认 0.765H）：旧版成片的副标紧跟标题下方（约 0.57H）。
+      ctx.translate(W / 2, H * (a.subY === undefined ? 0.765 : Number(a.subY)));
       ctx.scale(k2, k2);
       ctx.translate(-sw / 2, 0);
       MK.tagSun(ctx, a.sub, 0, 0, subSize, {});
@@ -780,7 +784,9 @@
         ctx.translate(W / 2 - sw / 2, sy);
         ctx.rotate(-3 * Math.PI / 180);
         MK.rrect(ctx, 0, 0, sw, 68, 12);
-        ctx.fillStyle = 'rgba(38,163,140,0.9)'; ctx.fill();
+        // strikeFill 可覆盖胶囊底色：默认值（jade 0.9）白字对比度只有 2.96:1，
+        // 低于大字号 3:1 的下限；jadeDeep(#0E7A5F) 是 5.29:1。默认不变以免破坏复刻一致性。
+        ctx.fillStyle = a.strikeFill || 'rgba(38,163,140,0.9)'; ctx.fill();
         MK.text(ctx, a.strike, 30, 48, { size: 42, weight: 700, color: '#fff' });
         // 划除线
         const kd = ease((t - 0.95) / 0.4);

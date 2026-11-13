@@ -206,7 +206,6 @@
         "title": "睡着以后发生什么",
         "organImage": "clock",
         "organ": "clock",
-        "Eyes": true,
         "probe": "none",
         "callouts": [
           {
@@ -231,7 +230,8 @@
               0.655
             ]
           }
-        ]
+        ],
+        "eyes": true
       }
     },
     {

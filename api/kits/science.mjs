@@ -11,6 +11,15 @@ export const capability = {
   },
   output: { width: 1920, height: 1080, fpsChoices: [24, 30, 60], fpsDefault: 30 },
   paramsSchema: 'kits/science/template/params.schema.json',
+  // 跨片可复用的标定值（画幅/调色板/字幕样式/各版式锚点 + 容差）。
+  // agent 取默认值或做断言都读这一个文件，不必翻片级的 elements.json。
+  calibration: {
+    path: 'kits/science/template/calibration.json',
+    schema: 'cutduo-calibration/1',
+    profiles: ['current', 'legacy-2026-11'],
+    verify: 'node tools/verify-calibration.mjs --params <preset.json>',
+    note: 'entries[].scope=appearance 的值绑定 profile，params.profile 不匹配时验证器判 SKIP 而非 PASS。',
+  },
   schemaStatus: 'complete',
   presets: [
     { id: 'demo', path: 'kits/science/template/presets/demo.json', note: '基础演示' },

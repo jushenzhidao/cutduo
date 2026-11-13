@@ -194,13 +194,20 @@ def main():
                     break
             if picked:
                 seg_args['itemAt'] = picked
-        # 圆框图解：第 2 句起依次放出标注（第 1 句留给画面入场）
+        # 圆框图解：标注时刻**作者写了就听作者的**，没写才按句子起点兜底。
+        # 曾经的实现是无条件覆盖，把作者写的 1.4–1.5s 冲成 0.45s（和"第一句留给入场"的注释相反），
+        # 成片实测引线标注在 1.4–1.6s 出现。现在只补空缺，重跑不再漂移（幂等）。
         if s['type'] == 'diagram':
             cos = seg_args.get('callouts') or []
-            if len(idxs) >= len(cos):
-                seg_args['callouts'] = [
-                    {**c, 'at': round(caps[idxs[i]]['start'] - cursor, 2)} for i, c in enumerate(cos)
-                ]
+            if cos and len(idxs) >= len(cos):
+                off = 1 if len(idxs) > len(cos) else 0
+                filled = []
+                for i, c in enumerate(cos):
+                    if isinstance(c.get('at'), (int, float)):
+                        filled.append(c)
+                    else:
+                        filled.append({**c, 'at': round(caps[idxs[min(i + off, len(idxs) - 1)]]['start'] - cursor, 2)})
+                seg_args['callouts'] = filled
         # 讲解位：把本段每句的说话区间写进去，人物嘴型只在说话时动
         if s['type'] == 'talk' and idxs:
             seg_args['talking'] = [
@@ -234,6 +241,10 @@ def main():
 
     fps = float(src.get('fps') or 30)
     out = {**src}
+    # 段长是连续秒（TTS 实测），边界几乎必然落在两帧之间；不量化的结果是
+    # "恰好卡在切点的那一帧" 被判给上一段 —— 成片上看是一帧迟切，实测 MAE 0.1，
+    # 肉眼几乎看不出，但对抗审查会报 cut.duplicate。这里直接打开帧网格对齐。
+    out['snapToFrames'] = True
     out['mouthCurve'] = mouth_curve(np.frombuffer(buf[: int(SR * total)].tobytes(), dtype=np.int16), fps, total)
     out['durationSeconds'] = total
     out['captions'] = [
@@ -243,6 +254,9 @@ def main():
         {k: v for k, v in s.items() if not k.startswith('_')} for s in new_segs
     ]
     out['audio'] = str(out_wav)
+    # 把实际用到的音色写回 preset：否则成片与"声音是谁"脱钩，
+    # 事后既审计不了性别一致性，也复现不了同一条音轨。
+    out['voices'] = {sp: voice_of({'speaker': sp}) for sp in used}
     Path(a.out_preset).write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding='utf-8')
 
     print(f'\n新时长 {total:.2f}s（原 {sum(float(s["dur"]) for s in segs):.2f}s）')
