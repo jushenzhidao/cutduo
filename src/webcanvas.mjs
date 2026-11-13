@@ -17,7 +17,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
-import { registerFonts } from './fonts.mjs';
+import { registerFonts, registerHandFonts } from './fonts.mjs';
 
 /** 字重 → 已注册字体族。与 kits/science 的 FONT_MAP 同口径，避免两套宿主字形不一致。 */
 export function pickFont(weight) {
@@ -31,6 +31,13 @@ function boot(srcDir) {
   const win = { __MK_IMAGES: {}, __MK_FIGS: {} };
   win.window = win;
   win.__FONT_PICK = pickFont;
+  // 手写体族名：浏览器里 kit.js 自带的字体栈会回落到系统楷体，Skia 侧没有系统字体，
+  // 必须把注册名喂进去，否则歌词会退化成 Noto（字重对、字形不对）。
+  win.__FAM = {
+    kai: '"LXGW WenKai"',
+    kuai: '"ZCOOL KuaiLe"',
+    sans: pickFont(500),
+  };
   win.__createCanvas = createCanvas;
 
   for (const f of ['kit.js', 'layouts.js', 'stage.js']) {
@@ -60,6 +67,7 @@ function boot(srcDir) {
  */
 export function createWebCanvasRenderer(opts = {}) {
   registerFonts(); // 幂等；缺字体只告警不中断
+  registerHandFonts(); // 手写体可选：缺了就退化成 Noto，不阻断
   const srcDir = path.resolve(opts.srcDir);
   const templateDir = path.resolve(opts.templateDir || path.dirname(srcDir));
   const W = opts.width || 1920;

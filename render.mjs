@@ -16,9 +16,12 @@ import { Worker, isMainThread, parentPort, workerData } from 'node:worker_thread
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { createPaperRenderer, loadTokens } from './kits/paper/paper.mjs';
 import { createScienceRenderer } from './kits/science/science.mjs';
+import { applyProfile } from './kits/science/profile.mjs';
 import { createWebCanvasRenderer } from './src/webcanvas.mjs';
 import { createClayRenderer } from './kits/clay/clay.mjs';
+import { createCollageRenderer } from './kits/collage/collage.mjs';
 import { registerFonts } from './src/fonts.mjs';
+import { buildMix } from './src/audio-mix.mjs';
 import { REPO_ROOT, DIRS, resolveInput } from './src/root.mjs';
 
 
@@ -27,7 +30,7 @@ import { REPO_ROOT, DIRS, resolveInput } from './src/root.mjs';
  * 或直接的 src 目录。通用路径要求三件套 kit.js / layouts.js / stage.js。
  */
 function kitSpec(kit) {
-  if (kit === 'science' || kit === 'paper' || kit === 'clay') return { kind: kit };
+  if (kit === 'science' || kit === 'paper' || kit === 'clay' || kit === 'collage') return { kind: kit };
   // 三种写法都认：模板名 / 模板根目录 / src 目录本身
   const cands = [
     path.resolve(REPO_ROOT, 'templates', 'own', kit, 'src'),
@@ -37,7 +40,8 @@ function kitSpec(kit) {
   const srcDir = cands.find((d) => fs.existsSync(path.join(d, 'kit.js')));
   if (!srcDir) {
     throw new Error(
-      `找不到 kit：${kit}\n  试过：${cands.join('\n        ')}\n  可用：science / paper / <模板名>`
+      `找不到 kit：${kit}\n  试过：${cands.join('\n        ')}\n  可用：science / paper / clay / collage / <模板名>` +
+      '\n  模板须在 templates/own/<name>/src（三件套）或直接传目录路径'
     );
   }
   const templateDir = path.dirname(srcDir);
@@ -122,11 +126,22 @@ function normalizeSegments(segs) {
   });
 }
 
-function loadParams(file, fpsOverride) {
+function loadParams(file, fpsOverride, kit) {
   const d = JSON.parse(fs.readFileSync(file, 'utf8'));
-  const scenes = d.scenes || (Array.isArray(d.segments) ? normalizeSegments(d.segments) : []);
+  let scenes = d.scenes || (Array.isArray(d.segments) ? normalizeSegments(d.segments) : []);
   if (!scenes.length) throw new Error('params 里没有 scenes / segments');
   const fps = Number(fpsOverride || d.fps || 60);
+  // 帧网格对齐（opt-in）：dur 是浮点秒，累加会积出 1e-15 级误差，导致
+  // "恰好落在切点上的那一帧"被判给上一段——整帧错，MAE 30+，但人眼看不出成因。
+  // 打开 snapToFrames 后 t0/t1 一律取 round(t*fps)/fps，帧号即真相。
+  // 默认关闭：老 params 的段长不是帧整数倍，打开会把边界帧挪 1 帧，属于行为变更。
+  if (d.snapToFrames === true) {
+    const q = (x) => Math.round(x * fps) / fps;
+    for (const s of scenes) { s.t0 = q(s.t0); s.t1 = q(s.t1); }
+  }
+  // 外观档案（params.profile）：只覆盖几何/外观，不碰文案；args 显式写的优先。
+  // 放在帧网格对齐之前——档案里的值可能是小数秒级别的几何，和 t0/t1 无关。
+  if (d.profile && kit === 'science') scenes = applyProfile(scenes, d.profile);
   const duration = d.durationSeconds || scenes[scenes.length - 1].t1;
   return { ...d, scenes, captions: d.captions || [], fps, durationSeconds: duration, frames: Math.round(duration * fps) };
 }
@@ -145,21 +160,25 @@ if (!isMainThread) {
   registerFonts(DIRS.fonts);
   // fps 必须由主线程显式传入：params 里常是 24，CLI 的 --fps 60 只改主线程会导致
   // worker 按 24fps 计时（帧号/时间轴错位、成片被截短）。
-  const P = loadParams(params, fps);
+  const P = loadParams(params, fps, kit);
   const avatar = await loadAvatar(workerData.avatar);
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext('2d');
   const spec = kitSpec(kit);
-  const stageContent = { scenes: P.scenes, captions: P.captions, brand, subtitle, theme, fadeOutSeconds };
+  // content 是「与时间轴无关的内容块」（歌词/关键词/纸条这类）。
+  // 不显式透传的话，通用宿主只拿到 scenes，模板会静默变成"有画面没文字"。
+  const stageContent = { scenes: P.scenes, captions: P.captions, media: P.media, content: P.content || null, brand, subtitle, theme, fadeInSeconds: P.fadeInSeconds, fadeOutSeconds };
   const r = spec.kind === 'science'
     ? createScienceRenderer({ canvas, ctx, width: W, height: H, fps: P.fps, brand, subtitle, theme, fadeOutSeconds })
     : spec.kind === 'paper'
       ? createPaperRenderer({ ctx, tokens: tokensPath ? loadTokens(tokensPath) : undefined, palette, transition, transitionDur })
       : spec.kind === 'clay'
         ? createClayRenderer({ canvas, ctx, width: W, height: H, subtitle, brand })
+        : spec.kind === 'collage'
+        ? createCollageRenderer({ canvas, ctx, width: W, height: H, fps: P.fps })
         : createWebCanvasRenderer({ srcDir: spec.srcDir, templateDir: spec.templateDir, canvas, ctx, width: W, height: H });
   r.setContent(spec.kind === 'paper' ? { scenes: P.scenes, captions: P.captions, avatar } : stageContent);
-  if (spec.kind === 'science' || spec.kind === 'webcanvas') await r.ready();
+  if (spec.kind === 'science' || spec.kind === 'webcanvas' || spec.kind === 'collage') await r.ready();
 
   const ff = spawnPart(partArgs({
     pipe, fps: P.fps, width: W, height: H, crf, preset, jpeg, x264Threads, part,
@@ -169,7 +188,7 @@ if (!isMainThread) {
 } else {
   const t0 = Date.now();
   registerFonts(DIRS.fonts);
-  const P = loadParams(A.params, A.fps);
+  const P = loadParams(A.params, A.fps, A.kit);
 
   if (A.probe) {
     const avatar = await loadAvatar(A.avatar);
@@ -179,16 +198,18 @@ if (!isMainThread) {
     const canvas = createCanvas(OUT_W, OUT_H);
     const r0 = canvas.getContext('2d');
     const spec = SPEC;
-    const probeContent = { scenes: P.scenes, captions: P.captions, brand: P.brand, subtitle: P.subtitle, theme: P.theme, fadeOutSeconds: P.fadeOutSeconds };
+    const probeContent = { scenes: P.scenes, captions: P.captions, media: P.media, content: P.content || null, brand: P.brand, subtitle: P.subtitle, theme: P.theme, fadeInSeconds: P.fadeInSeconds, fadeOutSeconds: P.fadeOutSeconds };
     const r = spec.kind === 'science'
       ? createScienceRenderer({ canvas, ctx: r0, width: OUT_W, height: OUT_H, brand: P.brand, subtitle: P.subtitle, theme: P.theme, fadeOutSeconds: P.fadeOutSeconds })
       : spec.kind === 'paper'
         ? createPaperRenderer({ ctx: r0, palette: PALETTE })
         : spec.kind === 'clay'
           ? createClayRenderer({ canvas, ctx: r0, width: OUT_W, height: OUT_H, subtitle: P.subtitle, brand: P.brand })
+          : spec.kind === 'collage'
+          ? createCollageRenderer({ canvas, ctx: r0, width: OUT_W, height: OUT_H, fps: P.fps })
           : createWebCanvasRenderer({ srcDir: spec.srcDir, templateDir: spec.templateDir, canvas, ctx: r0, width: OUT_W, height: OUT_H });
     r.setContent(spec.kind === 'paper' ? { scenes: P.scenes, captions: P.captions, avatar } : probeContent);
-    if (spec.kind === 'science' || spec.kind === 'webcanvas') await r.ready();
+    if (spec.kind === 'science' || spec.kind === 'webcanvas' || spec.kind === 'collage') await r.ready();
     r.renderFrame(A.at);
     fs.writeFileSync(A.probe, canvas.toBuffer('image/png'));
     console.log('probe →', A.probe, `${P.frames} 帧计划`);
@@ -199,6 +220,26 @@ if (!isMainThread) {
   // params 显式声明 > 模板 manifest > 1920×1080
   const OUT_W = Number(P.width || SPEC.width || 1920);
   const OUT_H = Number(P.height || SPEC.height || 1080);
+
+  // 音频：params.audio 有事件轨/配乐时先混一条，再交给 concatParts。
+  // 优先级：--audio（命令行显式指定）> params.audio > 无音轨。
+  let audioPath = A.audio;
+  if (!A.audio && P.audio) {
+    const mixDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mixout-'));
+    const mixed = buildMix({
+      out: path.join(mixDir, 'mix.wav'),
+      duration: P.durationSeconds,
+      mode: P.audio.mode || 'external-music',
+      music: P.audio.music ? resolveInput(P.audio.music, false) : null,
+      voice: P.audio.voice ? resolveInput(P.audio.voice, false) : null,
+      cues: P.audio.cues || [],
+      musicGain: P.audio.musicGain,
+    });
+    if (mixed) {
+      audioPath = mixed;
+      console.log(`  音效事件 ${(P.audio.cues || []).length} 条 · 混音 → ${path.basename(mixed)}`);
+    }
+  }
 
   const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'skia-kit-'));
   const segs = planShards(P.frames, A.workers, TMP);
@@ -219,7 +260,7 @@ if (!isMainThread) {
 
   concatParts({
     parts: segs.map((s) => s.part), tmpDir: TMP, out: A.out,
-    audio: A.audio, fps: P.fps, frames: P.frames,
+    audio: audioPath, fps: P.fps, frames: P.frames,
   });
   fs.rmSync(TMP, { recursive: true, force: true });
   report({ out: A.out, frames: P.frames, fps: P.fps, startedAt: t0, workers: A.workers });

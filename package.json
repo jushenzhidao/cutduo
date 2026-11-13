@@ -5,7 +5,7 @@
   "description": "Skia 直出的视频管线：引擎 / 版式 / 内容 / 素材四分离，五套版式一条命令出片，不经过浏览器",
   "scripts": {
     "api": "node api/cli.mjs",
-    "api:cap": "node api/cli.mjs capabilities",
+    "api:cap": "node tools/gen-capabilities.mjs",
     "api:json": "node api/cli.mjs render --stdin --json",
     "paper": "node render.mjs --kit paper --params kits/paper/presets/v8t.json",
     "science": "node render.mjs --kit science --params kits/science/template/presets/demo.json",
@@ -19,7 +19,12 @@
     "inspect": "node tools/motion-render.mjs inspect --package templates/fixtures/workbuddy-distill.motion",
     "tpl:render": "node tools/motion-render.mjs render --package templates/fixtures/workbuddy-distill.motion --inputs content/inputs.json --out out/distill.mp4",
     "tpl:build": "python3 tools/build-template.py",
-    "mcp": "node mcp/server.mjs"
+    "mcp": "node mcp/server.mjs",
+    "api:cap:check": "node tools/gen-capabilities.mjs --check",
+    "verify:cal": "node tools/verify-calibration.mjs --params kits/science/template/presets/demo.vo.json",
+    "adv": "node tools/adversarial.mjs",
+    "web": "node web/server.mjs",
+    "harness": "node harness/run.mjs"
   },
   "dependencies": {
     "@napi-rs/canvas": "^1.1.0"

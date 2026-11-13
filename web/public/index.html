@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>科普视频 · 自助出片台</title>
+<style>
+  :root{
+    --ink:#2C3A3E; --ink2:#5B6B70; --line:#E3E8E6; --bg:#F6F8F7; --card:#FFFFFF;
+    --jade:#26A38C; --jade-d:#0E7A5F; --pop:#FD2551; --sun:#FFD84D; --blue:#2B7FD4;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+  header{padding:18px 24px;background:var(--card);border-bottom:1px solid var(--line);
+    display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;position:sticky;top:0;z-index:9}
+  header h1{margin:0;font-size:19px;letter-spacing:.5px}
+  header .sub{color:var(--ink2);font-size:13px}
+  .pill{margin-left:auto;font-size:12px;color:var(--ink2);background:#EEF4F2;
+    border:1px solid var(--line);border-radius:999px;padding:4px 12px}
+  main{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:20px;padding:20px 24px 60px;align-items:start}
+  @media(max-width:980px){main{grid-template-columns:1fr}}
+  section.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:16px}
+  h2{font-size:14px;margin:0 0 12px;letter-spacing:.5px;color:var(--ink2);font-weight:600}
+  label{display:block;font-size:12px;color:var(--ink2);margin:10px 0 4px}
+  input[type=text],textarea,select{width:100%;padding:9px 10px;border:1px solid var(--line);
+    border-radius:9px;font:inherit;color:var(--ink);background:#fff}
+  input:focus,textarea:focus,select:focus{outline:2px solid #CDEDE4;border-color:var(--jade)}
+  textarea{resize:vertical;min-height:64px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .seg{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px;background:#FCFDFC}
+  .seg-head{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+  .seg-head b{font-size:13px}
+  .seg-head .type{font-size:11px;color:#fff;background:var(--jade);border-radius:6px;padding:1px 7px}
+  .seg-head .sp{margin-left:auto;display:flex;gap:4px}
+  button{font:inherit;border:1px solid var(--line);background:#fff;color:var(--ink);
+    border-radius:9px;padding:8px 14px;cursor:pointer;transition:.15s}
+  button:hover{border-color:#C9D5D1;background:#F7FBFA}
+  button.primary{background:var(--jade-d);border-color:var(--jade-d);color:#fff}
+  button.primary:hover{background:#0b6551}
+  button.ghost{background:transparent;border-color:transparent;color:var(--ink2);padding:4px 8px}
+  button.ghost:hover{background:#EEF4F2}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .hint{font-size:12px;color:var(--ink2);margin-top:6px}
+  .err{color:var(--pop);font-size:12px}
+  .items{display:grid;gap:8px}
+  .item{display:grid;grid-template-columns:1fr 120px 84px auto;gap:8px;align-items:center}
+  .item.tip{grid-template-columns:1fr auto}
+  .swatch{width:26px;height:26px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line)}
+  .bar{height:8px;background:#EDF2F0;border-radius:999px;overflow:hidden}
+  .bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--jade),var(--jade-d));transition:width .4s}
+  .stages{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--ink2)}
+  .stages span{padding:2px 8px;border-radius:999px;background:#F0F4F3;border:1px solid transparent}
+  .stages span.on{background:#E4F4EF;border-color:#BFE3D8;color:var(--jade-d)}
+  .stages span.err{background:#FDE8ED;border-color:#F8C6D3;color:var(--pop)}
+  video{width:100%;border-radius:12px;background:#000;margin-top:10px}
+  .meta{font-size:12px;color:var(--ink2);margin-top:8px;display:flex;gap:14px;flex-wrap:wrap}
+  .jobs{font-size:12.5px;max-height:220px;overflow:auto}
+  .jobs a{color:var(--blue);text-decoration:none}
+  .jobs div{padding:5px 0;border-bottom:1px dashed var(--line)}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:#fff;
+    padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:.25s}
+  .toast.on{opacity:1}
+  .kbd{font:11px/1 ui-monospace,monospace;background:#F0F4F3;border:1px solid var(--line);border-radius:4px;padding:2px 5px}
+</style>
+</head>
+<body>
+<header>
+  <h1>科普视频 · 自助出片台</h1>
+  <span class="sub">填内容 → 系统配音、排版、出片 → 下载 MP4</span>
+  <span class="pill" id="pool">并发上限 —</span>
+</header>
+
+<main>
+  <div>
+    <section class="card">
+      <h2>① 品牌与声音</h2>
+      <div class="row">
+        <div><label>角标文字</label><input type="text" id="brandText" placeholder="例：儿童骨科科普"></div>
+        <div><label>角标副行（英文）</label><input type="text" id="brandTag" placeholder="SCIENCE EXPLAINER"></div>
+      </div>
+      <div class="row3">
+        <div><label>配音音色</label><select id="voice"></select></div>
+        <div><label>语速</label><select id="rate">
+          <option value="+0%">正常</option><option value="+5%" selected>稍快 +5%</option><option value="+10%">快 +10%</option>
+        </select></div>
+        <div><label>背景音乐</label><select id="bgm"><option value="1" selected>加（轻垫）</option><option value="0">不加</option></select></div>
+      </div>
+      <p class="hint">选男声时会自动换成男性讲解员，避免「男声配女像」。</p>
+    </section>
+
+    <section class="card">
+      <h2>② 分段内容 <span class="hint" style="font-weight:400">（每段的「口播」一行一句，行数=字幕条数）</span></h2>
+      <div id="segs"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="addSeg('talk')">+ 讲解</button>
+        <button onclick="addSeg('matrix')">+ 要点阵列</button>
+        <button onclick="addSeg('tip')">+ 便签提醒</button>
+        <button class="ghost" onclick="loadSample()">填入示例</button>
+      </div>
+    </section>
+  </div>
+
+  <div>
+    <section class="card">
+      <h2>③ 生成</h2>
+      <div style="display:flex;gap:8px">
+        <button class="primary" id="btnGen" onclick="generate()">开始生成</button>
+        <button id="btnCheck" onclick="validateOnly()">只校验</button>
+      </div>
+      <div id="errors" class="err" style="margin-top:10px"></div>
+      <div id="prog" style="display:none;margin-top:14px">
+        <div class="bar"><i id="bar"></i></div>
+        <div class="stages" id="stages"></div>
+        <div class="hint" id="stageMsg"></div>
+      </div>
+      <div id="result"></div>
+    </section>
+
+    <section class="card">
+      <h2>最近生成</h2>
+      <div class="jobs" id="jobs"><span class="hint">暂无</span></div>
+    </section>
+
+    <section class="card">
+      <h2>容量上限（超了会拦下，不会偷偷缩字号）</h2>
+      <div id="caps" class="hint"></div>
+    </section>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TYPES = { cover:'封面', talk:'讲解位', matrix:'要点阵列', tip:'便签', outro:'结尾' };
+let META = null;
+let state = null;
+let pollTimer = null;
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2200); }
+
+async function boot(){
+  META = await (await fetch('/api/spec')).json();
+  $('pool').textContent = `并发上限 ${META.maxJobs} · 排队自动补位`;
+  $('voice').innerHTML = META.voices.map(v=>`<option value="${v.id}">${esc(v.label)}</option>`).join('');
+  $('caps').innerHTML = Object.entries(META.capacity).map(([k,c])=>`${esc(c.label)} ≤ ${c.max} 字`).join(' · ');
+  loadSample();
+  refreshJobs();
+  setInterval(refreshJobs, 8000);
+}
+
+function loadSample(){
+  const s = structuredClone(META.sample);
+  state = s;
+  $('brandText').value = s.brandText || '';
+  $('brandTag').value = s.brandTag || '';
+  $('voice').value = s.voice || META.voices[0].id;
+  $('rate').value = s.rate || '+5%';
+  $('bgm').value = s.bgm ? '1' : '0';
+  renderSegs();
+}
+
+function renderSegs(){
+  const box = $('segs');
+  box.innerHTML = '';
+  state.segments.forEach((seg, i) => box.appendChild(segCard(seg, i)));
+}
+
+function field(label, key, val, ph, segIdx, extra=''){
+  return `<div><label>${label}</label><input type="text" data-seg="${segIdx}" data-k="${key}"
+    value="${esc(val||'')}" placeholder="${esc(ph||'')}" ${extra}></div>`;
+}
+
+function segCard(seg, i){
+  const el = document.createElement('div');
+  el.className = 'seg';
+  const canDel = seg.type !== 'cover' && seg.type !== 'outro';
+  let body = '';
+
+  if (seg.type === 'cover') {
+    body = `<div class="row">${field('前缀（爆炸贴左侧小字）','prefix',seg.prefix,'孩子走路',i)}
+      ${field('主词（≤6 字，爆炸贴里）','title',seg.title,'一瘸一拐',i)}</div>
+      <div class="row">${field('副标（≤16 字，黄色标签）','sub',seg.sub,'先别当成摔伤',i)}
+      ${field('底部小字（可空）','hint',seg.hint,'儿童骨科科普 · 2 分钟看懂',i)}</div>`;
+  } else if (seg.type === 'talk') {
+    body = `<div class="row3">${field('小眉标','eyebrow',seg.eyebrow,'最容易被漏掉的一点',i)}
+      ${field('大字第一行（≤9 字）','line1',seg.line1,'喊膝盖疼',i)}
+      ${field('大字第二行（≤9 字，可空）','line2',seg.line2,'问题可能在髋',i)}</div>
+      <div class="row">
+        <div><label>贴纸</label><select data-seg="${i}" data-k="sticker">
+          <option value="">无</option>${META.stickers.map(s=>`<option value="${s}" ${seg.sticker===s?'selected':''}>${s}</option>`).join('')}
+        </select></div>
+        <div><label>手势</label><select data-seg="${i}" data-k="gesture">
+          ${['idle','explain','point','open','count','nod'].map(g=>`<option value="${g}" ${seg.gesture===g?'selected':''}>${g}</option>`).join('')}
+        </select></div>
+      </div>`;
+  } else if (seg.type === 'matrix') {
+    const items = seg.items || [];
+    body = `${field('标题','matrixTitle',seg.matrixTitle,'跛行的常见原因',i)}
+      <label>卡片（2–6 张）</label><div class="items">
+      ${items.map((it,k)=>`<div class="item">
+        <input type="text" data-seg="${i}" data-k="item-label" data-idx="${k}" value="${esc(it.label||'')}" placeholder="标签 ≤5 字">
+        <select data-seg="${i}" data-k="item-icon" data-idx="${k}">
+          ${META.icons.map(ic=>`<option value="${ic}" ${it.icon===ic?'selected':''}>${ic}</option>`).join('')}
+        </select>
+        <select data-seg="${i}" data-k="item-disc" data-idx="${k}">
+          ${META.discs.map(d=>`<option value="${d}" ${it.disc===d?'selected':''}>${d}</option>`).join('')}
+        </select>
+        <button class="ghost" onclick="delItem(${i},${k})">删</button></div>`).join('')}
+      </div><button class="ghost" style="margin-top:6px" onclick="addItem(${i})">+ 加一张卡</button>`;
+  } else if (seg.type === 'tip') {
+    const items = seg.items || [];
+    body = `<div class="row">${field('便签抬头','tipHead',seg.tipHead,'就医信号',i)}
+      ${field('便签标题（≤12 字）','tipTitle',seg.tipTitle,'这三种情况立刻去',i)}</div>
+      <label>条目（正好 3 条，便签纸只能容 3 行）</label><div class="items">
+      ${[0,1,2].map(k=>`<div class="item tip">
+        <input type="text" data-seg="${i}" data-k="tip-label" data-idx="${k}" value="${esc((items[k]&&items[k].label)||'')}" placeholder="第 ${k+1} 条 ≤10 字">
+        </div>`).join('')}
+      </div>`;
+  } else if (seg.type === 'outro') {
+    body = `<div class="row">${field('结语第一行（≤6 字）','line1',seg.line1,'早发现',i)}
+      ${field('结语第二行（≤6 字）','line2',seg.line2,'早评估',i)}</div>
+      ${field('免责声明（≤24 字）','note',seg.note,'科普内容仅供参考 · 具体诊疗请遵医嘱',i)}`;
+  }
+
+  el.innerHTML = `<div class="seg-head">
+      <b>${String(i+1).padStart(2,'0')}</b>
+      <span class="type">${TYPES[seg.type]||seg.type}</span>
+      <span class="sp">
+        ${canDel?`<button class="ghost" onclick="delSeg(${i})">删</button>`:''}
+      </span></div>
+    ${body}
+    <label style="margin-top:10px">口播（一行一句 · ≤26 字/句）
+      ${seg.type==='outro'?'<span class="hint">结尾不需要口播</span>':''}</label>
+    <textarea data-seg="${i}" data-k="speech" ${seg.type==='outro'?'disabled style="opacity:.45"':''}
+      placeholder="孩子突然走路一瘸一拐，家长第一反应是摔伤了">${esc(seg.speech||'')}</textarea>`;
+  return el;
+}
+
+document.addEventListener('input', (e) => {
+  const t = e.target; const i = t.dataset.seg; const k = t.dataset.k;
+  if (i == null || !k) return;
+  const seg = state.segments[Number(i)];
+  const idx = t.dataset.idx != null ? Number(t.dataset.idx) : null;
+  if (k === 'speech') seg.speech = t.value;
+  else if (k.startsWith('item-')) {
+    const key = k.slice(5); seg.items = seg.items || [];
+    seg.items[idx] = seg.items[idx] || {};
+    seg.items[idx][key === 'label' ? 'label' : key] = t.value;
+  } else if (k === 'tip-label') {
+    seg.items = seg.items || [{},{},{}];
+    seg.items[idx] = seg.items[idx] || {};
+    seg.items[idx].label = t.value;
+  } else seg[k] = t.value;
+});
+
+document.addEventListener('change', (e) => {
+  const t = e.target; const i = t.dataset.seg; const k = t.dataset.k;
+  if (i == null || !k) return;
+  const seg = state.segments[Number(i)];
+  const idx = t.dataset.idx != null ? Number(t.dataset.idx) : null;
+  if (k === 'item-icon' || k === 'item-disc' || k === 'item-label') {
+    seg.items = seg.items || []; seg.items[idx] = seg.items[idx] || {};
+    seg.items[idx][k.split('-')[1]] = t.value;
+  } else seg[k] = t.value;
+});
+
+function addSeg(type){
+  const seg = type === 'tip'
+    ? { type, tipHead:'', tipTitle:'', items:[{label:''},{label:''},{label:''}], speech:'' }
+    : { type, matrixTitle:'', items:[{label:''},{label:''},{label:''},{label:''}], speech:'' };
+  const outroAt = state.segments.findIndex(s => s.type === 'outro');
+  state.segments.splice(outroAt < 0 ? state.segments.length : outroAt, 0, seg);
+  renderSegs();
+}
+function delSeg(i){ state.segments.splice(i,1); renderSegs(); }
+function addItem(i){ const s = state.segments[i]; s.items = s.items || []; s.items.push({ label:'', icon:'shield' }); renderSegs(); }
+function delItem(i,k){ const s = state.segments[i]; s.items.splice(k,1); renderSegs(); }
+
+function collect(){
+  return {
+    brandText: $('brandText').value, brandTag: $('brandTag').value,
+    voice: $('voice').value, rate: $('rate').value, bgm: $('bgm').value === '1',
+    segments: state.segments,
+  };
+}
+
+function showErrors(list){
+  $('errors').innerHTML = (list && list.length)
+    ? list.slice(0, 8).map(e => `· ${esc(e.msg)}`).join('<br>') : '';
+}
+
+async function validateOnly(){
+  const r = await fetch('/api/validate', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(collect()) }).then(r=>r.json());
+  showErrors(r.errors);
+  if (r.ok) toast(`校验通过：${r.segments} 段 / ${r.captions} 句`);
+}
+
+const STAGE_ORDER = ['validate','tts','render','bgm','gate','done'];
+const STAGE_NAME = { validate:'校验', tts:'配音', render:'渲染', bgm:'配乐', gate:'门禁', done:'完成', queued:'排队', starting:'启动' };
+
+function paintStages(st){
+  const idx = STAGE_ORDER.indexOf(st.stage);
+  $('stages').innerHTML = STAGE_ORDER.map((k,i)=>{
+    const cls = st.failed && i === Math.max(idx,0) ? 'err' : (i <= idx ? 'on' : '');
+    return `<span class="${cls}">${STAGE_NAME[k]||k}</span>`;
+  }).join('');
+  $('bar').style.width = (st.pct || 0) + '%';
+  $('stageMsg').textContent = st.msg ? `${st.msg}${st.pct ? ' · ' + st.pct + '%' : ''}` : '';
+}
+
+async function generate(){
+  $('btnGen').disabled = true; $('result').innerHTML = ''; showErrors([]);
+  $('prog').style.display = 'block'; paintStages({ stage:'queued', pct:2, msg:'提交中' });
+  const res = await fetch('/api/jobs', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(collect()) });
+  const j = await res.json();
+  if (!res.ok) { showErrors(j.errors || [{msg:j.error}]); $('btnGen').disabled = false; $('prog').style.display='none'; return; }
+  toast(j.queued ? '已排队，前面还有任务' : '已开始');
+  poll(j.jobId);
+}
+
+function poll(id){
+  clearInterval(pollTimer);
+  const tick = async () => {
+    const st = await fetch(`/api/jobs/${id}`).then(r=>r.json()).catch(()=>({stage:'unknown',msg:'网络中断'}));
+    paintStages(st);
+    if (st.failed) {
+      clearInterval(pollTimer); $('btnGen').disabled = false;
+      showErrors((st.errors||[]).concat(st.error?[{msg:st.error.split('\n').pop()}]:[]));
+      toast('生成失败'); return;
+    }
+    if (st.stage === 'done') {
+      clearInterval(pollTimer); $('btnGen').disabled = false;
+      $('result').innerHTML = `<video controls autoplay playsinline src="${st.videoUrl}"></video>
+        <div class="meta"><span>${st.durationSeconds ? st.durationSeconds.toFixed(1)+'s' : ''}</span>
+        <span>${st.sizeMB||''} MB</span><span>${st.segments||''} 段 / ${st.captions||''} 句</span>
+        <span>门禁 ${esc((st.gate&&st.gate.verdict)||'—')}</span>
+        <a href="${st.videoUrl}" download>下载 MP4</a></div>`;
+      refreshJobs(); return;
+    }
+  };
+  tick();
+  pollTimer = setInterval(tick, 1200);
+}
+
+async function refreshJobs(){
+  const d = await fetch('/api/jobs?limit=8').then(r=>r.json()).catch(()=>null);
+  if (!d) return;
+  $('pool').textContent = `并发上限 ${d.maxJobs} · 运行中 ${d.jobs.filter(j=>!j.failed&&j.stage!=='done').length}`;
+  $('jobs').innerHTML = d.jobs.length ? d.jobs.map(j=>{
+    const st = j.failed ? '<span style="color:var(--pop)">失败</span>'
+      : j.stage === 'done' ? '已完成' : (STAGE_NAME[j.stage]||j.stage) + ' ' + (j.pct||0) + '%';
+    return `<div>${esc(j.id)} · ${st}${j.stage==='done'?` · <a href="/api/jobs/${j.id}/video" target="_blank">播放</a>`:''}</div>`;
+  }).join('') : '<span class="hint">暂无</span>';
+}
+
+boot();
+</script>
+</body>
+</html>

@@ -80,9 +80,22 @@ async function loadClips(P, t0 = -1e9, t1 = 1e9) {
 
 async function loadPhotos(P) {
   const out = {};
+  // 缺失必须在这里就汇总出来：原先 `catch { /* skip */ }` 让缺图完全静默，
+  // 直到渲染到那个镜头才抛「photo "x" 没有注入素材」，而且不带文件路径。
+  // 2026-11-13 用这条查出了 24 处失效引用（edits/assets → assets/media 没回写）。
+  const missing = [];
   for (const [k, rel] of Object.entries(P.photos || {})) {
     const f = resolveInput(rel, false);
-    if (f && fs.existsSync(f)) { try { out[k] = await loadImage(f); } catch { /* skip */ } }
+    if (!f || !fs.existsSync(f)) { missing.push(`${k} → ${rel}（文件不存在）`); continue; }
+    try {
+      out[k] = await loadImage(f);
+    } catch (e) {
+      missing.push(`${k} → ${rel}（解码失败：${e.message}）`);
+    }
+  }
+  if (missing.length) {
+    console.warn(`⚠ ${missing.length} 张照片未载入；渲染到对应镜头会抛错：`);
+    for (const m of missing) console.warn(`    ${m}`);
   }
   return out;
 }
