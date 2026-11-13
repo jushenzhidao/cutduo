@@ -1,0 +1,273 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "cute-mv params",
+  "description": "内容契约对齐上游 cute-character-lyric-mv v1.0.1：三类可替换内容（lyrics / keywords / notes）+ 固定 9 镜头时间轴。版式序列是 recipe，不是可选项。",
+  "type": "object",
+  "required": [
+    "segments",
+    "content"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "durationSeconds": {
+      "type": "number",
+      "minimum": 33,
+      "maximum": 33,
+      "description": "固定 33 秒。上游 durationPolicy = fixed，改时长会破 9 镜头的动作语义"
+    },
+    "fps": {
+      "type": "number",
+      "minimum": 24,
+      "maximum": 60
+    },
+    "width": {
+      "type": "number",
+      "minimum": 1080,
+      "maximum": 3840
+    },
+    "height": {
+      "type": "number",
+      "minimum": 720,
+      "maximum": 2160
+    },
+    "fadeInSeconds": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 2
+    },
+    "fadeOutSeconds": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 2
+    },
+    "lyricStyle": {
+      "type": "object",
+      "description": "歌词条样式。字高下限 56（1920 宽实测），低于此手机不可读",
+      "additionalProperties": false,
+      "properties": {
+        "size": {
+          "type": "number",
+          "minimum": 44,
+          "maximum": 96
+        },
+        "bottom": {
+          "type": "number",
+          "minimum": 40,
+          "maximum": 240
+        },
+        "track": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "color": {
+          "type": "string"
+        }
+      }
+    },
+    "segments": {
+      "type": "array",
+      "description": "9 个固定镜头。type 取自 guide.layouts[].type；dur 之和必须等于 33 秒，顺序不可调换",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "dur"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "street",
+              "cloud",
+              "room",
+              "park",
+              "city",
+              "hill",
+              "paper",
+              "dusk",
+              "final"
+            ]
+          },
+          "dur": {
+            "type": "number",
+            "minimum": 2.5,
+            "maximum": 5,
+            "description": "本镜头时长；9 段之和必须 = 33.0（4.25/3.65/3.15/4.25/4.5/3.95/2.8/3.25/3.2）"
+          },
+          "args": {
+            "type": "object",
+            "description": "镜头机位：x/y 是脚底坐标，s 是人物缩放，pose 是动作名",
+            "additionalProperties": false,
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1920
+              },
+              "y": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1080
+              },
+              "s": {
+                "type": "number",
+                "minimum": 0.4,
+                "maximum": 2
+              },
+              "pose": {
+                "type": "string",
+                "enum": [
+                  "wave",
+                  "umbrella",
+                  "hold",
+                  "throw",
+                  "lookup",
+                  "point",
+                  "draw",
+                  "shade",
+                  "hands"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "content": {
+      "type": "object",
+      "description": "对齐上游三字段。三类都有条数上限，超了不是排版问题而是内容问题：字会压到人物身上",
+      "required": [
+        "lyrics"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "lyrics": {
+          "type": "array",
+          "maxItems": 12,
+          "description": "歌词条。容量：62px 下 26 字仍可读，但语义上一条不要超过 14 字",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "s",
+              "e",
+              "zh"
+            ],
+            "properties": {
+              "s": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 33
+              },
+              "e": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 33
+              },
+              "zh": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              }
+            }
+          }
+        },
+        "keywords": {
+          "type": "array",
+          "maxItems": 12,
+          "description": "3D 关键词大字。默认落在顶部 130px 处，与人物头部不重叠",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "s",
+              "e",
+              "text"
+            ],
+            "properties": {
+              "s": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 33
+              },
+              "e": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 33
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1920
+              },
+              "y": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1080
+              },
+              "size": {
+                "type": "number",
+                "minimum": 24,
+                "maximum": 240
+              }
+            }
+          }
+        },
+        "notes": {
+          "type": "array",
+          "maxItems": 6,
+          "description": "手写纸条。text 里的 \\n 换行，一行不超过 6 字（40px 下定宽）",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "s",
+              "e",
+              "text"
+            ],
+            "properties": {
+              "s": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 33
+              },
+              "e": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 33
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1920
+              },
+              "y": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1080
+              },
+              "rot": {
+                "type": "number",
+                "minimum": -25,
+                "maximum": 25
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

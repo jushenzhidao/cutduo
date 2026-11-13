@@ -19,15 +19,16 @@ node bench/motion-host/check-hostable.mjs --json   # 同上，输出 JSON
 
 | 模板 | 实测 | 备注 |
 |---|---|---|
-| `../../motiongit-lab/templates/vendor/mac-desktop/` | 24 worker **480 fps**（官方 55 fps 的 8.7×） | 目前换宿主最优的一个 |
-| `../../motiongit-lab/templates/vendor/knowledge-explainer-sketchnote/` | 通用图解 **184 fps**；手绘 native 单核 **14 fps** | 判据脚本现标 ✗（6 处非 canvas `createElement`），实测是 iframe / script / 进度条 div / video 四条**未被内容触达**的路径，实际可换 |
+| `refs/vendor/mac-desktop/` | 24 worker **480 fps**（官方 55 fps 的 8.7×） | 目前换宿主最优的一个 |
+| `refs/vendor/knowledge-explainer-sketchnote/` | 通用图解 **184 fps**；手绘 native 单核 **14 fps** | 判据脚本现标 ✗（6 处非 canvas `createElement`），实测是 iframe / script / 进度条 div / video 四条**未被内容触达**的路径，实际可换 |
+| **`kits/clay/`** | 2100 帧 / 70s / **8.0s（262 fps）** / 1.89MB | 2026-11-13 落地。上游 `native-python-node/1`，但绘制层是纯 Canvas2D，**原样跑 `native-clay.js`**，只接管 window / 字体 / 背景 / 段边界。见 `kits/clay/README.md` |
 
 sketchnote 的手绘 native 族单核只有 14 fps（每帧上万次绘制 + 逐笔记账），**必须多进程才划算**：
 12 worker 138.9 fps，比 Chrome 8 实例的 32.9 fps 快 4.2×。
 
 ## 落点与脚本
 
-- 模板：`motiongit-lab/templates/vendor/<name>/`（**原封不动**）
+- 模板：`refs/vendor/<name>/`（**原封不动**）
 - 宿主 shim：`motiongit-lab/bench/motion-host/<name>-host.mjs`
 - 单帧探针：`bench/motion-host/poc-<name>.mjs`
 - 整片：`bench/motion-host/render-*-<name>.mjs`

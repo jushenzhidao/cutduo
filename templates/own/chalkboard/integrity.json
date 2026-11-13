@@ -1,0 +1,28 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "README.md": "374b3be8096c8a80dd0e6b792c10f336ed529d302d7c9be4135468f485e5b5d5",
+    "SKIA-SPEC.md": "b538bec674e6daf9d3ed05644ba015fdb9c3a46f849d081f50dee786fb97ec75",
+    "SKILL.md": "1c92523b8fb30b8d1c8e1d64529fbfc9b4d94f36c3ef3342c9734d0a8fb78897",
+    "SPEC.md": "f4f50a5877563f20b168e2446c7823028d0808a16565c375c5f63d2ec16e5011",
+    "asset-manifest.json": "55ae56c7b2ac76b1c8ad41588328b3720ace627e39a908315bf777b9827d7cda",
+    "assets/placeholder.png": "570f27db543abd48e35eb6dfbcfffd5a7adbd136a3f7478ad7ef665a177fddf7",
+    "guide.json": "0c5dc1cfbeecf801fdfe055cbbc2461821565bc38907e478f5913c88bffa272b",
+    "licenses/TEMPLATE-LICENSE.txt": "f45ee1ab3e1234ccb521b79a964db74693f768a75ea1c89b8c06b460f563666b",
+    "licenses/longcang-OFL.txt": "603546b7219a94bb59bf8294458194a5010119486354092b66a09a3fd61aeacc",
+    "licenses/lxgwwenkai-OFL.txt": "67c5d5206b96f8340b95fabd02ae60701e0b20ce2594d976216f1065e5aa3822",
+    "motion.json": "f035b7f13eb33de41c9cd45b149eb4792e56971bdb2ea2c94385cffa6ecf7dd1",
+    "motion.lock.json": "222d8d6459c8400dfa4b2da144c9f069242d668ff5070b6f15a1a31f5e7c2e47",
+    "params.schema.json": "c82d42898415ac3b4a5abbb5ce72d25c4660e471384c1384217e7105be87755a",
+    "presets/default.json": "945c66f312381144ea732e0940595d080894205c3ceb41319d96e808b5de2411",
+    "presets/recipes.json": "54cf0e4d5e1571b0ca7daa196d1b9f214bf56d32dbdefde90a0a7bc520ed7302",
+    "presets/voiced.json": "1aa760c730aea8612ce51abaf05121a23406c64f60950992f2467cf3da65a117",
+    "presets/voiced.vo.json": "1dee915854d014f6d30ffbfba169f64e8b5decba4da717f0b2d17aab63ac5f8e",
+    "src/index.html": "953470ee326714dc4303b32a2c0d9b451a252502f4330fbf7d45bc65a31a4959",
+    "src/kit.js": "8f01e6116e6feabf40b2344fac4a7cfde829ce82452dc78b046254651425b859",
+    "src/layouts.js": "a474bf0df9a5bd4206b45bc9a2cf6424e4793ebff254ca08bcda03df5f699875",
+    "src/main.js": "3ee9910aeb80c652ff0ff1796596f082e5c8e96c862b94cf7988c4539d810b7d",
+    "src/stage.js": "75173ceeac46503076d56486621b2ede7e15cfdd572b02abc2c2c46315fcb6c4",
+    "tools/vo.py": "6dbf4bfea695f3e42218979ff9fc74dea07ba2b368747b3478ae396f93ad4030"
+  }
+}

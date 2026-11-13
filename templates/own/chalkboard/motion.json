@@ -1,0 +1,65 @@
+{
+  "$schema": "https://motiongit.com/schema/motion/0.1.json",
+  "format": "motiongit-template",
+  "specVersion": "0.1.0-draft.1",
+  "template": {
+    "id": "chalkboard",
+    "version": "0.1.0",
+    "name": "粉笔黑板",
+    "status": "ready",
+    "distilledFrom": {
+      "source": "knowledge-explainer-chalkboard v2.7.4（@adunext，MotionGit）",
+      "durationSeconds": 209.98,
+      "resolution": "1920x1080",
+      "fps": 60,
+      "shots": 32,
+      "medianShotSeconds": 6.56,
+      "note": "借 8 个 mechanism 的字段契约与几何语义（相位角/本影锥/圆面重叠/光路求交/条件谓词），渲染层自写。未复制素材、文案、品牌标识、13 类通用图示库与 102 个图标。"
+    }
+  },
+  "runtime": {
+    "profile": "html-canvas/1",
+    "engine": "motiongit-reference",
+    "entry": "src/index.html",
+    "dependencyLock": "motion.lock.json"
+  },
+  "parameters": {
+    "schema": "params.schema.json",
+    "defaultPreset": "presets/default.json"
+  },
+  "assets": {
+    "manifest": "asset-manifest.json"
+  },
+  "output": {
+    "width": 1920,
+    "height": 1080,
+    "fps": {
+      "num": 30,
+      "den": 1
+    },
+    "durationPolicy": "fixed",
+    "durationSeconds": 34
+  },
+  "preview": {
+    "preset": "presets/default.json"
+  },
+  "license": {
+    "file": "licenses/TEMPLATE-LICENSE.txt"
+  },
+  "permissions": {
+    "network": false,
+    "read": [
+      "package",
+      "instance-inputs"
+    ],
+    "write": [
+      "instance-output"
+    ]
+  },
+  "ai": {
+    "entry": "SKILL.md",
+    "guide": "guide.json",
+    "summary": "粉笔黑板视频模板"
+  },
+  "integrity": "integrity.json"
+}

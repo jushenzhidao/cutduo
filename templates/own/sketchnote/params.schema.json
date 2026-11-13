@@ -1,0 +1,179 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "sketchnote params",
+  "type": "object",
+  "required": [
+    "segments"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "durationSeconds": {
+      "type": "number",
+      "minimum": 4,
+      "maximum": 600,
+      "description": "成片总时长（秒）；必须等于 segments 的 dur 累加，否则末段被截断"
+    },
+    "fps": {
+      "type": "number",
+      "minimum": 12,
+      "maximum": 60
+    },
+    "fadeOutSeconds": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 3
+    },
+    "theme": {
+      "type": "object",
+      "description": "强调色与底色。改这里即可换品牌色，不必改源码",
+      "properties": {
+        "bg": {
+          "type": "string"
+        },
+        "ink": {
+          "type": "string"
+        },
+        "accent": {
+          "type": "string"
+        }
+      }
+    },
+    "brand": {
+      "type": "object",
+      "description": "角标。show=false 或整段省略则不画",
+      "properties": {
+        "show": {
+          "type": "boolean"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 16
+        }
+      }
+    },
+    "subtitle": {
+      "type": "object",
+      "description": "字幕样式。字高下限见 guide.layout 与 pitfalls，不要低于实测值",
+      "properties": {
+        "size": {
+          "type": "number",
+          "minimum": 32,
+          "maximum": 96
+        },
+        "color": {
+          "type": "string"
+        },
+        "stroke": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 24
+        },
+        "strokeColor": {
+          "type": "string"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    },
+    "captions": {
+      "type": "array",
+      "description": "口播字幕时间轴；相邻两条留 0.1s 以上间隙，避免同帧双条",
+      "items": {
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "text"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "start": {
+            "type": "number",
+            "minimum": 0
+          },
+          "end": {
+            "type": "number",
+            "minimum": 0
+          },
+          "text": {
+            "type": "string"
+          },
+          "speaker": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "segments": {
+      "type": "array",
+      "description": "镜头序列。type 必须取自 guide.layouts[].type",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "dur"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "dur": {
+            "type": "number",
+            "minimum": 0.3
+          },
+          "title": {
+            "type": "string"
+          },
+          "sub": {
+            "type": "string"
+          },
+          "point": {
+            "type": "string"
+          },
+          "figure": {
+            "type": "string"
+          },
+          "args": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "段参数；键名必须是版式声明的参数",
+            "properties": {
+              "conclusion": {
+                "description": "收束语，1–2 条，每条 ≤20 字",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "items": {
+                "description": "步骤数组 2–6 项，每项 {id, label, icon, highlight, notes}",
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "return": {
+                "description": "{fromId, toId, label}：从哪回到哪、这条箭头上写什么（≤12 字）",
+                "type": "object"
+              },
+              "revision": {
+                "description": "{targetId, lines[]}：改哪一张、改成什么（1–2 行，每行 ≤18 字）",
+                "type": "object"
+              },
+              "subtitle": {
+                "description": "副题，≤44 字",
+                "type": "string"
+              },
+              "title": {
+                "description": "标题，≤28 字",
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

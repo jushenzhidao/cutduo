@@ -7,8 +7,16 @@
 | **类型层** | `01-original/` ～ `04-full-distill/` | 这条模板**停在哪一级**（原版 / 换宿主 / 半蒸馏 / 全蒸馏） |
 | **索引层** | 本文件第二节 | 要出这种画面，**跑哪个文件、喂哪份参数** |
 
-四个类型目录里只有 `README.md`，**不放代码与参数副本**——物理模板一律在 `templates/own/` 与 `refs/vendor/`。
-这不是洁癖：`own/` 与 `vendor/` 是按「能不能分发」分的，属凭据与许可的硬约束；
+四个类型目录里只有 `README.md`，**不放代码与参数副本**。物理模板有两处，性质不同：
+
+| 位置 | 是什么 | 例子 |
+|---|---|---|
+| `templates/own/<name>/` | 可分发模板资产，可能是上游原版存档 | `distill`、`editorial`（上游 DOM 版；Skia 实现在 `kits/editorial/`） |
+| `kits/<name>/template/` | **渲染器源码本体**，改它等于改成片 | `science`（`science.mjs` 逐字加载它） |
+
+判据：**有没有代码在执行它**。同名不等于同物——这跟「重复」是两回事。
+
+`own/` 与 `vendor/` 是按「能不能分发」分的（`vendor` 实际在 `refs/vendor/`，整目录不入库），属凭据与许可的硬约束；
 接入深度是过程属性，会随投入变化（今天原版、明天换宿主），按它搬文件会让路径天天变。
 沿用 `docs/AGENTS.md` §0 末段「路径稳定性优先于整齐」。
 
@@ -58,6 +66,9 @@ node render.mjs --kit <模板名> --params templates/own/<模板名>/presets/def
 
 `--kit` 先查 `science`/`paper` 内置适配器，再按 `templates/own/<模板名>/src` 找三件套，
 最后当作目录路径。这三件套就是 `templates/_scaffold/` 生成出来的形态。
+
+现有三件套模板：`sketchnote`（手绘解说）、`chalkboard`（粉笔黑板）、`night-card`、
+`cute-mv`（可爱角色歌词 MV）。四者都不占内置代号，直接 `--kit <名字>` 调用。
 
 > 别把「接入深度四级」和「模板内部五层」搞混：前者是本文件回答的（这条模板停在哪一级），
 > 后者是 `templates/_scaffold/README.md` 回答的（一份模板内部该有哪些文件）。两者正交。
@@ -111,6 +122,18 @@ uv run python tools/check-template.py --src templates/own/my-template
 `stage.js` 承担宿主无关的编排（浏览器与 Skia 共用同一份，不各写一遍）。
 它解决的是「结构完整且能被工具认」；画面语言必须自己写。
 
+**从现成模板半蒸馏**（不是从零写）先跑提取器，读它的内容模型：
+
+```bash
+python3 tools/distill-inspect.py --package refs/vendor/<名字>/template.motion
+# → out/distill-<名字>/report.md        版式 / 内容族 / 配方清单
+# → out/distill-<名字>/guide.draft.json layouts[] 已预填，capacity 留 TBD
+```
+
+支持 `.motion` 包与已解包目录。三种内容模型形态都能认：版式枚举（`oneOf` 的
+`mechanism`）、镜头枚举（`shots.items.oneOf` 的 `type`）、顶层参数表。
+`protected` 包也能提取——加密的是渲染源码，`params.schema.json` 仍是明文。
+
 ### 4.1 落位步骤
 
 1. **先定级**：按第一节判断停在哪一级，条目写进对应类型目录的 README（只加一行，不搬文件）。
@@ -124,7 +147,15 @@ uv run python tools/check-template.py --src templates/own/my-template
    uv run python tools/build-template.py --src templates/own/<名字> --out packages/<名字>.motion
    node tools/motion-render.mjs inspect --package packages/<名字>.motion   # 期望 integrity 全通过
    ```
-5. 打包后把新代号补进本文件第二节与 `docs/AGENTS.md` §0 的模板表 —— 两处都要改，
+5. **一条命令验收**（结构 → 单帧渲染 → 打包 → 包校验）：
+
+   ```bash
+   python3 tools/template-smoke.py --template templates/own/<名字>
+   ```
+
+   四关全过才算接上。`node --check` 抓不住路径错误——import 合法、运行时才 404。
+
+6. 打包后把新代号补进本文件第二节与 `docs/AGENTS.md` §0 的模板表 —— 两处都要改，
    只改一处就会出现「文档写着五支、实际六支」。
 
 ## 五、本文件与 `_scaffold/README.md` 的分工

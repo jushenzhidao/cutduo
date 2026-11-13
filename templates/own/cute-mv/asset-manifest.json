@@ -1,0 +1,19 @@
+{
+  "assets": [
+    {
+      "path": "../../../assets/fonts/LXGWWenKai-Regular.ttf",
+      "kind": "font",
+      "family": "LXGW WenKai",
+      "license": "OFL-1.1",
+      "role": "歌词条与手写纸条的楷体；不进包、不进 git，由 tools/fetch-fonts.sh 取到仓库 assets/fonts/"
+    },
+    {
+      "path": "../../../assets/fonts/ZCOOLKuaiLe-Regular.ttf",
+      "kind": "font",
+      "family": "ZCOOL KuaiLe",
+      "license": "OFL-1.1",
+      "role": "3D 关键词大字的圆体；同上"
+    }
+  ],
+  "note": "本模板没有图片/音频素材：人物、场景、文字全部矢量绘制。字体是唯一外部依赖，缺失时退化成 Noto Sans SC，不阻断出片。"
+}

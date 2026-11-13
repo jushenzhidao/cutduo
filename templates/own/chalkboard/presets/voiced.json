@@ -1,0 +1,260 @@
+{
+  "title": "挡得住吗：用几何讲清遮挡",
+  "durationSeconds": 34,
+  "fps": 30,
+  "fadeOutSeconds": 0.5,
+  "subtitle": {
+    "size": 46,
+    "y": 0.912
+  },
+  "voices": {
+    "default": "zh-CN-XiaoxiaoNeural",
+    "narrator": "zh-CN-YunyangNeural"
+  },
+  "segments": [
+    {
+      "type": "shadow-overlap",
+      "mechanism": "shadow-overlap",
+      "dur": 9,
+      "title": "挡住多少，由圆面相交的面积决定",
+      "duration": 9,
+      "unit": "cm",
+      "decimals": 1,
+      "labels": {
+        "source": "检验灯",
+        "body": "模型球",
+        "occluder": "遮光圆片",
+        "orbit": "球体的连续轨道",
+        "view": "观察者所见",
+        "lit": "可见受光比例",
+        "blocked": "被遮挡比例",
+        "actual": "实际原因"
+      },
+      "model": {
+        "orbitRadius": 12,
+        "bodyRadius": 0.45,
+        "occluderRadius": 1.4,
+        "sourceRadius": 5.2,
+        "sourceDistance": 160,
+        "inclinationDegrees": 0,
+        "displayInclinationDegrees": 0
+      },
+      "phaseKeys": [
+        [
+          0,
+          172.6
+        ],
+        [
+          9,
+          176.2
+        ]
+      ],
+      "nodeKeys": [
+        [
+          0,
+          90
+        ],
+        [
+          9,
+          90
+        ]
+      ]
+    },
+    {
+      "type": "ray-topology",
+      "mechanism": "ray-topology",
+      "dur": 8,
+      "title": "每条光路只停在遇到的第一块挡板",
+      "duration": 8,
+      "unit": "cm",
+      "decimals": 1,
+      "labels": {
+        "source": "检验灯",
+        "body": "模型球",
+        "occluder": "遮光圆片",
+        "orbit": "球体的连续轨道",
+        "view": "观察者所见",
+        "lit": "可见受光比例",
+        "blocked": "被遮挡比例",
+        "actual": "实际原因"
+      },
+      "optics": {
+        "source": [
+          -8,
+          0
+        ],
+        "target": [
+          8,
+          0
+        ],
+        "spread": 8,
+        "rays": 7,
+        "blockers": [
+          {
+            "id": "near",
+            "label": "前方挡板",
+            "x": -2.5,
+            "y": -1,
+            "r": 1.1
+          },
+          {
+            "id": "far",
+            "label": "后方挡板",
+            "x": 2.5,
+            "y": 1.6,
+            "r": 1.6
+          }
+        ]
+      }
+    },
+    {
+      "type": "inclined-orbit",
+      "mechanism": "inclined-orbit",
+      "dur": 9,
+      "title": "轨道有高度：俯视排成一条线也不一定入影",
+      "duration": 9,
+      "unit": "cm",
+      "decimals": 1,
+      "labels": {
+        "source": "检验灯",
+        "body": "模型球",
+        "occluder": "遮光圆片",
+        "orbit": "球体的连续轨道",
+        "view": "观察者所见",
+        "lit": "可见受光比例",
+        "blocked": "被遮挡比例",
+        "actual": "实际原因"
+      },
+      "model": {
+        "orbitRadius": 12,
+        "bodyRadius": 0.45,
+        "occluderRadius": 1.4,
+        "sourceRadius": 5.2,
+        "sourceDistance": 160,
+        "inclinationDegrees": 7,
+        "displayInclinationDegrees": 24
+      },
+      "phaseKeys": [
+        [
+          0,
+          150
+        ],
+        [
+          9,
+          210
+        ]
+      ],
+      "nodeKeys": [
+        [
+          0,
+          90
+        ],
+        [
+          9,
+          90
+        ]
+      ]
+    },
+    {
+      "type": "condition-proof",
+      "mechanism": "condition-proof",
+      "dur": 8,
+      "title": "三个条件同时成立，才叫真正挡住",
+      "duration": 8,
+      "unit": "cm",
+      "decimals": 1,
+      "labels": {
+        "source": "检验灯",
+        "body": "模型球",
+        "occluder": "遮光圆片",
+        "orbit": "球体的连续轨道",
+        "view": "观察者所见",
+        "lit": "可见受光比例",
+        "blocked": "被遮挡比例",
+        "actual": "实际原因"
+      },
+      "model": {
+        "orbitRadius": 12,
+        "bodyRadius": 0.45,
+        "occluderRadius": 1.4,
+        "sourceRadius": 5.2,
+        "sourceDistance": 160,
+        "inclinationDegrees": 0,
+        "displayInclinationDegrees": 0
+      },
+      "phaseKeys": [
+        [
+          0,
+          167
+        ],
+        [
+          8,
+          200
+        ]
+      ],
+      "conditions": [
+        "near-opposition",
+        "within-shadow-height",
+        "shadow-contact"
+      ]
+    }
+  ],
+  "captions": [
+    {
+      "seg": 0,
+      "text": "同一块遮光片，挡住多少不由距离决定",
+      "start": 0.4,
+      "end": 4.5,
+      "speaker": "default"
+    },
+    {
+      "seg": 0,
+      "text": "而是两个圆面真正相交的面积",
+      "start": 4.55,
+      "end": 8.7,
+      "speaker": "default"
+    },
+    {
+      "seg": 1,
+      "text": "七条光线从光源射向球面",
+      "start": 9.4,
+      "end": 13.0,
+      "speaker": "default"
+    },
+    {
+      "seg": 1,
+      "text": "每条只停在遇到的第一块挡板",
+      "start": 13.05,
+      "end": 16.7,
+      "speaker": "default"
+    },
+    {
+      "seg": 2,
+      "text": "轨道有高度，俯视看排成一条线",
+      "start": 17.4,
+      "end": 21.5,
+      "speaker": "default"
+    },
+    {
+      "seg": 2,
+      "text": "却可能整条从影子上面过去",
+      "start": 21.55,
+      "end": 25.7,
+      "speaker": "default"
+    },
+    {
+      "seg": 3,
+      "text": "对向、影高、圆面重叠，三个条件",
+      "start": 26.4,
+      "end": 30.0,
+      "speaker": "default"
+    },
+    {
+      "seg": 3,
+      "text": "同时成立，才叫真正挡住",
+      "start": 30.05,
+      "end": 33.7,
+      "speaker": "default"
+    }
+  ]
+}

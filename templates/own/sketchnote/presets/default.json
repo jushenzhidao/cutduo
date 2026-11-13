@@ -1,0 +1,90 @@
+{
+  "durationSeconds": 24,
+  "fps": 30,
+  "fadeOutSeconds": 0.5,
+  "theme": {
+    "paper": "#f6f1e6",
+    "ink": "#2b2a26",
+    "accent": "#e8b33a",
+    "highlight": "#ffe680",
+    "sticky": "#fff2b8",
+    "stickyAlt": "#ffd9c9",
+    "blue": "#4a7fb5",
+    "red": "#d05a4e",
+    "muted": "#8a8578"
+  },
+  "brand": {
+    "show": true,
+    "text": "手绘解说"
+  },
+  "subtitle": {
+    "size": 58,
+    "color": "#ffffff",
+    "stroke": 6,
+    "strokeColor": "#2b2a26",
+    "y": 0.907
+  },
+  "captions": [
+    { "start": 0.6, "end": 4.2, "text": "先看现象，把看到的记下来" },
+    { "start": 4.4, "end": 7.6, "text": "同一份样品，才能对比" },
+    { "start": 8.2, "end": 11.2, "text": "一个关键词，串起整页笔记" },
+    { "start": 11.4, "end": 14.2, "text": "它指的不是结论，是依据" },
+    { "start": 14.8, "end": 18.0, "text": "便签上改一版，旧的那条划掉" },
+    { "start": 18.2, "end": 20.6, "text": "改的是条件，不是结论" },
+    { "start": 20.8, "end": 23.8, "text": "回看原来的解释，才算闭环" }
+  ],
+  "segments": [
+    {
+      "type": "step-sequence",
+      "dur": 8,
+      "title": "一页观察记录",
+      "subtitle": "每一步保留已经写下的内容",
+      "items": [
+        { "id": "observe", "label": "观察现象", "icon": "concept", "highlight": [0, 2], "notes": ["记录颜色变化", "保持同一份样品"] },
+        { "id": "explain", "label": "解释变化", "icon": "explain", "highlight": [0, 2], "notes": ["说明发生的过程", "区分现象和推测"] },
+        { "id": "recheck", "label": "回查证据", "icon": "relearn", "highlight": [0, 2], "notes": ["寻找缺失的条件", "保留原来的记录"] },
+        { "id": "simplify", "label": "简化表述", "icon": "simplify", "highlight": [0, 2], "notes": ["删掉重复的描述"] }
+      ],
+      "conclusion": ["写下来的东西，别急着擦"]
+    },
+    {
+      "type": "keyword-annotation",
+      "dur": 6,
+      "title": "一页观察记录",
+      "subtitle": "整页只留一个词",
+      "items": [
+        { "id": "evidence", "label": "证据", "icon": "relearn", "highlight": [0, 2], "notes": ["能被别人重新检查", "不是自己的印象"] }
+      ]
+    },
+    {
+      "type": "sticky-revision",
+      "dur": 6,
+      "title": "一页观察记录",
+      "subtitle": "改的是条件，不是结论",
+      "items": [
+        { "id": "observe", "label": "观察现象", "icon": "concept", "notes": ["记录颜色变化"] },
+        { "id": "explain", "label": "解释变化", "icon": "explain", "notes": ["说明发生的过程"] },
+        { "id": "recheck", "label": "回查证据", "icon": "relearn", "notes": ["寻找缺失的条件"] },
+        { "id": "simplify", "label": "简化表述", "icon": "simplify", "notes": ["删掉重复的描述"] }
+      ],
+      "revision": {
+        "targetId": "explain",
+        "lines": ["补充实验条件", "推测需要证据"]
+      }
+    },
+    {
+      "type": "return-loop",
+      "dur": 4,
+      "title": "一页观察记录",
+      "subtitle": "收口回到第二环",
+      "items": [
+        { "id": "observe", "label": "观察现象", "icon": "concept" },
+        { "id": "explain", "label": "解释变化", "icon": "explain" },
+        { "id": "recheck", "label": "回查证据", "icon": "relearn" },
+        { "id": "simplify", "label": "简化表述", "icon": "simplify" }
+      ],
+      "return": { "fromId": "simplify", "toId": "explain", "label": "回看原来的解释" },
+      "conclusion": ["每改一次，都回到解释再看一遍"]
+    }
+  ]
+}

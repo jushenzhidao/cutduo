@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>可爱角色歌词 MV</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #101a1e; overflow: hidden; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<!-- 这里只放“宿主相关”的东西：canvas 标签、预加载 img、脚本加载顺序。
+     kit.js 与 layouts.js 不得出现 document / window / createElement，否则换宿主不成立。 -->
+<canvas id="c" width="1920" height="1080"></canvas>
+
+<!-- 本模板零图片素材：人物与场景全部矢量绘制，只有字体从 assets/fonts 注册 -->
+<script src="kit.js"></script>
+<script src="layouts.js"></script>
+<script src="stage.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

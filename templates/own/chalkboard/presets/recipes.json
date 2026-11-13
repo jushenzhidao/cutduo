@@ -1,0 +1,368 @@
+{
+  "name": "八机制单段预设",
+  "note": "机制与几何参数取自上游内容模型（这是契约的一部分）；标题为自写，未复制源片文案。",
+  "segments": [
+    {
+      "type": "orbit-phase",
+      "mechanism": "orbit-phase",
+      "dur": 10,
+      "title": "同一球体绕行，受光比例随角度改变",
+      "duration": 10,
+      "unit": "cm",
+      "decimals": 1,
+      "labels": {
+        "source": "检验灯",
+        "body": "模型球",
+        "occluder": "遮光圆片",
+        "orbit": "球体的连续轨道",
+        "view": "观察者所见",
+        "lit": "可见受光比例",
+        "blocked": "被遮挡比例",
+        "actual": "实际原因"
+      },
+      "model": {
+        "orbitRadius": 12,
+        "bodyRadius": 0.45,
+        "occluderRadius": 1.4,
+        "sourceRadius": 5.2,
+        "sourceDistance": 160,
+        "inclinationDegrees": 7,
+        "displayInclinationDegrees": 24
+      },
+      "phaseKeys": [
+        [
+          0,
+          25
+        ],
+        [
+          10,
+          225
+        ]
+      ]
+    },
+    {
+      "type": "surface-view",
+      "mechanism": "surface-view",
+      "dur": 10,
+      "title": "把球取出放大，看光线从哪一侧来",
+      "duration": 10,
+      "unit": "cm",
+      "decimals": 1,
+      "labels": {
+        "source": "检验灯",
+        "body": "模型球",
+        "occluder": "遮光圆片",
+        "orbit": "球体的连续轨道",
+        "view": "观察者所见",
+        "lit": "可见受光比例",
+        "blocked": "被遮挡比例",
+        "actual": "实际原因"
+      },
+      "model": {
+        "orbitRadius": 12,
+        "bodyRadius": 0.45,
+        "occluderRadius": 1.4,
+        "sourceRadius": 5.2,
+        "sourceDistance": 160,
+        "inclinationDegrees": 7,
+        "displayInclinationDegrees": 24
+      },
+      "phaseKeys": [
+        [
+          0,
+          35
+        ],
+        [
+          10,
+          125
+        ]
+      ]
+    },
+    {
+      "type": "shadow-overlap",
+      "mechanism": "shadow-overlap",
+      "dur": 10,
+      "title": "挡住多少，由两个圆面真正相交的面积决定",
+      "duration": 10,
+      "unit": "cm",
+      "decimals": 1,
+      "labels": {
+        "source": "检验灯",
+        "body": "模型球",
+        "occluder": "遮光圆片",
+        "orbit": "球体的连续轨道",
+        "view": "观察者所见",
+        "lit": "可见受光比例",
+        "blocked": "被遮挡比例",
+        "actual": "实际原因"
+      },
+      "model": {
+        "orbitRadius": 12,
+        "bodyRadius": 0.45,
+        "occluderRadius": 1.4,
+        "sourceRadius": 5.2,
+        "sourceDistance": 160,
+        "inclinationDegrees": 0,
+        "displayInclinationDegrees": 0
+      },
+      "phaseKeys": [
+        [
+          0,
+          166
+        ],
+        [
+          10,
+          194
+        ]
+      ]
+    },
+    {
+      "type": "inclined-orbit",
+      "mechanism": "inclined-orbit",
+      "dur": 10,
+      "title": "轨道有高度：俯视排成线也可能避开遮挡",
+      "duration": 10,
+      "unit": "cm",
+      "decimals": 1,
+      "labels": {
+        "source": "检验灯",
+        "body": "模型球",
+        "occluder": "遮光圆片",
+        "orbit": "球体的连续轨道",
+        "view": "观察者所见",
+        "lit": "可见受光比例",
+        "blocked": "被遮挡比例",
+        "actual": "实际原因"
+      },
+      "model": {
+        "orbitRadius": 12,
+        "bodyRadius": 0.45,
+        "occluderRadius": 1.4,
+        "sourceRadius": 5.2,
+        "sourceDistance": 160,
+        "inclinationDegrees": 7,
+        "displayInclinationDegrees": 24
+      },
+      "phaseKeys": [
+        [
+          0,
+          150
+        ],
+        [
+          10,
+          210
+        ]
+      ],
+      "nodeKeys": [
+        [
+          0,
+          90
+        ],
+        [
+          10,
+          90
+        ]
+      ]
+    },
+    {
+      "type": "projection-compare",
+      "mechanism": "projection-compare",
+      "dur": 10,
+      "title": "同一个高度差，在两个投影里看起来不同",
+      "duration": 10,
+      "unit": "cm",
+      "decimals": 1,
+      "labels": {
+        "source": "检验灯",
+        "body": "模型球",
+        "occluder": "遮光圆片",
+        "orbit": "球体的连续轨道",
+        "view": "观察者所见",
+        "lit": "可见受光比例",
+        "blocked": "被遮挡比例",
+        "actual": "实际原因"
+      },
+      "model": {
+        "orbitRadius": 12,
+        "bodyRadius": 0.45,
+        "occluderRadius": 1.4,
+        "sourceRadius": 5.2,
+        "sourceDistance": 160,
+        "inclinationDegrees": 7,
+        "displayInclinationDegrees": 24
+      },
+      "phaseKeys": [
+        [
+          0,
+          115
+        ],
+        [
+          10,
+          225
+        ]
+      ],
+      "nodeKeys": [
+        [
+          0,
+          90
+        ],
+        [
+          10,
+          90
+        ]
+      ]
+    },
+    {
+      "type": "causal-compare",
+      "mechanism": "causal-compare",
+      "dur": 10,
+      "title": "亮面减少与光路受挡，要分开核对",
+      "duration": 10,
+      "unit": "cm",
+      "decimals": 1,
+      "labels": {
+        "source": "检验灯",
+        "body": "模型球",
+        "occluder": "遮光圆片",
+        "orbit": "球体的连续轨道",
+        "view": "观察者所见",
+        "lit": "可见受光比例",
+        "blocked": "被遮挡比例",
+        "actual": "实际原因"
+      },
+      "model": {
+        "orbitRadius": 12,
+        "bodyRadius": 0.45,
+        "occluderRadius": 1.4,
+        "sourceRadius": 5.2,
+        "sourceDistance": 160,
+        "inclinationDegrees": 7,
+        "displayInclinationDegrees": 24
+      },
+      "phaseKeys": [
+        [
+          0,
+          80
+        ],
+        [
+          10,
+          5
+        ]
+      ],
+      "comparison": {
+        "label": "另一组明确条件",
+        "model": {
+          "orbitRadius": 12,
+          "bodyRadius": 0.45,
+          "occluderRadius": 1.4,
+          "sourceRadius": 5.2,
+          "sourceDistance": 160,
+          "inclinationDegrees": 0,
+          "displayInclinationDegrees": 0
+        },
+        "phaseKeys": [
+          [
+            0,
+            166
+          ],
+          [
+            10,
+            194
+          ]
+        ]
+      }
+    },
+    {
+      "type": "ray-topology",
+      "mechanism": "ray-topology",
+      "dur": 10,
+      "title": "每条光路停在遇到的第一块挡板",
+      "duration": 10,
+      "unit": "cm",
+      "decimals": 1,
+      "labels": {
+        "source": "检验灯",
+        "body": "模型球",
+        "occluder": "遮光圆片",
+        "orbit": "球体的连续轨道",
+        "view": "观察者所见",
+        "lit": "可见受光比例",
+        "blocked": "被遮挡比例",
+        "actual": "实际原因"
+      },
+      "optics": {
+        "source": [
+          -8,
+          0
+        ],
+        "target": [
+          8,
+          0
+        ],
+        "spread": 8,
+        "rays": 7,
+        "blockers": [
+          {
+            "id": "near",
+            "label": "前方挡板",
+            "x": -2.5,
+            "y": -1,
+            "r": 1.1
+          },
+          {
+            "id": "far",
+            "label": "后方挡板",
+            "x": 2.5,
+            "y": 1.6,
+            "r": 1.6
+          }
+        ]
+      }
+    },
+    {
+      "type": "condition-proof",
+      "mechanism": "condition-proof",
+      "dur": 10,
+      "title": "三个条件逐项核对，结论跟随几何状态",
+      "duration": 10,
+      "unit": "cm",
+      "decimals": 1,
+      "labels": {
+        "source": "检验灯",
+        "body": "模型球",
+        "occluder": "遮光圆片",
+        "orbit": "球体的连续轨道",
+        "view": "观察者所见",
+        "lit": "可见受光比例",
+        "blocked": "被遮挡比例",
+        "actual": "实际原因"
+      },
+      "model": {
+        "orbitRadius": 12,
+        "bodyRadius": 0.45,
+        "occluderRadius": 1.4,
+        "sourceRadius": 5.2,
+        "sourceDistance": 160,
+        "inclinationDegrees": 0,
+        "displayInclinationDegrees": 0
+      },
+      "phaseKeys": [
+        [
+          0,
+          167
+        ],
+        [
+          10,
+          193
+        ]
+      ],
+      "conditions": [
+        "near-opposition",
+        "within-shadow-height",
+        "shadow-contact"
+      ]
+    }
+  ],
+  "durationSeconds": 80,
+  "fps": 30
+}

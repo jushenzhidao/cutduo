@@ -1,0 +1,24 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "README.md": "6739e5bf2063dc2cad6745a150be75c9eb34c5feb90fa58193b59d78ff199000",
+    "SKIA-SPEC.md": "b538bec674e6daf9d3ed05644ba015fdb9c3a46f849d081f50dee786fb97ec75",
+    "SKILL.md": "43693121c3638ef6962e8a598e90919753deb8c21e03a27a673cfed50ec104d4",
+    "SPEC.md": "d0664f9e7b3a7eb18183a08dd27f8cfd50bc28a902227fc5bbb6f1a5d9fd7e59",
+    "asset-manifest.json": "55ae56c7b2ac76b1c8ad41588328b3720ace627e39a908315bf777b9827d7cda",
+    "assets/placeholder.png": "570f27db543abd48e35eb6dfbcfffd5a7adbd136a3f7478ad7ef665a177fddf7",
+    "guide.json": "d8dcd5603e4b49092f01ead4e98746dd37efd52df44898ac18af3ee937126944",
+    "licenses/TEMPLATE-LICENSE.txt": "0f5ec58b997a938c58c7a1f5eaa621c13b5efe2df7d8e5d3ceabb8934e1efab4",
+    "motion.json": "df85fdd39fb0a9997b5ab6998aacfdb67abe926cb38edd2752eda5f7ad608a2b",
+    "motion.lock.json": "222d8d6459c8400dfa4b2da144c9f069242d668ff5070b6f15a1a31f5e7c2e47",
+    "params.schema.json": "bb42b3ecaf1cf1f990eea6bb715d7fed33c13ff74a729eb1aba773e15515c5b0",
+    "presets/default.json": "9801507dd52f2b7e991de71e263aad8eed32d366e5fae70262f30c13b3665496",
+    "presets/default.vo.json": "109fef982fa097b7b165f575ac24ec4a986a0c4dbdcda0d5537eb199e937c9d8",
+    "src/index.html": "c57ff043162e32710c299b9727ddc2926edda60a132439d067a6ed73715bd37f",
+    "src/kit.js": "61082d0f0dd7dc5ebdebef476d89c7369ed9c6bbc1e326f69c06365c3bedc9eb",
+    "src/layouts.js": "df35141a65f3a9978693c015e20b36976e22f652b1be8f8419b7b4f0cb39401f",
+    "src/main.js": "3ee9910aeb80c652ff0ff1796596f082e5c8e96c862b94cf7988c4539d810b7d",
+    "src/stage.js": "80e04bcce1db2ceca02901a13ad8ec14707a3a7ef9d73e2e7e4bd2af2938b587",
+    "tools/vo.py": "6dbf4bfea695f3e42218979ff9fc74dea07ba2b368747b3478ae396f93ad4030"
+  }
+}

@@ -1,0 +1,526 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "粉笔黑板 · 知识讲解",
+  "type": "object",
+  "required": [
+    "segments"
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "maxLength": 60
+    },
+    "durationSeconds": {
+      "type": "number",
+      "minimum": 4,
+      "maximum": 600
+    },
+    "fps": {
+      "enum": [
+        24,
+        25,
+        30,
+        50,
+        60
+      ]
+    },
+    "fadeOutSeconds": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 3
+    },
+    "theme": {
+      "type": "object",
+      "description": "覆盖 MK.T 中的颜色键（board/white/yellow/blue/red/dim/lit/shade）"
+    },
+    "subtitle": {
+      "type": "object",
+      "properties": {
+        "size": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "color": {
+          "type": "string"
+        },
+        "stroke": {
+          "type": "number"
+        }
+      }
+    },
+    "captions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "text",
+          "start",
+          "end"
+        ],
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "start": {
+            "type": "number"
+          },
+          "end": {
+            "type": "number"
+          },
+          "speaker": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "segments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "mechanism",
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 44
+          },
+          "duration": {
+            "type": "number",
+            "minimum": 4,
+            "maximum": 90
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 6
+          },
+          "decimals": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "seed": {
+            "type": "integer"
+          },
+          "labels": {
+            "type": "object",
+            "description": "画面标签词典，键见 recipes.json（source/body/occluder/orbit/view/lit/blocked/actual）",
+            "properties": {
+              "source": {
+                "type": "string",
+                "maxLength": 12
+              },
+              "body": {
+                "type": "string",
+                "maxLength": 12
+              },
+              "occluder": {
+                "type": "string",
+                "maxLength": 12
+              },
+              "orbit": {
+                "type": "string",
+                "maxLength": 16
+              },
+              "view": {
+                "type": "string",
+                "maxLength": 14
+              },
+              "lit": {
+                "type": "string",
+                "maxLength": 14
+              },
+              "blocked": {
+                "type": "string",
+                "maxLength": 14
+              },
+              "actual": {
+                "type": "string",
+                "maxLength": 14
+              }
+            }
+          },
+          "model": {
+            "$ref": "#/$defs/model"
+          },
+          "phaseKeys": {
+            "$ref": "#/$defs/angleKeys"
+          },
+          "nodeKeys": {
+            "$ref": "#/$defs/angleKeys"
+          },
+          "cueTimes": {
+            "$ref": "#/$defs/cueTimes"
+          },
+          "comparison": {
+            "type": "object",
+            "required": [
+              "label",
+              "model",
+              "phaseKeys"
+            ],
+            "properties": {
+              "label": {
+                "type": "string",
+                "maxLength": 18
+              },
+              "model": {
+                "$ref": "#/$defs/model"
+              },
+              "phaseKeys": {
+                "$ref": "#/$defs/angleKeys"
+              },
+              "nodeKeys": {
+                "$ref": "#/$defs/angleKeys"
+              }
+            }
+          },
+          "optics": {
+            "$ref": "#/$defs/optics"
+          },
+          "conditions": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 4,
+            "items": {
+              "enum": [
+                "near-opposition",
+                "within-shadow-height",
+                "shadow-contact",
+                "direct-center-ray"
+              ]
+            }
+          },
+          "type": {
+            "enum": [
+              "orbit-phase",
+              "surface-view",
+              "shadow-overlap",
+              "inclined-orbit",
+              "projection-compare",
+              "causal-compare",
+              "ray-topology",
+              "condition-proof"
+            ]
+          },
+          "mechanism": {
+            "enum": [
+              "orbit-phase",
+              "surface-view",
+              "shadow-overlap",
+              "inclined-orbit",
+              "projection-compare",
+              "causal-compare",
+              "ray-topology",
+              "condition-proof"
+            ]
+          }
+        },
+        "oneOf": [
+          {
+            "properties": {
+              "type": {
+                "const": "orbit-phase"
+              },
+              "mechanism": {
+                "const": "orbit-phase"
+              }
+            },
+            "required": [
+              "type",
+              "mechanism",
+              "title",
+              "model",
+              "phaseKeys"
+            ]
+          },
+          {
+            "properties": {
+              "type": {
+                "const": "surface-view"
+              },
+              "mechanism": {
+                "const": "surface-view"
+              }
+            },
+            "required": [
+              "type",
+              "mechanism",
+              "title",
+              "model",
+              "phaseKeys"
+            ]
+          },
+          {
+            "properties": {
+              "type": {
+                "const": "shadow-overlap"
+              },
+              "mechanism": {
+                "const": "shadow-overlap"
+              }
+            },
+            "required": [
+              "type",
+              "mechanism",
+              "title",
+              "model",
+              "phaseKeys"
+            ]
+          },
+          {
+            "properties": {
+              "type": {
+                "const": "inclined-orbit"
+              },
+              "mechanism": {
+                "const": "inclined-orbit"
+              }
+            },
+            "required": [
+              "type",
+              "mechanism",
+              "title",
+              "model",
+              "phaseKeys"
+            ]
+          },
+          {
+            "properties": {
+              "type": {
+                "const": "projection-compare"
+              },
+              "mechanism": {
+                "const": "projection-compare"
+              }
+            },
+            "required": [
+              "type",
+              "mechanism",
+              "title",
+              "model",
+              "phaseKeys"
+            ]
+          },
+          {
+            "properties": {
+              "type": {
+                "const": "causal-compare"
+              },
+              "mechanism": {
+                "const": "causal-compare"
+              }
+            },
+            "required": [
+              "type",
+              "mechanism",
+              "title",
+              "model",
+              "phaseKeys",
+              "comparison"
+            ]
+          },
+          {
+            "properties": {
+              "type": {
+                "const": "ray-topology"
+              },
+              "mechanism": {
+                "const": "ray-topology"
+              }
+            },
+            "required": [
+              "type",
+              "mechanism",
+              "title",
+              "optics"
+            ]
+          },
+          {
+            "properties": {
+              "type": {
+                "const": "condition-proof"
+              },
+              "mechanism": {
+                "const": "condition-proof"
+              }
+            },
+            "required": [
+              "type",
+              "mechanism",
+              "title",
+              "model",
+              "phaseKeys",
+              "conditions"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "model": {
+      "type": "object",
+      "required": [
+        "orbitRadius",
+        "bodyRadius",
+        "occluderRadius",
+        "sourceRadius",
+        "sourceDistance"
+      ],
+      "description": "显式几何模型。单位由段参数 unit 给出（cm 只是惯用）。不是真实比例，只保证几何关系自洽。",
+      "properties": {
+        "orbitRadius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "bodyRadius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "occluderRadius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "sourceRadius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "sourceDistance": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "inclinationDegrees": {
+          "type": "number",
+          "description": "模型倾角，决定几何结果"
+        },
+        "displayInclinationDegrees": {
+          "type": "number",
+          "description": "画面示意倾角，只影响画法，不进入计算"
+        }
+      }
+    },
+    "optics": {
+      "type": "object",
+      "required": [
+        "source",
+        "target",
+        "rays",
+        "blockers"
+      ],
+      "properties": {
+        "source": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "target": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "spread": {
+          "type": "number",
+          "description": "光束在靶面上的宽度"
+        },
+        "rays": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 24
+        },
+        "blockers": {
+          "type": "array",
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "x",
+              "y",
+              "r"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "r": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "angleKeys": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 12,
+      "description": "角度轨道：[[段内秒, 角度], …]，2–12 个，时间严格递增，首尾必须覆盖 0 与段长",
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number"
+        }
+      },
+      "examples": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            6,
+            180
+          ],
+          [
+            12,
+            360
+          ]
+        ]
+      ]
+    },
+    "cueTimes": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "段内出现时机（秒）：structure 结构线 / focus 主图描出 / explain 数据标注 / settle 结论。缺省按段长比例推算。",
+      "properties": {
+        "structure": {
+          "type": "number"
+        },
+        "focus": {
+          "type": "number"
+        },
+        "explain": {
+          "type": "number"
+        },
+        "settle": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

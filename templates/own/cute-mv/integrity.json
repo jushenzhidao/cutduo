@@ -1,0 +1,22 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "README.md": "3f2c8147fc199c719f8a6fd0c0b9d835b99d137299871b1977d51415b961b8b4",
+    "SKIA-SPEC.md": "37a265fbc97dd722a25bf53b47208a3ed69ec4eb07cd5a50c7ccdf61e4f32296",
+    "SKILL.md": "e2ad7a9a070fd5473d068b84d6bc82d31afc7c544870c17f5520833a112030e0",
+    "SPEC.md": "bd175a42cd1ee98bdf05de75389f9faf572bdb7080858cb498f722ab55c72ecb",
+    "asset-manifest.json": "c40b257661dde528addfc8f021c2e9dd53d9367996d76da8991136677e3bd3f7",
+    "guide.json": "2af2c98133f17d8f440008fec7e9b1541b8dbdbae6595bcd5bbd27b8c37fdf0d",
+    "licenses/TEMPLATE-LICENSE.txt": "4de358f34c2008a5c3c95c9221c09783a83427bf85d642cc373b3f7f3b8c63d1",
+    "motion.json": "ce5aa320632304772c955a1592407c6d379f5c629b5579f36a1e49f3864c42c7",
+    "motion.lock.json": "222d8d6459c8400dfa4b2da144c9f069242d668ff5070b6f15a1a31f5e7c2e47",
+    "params.schema.json": "0f2df12965127b1d1d954846f50a6b3601324243e800ec0df5af1f1f296f3611",
+    "presets/default.json": "23d6e54e754058f30a73adf389ef210cd309045c66d09d11b6ff8ae2e5b73b51",
+    "src/index.html": "ae3282f2547caf0cb467b4f2f8347d03dcd7340acbd0cadab54667ee355e863f",
+    "src/kit.js": "715e98b32f13c9315581d4760c4c1b03d761e6d7b8086716bc8173ecaf151be3",
+    "src/layouts.js": "7039f2e4e35be6032d200251eef159b68d7da4bf02bf2b799ad170cf2fc77877",
+    "src/main.js": "3ee9910aeb80c652ff0ff1796596f082e5c8e96c862b94cf7988c4539d810b7d",
+    "src/stage.js": "5e2b95e3060bc30910eb63d1525f64a6124e4d4a81855668b958e1569a33240c",
+    "tools/fetch-fonts.sh": "250f09d98bbfcfc38a11b6eb92b78157187a75f7976901282f311bc162099a4a"
+  }
+}

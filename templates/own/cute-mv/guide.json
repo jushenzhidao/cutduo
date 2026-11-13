@@ -1,0 +1,187 @@
+{
+  "purpose": "把一段中文歌词（或短文案）编译成固定 33 秒、9 镜头的可爱 chibi 角色 MV：歌词条走底部，关键词以 3D 大字砸在顶部，手写纸条贴在中景。",
+  "distilledFrom": {
+    "file": "motiongit.com/chenyutao0417/cute-character-lyric-mv v1.0.1",
+    "durationSeconds": 33,
+    "size": "1920x1080@30",
+    "fps": 30,
+    "shots": 9,
+    "medianShotSeconds": 3.65,
+    "note": "只借内容模型：三个内容族（歌词条/关键词/纸条）的字段与条数上限、9 镜头的顺序与时长、三类文字的排版数值。画面全部自写，未复制上游源码与素材。"
+  },
+  "duration": {
+    "policy": "fixed",
+    "seconds": 33,
+    "fps": {
+      "num": 30,
+      "den": 1
+    },
+    "adaptation": "时长不可改。9 个镜头的动作语义按 33 秒排（歌词 8 句、纸条 3 张、关键词 8 个），加长会留下静止画面，截短会切掉收尾的纸条。"
+  },
+  "materials": [
+    {
+      "role": "text.subtitles",
+      "required": true,
+      "use": "用歌词文字与时间码填 content.lyrics；挑 2–3 字的词填 content.keywords；短句填 content.notes。三类都带 s/e 秒数，必须落在 0–33 秒内。",
+      "ask": "请提供歌词或短文案，以及每句大致出现的秒数；有配乐时给出音乐文件的时长。",
+      "maps": [
+        "content.lyrics",
+        "content.keywords",
+        "content.notes"
+      ]
+    },
+    {
+      "role": "audio.music",
+      "required": false,
+      "use": "配乐是外部输入，不进模板包：渲染时用 --audio 传入已授权的音乐文件。",
+      "ask": "如果要配乐，请提供已获授权的音乐文件。",
+      "ifMissing": "不加音乐，出成无声片并在交付时提醒补配乐；不要用未授权的歌曲兜底。"
+    }
+  ],
+  "layout": {
+    "ratio": "16:9",
+    "pixels": "1920x1080",
+    "safeArea": "顶部 110px 是关键词大字的落点；底部 96px 是歌词条基线。人物脚底在 y≈960，头顶约 y≈410，所以关键词默认 y=130、纸条默认 y=150 不会压到头发。",
+    "notes": "竖屏不成立：9 个镜头的机位是按 16:9 的横向留白摆的（人物偏左或偏右，另一侧留给大字）。要 9:16 需要重排机位，不是改画幅参数。"
+  },
+  "rhythm": {
+    "hardCut": "9 段之间全硬切，无转场。切点落在歌词换句前半秒，画面先换、字后到。",
+    "captionLag": "歌词条在 s 前 0.2s 淡入、e 后 0.3s 淡出（上游同口径）；纸条与大字的入场是回弹，约 0.45–0.5s。",
+    "beatPattern": "实测切点：4.25 / 3.65 / 3.15 / 4.25 / 4.5 / 3.95 / 2.8 / 3.25 / 3.2 秒，中位 3.65s。顺序即情绪走向：暖橙街道 → 灰蓝雨天 → 米色房间 → 暖棕公园 → 冷灰城市 → 粉色山坡 → 纸面 → 金色傍晚 → 深金收尾。"
+  },
+  "layouts": [
+    {
+      "type": "street",
+      "role": "开场：暖橙午后，人在街道上挥手",
+      "maxPerFilm": 1,
+      "seconds": 4.25,
+      "args": {
+        "x": "number",
+        "y": "number",
+        "s": "number",
+        "pose": "wave"
+      },
+      "capacity": "不承载文字容量；关键词在顶部，纸条在左上（x≈120）"
+    },
+    {
+      "type": "cloud",
+      "role": "低落：灰蓝雨天，撑伞站着",
+      "maxPerFilm": 1,
+      "seconds": 3.65,
+      "args": {
+        "pose": "umbrella"
+      },
+      "capacity": "伞面占头顶 260px 宽，关键词 y<200 才不会被伞顶住"
+    },
+    {
+      "type": "room",
+      "role": "内景：米色房间，桌上有纸堆与台灯",
+      "maxPerFilm": 1,
+      "seconds": 3.15,
+      "args": {
+        "pose": "hold"
+      },
+      "capacity": "人物在右侧 x≈1450，左侧窗与桌留给大字与纸条"
+    },
+    {
+      "type": "park",
+      "role": "转折：暖棕公园，纸团被丢出去",
+      "maxPerFilm": 1,
+      "seconds": 4.25,
+      "args": {
+        "pose": "throw"
+      },
+      "capacity": "纸团沿抛物线走 3 颗，飞行区在 x 1000–1530，别在那放文字"
+    },
+    {
+      "type": "city",
+      "role": "抽离：冷灰城市，楼比人高",
+      "maxPerFilm": 1,
+      "seconds": 4.5,
+      "args": {
+        "pose": "lookup",
+        "s": "0.84"
+      },
+      "capacity": "人物缩到 0.84 以显楼高；关键词仍落顶部 130"
+    },
+    {
+      "type": "hill",
+      "role": "起飞：粉色山坡，纸飞机从手边飞出",
+      "maxPerFilm": 1,
+      "seconds": 3.95,
+      "args": {
+        "pose": "point"
+      },
+      "capacity": "航线从手边 (968,520) 到 (1760,236)，别在航线上压字"
+    },
+    {
+      "type": "paper",
+      "role": "落定：纸面，铅笔一笔画完",
+      "maxPerFilm": 1,
+      "seconds": 2.8,
+      "args": {
+        "pose": "draw"
+      },
+      "capacity": "线从手边向左延伸 936px；纸条放左侧（x≈120,y≈150）"
+    },
+    {
+      "type": "dusk",
+      "role": "回暖：金色逆光，纸飞机远了",
+      "maxPerFilm": 1,
+      "seconds": 3.25,
+      "args": {
+        "pose": "shade"
+      },
+      "capacity": "太阳在 (1430,742) r=146，右下角不放字"
+    },
+    {
+      "type": "final",
+      "role": "收尾：深金，人退到左边，右侧写纸条",
+      "maxPerFilm": 1,
+      "seconds": 3.2,
+      "args": {
+        "pose": "hands"
+      },
+      "capacity": "纸条默认 (1120,560)，再往右下会压到太阳"
+    }
+  ],
+  "runtime": {
+    "profile": "html-canvas/1",
+    "entry": "src/index.html",
+    "dependencies": [
+      "kit.js",
+      "layouts.js",
+      "stage.js",
+      "main.js"
+    ],
+    "network": false,
+    "fonts": "歌词与纸条用 LXGW WenKai（OFL），3D 关键词用 ZCOOL KuaiLe（OFL）。字体不进包、不进 git：跑 tools/fetch-fonts.sh 取到仓库 assets/fonts/ 后由 src/webcanvas.mjs 注册。缺字体时 Skia 退化成 Noto Sans SC：字重对、字形不对，画面仍成立。"
+  },
+  "pitfalls": [
+    {
+      "symptom": "举起手时手臂横穿脸颊",
+      "cause": "前臂默认画在头之后（后画），手举过头顶就会压在脸上",
+      "fix": "按手的高度切层次：hand y < -380 时先画手臂再画头（kit.js 的 armOverHead 分支）"
+    },
+    {
+      "symptom": "伞偏到一边，头在淋雨",
+      "cause": "伞面跟着手腕走，而手腕在身体右侧",
+      "fix": "伞面固定在头顶（本地坐标 x=0 附近），伞杆斜到手腕"
+    },
+    {
+      "symptom": "交付门禁报「黑帧 > 3%」",
+      "cause": "淡入从纯黑起，门禁每 30 帧采一帧，首帧命中即 3.03%",
+      "fix": "淡入最高压到 86%，给首帧留 14% 画面；不要在首帧放纯黑卡"
+    },
+    {
+      "symptom": "Skia 出片有画面但没有歌词/大字/纸条",
+      "cause": "render.mjs 只把 scenes 传给宿主，content 块没透传",
+      "fix": "render.mjs 的 stageContent 里显式带 content；stage.setContent 同时认顶层与 content 两种写法"
+    },
+    {
+      "symptom": "关键词压到人物头发",
+      "cause": "把 y 改到人脸高度（>380）",
+      "fix": "关键词留在 y 120–200；要更靠下就缩 size，不要动人头顶（约 410）"
+    }
+  ]
+}

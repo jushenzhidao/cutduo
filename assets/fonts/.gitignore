@@ -1,1 +1,13 @@
-*.otf
+# 字体一律不入库：19 个文件约 34MB，进 git 会把仓库撑大且每次 clone 都付代价。
+#
+# 换机器 / 部署前跑一次：
+#     bash tools/fetch-fonts.sh
+# 只校验不下载：
+#     bash tools/fetch-fonts.sh --verify
+#
+# 不要在这里开白名单。旧规则是 `*.otf`，于是 .ttf 变成"没入库但也没被忽略"的
+# 中间态：`git status` 一屏 untracked，服务器上有没有字体取决于打包那台机器
+# 碰巧留了什么（2026-11-13 云端就只有 3 个 Noto，chalkboard 的粉笔字全退化了）。
+# 要么全入库、要么全不入库，这里选后者 —— 由脚本保证可复现。
+*
+!.gitignore

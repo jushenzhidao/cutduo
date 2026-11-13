@@ -1,0 +1,65 @@
+{
+  "$schema": "https://motiongit.com/schema/motion/0.1.json",
+  "format": "motiongit-template",
+  "specVersion": "0.1.0-draft.1",
+  "template": {
+    "id": "sketchnote",
+    "version": "0.1.0",
+    "name": "手绘解说",
+    "status": "stable",
+    "distilledFrom": {
+      "source": "knowledge-explainer-sketchnote v2.7.4-alpha.2（motiongit.com 个人下载）",
+      "durationSeconds": 12,
+      "resolution": "1920x1080",
+      "fps": 30,
+      "shots": 4,
+      "medianShotSeconds": 12,
+      "note": "半蒸馏：只借内容模型（4 类 mechanism 的字段契约、容量上限、内容族划分），渲染层与坐标全部自写；未复制其素材、文案、版式与品牌标识"
+    }
+  },
+  "runtime": {
+    "profile": "html-canvas/1",
+    "engine": "motiongit-reference",
+    "entry": "src/index.html",
+    "dependencyLock": "motion.lock.json"
+  },
+  "parameters": {
+    "schema": "params.schema.json",
+    "defaultPreset": "presets/default.json"
+  },
+  "assets": {
+    "manifest": "asset-manifest.json"
+  },
+  "output": {
+    "width": 1920,
+    "height": 1080,
+    "fps": {
+      "num": 30,
+      "den": 1
+    },
+    "durationPolicy": "fixed",
+    "durationSeconds": 24
+  },
+  "preview": {
+    "preset": "presets/default.json"
+  },
+  "license": {
+    "file": "licenses/TEMPLATE-LICENSE.txt"
+  },
+  "permissions": {
+    "network": false,
+    "read": [
+      "package",
+      "instance-inputs"
+    ],
+    "write": [
+      "instance-output"
+    ]
+  },
+  "ai": {
+    "entry": "SKILL.md",
+    "guide": "guide.json",
+    "summary": "手绘便签风格的知识解说：步骤序列、关键词标注、便签修订、回环四类镜头，纯矢量无素材依赖"
+  },
+  "integrity": "integrity.json"
+}

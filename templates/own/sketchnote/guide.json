@@ -1,0 +1,144 @@
+{
+  "purpose": "手绘便签风格的知识解说：把概念/流程/因果拆成 2–6 个要点，用抖动描边与荧光笔模拟纸面笔记。四类镜头分别负责「逐步累积」「单点标注」「修订」「回环」。",
+  "distilledFrom": {
+    "file": "knowledge-explainer-sketchnote v2.7.4-alpha.2",
+    "durationSeconds": 12,
+    "size": "1920x1080",
+    "fps": 30,
+    "shots": 4,
+    "medianShotSeconds": 12,
+    "note": "只借内容模型：4 类 mechanism（step-sequence / keyword-annotation / sticky-revision / return-loop）、字段约束、内容族划分。渲染层为自写手绘风，未复制其素材、文案、版式坐标与品牌标识。"
+  },
+  "duration": {
+    "policy": "fixed",
+    "seconds": 24,
+    "fps": {
+      "num": 30,
+      "den": 1
+    },
+    "adaptation": "总时长 = segments[].dur 之和，必须与 motion.json 的 durationSeconds 一致。上游按 recipe 的 duration 给单段时长（示例为 12s），本模板按内容密度取 4–10s/段。"
+  },
+  "materials": [
+    {
+      "role": "text.script",
+      "mappedParameters": [
+        "segments",
+        "captions"
+      ],
+      "required": true,
+      "ifMissing": "stop"
+    }
+  ],
+  "layout": {
+    "ratio": "16:9",
+    "pixels": "1920x1080",
+    "safeArea": "左右 120px；底部 0.907H 以下为字幕禁区，任何元素不得进入",
+    "notes": "纯矢量手绘，不依赖任何位图素材；要竖屏就同时改 motion.json 的 output 与这里的 ratio，版式按 W/H 比例定位。"
+  },
+  "rhythm": {
+    "hardCut": "段与段硬切、无转场；段首入场动画已推进 20–30%，避免切点出现空帧",
+    "captionLag": "字幕比画面晚 0.2–0.5s，句间留 0.1s 以上间隙",
+    "beatPattern": "初版配比：步骤型 35% / 关键词 25% / 修订 25% / 回环 15%（待成片标定后替换为实测值）"
+  },
+  "layouts": [
+    {
+      "type": "step-sequence",
+      "role": "把流程拆成 2–6 步，每一步出现后保留，讲「逐步累积」",
+      "maxPerFilm": 0,
+      "args": {
+        "title": "标题，≤28 字",
+        "subtitle": "副题，≤44 字",
+        "items": "步骤数组 2–6 项，每项 {id, label, icon, highlight, notes}",
+        "conclusion": "收束语，1–2 条，每条 ≤20 字"
+      },
+      "capacity": "label ≤12 字 · notes 每条 ≤18 字（1–2 条）· title ≤28 字 · subtitle ≤44 字（均为上游 schema 硬约束）"
+    },
+    {
+      "type": "keyword-annotation",
+      "role": "只放一个关键词，四周引出标注，讲「这一个词指的是什么」",
+      "maxPerFilm": 0,
+      "args": {
+        "title": "标题，≤28 字",
+        "subtitle": "副题，≤44 字",
+        "items": "恰好 1 项，{id, label, icon, highlight, notes}",
+        "conclusion": "收束语，1–2 条，每条 ≤20 字"
+      },
+      "capacity": "label ≤12 字（这是画面唯一的大字）· notes 每条 ≤18 字 · 只有 1 项，不要塞第二个"
+    },
+    {
+      "type": "sticky-revision",
+      "role": "便签墙上改一版：旧行划掉、新行贴上，讲「判断被修正」",
+      "maxPerFilm": 0,
+      "args": {
+        "title": "标题，≤28 字",
+        "subtitle": "副题，≤44 字",
+        "items": "便签数组 2–6 项",
+        "revision": "{targetId, lines[]}：改哪一张、改成什么（1–2 行，每行 ≤18 字）",
+        "conclusion": "收束语，1–2 条，每条 ≤20 字"
+      },
+      "capacity": "label ≤12 字 · revision.lines 每行 ≤18 字 · 被改的 targetId 必须存在于 items 中"
+    },
+    {
+      "type": "return-loop",
+      "role": "要点排成环，用一条回指箭头收口，讲「回到开头那一环」",
+      "maxPerFilm": 1,
+      "args": {
+        "title": "标题，≤28 字",
+        "subtitle": "副题，≤44 字",
+        "items": "要点数组 2–6 项，排成环",
+        "return": "{fromId, toId, label}：从哪回到哪、这条箭头上写什么（≤12 字）",
+        "conclusion": "收束语，1–2 条，每条 ≤20 字"
+      },
+      "capacity": "items 2–6（环上不超过 6 个，多了会挤）· return.label ≤12 字 · 每片最多 1 次，它是收尾不是过场"
+    }
+  ],
+  "runtime": {
+    "profile": "html-canvas/1",
+    "entry": "src/index.html",
+    "dependencies": [
+      "kit.js",
+      "layouts.js",
+      "stage.js",
+      "main.js"
+    ],
+    "network": false,
+    "fonts": "依赖系统 PingFang SC；Skia 侧由 src/webcanvas.mjs 注入 __FONT_PICK 映射到随包 Noto 三档"
+  },
+  "voicing": {
+    "tool": "tools/vo.py",
+    "principle": "时间轴跟随配音，不是配音迁就时间轴",
+    "lead": 0.45,
+    "gap": 0.28,
+    "end": 0.55,
+    "tailHold": 0.14,
+    "loudnessI": -16,
+    "autoFilled": [
+      "captions[].start",
+      "captions[].end"
+    ]
+  },
+  "voices": {
+    "mapping": "preset.voices 里按角色名映射音色；captions[].speaker 指向它",
+    "profiles": {
+      "narrator": "zh-CN-YunyangNeural",
+      "default": "zh-CN-XiaoxiaoNeural"
+    }
+  },
+  "pitfalls": [
+    {
+      "symptom": "手绘线条每帧都在抖，成片像在震",
+      "cause": "抖动种子用了时间 t，同一根线逐帧重算",
+      "fix": "抖动种子必须来自元素 id 与段号（确定性），同一段内每帧画出完全相同的线"
+    },
+    {
+      "symptom": "荧光笔高亮盖住字，或只盖住半个字",
+      "cause": "highlight 是字符区间 [起,止]，按字符数乘字号估算宽度；中文与标点宽度不同",
+      "fix": "用 MK.measure 逐字累加真实宽度，不要用 字数×字号 估"
+    },
+    {
+      "symptom": "换画幅后便签墙错位、字幕压到内容",
+      "cause": "坐标写死成 1920×1080 的绝对像素",
+      "fix": "所有坐标按 W/H 比例算；字幕 y 用比例（≤1）而不是像素"
+    }
+  ]
+}

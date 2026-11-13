@@ -1,0 +1,18 @@
+MIT License
+
+Copyright (c) 2026 cutduo
+
+本模板的代码（src/kit.js、src/layouts.js、src/stage.js、src/main.js 及配套脚本）
+按 MIT 许可发布，可商用、修改、再分发，须保留本版权与许可声明。
+
+上游致谢
+--------
+内容模型（lyrics / keywords / notes 三字段契约、条数上限、9 镜头的顺序与时长、
+三类文字的排版数值）来自 MotionGit 模板「可爱角色歌词 MV」
+（motiongit.com/chenyutao0417/cute-character-lyric-mv v1.0.1，MIT License）。
+本模板不含上游源码、素材、示例歌词与演示片；渲染层为独立实现。
+
+字体
+----
+LXGW WenKai（OFL-1.1）、ZCOOL KuaiLe（OFL-1.1）随发行版单独获取，不包含在本包内。
+字体的许可与版权归各自作者所有。

@@ -85,7 +85,9 @@
     caption(ctx, W, H, cap, style, t) {
       const s = style || {};
       const size = s.size || Math.round(H * 0.057);
-      const y = s.y || Math.round(H * 0.907);
+      // y 两种写法：≤1 视为相对高度（跨画幅安全），>1 视为绝对像素（旧 preset 兼容）
+      const rawY = s.y === undefined ? 0.907 : Number(s.y);
+      const y = rawY <= 1 ? Math.round(H * rawY) : Math.round(rawY);
       const k = u.clamp(Math.min((t - cap.start) / 0.10, (cap.end - t) / 0.10), 0, 1);
       ctx.save();
       ctx.globalAlpha *= k;

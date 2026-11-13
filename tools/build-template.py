@@ -49,10 +49,20 @@ for ref in refs:
 
 # 打包只收运行时产物：_raw.* 是未抠图/未压缩的源素材，indesign 类中间件同样排除
 SKIP = ("_raw.png", "_raw.jpg", "_raw.jpeg", ".psd", ".xcf")
+# 目录级排除：out/ 是本地产物（配音 wav、临时帧），render-cache 是重绘缓存，
+# 都不该进可分发包 —— 之前只按文件名排除，vo.py 产出的 wav 会被整个打进去。
+SKIP_DIRS = {"out", "render-cache", "node_modules", ".git", "__pycache__"}
+
+
+def _skipped(p):
+    rel = p.relative_to(SRC).parts[:-1]
+    return any(part in SKIP_DIRS for part in rel)
+
+
 files = sorted(
     p for p in SRC.rglob("*")
     if p.is_file() and p.name != "integrity.json" and not p.name.startswith(".")
-    and not p.name.endswith(SKIP)
+    and not p.name.endswith(SKIP) and not _skipped(p)
 )
 integrity = {
     "algorithm": "sha256",

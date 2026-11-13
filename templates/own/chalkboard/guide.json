@@ -1,0 +1,208 @@
+{
+  "purpose": "粉笔黑板知识讲解：用真实几何（光源、轨道、本影、投影）把「看到什么」和「为什么」分开画清。八个机制各自负责一类几何关系，不是八个版式皮肤。",
+  "distilledFrom": {
+    "file": "knowledge-explainer-chalkboard v2.7.4（@adunext，MotionGit）",
+    "durationSeconds": 209.98,
+    "size": "1920x1080",
+    "fps": 60,
+    "shots": 32,
+    "medianShotSeconds": 6.56,
+    "note": "只借内容模型：8 个 mechanism 的字段契约、几何语义（相位角/本影锥/圆面重叠/光路求交）、21 个内容族到机制的映射、条件谓词定义。渲染层（粉笔笔触、板面、版式坐标、字体排布）为自写；未复制其素材、文案、品牌标识与 13 类通用图示库。"
+  },
+  "duration": {
+    "policy": "fixed",
+    "seconds": 34,
+    "fps": {
+      "num": 30,
+      "den": 1
+    },
+    "adaptation": "总时长 = segments[].dur 之和，必须与 motion.json 的 durationSeconds 一致。单段 4–90s；几何演出的舒适区间是 8–12s（再短看不清相位怎么走）。"
+  },
+  "materials": [
+    {
+      "role": "text.script",
+      "mappedParameters": [
+        "segments",
+        "captions"
+      ],
+      "required": true,
+      "ifMissing": "stop"
+    }
+  ],
+  "layout": {
+    "ratio": "16:9",
+    "pixels": "1920x1080",
+    "safeArea": "左右 4.5% 边距；标题带 0.055–0.128H；内容区 0.165–0.885H；字幕 0.925H 以下",
+    "notes": "所有坐标按 W/H 比例算。竖屏未适配：八个机制都是「左几何 + 右数据」两栏，竖屏要改成上下两段，不是缩一缩。"
+  },
+  "rhythm": {
+    "hardCut": "段与段硬切、无转场；每段内部按 structure → focus → explain → settle 四拍推进",
+    "captionLag": "字幕比画面晚 0.1–0.3s；几何量（百分比、角度）必须与画面上球的位置同帧一致",
+    "beatPattern": "演示配比：遮挡 26% / 光路 24% / 倾角 26% / 条件 24%"
+  },
+  "layouts": [
+    {
+      "type": "orbit-phase",
+      "role": "同一球体沿轨道运动，从观察者看到的受光比例随角度改变。讲「相位」用这一支。",
+      "maxPerFilm": 0,
+      "args": {
+        "model": "几何模型 {orbitRadius, bodyRadius, occluderRadius, sourceRadius, sourceDistance, inclinationDegrees, displayInclinationDegrees}",
+        "phaseKeys": "角度轨道 [[段内秒, 角度], …]，2–12 个，时间严格递增，首尾覆盖 0 与段长",
+        "nodeKeys": "轨道节点相位，同上；不给则按 0 处理",
+        "labels": "画面标签词典：source/body/occluder/orbit/view/lit/blocked",
+        "unit": "单位串，≤6 字（cm / m / 任意）",
+        "decimals": "百分比小数位，0–3",
+        "duration": "段长（秒），与 preset 的 dur 一致"
+      },
+      "capacity": "title ≤44 字 · labels 每种 ≤12 字 · phaseKeys 2–12 个 · 左轨道 + 右相位盘两栏，右侧只放得下两组数值"
+    },
+    {
+      "type": "surface-view",
+      "role": "把球从轨道上取出放大，用 5 条入射光线说明光从哪一侧来。讲「光照方向」用这一支。",
+      "maxPerFilm": 0,
+      "args": {
+        "model": "同上",
+        "phaseKeys": "同上；这一段通常只走 90° 左右，走满一圈观众看不清放大对象",
+        "labels": "同上",
+        "duration": "段长（秒），与 preset 的 dur 一致",
+        "decimals": "百分比小数位，0–3",
+        "unit": "单位串，≤6 字"
+      },
+      "capacity": "title ≤44 字 · 左栏大球占 56% 宽，右栏只剩「一组数值 + 一张缩略轨道」的位置 · 缩略轨道不放标签"
+    },
+    {
+      "type": "shadow-overlap",
+      "role": "本影按锥形几何算出来，与球面圆面相交的面积决定遮挡比例。讲「挡住多少」用这一支。",
+      "maxPerFilm": 0,
+      "args": {
+        "model": "同上；occluderRadius 与 bodyRadius 的差决定过渡带宽度",
+        "phaseKeys": "同上。**过渡带只有约 ±9°，别用大角度扫**（见 pitfalls）",
+        "duration": "段长（秒），与 preset 的 dur 一致",
+        "decimals": "百分比小数位，0–3",
+        "unit": "单位串，≤6 字"
+      },
+      "capacity": "title ≤44 字 · 三块画面：左轨道 / 右上相位盘 / 右下截面，各自只放一组数值"
+    },
+    {
+      "type": "inclined-orbit",
+      "role": "同一轨道带倾角：俯视投影里排成一条线，仍可能避开遮挡。讲「为什么有时挡不住」用这一支。",
+      "maxPerFilm": 0,
+      "args": {
+        "model": "同上。inclinationDegrees 进计算，displayInclinationDegrees 只决定画多斜",
+        "nodeKeys": "节点相位；固定在 90° 时轨道会呈现为一条斜线",
+        "duration": "段长（秒），与 preset 的 dur 一致",
+        "decimals": "百分比小数位，0–3",
+        "unit": "单位串，≤6 字"
+      },
+      "capacity": "title ≤44 字 · 实际倾角与示意倾角必须分别标注，否则观众会当成真实比例"
+    },
+    {
+      "type": "projection-compare",
+      "role": "同一个三维状态画两个投影（正视 0、俯视约 77°）。讲「看到的不等于发生的」用这一支。",
+      "maxPerFilm": 0,
+      "args": {
+        "model": "同上",
+        "phaseKeys": "同上；两个投影共用同一个状态，不能各给一套时间轴",
+        "duration": "段长（秒），与 preset 的 dur 一致",
+        "decimals": "百分比小数位，0–3",
+        "unit": "单位串，≤6 字"
+      },
+      "capacity": "title ≤44 字 · 左右各一幅轨道图，单幅宽度只有 48%，标签最多两行"
+    },
+    {
+      "type": "causal-compare",
+      "role": "两个条件并排，各自一种变暗原因：左边只变相位，右边相位满但有本影。讲「外观相近、原因不同」用这一支。",
+      "maxPerFilm": 0,
+      "args": {
+        "model": "主状态模型",
+        "comparison": "{label ≤18 字, model, phaseKeys, nodeKeys}：右栏那一套"
+      },
+      "capacity": "两个 comparison.label 各 ≤18 字 · 两栏各只放一组数值 · 中间只留一条竖线，不放文字说明"
+    },
+    {
+      "type": "ray-topology",
+      "role": "源 → 靶的 N 条光线，每条停在遇到的第一块挡板。讲「哪块板挡住了哪几条」用这一支。",
+      "maxPerFilm": 0,
+      "args": {
+        "optics": "{source[x,y], target[x,y], spread, rays 1–24, blockers[{id,label,x,y,r}] ≤6}",
+        "labels": "source/body"
+      },
+      "capacity": "blockers ≤6 · rays 实际可读 7–9 条（再多光路糊成一片）· 右栏每条挡板占两行（名称 + 拦截数）"
+    },
+    {
+      "type": "condition-proof",
+      "role": "把 4 个几何谓词逐条判真假，结论跟随真实几何状态。讲「同时满足才算」用这一支。",
+      "maxPerFilm": 0,
+      "args": {
+        "conditions": "从 near-opposition / within-shadow-height / shadow-contact / direct-center-ray 里选 1–4 个",
+        "model": "同上",
+        "phaseKeys": "同上；通常停在临界点附近，让真假在段内切换"
+      },
+      "capacity": "conditions ≤4（右栏每行一个字高 0.045H 的判定语）· 结论行只写一句，≤12 字"
+    }
+  ],
+  "runtime": {
+    "profile": "html-canvas/1",
+    "entry": "src/index.html",
+    "dependencies": [
+      "kit.js",
+      "layouts.js",
+      "stage.js",
+      "main.js"
+    ],
+    "network": false,
+    "fonts": "粉笔字 LongCang（龙藏体）、正文与数字 LXGW WenKai（霞鹜文楷），均 OFL，许可在 licenses/。两支字体不入库也不随包分发，由宿主 assets/fonts 提供，缺失时跑 bash tools/fetch-fonts.sh。未注册时回退系统 PingFang SC：画面结构仍对，黑板感消失，且不报错。"
+  },
+  "voicing": {
+    "tool": "tools/vo.py",
+    "principle": "时间轴跟随配音，不是配音迁就时间轴",
+    "lead": 0.45,
+    "gap": 0.28,
+    "end": 0.55,
+    "tailHold": 0.14,
+    "loudnessI": -16,
+    "autoFilled": [
+      "captions[].start",
+      "captions[].end"
+    ]
+  },
+  "voices": {
+    "mapping": "preset.voices 里按角色名映射音色；captions[].speaker 指向它",
+    "profiles": {
+      "narrator": "zh-CN-YunyangNeural",
+      "default": "zh-CN-XiaoxiaoNeural"
+    }
+  },
+  "pitfalls": [
+    {
+      "symptom": "满相的球看起来仍然全暗，或月牙形状是歪的",
+      "cause": "球体明暗界线 x = -c·√(r²-y²) 的两个端点在圆的**上下顶点**，不在左右端点",
+      "fix": "路径 = 右半圆（从下顶点到上顶点）+ 界线（从上顶点回下顶点）。端点取错时 c=1 也填不满整圆"
+    },
+    {
+      "symptom": "遮挡比例从 0 突然跳到 100%，中间没有过渡",
+      "cause": "轨道半径/球半径 ≈ 27:1，圆面重叠的过渡带在轨道上只有约 17°；用 30° 以上的 phaseKeys 扫过去，画面「啪」一下全黑",
+      "fix": "要看到渐变就把 phaseKeys 缩到 3–5°（球几乎不动、影爬过球面）；要展示移动就用大角度，但别指望中间态"
+    },
+    {
+      "symptom": "球只剩一团棕色，看不出是本影",
+      "cause": "本影填充 alpha 给到 0.9，把受光面和轮廓一起盖掉",
+      "fix": "填充 ≤0.55，另描一圈红色粉笔边界——「影从哪开始」必须看得见"
+    },
+    {
+      "symptom": "缩略图里文字糊成一团",
+      "cause": "缩略轨道只有 0.3 倍尺寸，标签字号按原尺寸算",
+      "fix": "缩略图传 labels:false，整张图只做定位，不承载文字"
+    },
+    {
+      "symptom": "相位盘的方框比球还抢眼",
+      "cause": "框线用了 dim 色的正常 alpha",
+      "fix": "视点框只是分区提示，globalAlpha 压到 0.3 以下"
+    },
+    {
+      "symptom": "粉笔线看起来像矢量描边，不像粉笔",
+      "cause": "抖动幅度按线宽的比例给（w*0.32 ≈ 0.9px），在 1080p 下不可见",
+      "fix": "抖动 ≥1.5px、粉尘密度 ≥50%、外晕 alpha ≥0.2；三层描边（外晕/主体/芯）不能省"
+    }
+  ]
+}

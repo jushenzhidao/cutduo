@@ -78,7 +78,7 @@ L0–L3 全部进 `integrity.json`。改一个字节就要重新打包，否则 
 
 | 我们补 | 为什么 `.motion` 没有 |
 |---|---|
-| `pitfalls[]`（症状/成因/修法） | 规范只描述「应该怎样」，不沉淀「踩过什么」。而 `enter()` 入场下限、图标二次偏移、硬切首帧空帧这三条，每一条都会让新模板白跑一遍 |
+| `pitfalls[]`（症状/成因/修法） | 规范只描述「应该怎样」，不沉淀「踩过什么」。`enter()` 入场下限、图标二次偏移、硬切首帧空帧、Skia 姿态图静默退化——每一条都会让新模板白跑一遍。`kits/science/template/guide.json` 已有 4 条示范 |
 | Skia 宿主声明（`SKIA-SPEC.md`） | `runtime.profile` 只有 `html-canvas/1`。我们不污染 `motion.json` 的字段，另起一份说明 |
 | 字高与安全区的**实测**下限 | 规范只有语义安全区（「底部 940px 以下」），没有像素级判据。我们的判据是「横屏正文 ≥40px、单行 ≤26 字」 |
 
@@ -88,7 +88,16 @@ L0–L3 全部进 `integrity.json`。改一个字节就要重新打包，否则 
 
 1. **`guide.json` 先写 `rhythm` 与 `layouts[].capacity`** —— 这决定这支模板能装多少字、切点多久。
    没这两个数，后面 schema 不知道该约束什么。
-2. **`params.schema.json` 按 `layouts[].args` 反推** —— 只允许出现 guide 里声明过的参数，多一个就是设计漏了。
+2. **`params.schema.json` 用 `tools/gen-schema.py` 从 guide + presets 反推**：
+
+   ```bash
+   python3 tools/gen-schema.py --template templates/own/<名字>           # 先看统计
+   python3 tools/gen-schema.py --template templates/own/<名字> --write   # 写回
+   ```
+
+   类型取**真实 presets 的实测类型**（全样本同类型才收紧），只有说明、没有样本的参数不加 `type`——
+   宁松不错。手写 40+ 个参数必然漏，而且会漏掉 `additionalProperties` 这条唯一的硬约束。
+   生成后 `segments[].args` 就有了 `additionalProperties: false`，拼错键名会被拒。
 3. **`presets/default.json` 照 schema 填一份能跑的最小内容** —— 它是 `parameters.defaultPreset`，打包时会被 assert 存在。
 4. `motion.json` 填身份与输出规格（`durationSeconds` 要等于 `segments[].dur` 之和）。
 5. `SKILL.md` 写操作序列，末行保留边界声明。

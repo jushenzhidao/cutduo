@@ -1,0 +1,65 @@
+{
+  "$schema": "https://motiongit.com/schema/motion/0.1.json",
+  "format": "motiongit-template",
+  "specVersion": "0.1.0-draft.1",
+  "template": {
+    "id": "cute-mv",
+    "version": "0.1.0",
+    "name": "可爱角色歌词 MV",
+    "status": "stable",
+    "distilledFrom": {
+      "source": "motiongit.com/chenyutao0417/cute-character-lyric-mv v1.0.1（上游 MIT，个人下载包）",
+      "durationSeconds": 33,
+      "resolution": "1920x1080",
+      "fps": 30,
+      "shots": 9,
+      "medianShotSeconds": 3.65,
+      "note": "半蒸馏：只借内容模型（lyrics/keywords/notes 三字段契约、条数上限、9 镜头顺序与时长、三类文字的排版数值），渲染层与全部画面自写。未复制上游源码、素材、示例歌词、品牌标识与《碎碎念》演示片。"
+    }
+  },
+  "runtime": {
+    "profile": "html-canvas/1",
+    "engine": "motiongit-reference",
+    "entry": "src/index.html",
+    "dependencyLock": "motion.lock.json"
+  },
+  "parameters": {
+    "schema": "params.schema.json",
+    "defaultPreset": "presets/default.json"
+  },
+  "assets": {
+    "manifest": "asset-manifest.json"
+  },
+  "output": {
+    "width": 1920,
+    "height": 1080,
+    "fps": {
+      "num": 30,
+      "den": 1
+    },
+    "durationPolicy": "fixed",
+    "durationSeconds": 33
+  },
+  "preview": {
+    "preset": "presets/default.json"
+  },
+  "license": {
+    "file": "licenses/TEMPLATE-LICENSE.txt"
+  },
+  "permissions": {
+    "network": false,
+    "read": [
+      "package",
+      "instance-inputs"
+    ],
+    "write": [
+      "instance-output"
+    ]
+  },
+  "ai": {
+    "entry": "SKILL.md",
+    "guide": "guide.json",
+    "summary": "33 秒 / 9 镜头的可爱 chibi 角色歌词 MV：歌词条、3D 关键词大字、手写纸条三类内容可替换，人物为程序绘制的矢量角色，零素材依赖"
+  },
+  "integrity": "integrity.json"
+}
