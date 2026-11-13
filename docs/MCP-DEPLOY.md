@@ -200,3 +200,49 @@ token 在服务器 `/opt/cutduo/.env`（`chmod 600`）。注册后需在连接�
    `MAX_JOBS=3` 意味着 24 个渲染线程；建议首次压测后再决定是否放宽，长片尽量错峰。
 6. **`mcp.cutduo.com` 仍指向旧的 renderd**：那是另一个服务（容器 `renderd-api-1`，端口 39340），
    与本服务无关，也未下线。两个 MCP 并存时注意客户端配置别指错。
+
+## 十、出定制片：内联 params + 上传音轨（不进 preset 列表）
+
+`capabilities()` 里的 `presets[]` 只是**内置样例**。带配音的成片（`vo.py` 产出的 `.vo.json`）
+在 `out/` 下、不入库，所以定制片走**内联 params**：调用方把整份 preset 塞进 `params`，
+音轨走 `POST /assets`。
+
+```bash
+# 1) 上传旁白（≤64MB；assetId 形如 a-xxxx）
+curl -s -X POST "https://cut-mcp.1task.cn/assets?name=hip-hq.wav" \
+  -H "Authorization: Bearer $TOKEN" --data-binary @out/hip-synovitis/hq/hip-hq.wav
+
+# 2) 出片：params 直接放 preset 全文（含 segments / captions / durationSeconds）
+node -e '
+const fs=require("fs");
+const params=JSON.parse(fs.readFileSync("out/hip-synovitis/hq/hip-hq.vo.json","utf8"));
+fetch("https://cut-mcp.1task.cn/mcp",{method:"POST",
+  headers:{"Authorization":"Bearer "+process.env.TOKEN,"content-type":"application/json"},
+  body:JSON.stringify({jsonrpc:"2.0",id:1,method:"tools/call",params:{name:"cutduo_render",arguments:{
+    kit:"science", params, audio:"a-xxxx", fps:60,
+    overrides:{crf:15,preset:"slow"}, out:"hip-60fps.mp4"}}})})
+  .then(r=>r.json()).then(j=>console.log(j.result.content[0].text));
+'
+```
+
+实测（本机 30 核，4770 帧 / 79.5s / 1920×1080@60）：
+
+| 档 | overrides | 耗时 | 体积 | PSNR（vs 源帧） |
+|---|---|---|---|---|
+| 默认 | — | 26.0s | 8.42MB | 45.47 dB |
+| 质量优先 | `{crf:15, preset:"slow"}` | 31.0s | 15.85MB | **50.70 dB** |
+
+服务器（Xeon E5-2682 v4、`MAX_JOBS=1`）会比本机慢，长片按 1.5–3× 估；超过 90s 会返回
+`jobId`，用 `cutduo_job_status` 轮询。
+
+### 三个前提，缺一不可
+
+1. **镜像里必须有字体**。`assets/fonts/` 被 `.gitignore` 排除（19 个文件 ~34MB）。
+   - 用本文档第二节的 `tar` 方式送代码：本机有字体，会一起带过去；
+   - 若在服务器 `git clone`：先跑 `bash tools/fetch-fonts.sh`（需在构建前、且要在构建上下文里）。
+   - 缺字体会**静默回退系统字体**，片子照出、门禁照过，只是画面和本地不一致。
+2. **schema 要跟上渲染器**。`snapToFrames`（vo.py 自动写）、`strikeFill`（focus 版式的划掉标签填充色）、
+   `_note`（作者注释）曾缺席 `params.schema.json`，导致**任何 `.vo.json` 经 API 都会被拒**
+   （CLI 不校验 schema，所以本地一直没发现）。已在 2026-11-13 补齐。
+3. **BGM 不在 MCP 里**。`cutduo_render` 只 mux 一条音轨（AAC 160k）。
+   要带配乐就先在本地混好成 wav 再上传，或出片后跑 `tools/add-bgm.mjs`（后者只在有仓库的机器上可用）。

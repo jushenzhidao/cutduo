@@ -81,7 +81,7 @@ const TOOLS = [
   {
     name: 'cutduo_render',
     description:
-      '出片。默认同步等待最多 90 秒；超过则返回 jobId，改用 cutduo_job_status 轮询。audio 可传上传得到的 assetId（a- 开头）、内置音频文件名，或公网 URL。',
+      '出片。默认同步等待最多 90 秒；超过则返回 jobId，改用 cutduo_job_status 轮询。audio 可传上传得到的 assetId（a- 开头）或内置音频文件名。质量优先档用 overrides={"crf":15,"preset":"slow"}。',
     inputSchema: {
       type: 'object',
       properties: {
@@ -91,6 +91,10 @@ const TOOLS = [
         audio: { type: 'string', description: 'assetId / 内置音频名 / 公网 URL' },
         fps: { type: 'number', description: '覆盖帧率' },
         workers: { type: 'number', description: '并行 worker 数，默认 8' },
+        overrides: {
+          type: 'object',
+          description: '渲染超参（只放与内容无关的）：crf / preset(x264) / pipe / theme / transition。质量优先档传 {"crf":15,"preset":"slow"}',
+        },
         out: { type: 'string', description: '产物文件名（不含目录），默认 <kit>.mp4' },
       },
       required: ['kit'],
@@ -170,7 +174,9 @@ async function doRender(args) {
   if (args.preset) req.preset = args.preset;
   const audio = resolveAudio(args.audio);
   if (audio) req.audio = audio;
-  const overrides = {};
+  // overrides 透传给契约层：内容必须走 params，超参（crf / x264 preset / pipe）从这里进。
+  // 不透传的话，MCP 只能出默认档（crf20+veryfast），复刻不了「质量优先」母版。
+  const overrides = { ...(args.overrides || {}) };
   if (args.fps != null) overrides.fps = args.fps;
   if (args.workers != null) overrides.workers = args.workers;
   if (Object.keys(overrides).length) req.overrides = overrides;
