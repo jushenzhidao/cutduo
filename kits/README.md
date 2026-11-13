@@ -10,8 +10,11 @@
 | `desk` | 桌面 | 1440×1080 @60 | `kits/desk/render.mjs` | `content/*.json`（`*-voiced.json` 带配音） |
 | `editorial` | 杂志 | 1920×1080 @30 | `kits/editorial/canvas-editorial.mjs` | `content/inputs-*.json` |
 | `mg` | 通用 | 1920×1080 @30 | `kits/mg/render.mjs` | `kits/mg/params.json` |
+| `clay` | 黏土图示 | 1920×1080 @30 | `render.mjs --kit clay` | `kits/clay/presets/*.json`（7 种机制） |
 
-五者共用 `@napi-rs/canvas`（Skia），**换版式不换速度档**。
+六者共用 `@napi-rs/canvas`（Skia），**换版式不换速度档**。
+
+`clay` 是**换宿主**（原样跑上游 Canvas2D 源码），不是自建；其余五支是自建或全蒸馏。
 
 ```bash
 bash tools/smoke.sh     # 五支各出一帧，回归用
@@ -36,8 +39,17 @@ kits/<name>/
   README.md                  这支版式的结构规律与坑
 ```
 
-`science` 额外带 `template/`（`.motion` 格式的三件套源码 + SPEC）与 `probe/`（最小验证集），
-因为它同时支持 Skia 与浏览器两个宿主——双跑能力，不是另一套栈。
+`science` 额外带 `template/`，那是**渲染器的源码本体**：`science.mjs` 逐字加载其中的
+`src/kit.js` + `layouts.js`，改它等于改成片。这与 `templates/own/` 里的模板是两种东西：
+
+| 位置 | 是什么 | 有没有代码在执行它 |
+|---|---|---|
+| `kits/<name>/template/` | 渲染器源码本体 | 有（`science.mjs` 直接加载） |
+| `templates/own/<name>/` | 可分发模板资产，可能是上游原版 | 没有（`editorial` 的上游 DOM 版；Skia 实现在 `kits/editorial/`） |
+
+判据就是这一列：有代码在执行，就放渲染器旁边；只是原版存档，放 `templates/own/`。
+
+`science` 同时支持 Skia 与浏览器两个宿主——双跑能力，不是另一套栈。
 
 ## 新增一支版式
 
@@ -47,4 +59,7 @@ kits/<name>/
 4. 在 `tools/smoke.sh` 加一行 `probe`，保证以后改路径能回归。
 5. 走根入口的话，在 `render.mjs` 的 `kitSpec()` 里加一个 `kind`；
    若是三件套形式（`kit.js` + `layouts.js` + `stage.js`），`--kit <name>` 会自动按
-   `kits/<name>/template/src` → `templates/own/<name>/src` → 目录路径 依次探测，无需改代码。
+   `templates/own/<name>/src` → `<name>/src` → `<name>`（目录本身）依次探测，无需改代码。
+   **`kits/<name>/template/src` 不在通用探测里**：只有 `kits/science/template/src` 被
+   `render.mjs` 单独硬编码为 science 专用适配器（要预载姿态图与口型贴片，通用宿主不认）。
+   新模板一律落 `templates/own/`，放 `kits/` 下会报「找不到 kit」。

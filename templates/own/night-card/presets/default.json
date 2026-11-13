@@ -1,0 +1,78 @@
+{
+  "durationSeconds": 56,
+  "fps": 30,
+  "fadeOutSeconds": 0.6,
+  "theme": {
+    "bg": "#0A0A0C",
+    "bgSoft": "#151318",
+    "ink": "#F2EDE3",
+    "muted": "#6B6660",
+    "dim": "#332F36",
+    "accent": "#E0A94A",
+    "accentSoft": "#8A6526"
+  },
+  "brand": {
+    "show": true,
+    "text": "夜色卡片"
+  },
+  "subtitle": {
+    "size": 54,
+    "color": "#FFFFFF",
+    "stroke": 0,
+    "y": 0.845
+  },
+  "captions": [],
+  "segments": [
+    {
+      "type": "cover",
+      "dur": 7,
+      "kicker": "深夜手记 · 01",
+      "title": "有些话\n只能夜里说",
+      "sub": "给还没睡的人"
+    },
+    {
+      "type": "statement",
+      "dur": 6.5,
+      "text": "你不是睡不着",
+      "note": "你是在等一个还没发生的答案"
+    },
+    {
+      "type": "statement",
+      "dur": 7,
+      "mark": true,
+      "text": "白天我把它按下去\n夜里它自己浮上来"
+    },
+    {
+      "type": "contrast",
+      "dur": 8,
+      "before": "白天说没关系",
+      "after": "凌晨三点还在想那句话"
+    },
+    {
+      "type": "quote",
+      "dur": 9,
+      "text": "人最难的不是做选择\n是选完之后不再回头",
+      "from": "某个凌晨 · 03:47"
+    },
+    {
+      "type": "number",
+      "dur": 7,
+      "value": "3:47",
+      "label": "一天里最诚实的时刻",
+      "note": "没有人在看，你才肯承认"
+    },
+    {
+      "type": "statement",
+      "dur": 6,
+      "text": "所以别急着睡",
+      "note": "有些答案，天亮才来"
+    },
+    {
+      "type": "outro",
+      "dur": 5.5,
+      "title": "晚安",
+      "sub": "明天再看一遍",
+      "brand": "夜色卡片"
+    }
+  ]
+}

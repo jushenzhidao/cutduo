@@ -1,0 +1,358 @@
+{
+  "durationSeconds": 70.0,
+  "fps": 30,
+  "fadeOutSeconds": 0.5,
+  "brand": {
+    "show": true,
+    "text": "黏土图示"
+  },
+  "subtitle": {
+    "size": 54,
+    "color": "#2b2a26",
+    "stroke": 7,
+    "strokeColor": "#ffffff",
+    "y": 0.907
+  },
+  "captions": [
+    {
+      "start": 0.5,
+      "end": 8.5,
+      "text": "同一批面团，按份量拆成三份"
+    },
+    {
+      "start": 9.5,
+      "end": 16.5,
+      "text": "柔软的颗粒，一个一个粘上去"
+    },
+    {
+      "start": 17.5,
+      "end": 25.5,
+      "text": "作用力过了阈值，才会分裂"
+    },
+    {
+      "start": 26.5,
+      "end": 37.5,
+      "text": "顺着血统，追到最早那一支"
+    },
+    {
+      "start": 38.5,
+      "end": 49.5,
+      "text": "东西沿着通道，绕过障碍"
+    },
+    {
+      "start": 50.5,
+      "end": 57.5,
+      "text": "先放大看细节，再回到全图"
+    },
+    {
+      "start": 58.5,
+      "end": 69.5,
+      "text": "同样的路，换个条件会怎样"
+    }
+  ],
+  "segments": [
+    {
+      "type": "split-merge",
+      "dur": 9.0,
+      "unit": "团",
+      "valueUnit": "克",
+      "decimals": 1,
+      "seed": 39,
+      "language": "zh-CN",
+      "id": "dough",
+      "title": "同一批面团按份量拆分",
+      "nodes": [
+        {
+          "id": "n0",
+          "label": "甲团",
+          "value": 36
+        },
+        {
+          "id": "n1",
+          "label": "乙团",
+          "value": 54
+        }
+      ],
+      "parts": [
+        {
+          "id": "left",
+          "label": "小份",
+          "weight": 1
+        },
+        {
+          "id": "core",
+          "label": "中份",
+          "weight": 2
+        },
+        {
+          "id": "right",
+          "label": "大份",
+          "weight": 3
+        }
+      ],
+      "direction": "split"
+    },
+    {
+      "type": "interface-bind",
+      "dur": 8.0,
+      "unit": "团",
+      "valueUnit": "克",
+      "decimals": 1,
+      "seed": 39,
+      "language": "zh-CN",
+      "id": "coating",
+      "title": "柔软颗粒的边界逐个附着",
+      "nodes": [
+        {
+          "id": "n0",
+          "label": "细粒",
+          "value": 30
+        },
+        {
+          "id": "n1",
+          "label": "粗粒",
+          "value": 45
+        }
+      ],
+      "agents": 8
+    },
+    {
+      "type": "shear-break",
+      "dur": 9.0,
+      "unit": "团",
+      "valueUnit": "克",
+      "decimals": 1,
+      "seed": 39,
+      "language": "zh-CN",
+      "id": "snow",
+      "title": "压力达到阈值才发生分裂",
+      "nodes": [
+        {
+          "id": "n0",
+          "label": "雪团甲",
+          "value": 40
+        },
+        {
+          "id": "n1",
+          "label": "雪团乙",
+          "value": 56
+        }
+      ],
+      "parts": [
+        {
+          "id": "left",
+          "label": "小份",
+          "weight": 1
+        },
+        {
+          "id": "core",
+          "label": "中份",
+          "weight": 2
+        },
+        {
+          "id": "right",
+          "label": "大份",
+          "weight": 3
+        }
+      ],
+      "force": 64,
+      "threshold": 52
+    },
+    {
+      "type": "lineage-track",
+      "dur": 12.0,
+      "unit": "团",
+      "valueUnit": "克",
+      "decimals": 1,
+      "seed": 39,
+      "language": "zh-CN",
+      "id": "pellet-lineage",
+      "title": "同一批材料保留出处与后代",
+      "nodes": [
+        {
+          "id": "n0",
+          "label": "红批",
+          "value": 24
+        },
+        {
+          "id": "n1",
+          "label": "蓝批",
+          "value": 32
+        }
+      ],
+      "parts": [
+        {
+          "id": "left",
+          "label": "小份",
+          "weight": 1
+        },
+        {
+          "id": "core",
+          "label": "中份",
+          "weight": 2
+        },
+        {
+          "id": "right",
+          "label": "大份",
+          "weight": 3
+        }
+      ]
+    },
+    {
+      "type": "channel-transport",
+      "dur": 12.0,
+      "unit": "团",
+      "valueUnit": "克",
+      "decimals": 1,
+      "seed": 39,
+      "language": "zh-CN",
+      "id": "mineral-stream",
+      "title": "颗粒沿实际通道进入收集区",
+      "nodes": [
+        {
+          "id": "n0",
+          "label": "颗粒甲",
+          "value": 24
+        },
+        {
+          "id": "n1",
+          "label": "颗粒乙",
+          "value": 32
+        },
+        {
+          "id": "n2",
+          "label": "颗粒丙",
+          "value": 48
+        }
+      ],
+      "route": [
+        {
+          "x": 0.1,
+          "y": 0.5
+        },
+        {
+          "x": 0.34,
+          "y": 0.5
+        },
+        {
+          "x": 0.6,
+          "y": 0.5
+        },
+        {
+          "x": 0.9,
+          "y": 0.5
+        }
+      ],
+      "obstacles": [
+        {
+          "id": "rock-A",
+          "x": 0.35,
+          "y": 0.16,
+          "r": 0.04
+        },
+        {
+          "id": "rock-B",
+          "x": 0.7,
+          "y": 0.84,
+          "r": 0.04
+        }
+      ]
+    },
+    {
+      "type": "focus-return",
+      "dur": 8.0,
+      "unit": "团",
+      "valueUnit": "克",
+      "decimals": 1,
+      "seed": 39,
+      "language": "zh-CN",
+      "id": "grain-focus",
+      "title": "选中现场颗粒并原位返回",
+      "nodes": [
+        {
+          "id": "n0",
+          "label": "种子甲",
+          "value": 18
+        },
+        {
+          "id": "n1",
+          "label": "种子乙",
+          "value": 24
+        },
+        {
+          "id": "n2",
+          "label": "种子丙",
+          "value": 30
+        }
+      ],
+      "focusId": "n1"
+    },
+    {
+      "type": "alternative-compare",
+      "dur": 12.0,
+      "unit": "团",
+      "valueUnit": "克",
+      "decimals": 1,
+      "seed": 39,
+      "language": "zh-CN",
+      "id": "seed-gate",
+      "title": "开阀与闭阀是两个假设条件",
+      "nodes": [
+        {
+          "id": "n0",
+          "label": "样本甲",
+          "value": 18
+        },
+        {
+          "id": "n1",
+          "label": "样本乙",
+          "value": 24
+        }
+      ],
+      "route": [
+        {
+          "x": 0.1,
+          "y": 0.5
+        },
+        {
+          "x": 0.34,
+          "y": 0.5
+        },
+        {
+          "x": 0.6,
+          "y": 0.5
+        },
+        {
+          "x": 0.9,
+          "y": 0.5
+        }
+      ],
+      "obstacles": [
+        {
+          "id": "rock-A",
+          "x": 0.35,
+          "y": 0.16,
+          "r": 0.04
+        },
+        {
+          "id": "rock-B",
+          "x": 0.7,
+          "y": 0.84,
+          "r": 0.04
+        }
+      ],
+      "conditions": [
+        {
+          "id": "open-case",
+          "label": "假设：阀门打开",
+          "gateOpen": true
+        },
+        {
+          "id": "closed-case",
+          "label": "假设：阀门关闭",
+          "gateOpen": false
+        }
+      ]
+    }
+  ]
+}

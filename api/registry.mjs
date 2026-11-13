@@ -11,8 +11,11 @@ import * as science from './kits/science.mjs';
 import * as desk from './kits/desk.mjs';
 import * as editorial from './kits/editorial.mjs';
 import * as mg from './kits/mg.mjs';
+import * as clay from './kits/clay.mjs';
+import * as collage from './kits/collage.mjs';
+import * as nightCard from './kits/night-card.mjs';
 
-const MODULES = [paper, science, desk, editorial, mg];
+const MODULES = [paper, science, desk, editorial, mg, clay, collage, nightCard];
 
 /** 别名 → 规范 id。别名只做输入宽容，不扩张契约。 */
 const ALIASES = {
@@ -25,6 +28,8 @@ const ALIASES = {
   'canvas-editorial': 'editorial',
   edit: 'editorial',
   'mg-kit': 'mg',
+  'screen-collage': 'collage',
+  'promo-main': 'collage',
 };
 
 const BY_ID = new Map();
@@ -43,6 +48,8 @@ export function list() {
     paramsSchema: capability.paramsSchema,
     schemaStatus: capability.schemaStatus,
     ...(capability.schemaNote ? { schemaNote: capability.schemaNote } : {}),
+    // 跨片可复用的标定值：有就透出，别让 agent 去猜路径。
+    ...(capability.calibration ? { calibration: capability.calibration } : {}),
     presets: capability.presets || [],
     defaultPreset: capability.defaultPreset || null,
     audio: capability.audio,

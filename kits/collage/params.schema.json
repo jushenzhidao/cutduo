@@ -1,0 +1,328 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Screen Collage 深色科技风宣传片（collage）",
+  "type": "object",
+  "required": [
+    "durationSeconds",
+    "scenes"
+  ],
+  "properties": {
+    "fps": {
+      "type": "number",
+      "default": 60
+    },
+    "width": {
+      "type": "number",
+      "default": 1920
+    },
+    "height": {
+      "type": "number",
+      "default": 1080
+    },
+    "durationSeconds": {
+      "type": "number",
+      "description": "必须等于 scenes 最后一段的 t1。上游契约里它是硬断言（min 57 / max 600），这里放宽为「与时间轴一致」即可。"
+    },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "description": "11 种场景按 type 分派。t0/t1 相邻相接、不得留缝；顺序自由，hero 与 end 各出现一次。",
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "t0",
+          "t1"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "hero",
+              "recipe",
+              "open",
+              "pack",
+              "flow",
+              "adapt",
+              "reuse",
+              "spec",
+              "share",
+              "finale",
+              "end"
+            ]
+          },
+          "t0": {
+            "type": "number"
+          },
+          "t1": {
+            "type": "number"
+          },
+          "args": {
+            "type": "object"
+          },
+          "hold": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 6,
+            "description": "在该场景的已审核静止点停顿的秒数（0–6，1/60 的整数倍）。上游规则：停留时构图不动，HUD/时间轴继续走。"
+          },
+          "still": {
+            "type": "number",
+            "description": "覆盖默认静止点（秒）。默认值见 collage.mjs 的 STILL 表，取自 guide.json。"
+          }
+        }
+      }
+    },
+    "media": {
+      "type": "object",
+      "description": "媒体载体（对应上游 media 契约）。键是角色名：demo / portrait / wall00–wall11。",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "src"
+        ],
+        "properties": {
+          "src": {
+            "type": "string",
+            "description": "图片路径（相对仓库根或绝对）"
+          },
+          "kind": {
+            "enum": [
+              "image",
+              "video"
+            ],
+            "description": "当前实现只吃 image，video 留位"
+          },
+          "start": {
+            "type": "number"
+          },
+          "fit": {
+            "enum": [
+              "cover",
+              "contain"
+            ]
+          },
+          "focusX": {
+            "type": "number"
+          },
+          "focusY": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "audio": {
+      "type": "object",
+      "description": "动作音效事件轨 + 配乐 + 人声 ducking。命令行 --audio 优先级更高。",
+      "properties": {
+        "mode": {
+          "enum": [
+            "external-music",
+            "effects-only",
+            "none"
+          ]
+        },
+        "music": {
+          "type": "string"
+        },
+        "voice": {
+          "type": "string"
+        },
+        "musicGain": {
+          "type": "number"
+        },
+        "cues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "at",
+              "src"
+            ],
+            "properties": {
+              "at": {
+                "type": "number",
+                "description": "绝对秒"
+              },
+              "src": {
+                "type": "string",
+                "description": "文件路径，或内置合成音 whoosh / tick / impact / rise"
+              },
+              "gain": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "kline": {
+      "type": "object",
+      "properties": {
+        "kline": {
+          "type": "string",
+          "description": "主句"
+        },
+        "klineGrad": {
+          "type": "string",
+          "description": "kline 里要做渐变的那一段（必须是 kline 的子串；找不到就整句纯白）"
+        },
+        "label": {
+          "type": "string",
+          "description": "HUD 左上角章节名，如 01 / FORMAT"
+        }
+      }
+    }
+  },
+  "x-sceneArgs": {
+    "hero": {
+      "label": "01 / FORMAT",
+      "chip": "胶囊文案，可带前置圆点",
+      "kline": "主张句",
+      "klineGrad": "渐变片段",
+      "decode": "下方 mono 注脚（建议大写 + 宽字距）"
+    },
+    "recipe": {
+      "label": "02 / RECIPE",
+      "cards": [
+        {
+          "cardTag": "样张左上角标记",
+          "cardBadge": "样张里的高亮标签",
+          "cardChips": "样张第二行的圆点标签",
+          "cardFormat": "大格式字，如 .mxf",
+          "cardMeta": "格式技术串，如 MXF · OP1a · DNxHD",
+          "cardSub": "样张脚注"
+        }
+      ],
+      "subMp4": "左侧像素卡说明",
+      "kline": "底部论点",
+      "klineGrad": "渐变片段"
+    },
+    "open": {
+      "byline": "落款人/组织",
+      "kline": "主张",
+      "decode": "注脚"
+    },
+    "pack": {
+      "kline": "标题",
+      "klineGrad": "要打字的渐变片段",
+      "typed": "true 时该片段逐字打出",
+      "fileName": "文件名",
+      "meta": "资源说明串",
+      "cmd": "终端里要打出的命令（不含 $）"
+    },
+    "flow": {
+      "steps": [
+        {
+          "num": "01",
+          "label": "步骤名"
+        }
+      ],
+      "panelTitle": "左面板标题",
+      "panelTag": "左面板右上角说明",
+      "messages": [
+        {
+          "file": "有值时画成文件气泡",
+          "text": "正文",
+          "sub": "第二行",
+          "check": "true 时右侧加绿色对勾",
+          "right": "true 时右对齐",
+          "w": "气泡宽（可选）",
+          "h": "气泡高（可选）"
+        }
+      ],
+      "previewTitle": "右面板标题",
+      "previewVer": "右面板版本号",
+      "previewNote": "预览下方说明",
+      "previewMeta": "预览规格串",
+      "kline": "底部论点",
+      "klineGrad": "渐变片段"
+    },
+    "adapt": {
+      "kline": "标题",
+      "klineGrad": "渐变片段",
+      "leftCaption": "左侧画幅标注",
+      "rightCaption": "右侧画幅标注",
+      "leftTag": "左窗左上角标记",
+      "rightTag": "右窗左上角标记"
+    },
+    "reuse": {
+      "kline": "标题",
+      "klineGrad": "渐变片段",
+      "decode": "墙下方图注"
+    },
+    "spec": {
+      "kline": "标题",
+      "klineGrad": "渐变片段",
+      "fileName": "代码卡文件名",
+      "version": "代码卡右上角版本",
+      "schemaUrl": "$schema 行覆盖",
+      "runtime": "runtime 行覆盖",
+      "params": "params 行覆盖",
+      "guide": "guide 行覆盖",
+      "status": "底部状态条文字",
+      "tools": [
+        {
+          "label": "工具名",
+          "pos": [
+            0,
+            0
+          ],
+          "side": "left | right | bottom",
+          "color": "端点色",
+          "noLink": "true 时不画连接线"
+        }
+      ]
+    },
+    "share": {
+      "title": "左上小标题",
+      "stats": "右上统计串",
+      "mainNodes": [
+        {
+          "x": 0,
+          "l": "主干节点字母"
+        }
+      ],
+      "branches": [
+        {
+          "color": "分支色",
+          "path": [
+            [
+              0,
+              0
+            ]
+          ],
+          "nodes": [
+            [
+              0,
+              0,
+              "字母"
+            ]
+          ],
+          "label": "分支标签",
+          "labelAt": [
+            0,
+            0
+          ]
+        }
+      ],
+      "kline": "底部论点",
+      "klineGrad": "渐变片段"
+    },
+    "finale": {
+      "kline": "收尾句",
+      "klineGrad": "渐变片段"
+    },
+    "end": {
+      "brand": "产品名",
+      "domain": "网址（不带协议）"
+    }
+  },
+  "x-notes": [
+    "本 schema 只约束骨架（type / t0 / t1）与少数全局字段，不设 additionalProperties:false —— 11 个场景的 args 形态差异很大，锁死会误杀历史参数。",
+    "klineGrad 必须是 kline 的子串，否则该行按纯白绘制（不报错）。",
+    "素材：当前版本的作品墙是程序化缩略图；接真实图片需扩 media 载入，见 README 的「已知差距」。",
+    "hold 只在 STILL 表列出的场景生效（recipe/pack/flow/adapt/reuse/share/end）；hero/open/spec/finale 没有已审核静止点，不允许停留。"
+  ]
+}

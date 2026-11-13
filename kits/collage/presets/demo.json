@@ -1,0 +1,537 @@
+{
+  "fps": 60,
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 57,
+  "note": "参考片复刻件（motiongit-promo-main v2.6.5-alpha.1 的 57s 演示）。品牌字段全部显式写死，不依赖 kit 默认值 —— 默认值已换成 cutduo/.json，这里是唯一保留 MotionGit 的地方，用于与参考片逐帧对位。",
+  "scenes": [
+    {
+      "type": "hero",
+      "t0": 0,
+      "t1": 4.5,
+      "args": {
+        "label": "01 / FORMAT",
+        "chip": "MotionGit · Open Video Templates",
+        "kline": "Video templates for the AI era",
+        "klineGrad": "AI",
+        "decode": "REUSABLE VIDEO TEMPLATES · BUILT FOR AI",
+        "wordmark": "motion",
+        "dotStyle": "floating"
+      }
+    },
+    {
+      "type": "recipe",
+      "t0": 4.5,
+      "t1": 11,
+      "args": {
+        "label": "02 / RECIPE",
+        "cards": [
+          {
+            "cardTag": "03 · TIMELINE",
+            "cardBadge": "Cut fast",
+            "cardChips": "• SCRIPT   • MEDIA   (READY)",
+            "cardFormat": ".mov",
+            "cardMeta": "MOV · ProRes 422 · 10-bit",
+            "cardSub": "keep every frame editable"
+          },
+          {
+            "cardTag": "05 · HANDOFF",
+            "cardBadge": "Pass ideas",
+            "cardChips": "• SCRIPT   • MEDIA   (READY)",
+            "cardFormat": ".mxf",
+            "cardMeta": "MXF · OP1a · DNxHD",
+            "cardSub": "show how ideas connect"
+          },
+          {
+            "cardTag": "07 · DELIVERY",
+            "cardBadge": "Ship it",
+            "cardChips": "• SCRIPT   • MEDIA   (READY)",
+            "cardFormat": ".webm",
+            "cardMeta": "WEBM · VP9 · Alpha",
+            "cardSub": "play anywhere, no install"
+          }
+        ],
+        "subMp4": "Finished video · Ready to play",
+        "kline": ".motion saves the recipe",
+        "klineGrad": ".motion",
+        "rightFormat": ".motion",
+        "panelTitle": "Hello Motion"
+      }
+    },
+    {
+      "type": "open",
+      "t0": 11,
+      "t1": 14.5,
+      "args": {
+        "label": "03 / OPEN",
+        "byline": "Initiated by MotionGit",
+        "kline": "An open video template format",
+        "decode": "SPEC · RUNTIME · GUIDE"
+      }
+    },
+    {
+      "type": "pack",
+      "t0": 14.5,
+      "t1": 21,
+      "args": {
+        "label": "04 / PACKAGE",
+        "kline": "All packed into one file",
+        "klineGrad": "one file",
+        "typed": true,
+        "fileName": "template-01.motion",
+        "meta": "Code · Parameters · Assets · Instructions → One file",
+        "cmd": "motion inspect template",
+        "fileExt": ".motion"
+      }
+    },
+    {
+      "type": "flow",
+      "t0": 21,
+      "t1": 31,
+      "args": {
+        "label": "05 / CREATE",
+        "steps": [
+          {
+            "num": "01",
+            "label": "Download template"
+          },
+          {
+            "num": "02",
+            "label": "Give it to AI"
+          },
+          {
+            "num": "03",
+            "label": "Add your content"
+          },
+          {
+            "num": "04",
+            "label": "Create your video"
+          }
+        ],
+        "panelTitle": "Your AI assistant",
+        "panelTag": "Template-aware assistant",
+        "messages": [
+          {
+            "file": "template-01.motion",
+            "text": "Use this template to make a new video.",
+            "h": 96
+          },
+          {
+            "text": "Animation rules and asset requirements loaded.",
+            "check": true,
+            "h": 56
+          },
+          {
+            "text": "Here is my copy, logo and media.",
+            "sub": "Everything you need to get started.",
+            "right": true,
+            "h": 84
+          }
+        ],
+        "previewTitle": "Template 01 · Modern Graphic",
+        "previewVer": "v1.1.4",
+        "previewNote": "Actual finished template excerpt",
+        "previewMeta": "1920 × 1080 · 60 fps",
+        "kline": "From a template to your next video",
+        "klineGrad": "your next video"
+      }
+    },
+    {
+      "type": "adapt",
+      "t0": 31,
+      "t1": 35,
+      "args": {
+        "label": "06 / ADAPT",
+        "kline": "New content. Same style.",
+        "klineGrad": "Same style.",
+        "leftCaption": "16:9 · Landscape",
+        "rightCaption": "9:16 · Portrait"
+      }
+    },
+    {
+      "type": "reuse",
+      "t0": 35,
+      "t1": 40.5,
+      "args": {
+        "label": "07 / WORK",
+        "kline": "Great design, made to be reused",
+        "klineGrad": "be reused",
+        "decode": "KNOWLEDGE · 12 ANIMATION STYLES"
+      }
+    },
+    {
+      "type": "spec",
+      "t0": 40.5,
+      "t1": 44.5,
+      "args": {
+        "label": "08 / SPEC",
+        "kline": "An open spec connects more AI models and tools",
+        "klineGrad": "AI models and tools",
+        "fileName": "motion.json",
+        "version": "Motion Open Spec v0.1 Draft",
+        "status": "Open specification · Connect compatible models and tools",
+        "tools": [
+          {
+            "label": "Claude",
+            "pos": [
+              320,
+              392
+            ],
+            "side": "left",
+            "color": "#F7A87D"
+          },
+          {
+            "label": "Codex",
+            "pos": [
+              268,
+              560
+            ],
+            "side": "left",
+            "color": "#5FD08A"
+          },
+          {
+            "label": "Grok",
+            "pos": [
+              316,
+              726
+            ],
+            "side": "left",
+            "color": "#8E94AC"
+          },
+          {
+            "label": "Cursor",
+            "pos": [
+              1602,
+              392
+            ],
+            "side": "right",
+            "color": "#8FA0FA"
+          },
+          {
+            "label": "GitHub Copilot",
+            "pos": [
+              1650,
+              560
+            ],
+            "side": "right",
+            "color": "#B98CF3"
+          },
+          {
+            "label": "Other tools",
+            "pos": [
+              1607,
+              726
+            ],
+            "side": "right",
+            "color": "#8E94AC"
+          },
+          {
+            "label": "Command line",
+            "pos": [
+              587,
+              862
+            ],
+            "side": "bottom",
+            "noLink": true
+          },
+          {
+            "label": "Renderers",
+            "pos": [
+              837,
+              862
+            ],
+            "side": "bottom",
+            "noLink": true
+          },
+          {
+            "label": "Editors",
+            "pos": [
+              1086,
+              862
+            ],
+            "side": "bottom",
+            "noLink": true
+          },
+          {
+            "label": "Players",
+            "pos": [
+              1335,
+              862
+            ],
+            "side": "bottom",
+            "noLink": true
+          }
+        ],
+        "schemaUrl": "\"https://motiongit.com/schema/motion/0.1.json\"",
+        "runtime": "\"profile\": \"html-canvas/1\"",
+        "params": "\"title\": { \"type\": \"string\" }",
+        "guide": "\"guide.json\""
+      }
+    },
+    {
+      "type": "share",
+      "t0": 44.5,
+      "t1": 48.5,
+      "args": {
+        "label": "09 / SHARE",
+        "title": "Made for more creators",
+        "stats": "19 commits  ·  5 creators  ·  4 forks",
+        "mainNodes": [
+          {
+            "x": 250,
+            "l": "m"
+          },
+          {
+            "x": 420,
+            "l": "m"
+          },
+          {
+            "x": 600,
+            "l": "m"
+          },
+          {
+            "x": 780,
+            "l": "m"
+          },
+          {
+            "x": 960,
+            "l": "m"
+          },
+          {
+            "x": 1150,
+            "l": "m"
+          },
+          {
+            "x": 1450,
+            "l": "m"
+          }
+        ],
+        "branches": [
+          {
+            "color": "#5B8CFF",
+            "path": [
+              [
+                420,
+                560
+              ],
+              [
+                470,
+                560
+              ],
+              [
+                520,
+                430
+              ],
+              [
+                1000,
+                430
+              ],
+              [
+                1060,
+                430
+              ],
+              [
+                1090,
+                520
+              ],
+              [
+                1090,
+                560
+              ]
+            ],
+            "nodes": [
+              [
+                520,
+                430,
+                "L"
+              ],
+              [
+                760,
+                430,
+                "L"
+              ],
+              [
+                1000,
+                430,
+                "L"
+              ]
+            ],
+            "label": "fork · portrait",
+            "labelAt": [
+              520,
+              360
+            ]
+          },
+          {
+            "color": "#5FD08A",
+            "path": [
+              [
+                1000,
+                560
+              ],
+              [
+                1010,
+                480
+              ],
+              [
+                1060,
+                300
+              ],
+              [
+                1480,
+                300
+              ],
+              [
+                1560,
+                300
+              ],
+              [
+                1600,
+                420
+              ],
+              [
+                1620,
+                520
+              ]
+            ],
+            "nodes": [
+              [
+                1150,
+                300,
+                "Y"
+              ],
+              [
+                1330,
+                300,
+                "Y"
+              ],
+              [
+                1500,
+                300,
+                "Y"
+              ]
+            ],
+            "label": "fork · new colors",
+            "labelAt": [
+              1150,
+              232
+            ]
+          },
+          {
+            "color": "#F56FB0",
+            "path": [
+              [
+                700,
+                560
+              ],
+              [
+                720,
+                620
+              ],
+              [
+                760,
+                700
+              ],
+              [
+                1360,
+                700
+              ],
+              [
+                1400,
+                700
+              ],
+              [
+                1410,
+                740
+              ]
+            ],
+            "nodes": [
+              [
+                760,
+                700,
+                "A"
+              ],
+              [
+                980,
+                700,
+                "A"
+              ],
+              [
+                1200,
+                700,
+                "A"
+              ],
+              [
+                1360,
+                700,
+                "A"
+              ]
+            ],
+            "label": "fork · launch",
+            "labelAt": [
+              760,
+              640
+            ]
+          },
+          {
+            "color": "#F7A44E",
+            "path": [
+              [
+                1410,
+                740
+              ],
+              [
+                1420,
+                800
+              ],
+              [
+                1440,
+                820
+              ]
+            ],
+            "nodes": [
+              [
+                1444,
+                822,
+                "A"
+              ]
+            ],
+            "label": "fork · holiday",
+            "labelAt": [
+              1444,
+              880
+            ]
+          }
+        ],
+        "kline": "Great ideas. Shared and refined.",
+        "klineGrad": "Shared and refined."
+      }
+    },
+    {
+      "type": "finale",
+      "t0": 48.5,
+      "t1": 52.5,
+      "args": {
+        "label": "10 / MOTION",
+        "kline": "Start every creation with great design",
+        "klineGrad": "great design",
+        "wordmark": "motion",
+        "dotStyle": "floating"
+      }
+    },
+    {
+      "type": "end",
+      "t0": 52.5,
+      "t1": 57,
+      "args": {
+        "label": "",
+        "brand": "MotionGit",
+        "domain": "motiongit.com"
+      }
+    }
+  ],
+  "brand": {
+    "name": "MotionGit",
+    "initial": "m"
+  }
+}

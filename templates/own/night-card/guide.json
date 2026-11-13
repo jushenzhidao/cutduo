@@ -1,0 +1,175 @@
+{
+  "purpose": "竖屏情绪向卡片：一屏一句话，深色底加暖金点缀。用于深夜独白、情绪向口播、图文卡片轮播",
+  "distilledFrom": {
+    "file": "self-built",
+    "durationSeconds": 56,
+    "size": "1080x1920",
+    "fps": 30,
+    "shots": 8,
+    "medianShotSeconds": 7,
+    "note": "原创版式，未复制任何第三方素材、文案或品牌标识。节奏参数来自本模板 presets/default.json 的 8 段实测"
+  },
+  "duration": {
+    "policy": "fixed",
+    "seconds": 56,
+    "fps": {
+      "num": 30,
+      "den": 1
+    },
+    "adaptation": "总时长 = segments[].dur 之和，必须与 motion.json 的 durationSeconds 一致；否则末段被截断"
+  },
+  "materials": [
+    {
+      "role": "text.script",
+      "mappedParameters": [
+        "segments",
+        "captions"
+      ],
+      "required": true,
+      "ifMissing": "stop"
+    },
+    {
+      "role": "image.figure",
+      "mappedParameters": [
+        "segments[].figure"
+      ],
+      "required": false,
+      "ifMissing": "ignore"
+    },
+    {
+      "role": "audio.bed",
+      "mappedParameters": [
+        "audio"
+      ],
+      "required": false,
+      "ifMissing": "ignore"
+    }
+  ],
+  "layout": {
+    "ratio": "9:16",
+    "pixels": "1080x1920",
+    "safeArea": "左右 96px；上 119px、下 1801px 是四角取景框的位置。正文块控制在 25%–65% 高度内，底部 20% 留给短视频平台的按钮与文案",
+    "notes": "要改横屏必须同时改 motion.json 的 output 与这里的 ratio，check-template.py 会校验两者一致；只改一处会 FAIL。所有纵向位置都用 H 的比例表达，跨画幅不会错位"
+  },
+  "rhythm": {
+    "hardCut": "段与段之间硬切，无转场。段首不设空场：reveal 有 0.22 的透明度底线，切点第一帧整句已经隐约在场，再逐字推到 1",
+    "captionLag": "本模板正文即大字，captions 默认留空；只有加旁白时才启用字幕，字幕落在 0.845H，避开底部操作栏",
+    "beatPattern": "8 段实测：cover 7s / statement 6.5+7+6s / contrast 8s / quote 9s / number 7s / outro 5.5s，中位 7s。情绪向的段要长于口播的 2.75s 切点，短于 5s 会显得赶"
+  },
+  "layouts": [
+    {
+      "type": "cover",
+      "role": "封面 / 开场钩子",
+      "maxPerFilm": 1,
+      "args": {
+        "kicker": "string",
+        "title": "string",
+        "sub": "string"
+      },
+      "capacity": "title ≤ 12 字（2 行内）；128px 档单行 6 字，超了自动降到 84px、最多 3 行。kicker ≤ 12 字，sub ≤ 16 字"
+    },
+    {
+      "type": "statement",
+      "role": "单句宣言",
+      "maxPerFilm": 4,
+      "args": {
+        "text": "string",
+        "note": "string",
+        "mark": "boolean",
+        "size": "number"
+      },
+      "capacity": "text ≤ 24 字（104px、最多 4 行）；一句话只表达一个意思，30 字以上应该拆成两段。note ≤ 18 字，34px 单行"
+    },
+    {
+      "type": "quote",
+      "role": "引言 / 他人口吻",
+      "maxPerFilm": 2,
+      "args": {
+        "text": "string",
+        "from": "string"
+      },
+      "capacity": "text ≤ 40 字（84px、最多 5 行）；单行 10 字。from ≤ 16 字，30px 带字距"
+    },
+    {
+      "type": "contrast",
+      "role": "前后对照",
+      "maxPerFilm": 2,
+      "args": {
+        "before": "string",
+        "after": "string"
+      },
+      "capacity": "before ≤ 16 字（52px 单行，不折行，超了会溢出画面）；after ≤ 22 字（84px、最多 3 行）"
+    },
+    {
+      "type": "number",
+      "role": "数字冲击",
+      "maxPerFilm": 1,
+      "args": {
+        "value": "string",
+        "label": "string",
+        "note": "string"
+      },
+      "capacity": "value ≤ 6 字符（340px 起，按宽度自动降到 180px）；label ≤ 18 字（44px 单行）；note ≤ 22 字（32px 单行）"
+    },
+    {
+      "type": "outro",
+      "role": "收尾 / 落款",
+      "maxPerFilm": 1,
+      "args": {
+        "title": "string",
+        "sub": "string",
+        "brand": "string"
+      },
+      "capacity": "title ≤ 10 字（64px 单行）；sub ≤ 16 字；brand ≤ 12 字（26px 带字距）"
+    }
+  ],
+  "runtime": {
+    "profile": "html-canvas/1",
+    "entry": "src/index.html",
+    "dependencies": [
+      "kit.js",
+      "layouts.js",
+      "main.js"
+    ],
+    "network": false,
+    "fonts": "浏览器用 PingFang SC；Skia 侧由 src/webcanvas.mjs 注入 __FONT_PICK 映射到随包 Noto Sans SC（Black / Medium / Regular 三档）。字重 700 在两侧都拿到最重的一档，不依赖系统额外字体"
+  },
+  "voices": {
+    "mapping": "preset.voices 里按角色名映射音色；captions[].speaker 指向它",
+    "profiles": {
+      "default": "zh-CN-XiaoxiaoNeural"
+    }
+  },
+  "pitfalls": [
+    {
+      "symptom": "每个切点的第一帧只有半句话，后面几个字是空的，看起来像渲染错误",
+      "cause": "逐字浮现若从 0 开始，段首 t=0 时所有字 alpha=0；居中排版仍按整行宽度留位，于是只剩左侧几个字",
+      "fix": "reveal 内部保留 0.22 的透明度底线，逐字只负责把 0.22 推到 1。整句先在场，再点亮"
+    },
+    {
+      "symptom": "改成竖屏后 check-template.py 报画幅与 ratio 不一致",
+      "cause": "只改了 motion.json 的 output，guide.layout.ratio 还是横向",
+      "fix": "两处同时改：motion.json output 1080x1920 + guide.layout.ratio 9:16"
+    },
+    {
+      "symptom": "深色底上的次要文字看不清，或者四角取景框完全不可见",
+      "cause": "把浅色模板的 muted/dim 直接搬到深底：dim #332F36 在 #0A0A0C 上对比度只有 1.8:1",
+      "fix": "muted 提到 #8A8478（约 4.4:1）；取景框改用 ink 的 14% 透明度，不要用 dim 的半透明"
+    },
+    {
+      "symptom": "contrast 的 before 那句话超出右边裁切",
+      "cause": "before 用的是 MK.text 而不是 fitText，不折行也不降字号，超过 16 字直接溢出",
+      "fix": "内容侧限在 16 字内；要支持长句就把 before 也换成 fitText，但两行会把对照关系冲淡"
+    },
+    {
+      "symptom": "改完配色后，某个版式局部整块消失",
+      "cause": "只给 preset.theme 传了改动的几个键，env.T 变成残缺调色板，T.white / T.dim 变 undefined",
+      "fix": "theme 可以只写要改的键，但绘制层必须走 env.T（完整表 + 覆盖）；不要直接把 preset.theme 当调色板用"
+    }
+  ],
+  "audio": {
+    "bed": "assets/bed.m4a",
+    "note": "本模板默认无旁白，正文即大字。要加旁白用仓库根 tools/build-sync.py 生成音轨，再以 --audio 替换；音轨整条替换，不做混音（旁白+BGM 要先 amix）",
+    "bedLevel": "均值 −29.4 dB / 峰值 −17.3 dB（无旁白时的唯一音轨）"
+  }
+}

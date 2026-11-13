@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "黏土图示参数（clay）",
+  "type": "object",
+  "required": [
+    "durationSeconds",
+    "segments"
+  ],
+  "properties": {
+    "durationSeconds": {
+      "type": "number",
+      "description": "必须等于各段 dur 之和"
+    },
+    "fps": {
+      "type": "number"
+    },
+    "fadeOutSeconds": {
+      "type": "number"
+    },
+    "theme": {
+      "type": "object"
+    },
+    "brand": {
+      "type": "object"
+    },
+    "subtitle": {
+      "type": "object"
+    },
+    "captions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "text"
+        ],
+        "properties": {
+          "start": {
+            "type": "number"
+          },
+          "end": {
+            "type": "number"
+          },
+          "text": {
+            "type": "string"
+          },
+          "speaker": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "segments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "dur"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "alternative-compare",
+              "channel-transport",
+              "focus-return",
+              "interface-bind",
+              "lineage-track",
+              "shear-break",
+              "split-merge"
+            ],
+            "description": "机制名 = 段类型"
+          },
+          "dur": {
+            "type": "number",
+            "minimum": 1,
+            "description": "本段时长（秒）；动画按 recipe.duration 归一化，二者应一致"
+          },
+          "title": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "valueUnit": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "family": {
+            "type": "string"
+          },
+          "decimals": {
+            "type": "number"
+          },
+          "seed": {
+            "type": "number"
+          },
+          "duration": {
+            "type": "number"
+          },
+          "agents": {
+            "type": "number"
+          },
+          "force": {
+            "type": "number"
+          },
+          "threshold": {
+            "type": "number"
+          },
+          "parts": {
+            "type": "array"
+          },
+          "nodes": {
+            "type": "array"
+          },
+          "conditions": {
+            "type": "array"
+          },
+          "labels": {
+            "type": "array"
+          },
+          "cueTimes": {
+            "type": "array"
+          },
+          "route": {
+            "type": [
+              "string",
+              "array",
+              "object"
+            ]
+          },
+          "obstacles": {
+            "type": [
+              "string",
+              "array",
+              "object"
+            ]
+          },
+          "focusId": {
+            "type": [
+              "string",
+              "array",
+              "object"
+            ]
+          },
+          "direction": {
+            "enum": [
+              "split",
+              "merge"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

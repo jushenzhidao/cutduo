@@ -1,0 +1,12 @@
+{
+  "runtime": "html-canvas/1",
+  "tested": [
+    {
+      "os": "macOS 15 (arm64)",
+      "node": "22.x",
+      "browser": "Chromium headless (Playwright)",
+      "ffmpeg": "9.0.2 (Homebrew arm64)"
+    }
+  ],
+  "dependencies": {}
+}

@@ -1,0 +1,645 @@
+{
+  "fps": 60,
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 57,
+  "brand": {
+    "name": ".cutduo",
+    "initial": "c"
+  },
+  "note": "同一套 11 段结构，换成 cutduo 自己的内容与 .json 工程文件。所有数字都来自本仓实测：332 fps / 3420 帧 10.2s / 62 commits / 3 branches / 7 templates。改主题只改这个文件。",
+  "scenes": [
+    {
+      "type": "hero",
+      "t0": 0,
+      "t1": 4.5,
+      "args": {
+        "label": "01 / FORMAT",
+        "wordmark": ".cutduo",
+        "chip": ".cutduo · Skia 直出视频管线",
+        "kline": "视频出片，不经过浏览器",
+        "klineGrad": "不经过浏览器",
+        "decode": "8 TEMPLATES · 330 FPS · NO CHROMIUM",
+        "chipDot": false
+      }
+    },
+    {
+      "type": "recipe",
+      "t0": 4.5,
+      "t1": 11,
+      "args": {
+        "label": "02 / RECIPE",
+        "cards": [
+          {
+            "cardTag": "01 · LAYOUT",
+            "cardBadge": "版式是代码",
+            "cardChips": "• SKIA   • NODE   (LOCAL)",
+            "cardFormat": ".mjs",
+            "cardMeta": "CANVAS2D · SKIA · FFMPEG",
+            "cardSub": "版式只写一次，内容换一百次"
+          },
+          {
+            "cardTag": "02 · INPUT",
+            "cardBadge": "内容是数据",
+            "cardChips": "• JSON   • SCHEMA   (VALID)",
+            "cardFormat": ".json",
+            "cardMeta": "JSON · params · schema",
+            "cardSub": "改一句话，不用重排时间轴"
+          },
+          {
+            "cardTag": "03 · FRAMES",
+            "cardBadge": "帧直送",
+            "cardChips": "• RAW    • X264    (PIPE)",
+            "cardFormat": ".raw",
+            "cardMeta": "RGBA · 6MB/帧 · 直送编码器",
+            "cardSub": "没有截图，没有中间 JPEG"
+          }
+        ],
+        "subMp4": "成片只能播放",
+        "kline": "成片只有像素，内容才是数据",
+        "klineGrad": "内容才是数据",
+        "rightFormat": ".json",
+        "panelTitle": "demo.json",
+        "panelLines": [
+          [
+            "\"kit\"",
+            ": \"collage\","
+          ],
+          [
+            "\"scenes\"",
+            ": 11,"
+          ],
+          [
+            "\"fps\"",
+            ": 60"
+          ]
+        ]
+      }
+    },
+    {
+      "type": "open",
+      "t0": 11,
+      "t1": 14.5,
+      "args": {
+        "label": "03 / OPEN",
+        "byline": ".cutduo · 八支版式",
+        "kline": "一条命令出片，全程不碰浏览器",
+        "klineGrad": "不碰浏览器",
+        "decode": "SKIA · NODE · FFMPEG"
+      }
+    },
+    {
+      "type": "pack",
+      "t0": 14.5,
+      "t1": 21,
+      "args": {
+        "label": "04 / PACKAGE",
+        "kline": "一个 params 装下整支片子",
+        "klineGrad": "装下整支片子",
+        "typed": true,
+        "fileName": "presets/cutduo.json",
+        "meta": "版式 · 内容 · 素材 · 音轨 → 一次渲染",
+        "cmd": "node render.mjs --kit collage",
+        "fileExt": ".json"
+      }
+    },
+    {
+      "type": "flow",
+      "t0": 21,
+      "t1": 31,
+      "args": {
+        "label": "05 / CREATE",
+        "steps": [
+          {
+            "num": "01",
+            "label": "写 params"
+          },
+          {
+            "num": "02",
+            "label": "校验 schema"
+          },
+          {
+            "num": "03",
+            "label": "分片渲染"
+          },
+          {
+            "num": "04",
+            "label": "直接出片"
+          }
+        ],
+        "panelTitle": "params 校验",
+        "panelTag": "schema-first",
+        "messages": [
+          {
+            "file": "presets/demo.json",
+            "text": "11 段 / 57 秒 / 槽位全部填齐",
+            "h": 96
+          },
+          {
+            "text": "schema 通过，11 段首尾相接",
+            "check": true,
+            "h": 56
+          },
+          {
+            "text": "这一版只换了文案和品牌。",
+            "sub": "版式一帧没动。",
+            "right": true,
+            "h": 84
+          }
+        ],
+        "previewTitle": "Scene 05 · flow",
+        "previewVer": "t = 21.0 – 31.0s",
+        "previewNote": "collage 版式 · 实际渲染帧",
+        "previewMeta": "1920 × 1080 · 60 fps",
+        "kline": "从一份 JSON 到一条成片",
+        "klineGrad": "一条成片"
+      }
+    },
+    {
+      "type": "adapt",
+      "t0": 31,
+      "t1": 35,
+      "args": {
+        "label": "06 / ADAPT",
+        "kline": "同一套渲染库，三种画幅",
+        "klineGrad": "三种画幅",
+        "leftTag": "04 · 横屏工程",
+        "rightTag": "04 · 竖屏工程",
+        "leftCaption": "1440×1080 · desk",
+        "rightCaption": "1080×1920 · night-card"
+      }
+    },
+    {
+      "type": "reuse",
+      "t0": 35,
+      "t1": 40.5,
+      "args": {
+        "label": "07 / WORK",
+        "kline": "版式是资产，不是一次性的活儿",
+        "klineGrad": "资产",
+        "decode": "8 TEMPLATES · 1 RENDER ENGINE"
+      }
+    },
+    {
+      "type": "spec",
+      "t0": 40.5,
+      "t1": 44.5,
+      "args": {
+        "label": "08 / SPEC",
+        "kline": "参数即契约，schema 先于渲染",
+        "klineGrad": "schema 先于渲染",
+        "fileName": "params.schema.json",
+        "version": "JSON Schema · draft 2020-12",
+        "schemaUrl": "\"https://json-schema.org/draft/2020-12/schema\"",
+        "runtime": "{ \"engine\": \"skia\", \"browser\": false }",
+        "params": "{ \"scenes\": { \"type\": \"array\" } }",
+        "guide": "\"presets/cutduo.json\"",
+        "status": "校验通过 · 11 段 / 3420 帧 / 57.0 秒",
+        "tools": [
+          {
+            "label": "Node",
+            "pos": [
+              320,
+              392
+            ],
+            "side": "left",
+            "color": "#5FD08A"
+          },
+          {
+            "label": "ffmpeg",
+            "pos": [
+              268,
+              560
+            ],
+            "side": "left",
+            "color": "#8FA0FA"
+          },
+          {
+            "label": "Skia",
+            "pos": [
+              316,
+              726
+            ],
+            "side": "left",
+            "color": "#6FD3F7"
+          },
+          {
+            "label": "x264",
+            "pos": [
+              1602,
+              392
+            ],
+            "side": "right",
+            "color": "#F7A87D"
+          },
+          {
+            "label": "JSON Schema",
+            "pos": [
+              1650,
+              560
+            ],
+            "side": "right",
+            "color": "#B98CF3"
+          },
+          {
+            "label": "其他工具",
+            "pos": [
+              1607,
+              726
+            ],
+            "side": "right",
+            "color": "#8E94AC"
+          },
+          {
+            "label": "命令行",
+            "pos": [
+              587,
+              862
+            ],
+            "side": "bottom",
+            "noLink": true
+          },
+          {
+            "label": "渲染器",
+            "pos": [
+              837,
+              862
+            ],
+            "side": "bottom",
+            "noLink": true
+          },
+          {
+            "label": "编辑器",
+            "pos": [
+              1086,
+              862
+            ],
+            "side": "bottom",
+            "noLink": true
+          },
+          {
+            "label": "播放器",
+            "pos": [
+              1335,
+              862
+            ],
+            "side": "bottom",
+            "noLink": true
+          }
+        ]
+      }
+    },
+    {
+      "type": "share",
+      "t0": 44.5,
+      "t1": 48.5,
+      "args": {
+        "label": "09 / SHARE",
+        "title": "版本自己长，版式不用动",
+        "stats": "62 commits  ·  3 branches  ·  7 templates",
+        "mainNodes": [
+          {
+            "x": 250,
+            "l": "m"
+          },
+          {
+            "x": 420,
+            "l": "m"
+          },
+          {
+            "x": 600,
+            "l": "m"
+          },
+          {
+            "x": 780,
+            "l": "m"
+          },
+          {
+            "x": 960,
+            "l": "m"
+          },
+          {
+            "x": 1150,
+            "l": "m"
+          },
+          {
+            "x": 1450,
+            "l": "m"
+          }
+        ],
+        "branches": [
+          {
+            "color": "#5B8CFF",
+            "path": [
+              [
+                420,
+                560
+              ],
+              [
+                470,
+                560
+              ],
+              [
+                520,
+                430
+              ],
+              [
+                1000,
+                430
+              ],
+              [
+                1060,
+                430
+              ],
+              [
+                1090,
+                520
+              ],
+              [
+                1090,
+                560
+              ]
+            ],
+            "nodes": [
+              [
+                520,
+                430,
+                "L"
+              ],
+              [
+                760,
+                430,
+                "L"
+              ],
+              [
+                1000,
+                430,
+                "L"
+              ]
+            ],
+            "label": "fork · 新版式",
+            "labelAt": [
+              520,
+              360
+            ]
+          },
+          {
+            "color": "#5FD08A",
+            "path": [
+              [
+                1000,
+                560
+              ],
+              [
+                1010,
+                480
+              ],
+              [
+                1060,
+                300
+              ],
+              [
+                1480,
+                300
+              ],
+              [
+                1560,
+                300
+              ],
+              [
+                1600,
+                420
+              ],
+              [
+                1620,
+                520
+              ]
+            ],
+            "nodes": [
+              [
+                1150,
+                300,
+                "Y"
+              ],
+              [
+                1330,
+                300,
+                "Y"
+              ],
+              [
+                1500,
+                300,
+                "Y"
+              ]
+            ],
+            "label": "fork · 新内容",
+            "labelAt": [
+              1150,
+              232
+            ]
+          },
+          {
+            "color": "#F56FB0",
+            "path": [
+              [
+                700,
+                560
+              ],
+              [
+                720,
+                620
+              ],
+              [
+                760,
+                700
+              ],
+              [
+                1360,
+                700
+              ],
+              [
+                1400,
+                700
+              ],
+              [
+                1410,
+                740
+              ]
+            ],
+            "nodes": [
+              [
+                760,
+                700,
+                "A"
+              ],
+              [
+                980,
+                700,
+                "A"
+              ],
+              [
+                1200,
+                700,
+                "A"
+              ],
+              [
+                1360,
+                700,
+                "A"
+              ]
+            ],
+            "label": "fork · 客户改稿",
+            "labelAt": [
+              760,
+              640
+            ]
+          },
+          {
+            "color": "#F7A44E",
+            "path": [
+              [
+                1410,
+                740
+              ],
+              [
+                1420,
+                800
+              ],
+              [
+                1440,
+                820
+              ]
+            ],
+            "nodes": [
+              [
+                1444,
+                822,
+                "A"
+              ]
+            ],
+            "label": "merge · 交付",
+            "labelAt": [
+              1444,
+              880
+            ]
+          }
+        ],
+        "kline": "内容一直改，版式只写一次",
+        "klineGrad": "只写一次"
+      }
+    },
+    {
+      "type": "finale",
+      "t0": 48.5,
+      "t1": 52.5,
+      "args": {
+        "label": "10 / MOTION",
+        "wordmark": ".cutduo",
+        "kline": "57 秒的片子，10 秒出完",
+        "klineGrad": "10 秒出完"
+      }
+    },
+    {
+      "type": "end",
+      "t0": 52.5,
+      "t1": 57,
+      "args": {
+        "label": "",
+        "brand": ".cutduo",
+        "domain": "cut-mcp.1task.cn"
+      }
+    }
+  ],
+  "audio": {
+    "mode": "effects-only",
+    "note": "内置合成音（whoosh/tick/impact/rise）在场景切点与关键动作上打点；这是能力验收用的程序音效，不是上游那 33 个音效（上游发行时已剥离）。接真实素材：把 src 换成文件路径，或给 music 指一条配乐。",
+    "musicGain": 0.55,
+    "cues": [
+      {
+        "at": 0.32,
+        "src": "impact",
+        "gain": 0.34
+      },
+      {
+        "at": 1.5,
+        "src": "tick",
+        "gain": 0.22
+      },
+      {
+        "at": 4.5,
+        "src": "whoosh",
+        "gain": 0.4
+      },
+      {
+        "at": 7.4,
+        "src": "whoosh",
+        "gain": 0.3
+      },
+      {
+        "at": 11.0,
+        "src": "whoosh",
+        "gain": 0.36
+      },
+      {
+        "at": 14.5,
+        "src": "rise",
+        "gain": 0.26
+      },
+      {
+        "at": 16.9,
+        "src": "tick",
+        "gain": 0.2
+      },
+      {
+        "at": 21.0,
+        "src": "whoosh",
+        "gain": 0.36
+      },
+      {
+        "at": 22.4,
+        "src": "tick",
+        "gain": 0.18
+      },
+      {
+        "at": 23.4,
+        "src": "tick",
+        "gain": 0.18
+      },
+      {
+        "at": 31.0,
+        "src": "whoosh",
+        "gain": 0.36
+      },
+      {
+        "at": 35.0,
+        "src": "whoosh",
+        "gain": 0.36
+      },
+      {
+        "at": 40.5,
+        "src": "whoosh",
+        "gain": 0.34
+      },
+      {
+        "at": 44.5,
+        "src": "whoosh",
+        "gain": 0.34
+      },
+      {
+        "at": 48.5,
+        "src": "rise",
+        "gain": 0.3
+      },
+      {
+        "at": 49.3,
+        "src": "impact",
+        "gain": 0.3
+      },
+      {
+        "at": 52.5,
+        "src": "whoosh",
+        "gain": 0.34
+      }
+    ]
+  }
+}
