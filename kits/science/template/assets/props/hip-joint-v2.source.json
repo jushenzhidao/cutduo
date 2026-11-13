@@ -1,0 +1,27 @@
+{
+  "_note": "hip-joint.png 的圆形视窗版本。同一张生成原图，只改后处理：方形裁切 → 圆形 alpha。理由见 postProcess 与 docs/ASSET-POLICY.md。",
+  "id": "hip-joint-v2",
+  "kind": "image",
+  "path": "hip-joint-v2.png",
+  "source": {
+    "type": "generated",
+    "provider": "apiduo MCP (mcp__apiduo__image.generate)",
+    "model": "flux-3-image",
+    "prompt": "Flat vector medical illustration, cross-section of a child hip joint: round femoral head seated inside the cup-shaped acetabulum, a thin crescent of pale yellow joint fluid (effusion) between them. Clean thick dark outlines, soft flat shading, teal green bone with warm cream highlights, small coral red accent on the inflamed synovial lining. Educational infographic style, front view, centered, generous margins, no text, no labels, no arrows, plain pure white background.",
+    "params": { "aspect_ratio": "1:1", "resolution": "1k" },
+    "seed": null,
+    "seedNote": "flux-3-image 未暴露 seed；原图沿用 hip-joint 的 frozen 原始产物，不重新生成。",
+    "raw": "assets/media/anatomy/hip-joint-raw.png",
+    "rawUrl": "https://oss.s3ai.cn/cdn/apiduo/response/2026/11/13/4118cea17897a06e85c4b916a3082dd9.png",
+    "derivedFrom": "hip-joint.png",
+    "postProcess": "node tools/circle-prop.mjs --in assets/media/anatomy/hip-joint-raw.png --out kits/science/template/assets/props/hip-joint-v2.png --size 900 --tol 22（四边泛洪去白底 + 抗锯齿圆形 alpha）。与 hip-joint.png 的差别只在收边方式：方形裁切会让股骨下端在圆盘中央断成一条直线，圆形视窗把它压到圆盘边缘，读作延伸出画。",
+    "usageNote": "diagram 版式里配 organSize=765：道具方图 765×0.92≈704，正好等于 r=352 的圆盘直径，圆形视窗与圆盘边缘对齐。"
+  },
+  "license": "自生成素材（flux-3-image 输出），随本仓库使用",
+  "frozen": true,
+  "use": {
+    "layout": "diagram",
+    "param": "segments[].args.organImage = \"hip-joint-v2\"（配 organSize: 765）",
+    "consumers": ["Skia: kits/science/science.mjs → primeProps()", "浏览器: kits/science/template/src/index.html → img[data-prop]"]
+  }
+}

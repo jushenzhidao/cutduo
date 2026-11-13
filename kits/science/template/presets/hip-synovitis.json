@@ -185,7 +185,8 @@
       "args": {
         "paper": "mint",
         "title": "髋关节积液",
-        "organImage": "hip-joint",
+        "organImage": "hip-joint-v2",
+        "organSize": 765,
         "pulse": false,
         "probe": "left",
         "callouts": [
