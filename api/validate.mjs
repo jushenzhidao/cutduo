@@ -8,8 +8,11 @@
  *       enum / const / minimum / maximum / exclusive* / minLength / maxLength /
  *       pattern / minItems / maxItems / oneOf / anyOf
  *
- * 刻意不支持：$ref、allOf、if-then-else、format。
- * 遇到这些返回 unsupported 列表而不是静默放过 —— 静默放过等于假通过。
+ * 刻意不支持：$ref、format。遇到返回 unsupported 列表而不是静默放过 —— 静默放过等于假通过。
+ *
+ * if-then-else 原本也不支持，但 2026-11-14 改了：`paper` 的 schema 用它对 9 种段型分别约束
+ * 必填 args（比如 number 段必须有 value）。不支持 = 这 9 条约束全部失效，传一个缺 value 的
+ * number 段能过 API 校验，渲染出来是空白。所以补上——if 的判定用一次子校验，只看是否通过。
  */
 
 const TYPES = {
@@ -44,8 +47,14 @@ export function validate(schema, value) {
   const walk = (sch, val, path) => {
     if (!sch || typeof sch !== 'object') return;
 
-    for (const kw of ['$ref', 'if', 'then', 'else']) {
-      if (kw in sch) unsupported.add(kw);
+    if ('$ref' in sch) unsupported.add('$ref');
+    // 条件分支：if 匹配则套 then，否则套 else。if 里通常只有 type/const/required/properties，
+    // 用一次子校验判定"是否匹配"（它的 errors 不并进当前错误，否则会报一堆"if 不成立"的噪音）。
+    if (sch.if && typeof sch.if === 'object') {
+      let hit = false;
+      try { hit = validate(sch.if, val).valid; } catch { hit = false; }
+      const branch = hit ? sch.then : sch.else;
+      if (branch && typeof branch === 'object') walk(branch, val, path);
     }
     // allOf 是纯合取，可以安全展开；paper 的 schema 用它挂公共约束
     if (Array.isArray(sch.allOf)) sch.allOf.forEach((sub) => walk(sub, val, path));
