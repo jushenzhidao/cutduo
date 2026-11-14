@@ -1,0 +1,168 @@
+{
+  "_how": "text 是旁白原文（会逐段配音）；screens 是这一拍的画面，可以有多个——一拍拆成几段时按顺序取，给不同 screens 才能避免同拍子段画面完全一样（骨架默认 freeze 偏高就是因为它俩共用一份 args）。",
+  "template": "C",
+  "tier": "速览",
+  "title": "抗生素的另一面",
+  "subtitle": "",
+  "voice": "zh-CN-YunjianNeural",
+  "rate": "+8%",
+  "beats": [
+    {
+      "id": "C01",
+      "role": "hook",
+      "type": "cover",
+      "text": "先问一句：你有没有过这种经历——吃了几天抗生素，烧退了，人却开始拉肚子。",
+      "screens": [
+        {
+          "prefix": "抗生素的",
+          "title": "另一面",
+          "sub": "为什么吃药几天后开始拉肚子",
+          "sticker": "drop",
+          "hint": "医学科普 · 一分钟看懂"
+        }
+      ],
+      "_note": "画面参考：—"
+    },
+    {
+      "id": "C02",
+      "role": "ask",
+      "type": "talk",
+      "text": "这不是巧合。抗生素的本职是杀细菌，但它分不清哪些是敌人，哪些是你肠道里的老住户。",
+      "screens": [
+        {
+          "paper": "cream",
+          "figure": "right",
+          "eyebrow": "你一定遇到过",
+          "lines": [
+            "吃了三天抗生素",
+            "突然开始拉肚子"
+          ],
+          "accentLine": 1,
+          "sticker": "question",
+          "gesture": "open"
+        }
+      ],
+      "_note": "画面参考：—"
+    },
+    {
+      "id": "C03",
+      "role": "principle",
+      "type": "talk",
+      "text": "你的结肠里住着几百种细菌，帮你分解纤维、合成维生素、挡住外来菌。广谱抗生素一进来，这些居民被一起清掉。",
+      "screens": [
+        {
+          "paper": "mint",
+          "figure": "left",
+          "eyebrow": "不是药有问题",
+          "lines": [
+            "是肠道里的居民",
+            "被一起杀掉了"
+          ],
+          "accentLine": 1,
+          "sticker": "drop",
+          "gesture": "point"
+        }
+      ],
+      "_note": "画面参考：—"
+    },
+    {
+      "id": "C04",
+      "role": "prop",
+      "type": "diagram",
+      "text": "菌群被破坏之后，原本被压制的菌会趁机繁殖，肠道吸收也变差——于是就有了腹泻。",
+      "screens": [
+        {
+          "paper": "cream",
+          "title": "肠道菌群",
+          "organ": "gut",
+          "eyes": true,
+          "mark": [
+            0.2,
+            0.8
+          ],
+          "pulse": true,
+          "probe": "left",
+          "callouts": [
+            {
+              "text": "几百种细菌住在这里",
+              "at": 1.2,
+              "x": 0.735,
+              "y": 0.3,
+              "size": 64,
+              "lead": [
+                0.405,
+                0.665
+              ]
+            },
+            {
+              "text": "抗生素进来，一起清掉",
+              "at": 3.0,
+              "x": 0.735,
+              "y": 0.52,
+              "size": 64,
+              "lead": [
+                0.405,
+                0.72
+              ]
+            }
+          ]
+        }
+      ],
+      "_note": "画面参考：—"
+    },
+    {
+      "id": "C06",
+      "role": "solution",
+      "type": "talk",
+      "text": "所以不是药错了，也不是你肠胃弱。最常见的误解，是把它当成自己肠胃不好，然后自己减量、或者干脆停药。",
+      "screens": [
+        {
+          "paper": "cream",
+          "figure": "right",
+          "eyebrow": "所以别误会",
+          "lines": [
+            "不是药错了",
+            "更不是肠胃弱"
+          ],
+          "accentLine": 1,
+          "sticker": "shield",
+          "gesture": "open"
+        }
+      ],
+      "_note": "画面参考：—"
+    },
+    {
+      "id": "C07",
+      "role": "twist",
+      "type": "tip",
+      "text": "正确做法只有一句：不要自己停。要不要换药、要不要补益生菌，让医生判断。",
+      "screens": [
+        {
+          "paper": "mint",
+          "head": "怎么办",
+          "title": "三件事",
+          "items": [
+            "不要自己停药",
+            "把症状告诉医生",
+            "是否补益生菌，听医嘱"
+          ]
+        }
+      ],
+      "_note": "画面参考：—"
+    },
+    {
+      "id": "C08",
+      "role": "heal",
+      "type": "outro",
+      "text": "抗生素是处方药。它救过很多人，也值得被正确使用。",
+      "screens": [
+        {
+          "line1": "抗生素是处方药",
+          "line2": "怎么吃，听医生的",
+          "note": "科普内容仅供参考 · 具体用药请遵医嘱"
+        }
+      ],
+      "_note": "画面参考：—"
+    }
+  ]
+}
