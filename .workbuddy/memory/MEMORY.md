@@ -163,6 +163,9 @@ gate 判 PASS，实际 22s 白屏、后半段卡死（根因 `default: bg('paper
 | D | 一条主线 | 5 | hero/point/steps/steps/outro（每拍 18s，必拆多段 ⇒ 每拍要多个 screens） |
 | E | 闯关 | 5 | hero/compare/quote/number/**checklist** |
 
+**number 段不给 `dur` 时数字瞬间到位、后面整段静止**（要写 `dur: 2~3`）。
+**checklist 的 `items` 时刻必须落在子段时长内**（拆段后每段只有 6 s 左右，铺到 11 s 的后两项永不出现）。
+
 `checklist` 段不是勾选框列表，是**半圆仪表盘 + 指针扫过 + 当前项**（pChecklist：R=330 的弧，
 指针按 items 出现顺序推进，中间显示当前项文字）。这是设计，不是缺漏。
 
