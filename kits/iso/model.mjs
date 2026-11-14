@@ -139,9 +139,12 @@ export function createModel(content = {}) {
   const mats = { ...palette };
   const liftH = 0.15 * radius;
 
+  // 层间距：默认按"最上层 1.4R"的曲线；几十层时曲线会把每层挤成 5 mm，改用等间距（spacing 单位 mm）
+  const spacing = content.spacing != null ? Number(content.spacing) : null;
   const travelOf = (i) => {
     const L = layers[i];
     if (L.travel !== undefined) return Number(L.travel);
+    if (spacing != null) return (NL - 1 - i) * spacing;
     if (i === NL - 1) return -0.07 * radius;
     return radius * (0.1 + 1.3 * Math.pow((NL - 1 - i) / Math.max(1, NL - 1), 1.1));
   };

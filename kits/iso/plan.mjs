@@ -166,8 +166,8 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
   };
   const drift = (base, dyaw = 4, dzoom = 0.035) => ({ ...base, yaw: base.yaw + dyaw, zoom: base.zoom * (1 + dzoom) });
   /** 末尾静止：最后 0.45 s 机位不动。落位还在漂的镜头会被 pacing 的 hold 判据抓住。 */
-  const settle = (tEnd, cam) => {
-    camK(Math.max(0, tEnd - 0.8), cam, 'io');
+  const settle = (tEnd, cam, hold = 1.0) => {
+    camK(Math.max(0, tEnd - hold), cam, 'io');
     camK(tEnd, { ...cam }, 'lin');
   };
 
@@ -363,6 +363,26 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
       const hero = fitCam({ parts: solid, S: poseAt(t1), yaw: YAW.hero, pitch: PITCH.hero, aim: [0.54, 0.5], fill: 0.6 });
       settle(t1, hero);
       labelsWindow = { t0: t0 + 0.05, t1: t0 + 0.3 * d };
+    } else if (type === 'layer') {
+      // 逐层展示：镜头停在这一层上，缓慢侧转 10°，其余层降到 8% 幽灵当上下文
+      const lid = args.layer || model.layers[0].id;
+      if (!model.layers.some((l) => l.id === lid)) throw new Error(`iso: layer 镜头引用了不存在的层 ${lid}`);
+      K('lift', t0 + 0.01, 1, 'lin');
+      K('ex', t0 + 0.01, NL, 'lin');
+      for (const id of Object.keys(model.arrays)) burstK(id, t0 + 0.01, 0);
+      const parts = byLayer(lid);
+      const target = fitCam({
+        parts, S: poseAt(t0 + 0.02),
+        yaw: args.yaw ?? (YAW.part + 4), pitch: args.pitch ?? 24,
+        aim: [0.56, 0.5], fill: args.fill ?? 0.5,
+      });
+      whipTo(t0, target, 0.3, tr);
+      // settle 的目标必须与最后一帧机位一致：差 3° 就会让整段后半程持续漂，hold 判 4 帧（实测）
+      const swept = { ...target, yaw: target.yaw + (args.sweep ?? 10), zoom: target.zoom * 1.04 };
+      camK(t0 + 0.55 * d, swept, 'io');
+      settle(t1, swept);
+      addCard(t0 + 0.28, t1 - 0.08, args.card, 'top');
+      subjectWins.push({ t0, t1, ids: parts.map((x) => x.id) });
     } else if (type === 'orbit') {
       // 循环自转：正弦摆动，段首段尾完全相同（sin 0 = sin 2π）⇒ 这一段可以直接当循环素材
       K('lift', t0 + 0.01, val('lift', t0));

@@ -37,6 +37,7 @@
               "hero",
               "rise",
               "explode",
+              "layer",
               "part",
               "action",
               "array",
@@ -105,7 +106,7 @@
               },
               "sweep": {
                 "type": "number",
-                "description": "orbit 镜头的摆动幅度（度）"
+                "description": "layer/orbit 镜头的侧转幅度（度）"
               },
               "cycles": {
                 "type": "number",
@@ -354,6 +355,7 @@
     "stack": "layer? · card?",
     "assemble": "无",
     "end": "card?（型号 + 一句话）",
-    "orbit": "sweep? · cycles? · roll? · card?"
+    "orbit": "sweep? · cycles? · roll? · card?",
+    "layer": "layer?（层 id）· yaw?/pitch?/fill? · sweep? · card?"
   }
 }

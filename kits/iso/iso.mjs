@@ -24,7 +24,7 @@ import { buildPlan } from './plan.mjs';
  * 九种镜头。放在渲染器文件里是有意的：tools/check-kit-contract.mjs 只扫渲染器源码，
  * 段型常量写在 plan.mjs 里它提取不到，会把 EASE / LOOK 的键当成段型（实测 7 种假段型）。
  */
-export const SCENE_TYPES = ['hero', 'rise', 'explode', 'part', 'action', 'array', 'stack', 'assemble', 'orbit', 'end'];
+export const SCENE_TYPES = ['hero', 'rise', 'explode', 'layer', 'part', 'action', 'array', 'stack', 'assemble', 'orbit', 'end'];
 
 const FONT = {
   big: 'NotoSC Regular',
@@ -250,7 +250,7 @@ export function createIsoRenderer(opts = {}) {
         local.push({ f, off, depth: cam.depth(c) });
       }
       local.sort((a, b) => a.depth - b.depth);
-      for (const it of local) it.ghost = subject ? !subject.has(part.id) : false;
+      for (const it of local) { it.isSubject = subject ? subject.has(part.id) : false; it.ghost = subject ? !it.isSubject : false; }
       list.push(...local);
     }
 
@@ -275,6 +275,13 @@ export function createIsoRenderer(opts = {}) {
       if (look.rim && !item.ghost) {
         target.strokeStyle = rgba(look.rim);
         target.lineWidth = 0.7;
+        target.stroke();
+      }
+      // 单层展示：主体描一圈亮边。黑玻璃、电芯这类深色件在深底上只有轮廓可读，
+      // 不描边就只剩"更黑的一块"（24 层片的屏幕/电池两镜实测）
+      if (item.isSubject) {
+        target.strokeStyle = 'rgba(214,228,255,0.45)';
+        target.lineWidth = 1.1;
         target.stroke();
       }
     }
