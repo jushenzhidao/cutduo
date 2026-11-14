@@ -139,11 +139,52 @@ uv run python tools/check-template.py --src templates/own/my-template        # �
 ```bash
 node src/gate.mjs out/film.mp4          # 单支
 node src/gate.mjs out/*.mp4 --html report.html
+
+# 内容层（可选，默认不跑）
+node src/gate.mjs out/film.mp4 --ocr 2 --expect "389,本福特定律"   # 读回屏幕字并断言
+node src/gate.mjs out/film.mp4 --facts facts.md                     # 台账数字必须在屏幕上出现
+node src/gate.mjs out/film.mp4 --require-bgm                        # 必须铺底音乐
+node src/gate.mjs out/film.mp4 --require-loudness                   # −16 LUFS 口径 + 真峰值
 ```
 
 只拦**交付完整性**：帧数与时长×fps 的偏差、音画时长差、空帧 ≤8%、黑帧 ≤3%。
-不拦 hook（前 2 秒运动）、平均亮度、重复帧——这三项在本仓 19 支成片上是连续分布，
-照搬外部阈值会误杀 13/19，包括全部口播片。判据标定过程写在 `src/gate.mjs` 头部。
+不拦 hook（前 2 秒运动）、平均亮度、重复帧、最长静止——这几项在本仓成片上是连续分布，
+照搬外部阈值会误杀 13/19。判据标定过程写在 `src/gate.mjs` 头部。
+
+五项内容层判据（2026-11-14 加，均为「默认只报」，显式开关才拦）：
+
+| 判据 | 开关 | 标定 |
+|---|---|---|
+| 最长静止 | 默认报 | 26 支实测最长 8.5 s、12 支 >3 s ⇒ 上游「静止 ≤3 s」在本仓不成立，告警线设 10 s，0 支触发 |
+| 屏幕字回读 | `--ocr [秒]` `--expect` `--require-expect` | macOS Vision 逐帧 OCR → `ocr.txt`；断言按容错匹配（OCR 会把 `cutduo` 读成 `cutauo`） |
+| 台账对照 | `--facts facts.md` `--require-facts` | 台账里的数字必须在屏幕上出现；反向输出「台账外数字」清单（滤掉时间码/分辨率/章节号） |
+| BGM 铺底 | `--bgm` `--require-bgm` | 与参考曲互相关在本仓不成立（有/无只差 0.03）⇒ 改判旁白间隙：有 BGM 0 段静音，无 BGM 20–22 段 |
+| 响度 | `--loudness` `--require-loudness` | 交付走 loudnorm −16，实测 5 支全落 −15.9 / 真峰值 −1.0~−1.5；未走该链路的素材片 −18~−31 只报不拦 |
+
+## 选哪一支
+
+`kits/STYLES.md` 是版式图鉴：按用途（知识科普 / 界面演示 / 观点长文 / 图示 / 快剪 / 竖屏）
+给首选与次选，并列出各支的段型。**讲法（6 母版）与版式（8 支）正交**，可以自由组合。
+
+## 新建一支片
+
+```bash
+node tools/new-film.mjs --slug myfilm --template A --tier 精讲 --title "标题"
+cd content/myfilm && ./make.sh
+```
+
+建出 `script.json`（拍表 + 文案）/ `facts.md`（出处台账）/ `build.mjs`（配音定长 → 链式时间轴）/
+`bgm.mjs`（分层配乐）/ `make.sh`（一条命令出片）。母版 A–F 见 `tools/knowledge/guide.json`。
+
+改一句旁白只需重配那段、再 `./make.sh`：时间轴是链式的（`from: "@prev+0.25"`），其余段落自动顺移。
+
+多支片一起出：
+
+```bash
+node tools/render-all.mjs --list     # 状态：skeleton / stale / ready / done
+node tools/render-all.mjs            # 重渲所有 ready（不重配音）
+node tools/render-all.mjs --rebuild  # 走 make.sh，重配音 + 重混音
+```
 
 ## 改完代码的回归
 

@@ -1,127 +1,276 @@
 {
-  "_note": "验收用新片：验证 guide 的内容模型 + profile 足以换文案出片，不改任何代码。文案、字幕、段序全部新写；外观走 legacy-2026-11 档案。",
-  "profile": "legacy-2026-11",
-  "durationSeconds": 44.0,
-  "fps": 30,
-  "fadeOutSeconds": 0.32,
-  "theme": { "pop": "#FD2551", "sun": "#FFD84D", "jade": "#26A38C", "jadeDeep": "#0E7A5F", "blue": "#2B7FD4", "ink": "#2C3A3E" },
-  "brand": { "show": true, "text": "儿童健康科普", "tag": "SCIENCE EXPLAINER" },
-  "subtitle": { "size": 62, "color": "#FFFFFF", "stroke": 6, "strokeColor": "#1B2B30", "y": 1002 },
-  "captions": [
-    { "start": 0.6, "end": 4.0, "text": "孩子突然喊肚子疼，家长第一反应是喂药", "seg": 0 },
-    { "start": 4.3, "end": 7.5, "text": "但止疼药会掩盖最关键的线索", "seg": 0 },
-    { "start": 8.2, "end": 11.4, "text": "一疼就吃止痛药，是家长最常做错的一步", "seg": 1 },
-    { "start": 11.7, "end": 15.0, "text": "疼的位置、时间、伴随症状才是判断依据", "seg": 1 },
-    { "start": 15.8, "end": 18.4, "text": "该做哪种检查？先看辐射", "seg": 2 },
-    { "start": 18.7, "end": 21.4, "text": "CT 辐射偏高，不能随便做", "seg": 2 },
-    { "start": 21.7, "end": 24.8, "text": "超声零辐射、可重复，是儿童首选", "seg": 2 },
-    { "start": 25.6, "end": 28.6, "text": "比如阑尾炎，右下腹会有固定压痛", "seg": 3 },
-    { "start": 28.9, "end": 32.0, "text": "探头一放上去，肿大的阑尾当场显形", "seg": 3 },
-    { "start": 32.8, "end": 35.2, "text": "儿童腹痛常见四类", "seg": 4 },
-    { "start": 35.5, "end": 38.6, "text": "阑尾炎、肠套叠、胆囊炎、肾结石", "seg": 4 },
-    { "start": 39.2, "end": 40.6, "text": "所以别拖", "seg": 5 },
-    { "start": 40.9, "end": 43.8, "text": "疼满 6 小时还没缓解，就别再等", "seg": 5 },
-    { "start": 44.6, "end": 47.4, "text": "这三种情况要立刻去医院", "seg": 6 },
-    { "start": 47.7, "end": 49.6, "text": "疼到直不起腰", "seg": 6 },
-    { "start": 49.9, "end": 51.9, "text": "伴随发烧、呕吐", "seg": 6 },
-    { "start": 52.2, "end": 54.2, "text": "按压之后更疼", "seg": 6 }
-  ],
-  "segments": [
-    {
-      "type": "cover",
-      "dur": 7.5,
-      "args": {
-        "prefix": "孩子喊肚子疼",
-        "title": "别急着喂药",
-        "sub": "先看 3 个信号再决定",
-        "sticker": "question",
-        "hint": "医学科普 · 2 分钟看懂"
-      }
+ "_note": "验收用新片：验证 guide 的内容模型 + profile 足以换文案出片，不改任何代码。文案、字幕、段序全部新写；外观走 legacy-2026-11 档案。",
+ "profile": "legacy-2026-11",
+ "durationSeconds": 59.8,
+ "fps": 30,
+ "fadeOutSeconds": 0.32,
+ "theme": {
+  "pop": "#FD2551",
+  "sun": "#FFD84D",
+  "jade": "#26A38C",
+  "jadeDeep": "#0E7A5F",
+  "blue": "#2B7FD4",
+  "ink": "#2C3A3E"
+ },
+ "brand": {
+  "show": true,
+  "text": "儿童健康科普",
+  "tag": "SCIENCE EXPLAINER"
+ },
+ "subtitle": {
+  "size": 62,
+  "color": "#FFFFFF",
+  "stroke": 6,
+  "strokeColor": "#1B2B30",
+  "y": 1002
+ },
+ "captions": [
+  {
+   "start": 0.6,
+   "end": 4.0,
+   "text": "孩子突然喊肚子疼，家长第一反应是喂药",
+   "seg": 0
+  },
+  {
+   "start": 4.3,
+   "end": 7.5,
+   "text": "但止疼药会掩盖最关键的线索",
+   "seg": 0
+  },
+  {
+   "start": 8.2,
+   "end": 11.4,
+   "text": "一疼就吃止痛药，是家长最常做错的一步",
+   "seg": 1
+  },
+  {
+   "start": 11.7,
+   "end": 15.0,
+   "text": "疼的位置、时间、伴随症状才是判断依据",
+   "seg": 1
+  },
+  {
+   "start": 15.8,
+   "end": 18.4,
+   "text": "该做哪种检查？先看辐射",
+   "seg": 2
+  },
+  {
+   "start": 18.7,
+   "end": 21.4,
+   "text": "CT 辐射偏高，不能随便做",
+   "seg": 2
+  },
+  {
+   "start": 21.7,
+   "end": 24.8,
+   "text": "超声零辐射、可重复，是儿童首选",
+   "seg": 2
+  },
+  {
+   "start": 25.6,
+   "end": 28.6,
+   "text": "比如阑尾炎，右下腹会有固定压痛",
+   "seg": 3
+  },
+  {
+   "start": 28.9,
+   "end": 32.0,
+   "text": "探头一放上去，肿大的阑尾当场显形",
+   "seg": 3
+  },
+  {
+   "start": 32.8,
+   "end": 35.2,
+   "text": "儿童腹痛常见四类",
+   "seg": 4
+  },
+  {
+   "start": 35.5,
+   "end": 38.6,
+   "text": "阑尾炎、肠套叠、胆囊炎、肾结石",
+   "seg": 4
+  },
+  {
+   "start": 39.2,
+   "end": 40.6,
+   "text": "所以别拖",
+   "seg": 5
+  },
+  {
+   "start": 40.9,
+   "end": 43.8,
+   "text": "疼满 6 小时还没缓解，就别再等",
+   "seg": 5
+  },
+  {
+   "start": 44.6,
+   "end": 47.4,
+   "text": "这三种情况要立刻去医院",
+   "seg": 6
+  },
+  {
+   "start": 47.7,
+   "end": 49.6,
+   "text": "疼到直不起腰",
+   "seg": 6
+  },
+  {
+   "start": 49.9,
+   "end": 51.9,
+   "text": "伴随发烧、呕吐",
+   "seg": 6
+  },
+  {
+   "start": 52.2,
+   "end": 54.2,
+   "text": "按压之后更疼",
+   "seg": 6
+  }
+ ],
+ "segments": [
+  {
+   "type": "cover",
+   "dur": 7.5,
+   "args": {
+    "prefix": "孩子喊肚子疼",
+    "title": "别急着喂药",
+    "sub": "先看 3 个信号再决定",
+    "sticker": "question",
+    "hint": "医学科普 · 2 分钟看懂"
+   }
+  },
+  {
+   "type": "talk",
+   "dur": 7.3,
+   "args": {
+    "paper": "cream",
+    "figure": "right",
+    "eyebrow": "家长最常做错的一步",
+    "lines": [
+     "一疼就吃止痛药",
+     "反而掩盖了病情"
+    ],
+    "accentLine": 1,
+    "size": 84,
+    "sticker": "question",
+    "gesture": "point"
+   }
+  },
+  {
+   "type": "compare",
+   "dur": 9.0,
+   "args": {
+    "paper": "sky",
+    "title": "该做哪种检查",
+    "left": {
+     "icon": "xray",
+     "label": "CT",
+     "note": "辐射偏高",
+     "bad": true,
+     "badge": "no"
     },
-    {
-      "type": "talk",
-      "dur": 7.3,
-      "args": {
-        "paper": "cream",
-        "figure": "right",
-        "eyebrow": "家长最常做错的一步",
-        "lines": ["一疼就吃止痛药", "反而掩盖了病情"],
-        "accentLine": 1,
-        "size": 84,
-        "sticker": "question",
-        "gesture": "point"
-      }
+    "right": {
+     "icon": "scanner",
+     "label": "超声",
+     "note": "无辐射可重复",
+     "badge": "yes"
     },
-    {
-      "type": "compare",
-      "dur": 9.0,
-      "args": {
-        "paper": "sky",
-        "title": "该做哪种检查",
-        "left": { "icon": "xray", "label": "CT", "note": "辐射偏高", "bad": true, "badge": "no" },
-        "right": { "icon": "scanner", "label": "超声", "note": "无辐射可重复", "badge": "yes" },
-        "conclusion": "儿童腹痛 · 先超声"
-      }
-    },
-    {
-      "type": "diagram",
-      "dur": 7.2,
-      "args": {
-        "paper": "mint",
-        "title": "阑尾炎",
-        "organ": "appendix",
-        "eyes": true,
-        "mark": [0.2, 0.8],
-        "pulse": true,
-        "probe": "left",
-        "callouts": [
-          { "text": "右下腹固定压痛", "at": 1.5, "x": 0.735, "y": 0.3, "size": 70, "lead": [0.405, 0.665] }
-        ]
-      }
-    },
-    {
-      "type": "matrix",
-      "dur": 7.0,
-      "args": {
-        "paper": "mint",
-        "title": "腹痛的 4 个常见原因",
-        "items": [
-          { "icon": "appendix", "label": "阑尾炎", "disc": "#FFE770" },
-          { "icon": "intussusception", "label": "肠套叠", "disc": "#FFD1DC" },
-          { "icon": "gallbladder", "label": "胆囊炎", "disc": "#C8EBDD" },
-          { "icon": "kidney", "label": "肾结石", "disc": "#CFE6FB" }
-        ]
-      }
-    },
-    {
-      "type": "focus",
-      "dur": 6.0,
-      "args": {
-        "paper": "sky",
-        "title": "别拖",
-        "icon": "scanner",
-        "strike": "疼一整天再看",
-        "claim": "6 小时是窗口"
-      }
-    },
-    {
-      "type": "tip",
-      "dur": 10.8,
-      "args": {
-        "paper": "sky",
-        "head": "就医信号",
-        "title": "这三种情况立刻去医院",
-        "items": ["疼到直不起腰", "伴随发烧呕吐", "按压后更疼"]
-      }
-    },
-    {
-      "type": "outro",
-      "dur": 5.0,
-      "args": {
-        "line1": "感谢观看",
-        "line2": "下期再会",
-        "note": "科普内容仅供参考 · 具体诊疗请遵医嘱"
-      }
-    }
-  ]
+    "conclusion": "儿童腹痛 · 先超声"
+   }
+  },
+  {
+   "type": "diagram",
+   "dur": 7.2,
+   "args": {
+    "paper": "mint",
+    "title": "阑尾炎",
+    "organ": "appendix",
+    "eyes": true,
+    "mark": [
+     0.2,
+     0.8
+    ],
+    "pulse": true,
+    "probe": "left",
+    "callouts": [
+     {
+      "text": "右下腹固定压痛",
+      "at": 1.5,
+      "x": 0.735,
+      "y": 0.3,
+      "size": 70,
+      "lead": [
+       0.405,
+       0.665
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "type": "matrix",
+   "dur": 7.0,
+   "args": {
+    "paper": "mint",
+    "title": "腹痛的 4 个常见原因",
+    "items": [
+     {
+      "icon": "appendix",
+      "label": "阑尾炎",
+      "disc": "#FFE770"
+     },
+     {
+      "icon": "intussusception",
+      "label": "肠套叠",
+      "disc": "#FFD1DC"
+     },
+     {
+      "icon": "gallbladder",
+      "label": "胆囊炎",
+      "disc": "#C8EBDD"
+     },
+     {
+      "icon": "kidney",
+      "label": "肾结石",
+      "disc": "#CFE6FB"
+     }
+    ]
+   }
+  },
+  {
+   "type": "focus",
+   "dur": 6.0,
+   "args": {
+    "paper": "sky",
+    "title": "别拖",
+    "icon": "scanner",
+    "strike": "疼一整天再看",
+    "claim": "6 小时是窗口"
+   }
+  },
+  {
+   "type": "tip",
+   "dur": 10.8,
+   "args": {
+    "paper": "sky",
+    "head": "就医信号",
+    "title": "这三种情况立刻去医院",
+    "items": [
+     "疼到直不起腰",
+     "伴随发烧呕吐",
+     "按压后更疼"
+    ]
+   }
+  },
+  {
+   "type": "outro",
+   "dur": 5.0,
+   "args": {
+    "line1": "感谢观看",
+    "line2": "下期再会",
+    "note": "科普内容仅供参考 · 具体诊疗请遵医嘱"
+   }
+  }
+ ]
 }
