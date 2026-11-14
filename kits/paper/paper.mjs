@@ -804,7 +804,7 @@ function pCompare(t, a) {
   // 左右大标题同号：逐栏 fitSize 会让两栏字数不同时差一到两号，成对出现时一眼能看出不齐
   const bigSize = Math.min(...[a.left, a.right].map(
     (s) => fitSize((((s || {}).items) || [])[0] || '', 92, colW, (v) => `900 ${v}px ${PF.black}`)));
-  const drawCol = (side, right, accentColor, p, base) => {
+  const drawCol = (side, right, accentColor, p, base, revealTimes) => {
     if (p <= 0) return;
     const lf = `500 22px ${PF.med}`;
     const bf = `500 38px ${PF.med}`;
@@ -812,10 +812,10 @@ function pCompare(t, a) {
     const big = items[0] || '';
     const bs = bigSize;
     const tf = `900 ${bs}px ${PF.black}`;
-    const place = (text, font, x, inkTop, color, track = 0) => {
+    const place = (text, font, x, inkTop, color, track = 0, clipW = null) => {
       const w = trackWidth(parseRichChars(text), font, track);
       const px = right ? x - w : x;
-      drawChars({ chars: parseRichChars(text) }, px, inkTop + inkAsc(text, font), font, color, BLUE, null, track);
+      drawChars({ chars: parseRichChars(text) }, px, inkTop + inkAsc(text, font), font, color, BLUE, clipW, track);
     };
     ctx.save();
     // 两栏各自从外侧滑进来：左栏从 -26、右栏从 +26，落位后偏移归零
@@ -824,18 +824,26 @@ function pCompare(t, a) {
     place(side.title || '', lf, right ? RX : LX, 259, right ? BLUE : PK.label, 4.7);
     place(big, tf, right ? RX : LX, 317, PK.ink);
     items.slice(1).forEach((s, i) => {
-      const q = pr(t, base + 0.25 + i * 0.18, base + 0.55 + i * 0.18);
+      // 默认按 0.18s 一条快速揭示；给了 revealAt 就按作者指定的绝对时刻逐条出现。
+      // 用于**长段**：compare 天然 2 秒演完，18s 的段后半程完全静止（实测 longest still 17.77s）。
+      const t0r = Array.isArray(revealTimes) && Number.isFinite(revealTimes[i])
+        ? revealTimes[i] : base + 0.25 + i * 0.18;
+      const q = pr(t, t0r, t0r + 0.34);
       if (q <= 0) return;
-      ctx.save(); ctx.globalAlpha = eo(p) * eo(q);
-      place(s, bf, right ? RX : LX, 427 + i * 63, PK.body);
+      ctx.save(); ctx.globalAlpha = eo(p) * Math.min(1, eo(q) * 3);
+      // 遮罩从左扫出，而不是整体淡入：pacing 实测纯淡入每次只占 0.2% 面积、均值永远够不到
+      // 0.35 阈值，18.6s 的段被判「全程停」（"幅度太小，把揭示做大"）。横扫的面积变化大一个量级。
+      const wLine = trackWidth(parseRichChars(s), bf, 0);
+      place(s, bf, right ? RX : LX, 427 + i * 63, PK.body, 0, wLine * eo(q));
       ctx.restore();
     });
     ctx.restore();
   };
   const lAt = clampStart(a.leftAt, a.t0, 0.05);
   const rAt = Math.min(a.rightAt, lAt + 0.45);
-  drawCol(a.left || {}, false, '#000', pr(t, lAt, lAt + 0.4), lAt);
-  drawCol(a.right || {}, true, BLUE, pr(t, rAt, rAt + 0.4), rAt);
+  const rev = a.revealAt || {};
+  drawCol(a.left || {}, false, '#000', pr(t, lAt, lAt + 0.4), lAt, rev.left);
+  drawCol(a.right || {}, true, BLUE, pr(t, rAt, rAt + 0.4), rAt, rev.right);
 
   const dp = pr(t, rAt, rAt + 0.4);
   if (dp > 0) {

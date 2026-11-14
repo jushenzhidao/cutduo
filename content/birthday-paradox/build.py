@@ -141,7 +141,10 @@ def main():
     scenes.append({'type': 'compare', 't0': b['t0'], 't1': b['t1'], 'args': {
         'cast': '差在哪', 'left': {'title': '直觉', 'items': ['一年 365 天', '23 人怎么可能', '估不到 10%']},
         'right': {'title': '实际', 'items': ['253 对组合', '23 人 50.7%', '57 人 99.0%']},
-        'leftAt': A(b, 0.6), 'rightAt': A(b, 1.6), 'strikeAt': A(b, 3.2), 'stamp': '差在问法'}})
+        'leftAt': A(b, 0.6), 'rightAt': A(b, 1.6), 'strikeAt': A(b, 3.2), 'stamp': '差在问法',
+        # 这一段 18.6s，但 compare 的内容 2 秒就演完 ⇒ 后面 17.8s 完全静止（全库最长）。
+        # 把 4 条正文铺到 15s，让后半程有东西陆续出现。
+        'revealAt': {'left': [A(b, 6.0), A(b, 12.0)], 'right': [A(b, 9.0), A(b, 15.0)]}}})
 
     b = beats[7]
     scenes.append({'type': 'point', 't0': b['t0'], 't1': b['t1'], 'args': {
