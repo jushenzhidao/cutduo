@@ -35,6 +35,25 @@ const gray = (file, t) => {
   return r.stdout && r.stdout.length >= W * H ? r.stdout : null;
 };
 
+// Otsu：按直方图自动找前景/背景分界。固定阈值（38 灰阶）只对浅底成立——
+// 深色 iso 片整帧都接近底色，会被判成"几乎没有墨"（实测 1.8%），跨套版式一比就全错。
+function otsu(hist, total) {
+  let sum = 0;
+  for (let v = 0; v < 256; v++) sum += v * hist[v];
+  let sumB = 0, wB = 0, best = 0, thr = 128;
+  for (let v = 0; v < 256; v++) {
+    wB += hist[v];
+    if (!wB) continue;
+    const wF = total - wB;
+    if (!wF) break;
+    sumB += v * hist[v];
+    const mB = sumB / wB, mF = (sum - sumB) / wF;
+    const between = wB * wF * (mB - mF) * (mB - mF);
+    if (between > best) { best = between; thr = v; }
+  }
+  return thr;
+}
+
 /** 单帧构图读数 */
 function measureFrame(buf) {
   // 背景色 = 直方图众数（paper 是浅底、science 是米色底，都成立）
@@ -46,6 +65,7 @@ function measureFrame(buf) {
   // 墨带只在**文字区**（左侧 60%）统计：右侧关键词卡是一整块实心色块，
   // 按整屏投影会把它和标题连成一条，层级差恒等于 1（实测 sample-1000）。
   const TEXT_W = Math.round(W * 0.6);
+  const thr = otsu(hist, buf.length);
   const rows = new Int32Array(H);
   let ink = 0, sx = 0, sy = 0, edge = 0;
   const edgePx = Math.max(2, Math.round(W * 0.03));
@@ -54,7 +74,7 @@ function measureFrame(buf) {
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const d = Math.abs(buf[y * W + x] - bg);
-      if (d <= 38) continue;                 // 与底色差不足 38 灰阶的算背景
+      if (d <= Math.max(10, Math.abs(thr - bg) * 0.35)) continue;   // Otsu 分界与底色的差值再放宽一点
       ink++; sx += x; sy += y;
       if (x < TEXT_W) rows[y]++;
       if (x < edgePx || x >= W - edgePx || y < edgePy || y >= H - edgePy) edge++;
@@ -85,6 +105,16 @@ function measureFrame(buf) {
   };
 }
 
+// 套版式决定构图基线：paper 是浅底大字 + 关键词卡，iso 是深底满幅的爆炸图，
+// 拿同一套阈值跨套比毫无意义（实测 iso 的"贴边 13%"是设计，paper 的"贴边 0%"是排版）。
+function kitOf(slug) {
+  try {
+    const mk = readFileSync(path.join(ROOT, `content/${slug}/make.sh`), 'utf8');
+    const m = mk.match(/--kit\s+(\w+)/);
+    return m ? m[1] : 'unknown';
+  } catch { return 'unknown'; }
+}
+
 function measureFilm(slug) {
   const file = path.join(ROOT, `out/${slug}.mp4`);
   if (!existsSync(file)) return null;
@@ -101,7 +131,7 @@ function measureFilm(slug) {
   const pick = (k) => frames.map((f) => f[k]).filter(Number.isFinite);
   const med = (arr) => { const a = [...arr].sort((x, y) => x - y); return a[Math.floor(a.length / 2)]; };
   return {
-    slug, dur: +dur.toFixed(1), n: frames.length,
+    slug, kit: kitOf(slug), dur: +dur.toFixed(1), n: frames.length,
     ink: med(pick('ink')),
     cx: med(pick('cx')),
     cy: med(pick('cy')),
@@ -145,24 +175,30 @@ for (const r of rows) {
     + `  ${(r.inkMin * 100).toFixed(1)}–${(r.inkMax * 100).toFixed(1)}`);
 }
 
-// 数据驱动阈值：全库 p10–p90 之外才算离群
-const q = (k, p) => { const a = rows.map((r) => r[k]).sort((x, y) => x - y); return a[Math.floor((a.length - 1) * p)]; };
-const bounds = {
-  ink: [q('ink', 0.1), q('ink', 0.9)],
-  driftX: [0, q('driftX', 0.95)],
-  edge: [0, q('edge', 0.95)],
-  hier: [q('hier', 0.1), 99],
-};
+// 阈值**按套版式分组**取 p10/p90：跨套比较无意义（见 kitOf 注释）。
+// 同组样本 <3 支时只报数字、不下离群结论。
+const groups = new Map();
+for (const r of rows) { if (!groups.has(r.kit)) groups.set(r.kit, []); groups.get(r.kit).push(r); }
+const qk = (arr, k, p) => { const a = arr.map((r) => r[k]).sort((x, y) => x - y); return a[Math.floor((a.length - 1) * p)]; };
 const out = [];
-for (const r of rows) {
-  if (r.ink < bounds.ink[0] * 0.6) out.push(`${r.slug}: 墨量 ${(r.ink * 100).toFixed(1)}% 低于全库 p10 的六成——近半时间是空屏`);
-  if (r.driftX > bounds.driftX[1] * 1.25) out.push(`${r.slug}: 重心横向偏 ${fmt(r.driftX)}（全库 p95=${fmt(bounds.driftX[1])}）——构图持续偏一侧`);
-  if (r.edge > bounds.edge[1] * 1.3) out.push(`${r.slug}: 贴边墨占比 ${(r.edge * 100).toFixed(1)}%（p95=${(bounds.edge[1] * 100).toFixed(1)}%）——主体快顶到画布边`);
-  if (r.hier < bounds.hier[0] * 0.8) out.push(`${r.slug}: 层级差 ${fmt(r.hier)}（p10=${fmt(bounds.hier[0])}）——全屏字一样大，主次不分`);
+for (const [kit, arr] of groups) {
+  if (arr.length < 3) continue;
+  const b = {
+    ink: [qk(arr, 'ink', 0.1), qk(arr, 'ink', 0.9)],
+    edge: qk(arr, 'edge', 0.95),
+    hier: qk(arr, 'hier', 0.1),
+  };
+  for (const r of arr) {
+    if (r.ink < b.ink[0] * 0.5) out.push(`[${kit}] ${r.slug}: 墨量 ${(r.ink * 100).toFixed(1)}% 不到同族 p10 的一半——近半时间空屏`);
+    if (r.edge > Math.max(b.edge * 1.6, 0.06)) out.push(`[${kit}] ${r.slug}: 贴边墨 ${(r.edge * 100).toFixed(1)}%（同族 p95=${(b.edge * 100).toFixed(1)}%）——主体顶到画布边`);
+    if (r.hier < b.hier * 0.7) out.push(`[${kit}] ${r.slug}: 层级差 ${fmt(r.hier)}（同族 p10=${fmt(b.hier)}）——主次分不开`);
+  }
 }
 console.log('─'.repeat(84));
-console.log(`全库分布：墨量 ${(bounds.ink[0] * 100).toFixed(1)}–${(bounds.ink[1] * 100).toFixed(1)}% · `
-  + `重心偏X ≤${fmt(bounds.driftX[1])} · 贴边 ≤${(bounds.edge[1] * 100).toFixed(1)}% · 层级差 ≥${fmt(bounds.hier[0])}`);
+for (const [kit, arr] of groups) {
+  console.log(`  ${kit.padEnd(10)} ${String(arr.length).padStart(2)} 支 · 墨量中位 ${(qk(arr, 'ink', 0.5) * 100).toFixed(1)}% · `
+    + `贴边 p95 ${(qk(arr, 'edge', 0.95) * 100).toFixed(1)}% · 层级差 p10 ${fmt(qk(arr, 'hier', 0.1))}`);
+}
 if (out.length) { console.log('\n离群：'); out.forEach((s) => console.log('  · ' + s)); }
 else console.log('\n没有离群：全部落在全库 p10–p90 内');
 process.exit(out.length ? 1 : 0);

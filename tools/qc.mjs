@@ -68,6 +68,13 @@ const table = (gate.stdout || '').split('\n').filter((l) => /PASS|FAIL|film|spec
 if (table.length) console.log(table.join('\n'));
 if (gate.stderr && gate.stderr.trim()) console.error(gate.stderr.trim());
 
+/* ── 3b. 构图量化（可选，只报不拦：阈值是同族相对的，会误报） ── */
+if (process.argv.includes('--composition')) {
+  console.log('── QC 3b 构图量化');
+  const comp = run([path.join(ROOT, 'tools/composition.mjs'), slug]);
+  process.stdout.write(comp.stdout || '');
+}
+
 /* ── 4. 案例（复用 gate 的 json） ── */
 console.log('── QC 4/5 案例留痕');
 const cs = run([path.join(ROOT, 'tools/case-loop.mjs'), slug, '--gate-json', gateJson, '--quiet']);
