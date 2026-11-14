@@ -79,7 +79,17 @@ function main() {
           s._anchors = resolved;
         }
         if (rowEntries) s._rowEntries = rowEntries;
-        if (Array.isArray(st.lines) && st.lines.length) s._lines = st.lines;
+        if (Array.isArray(st.lines) && st.lines.length) {
+          // 字幕逐字上色要用这一句自己的字级时刻（段内秒 → 绝对秒）
+          s._lines = st.lines.map((L) => {
+            const pos = (st.line ?? '').indexOf(L.text);
+            const cs = pos >= 0 ? (st.chars ?? []).slice(pos, pos + L.text.length) : [];
+            return {
+              ...L,
+              chars: cs.map((c) => ({ ch: c.ch, at: c.t == null ? null : st.start + c.t })),
+            };
+          });
+        }
         // 元镜头的数据源：时间轴要全片每段的真实范围与字刻线，glyph 要这一句的逐字时刻
         if (s.family === 'timeline') {
           s._timeline = timing.segments ?? [];
@@ -198,11 +208,13 @@ function main() {
         let text = cur.seg.line;
         let from = cur.start;
         let to = cur.end;
+        let curLine = null;
         const ls = cur.seg._lines;
         if (Array.isArray(ls) && ls.length) {
           let k = 0;
           for (let j = 0; j < ls.length; j++) if (t >= ls[j].at - 0.06) k = j;
           const L = ls[k];
+          curLine = L;
           text = L.text;
           from = L.at;
           to = Math.min(cur.end, L.at + L.speech + 0.62);
@@ -211,6 +223,8 @@ function main() {
           palette,
           width,
           y: params.captionY ?? height - 140,
+          chars: curLine?.chars,
+          now: t,
         });
       }
 

@@ -68,6 +68,20 @@ ffmpeg -y -i out/render-cost.mp4 -af "loudnorm=I=-16:TP=-1.5:LRA=11" \
 node src/gate.mjs out/render-cost-final.mp4 --require-audio
 ```
 
+出片前后的三个工具（都在仓库 `tools/`，与本 kit 无关的部分也能用）：
+
+```bash
+# 出片前体检：版式轮换 + 空台预判（不看像素，preset 一改就能跑）
+node tools/check-shotbook.mjs kits/diagram/presets/x.json --timing out/x.timing.json
+
+# 审片：每段首/末 + 每个锚点后 0.22s，拼 3 列并标序号
+node tools/review-sheet.mjs --video out/x-final.mp4 \
+  --preset kits/diagram/presets/x.json --timing out/x.timing.json --out out/x-sheet.png
+
+# 两遍响度归一（比单遍准 0.1 LUFS，并且会告诉你是不是真峰值卡住了增益）
+node tools/normalize.mjs out/x.mp4 out/x-final.mp4
+```
+
 `vo.mjs` 跟 `templates/_scaffold/tools/vo.py` 同一套"时间轴跟随配音"的原则，但结构不同
 （这里一段 = 一句口播 + 一张图，没有 scene/line 嵌套），所以是独立实现，不是调用。
 
@@ -167,6 +181,15 @@ node kits/diagram/render.mjs --params out/x.vo.json --timing out/x.timing.json -
 | `frame.bottom` 版心下边 | 120 | 收到 210 是给 42px 字幕让位；再大图区就压得太扁，`data-bar` 的行高会顶到上限 |
 | `fps` | 60 | 30 只适合信息密度低的短片。逐字点亮（`glyph`）在 30fps 下会看到台阶 |
 | `crf` | 18 | 12 起体积翻倍、肉眼无差；24 以上深底渐变会出色带 |
+
+## 五·七、字幕：逐字上色
+
+有 `--timing` 时字幕按句内**每个字的真实时刻**分成两段：念到的墨色、没念到的压到 0.34 的灰。
+不是逐字弹出（字幕一跳行，观众视线要重新找起点），是同一行里换色。
+
+实现要点：**不能用"每个字单独 fillText"**。逐字累加 `measureText` 会积亚像素误差，
+中文间距会变得毛毛的。做法是整行只排一次版，用矩形 clip 分层重绘 —— 字形位置完全一致，
+只是颜色不同。也不要再叠一层"当前字标红"：同一字被画两遍会变粗，视觉上吃掉右边的字距。
 
 ## 六、容量纪律
 

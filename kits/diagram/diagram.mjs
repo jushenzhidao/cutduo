@@ -261,10 +261,51 @@ export function drawCaption(ctx, text, t, total, size, opts = {}) {
   ctx.save();
   ctx.globalAlpha = a;
   ctx.font = `${fit.size}px ${fonts.med}`;
-  ctx.fillStyle = palette.ink;
-  ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  lines.forEach((ln, i) => ctx.fillText(ln, W / 2, top + i * lineH));
+
+  // 逐字上色：念到的墨色、刚念到的 0.35s 内偏红、没念到的压灰。
+  // 不用"每个字单独 fillText"—— 逐字累加宽度会累积亚像素误差，中文间距会变成毛毛的。
+  // 改成整行只排一次版，用矩形 clip 分层重绘：字形位置完全一致，只是颜色不同。
+  const chars = opts.chars;
+  if (Array.isArray(chars) && chars.length && Number.isFinite(opts.now)) {
+    ctx.textAlign = 'left';
+    let k = 0;
+    for (let i = 0; i < lines.length; i++) {
+      const ln = lines[i];
+      const y = top + i * lineH;
+      const x0 = W / 2 - ctx.measureText(ln).width / 2;
+
+      // 底：整行压灰
+      ctx.globalAlpha = a * 0.34;
+      ctx.fillStyle = palette.label;
+      ctx.fillText(ln, x0, y);
+
+      // 已念到的连续前缀
+      let n = 0;
+      for (const ch of ln) {
+        const c = chars[k + n];
+        if (!c || !Number.isFinite(c.at) || opts.now < c.at) break;
+        n++;
+      }
+      if (n > 0) {
+        const w = ctx.measureText(ln.slice(0, n)).width;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(x0 - 2, y - lineH, w + 2, lineH * 1.6);
+        ctx.clip();
+        ctx.globalAlpha = a;
+        ctx.fillStyle = palette.ink;
+        ctx.fillText(ln, x0, y);
+        ctx.restore();
+      }
+
+      k += ln.length;
+    }
+  } else {
+    ctx.fillStyle = palette.ink;
+    ctx.textAlign = 'center';
+    lines.forEach((ln, i) => ctx.fillText(ln, W / 2, top + i * lineH));
+  }
   ctx.restore();
   return { lines: lines.length, size: fit.size, overflow: fit.overflow };
 }
