@@ -113,6 +113,7 @@ export function createIsoRenderer(opts = {}) {
   let title = 'PRODUCT';
   let backdropImg = null;
   let backdropPath = null;
+  const spriteImgs = new Map();
 
   function setContent(c = {}) {
     const content = c.content || {};
@@ -340,6 +341,45 @@ export function createIsoRenderer(opts = {}) {
     return [base[0] * f, base[1] * f, base[2] * f];
   }
 
+  /**
+   * 贴片：世界尺寸的一张贴图，居中画在该点。宽度按两端投影实测（针孔下不能用 k 直接乘）。
+   * 只用于"机位基本固定"的镜头——它是永远面向相机的平面，yaw 一转就露馅。
+   */
+  function drawSprite(item, cam, target, alphaMul) {
+    const img = spriteImgs.get(item.sprite.id);
+    if (!img) return;
+    const p = item.sprite;
+    const off = item.off;
+    const zc = (Number(p.z) || 0) + (Number(p.h) || 10) / 2;
+    const half = (Number(p.w) || 10) / 2;
+    const [lx] = cam.project([p.x - half + off[0], p.y + off[1], zc + off[2]]);
+    const [rx] = cam.project([p.x + half + off[0], p.y + off[1], zc + off[2]]);
+    const [sx, sy] = cam.project([p.x + off[0], p.y + off[1], zc + off[2]]);
+    const pw = Math.abs(rx - lx);
+    const ph = pw * (img.height / img.width);
+    target.globalAlpha = (item.ghost ? (look.ghost ?? 0.08) : 1) * alphaMul;
+    // 接地阴影：贴片本身没有底面，不补一块就会"浮"在半空（特写镜头最明显）
+    if (!item.ghost) {
+      const [fx, fy] = cam.project([p.x + off[0], p.y + off[1], (Number(p.z) || 0) + off[2]]);
+      const rx = pw * 0.42;
+      const ry = Math.max(4, pw * 0.085);
+      const sg = target.createRadialGradient(fx, fy, 0, fx, fy, rx);
+      sg.addColorStop(0, 'rgba(78,50,26,0.30)');
+      sg.addColorStop(0.6, 'rgba(78,50,26,0.12)');
+      sg.addColorStop(1, 'rgba(78,50,26,0)');
+      target.save();
+      target.translate(fx, fy);
+      target.scale(1, ry / rx);
+      target.fillStyle = sg;
+      target.beginPath();
+      target.arc(0, 0, rx, 0, Math.PI * 2);
+      target.fill();
+      target.restore();
+    }
+    target.drawImage(img, sx - pw / 2, sy - ph / 2, pw, ph);
+    target.globalAlpha = 1;
+  }
+
   function drawObject(state, alphaMul = 1, target = ctx) {
     const cam = currentCam;
     const { S } = state;
@@ -355,6 +395,13 @@ export function createIsoRenderer(opts = {}) {
       for (const part of model.parts) {
         const off = partOffset(model, part, S);
         const isSub = subject ? subject.has(part.id) : false;
+        if (part.kind === 'sprite') {
+          // showIn：同一只鸭子有两张图（杯里只露头 / 爆炸时整只），按当前镜头类型切
+          if (Array.isArray(part.showIn) && state.type && !part.showIn.includes(state.type)) continue;
+          const c = [part.center[0] + off[0], part.center[1] + off[1], part.center[2] + off[2]];
+          list.push({ sprite: part, off, depth: cam.depth(c), isSubject: isSub, ghost: subject ? !isSub : false });
+          continue;
+        }
         for (let fi = 0; fi < part.faceCount; fi++) {
           const f = model.faces[part.faces + fi];
           if (!facing(f.n, cam)) continue;
@@ -382,6 +429,10 @@ export function createIsoRenderer(opts = {}) {
 
     target.lineJoin = 'round';
     for (const item of list) {
+      if (item.sprite) {
+        drawSprite(item, cam, target, alphaMul);
+        continue;
+      }
       const { f, off } = item;
       target.globalAlpha = (item.ghost ? (look.ghost ?? 0.08) : 1) * alphaMul;
       const pts = f.pts;
@@ -621,6 +672,17 @@ export function createIsoRenderer(opts = {}) {
 
   /** 与 science/collage 同一个约定：位图要在渲染前解码完，否则前几帧是空的 */
   async function ready() {
+    // sprite 图与 backdrop 一样只能异步解码
+    for (const part of model?.parts || []) {
+      if (part.kind !== 'sprite' || !part.src) continue;
+      const sp = path.isAbsolute(part.src) ? part.src : path.join(DIRS.root, part.src);
+      try {
+        if (fs.existsSync(sp)) spriteImgs.set(part.id, await loadImage(fs.readFileSync(sp)));
+        else console.warn(`[iso] sprite 不存在：${sp}`);
+      } catch (e) {
+        console.warn(`[iso] sprite 解码失败：${e.message}`);
+      }
+    }
     if (!backdropPath) return false;
     try {
       if (!fs.existsSync(backdropPath)) {

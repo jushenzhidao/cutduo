@@ -198,6 +198,8 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
 
   let labelsWindow = null;
   const heroWins = [];
+  /** 镜头类型窗：贴片要按当前镜头切换（杯里只露头 / 爆炸时整只） */
+  const typeWins = [];
   /** 近摄镜头（特写/阵列/夹层）只让主体保持实色，其余零件降到 13% 幽灵 */
   const subjectWins = [];
   const exTime = (t0, dur, v) => t0 + 0.25 + (v / NL) * (0.62 * dur);
@@ -216,6 +218,7 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
     const args = scene.args || {};
     // 每个镜头可以指定"怎么进来"：whip 甩 / orbit 绕 / spin 原地转一圈（默认甩）
     const tr = args.transition || 'whip';
+    typeWins.push({ t0, t1, type });
     pin(t0);
 
     if (type === 'hero') {
@@ -478,7 +481,8 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
 
       const showLabels = labelsWindow && t >= labelsWindow.t0 && t <= labelsWindow.t1;
       const sw = subjectWins.find((w) => t >= w.t0 && t <= w.t1);
-      return { t, cam, S, cards: live, labels: showLabels, heroWindow: !!win, subject: sw ? new Set(sw.ids) : null, blur, model };
+      const tw = typeWins.find((w) => t >= w.t0 && t < w.t1);
+      return { t, type: tw ? tw.type : (typeWins[0]?.type || 'hero'), cam, S, cards: live, labels: showLabels, heroWindow: !!win, subject: sw ? new Set(sw.ids) : null, blur, model };
     },
     _tracks: tracks,
     _cams: camKeys,

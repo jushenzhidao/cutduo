@@ -212,6 +212,10 @@ function buildFaces(spec) {
     const pts = circle(Number(spec.x) || 0, Number(spec.y) || 0, Number(spec.r) || 5, Number(spec.seg) || 26);
     return prismFaces(pts, z0, z1, spec.material);
   }
+  if (kind === 'sprite') {
+    // 贴片：永远面向相机的一张图。没有面，绘制在 iso.mjs 里单独处理。
+    return [];
+  }
   if (kind === 'ball') {
     return ballFaces(spec);
   }
@@ -317,6 +321,15 @@ export function createModel(content = {}) {
       bx0 = Math.min(bx0, p[0]); bx1 = Math.max(bx1, p[0]);
       by0 = Math.min(by0, p[1]); by1 = Math.max(by1, p[1]);
       bz0 = Math.min(bz0, p[2]); bz1 = Math.max(bz1, p[2]);
+    }
+    if (!pf.length && spec.kind === 'sprite') {
+      // 空面集⇒bbox 会算成 ±Infinity，这里按声明尺寸补一个极薄的盒
+      const sw = (Number(spec.w) || 10) / 2;
+      const sx0 = Number(spec.x) || 0, sy0 = Number(spec.y) || 0, sz0 = Number(spec.z) || 0;
+      const sh = Number(spec.h) || 10;
+      bx0 = sx0 - sw; bx1 = sx0 + sw;
+      by0 = sy0 - 1; by1 = sy0 + 1;
+      bz0 = sz0; bz1 = sz0 + sh;
     }
     part.bbox = [[bx0, bx1], [by0, by1], [bz0, bz1]];
     part.center = [(bx0 + bx1) / 2, (by0 + by1) / 2, (bz0 + bz1) / 2];

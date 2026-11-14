@@ -103,6 +103,21 @@ drop 自动落在最长/信息最满那一段 = 爆炸开头），转场与落�
 `await r.ready()`（与 science/collage 同一约定）。`new Image(); img.src = buf` 在 napi-rs 里
 width/complete 都对，但 `drawImage` 画出来是全透明——踩过一次。
 
+## 贴片（`kind: 'sprite'`）
+
+```json
+{ "id": "duck", "kind": "sprite", "src": "assets/gen/duck-sprite.png",
+  "x": 0, "y": -1, "z": 8, "w": 70, "h": 78,
+  "showIn": ["explode", "layer", "orbit"] }
+```
+
+- **永远是面向相机的平面**：`w` 按两端投影实测像素宽（针孔下不能直接乘 k），`h` 由图片比例推。
+  镜头 yaw 一转就露馅，所以只用在"机位基本固定"的镜头；`showIn` 按镜头类型切换（同一只鸭子做了
+  「杯里只露头」和「整只」两张图）。
+- 没有面集：`buildFaces` 返回空数组，`bbox` 按声明尺寸补一个极薄的盒（取景与层标注要用）。
+- **必须补接地阴影**：贴片没有底面，不补一块就浮在半空——特写镜头最明显。阴影按底部中心投影画椭圆。
+- 图同样只能 `loadImage` 异步解码，走渲染器的 `ready()`。
+
 ## 核对外廓：正交三视图
 
 ```bash

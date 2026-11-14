@@ -158,105 +158,6 @@
         "material": "porcelainIn"
       },
       {
-        "id": "duckBody",
-        "layer": "duck",
-        "kind": "ball",
-        "x": 0,
-        "y": -2,
-        "z": 10,
-        "rx": 24,
-        "ry": 28,
-        "rz": 34,
-        "segU": 18,
-        "segV": 11,
-        "material": "duck"
-      },
-      {
-        "id": "duckHead",
-        "layer": "duck",
-        "kind": "ball",
-        "hero": "out",
-        "x": 0,
-        "y": 2,
-        "z": 78,
-        "r": 18,
-        "segU": 14,
-        "segV": 9,
-        "material": "duck"
-      },
-      {
-        "id": "duckBeak",
-        "layer": "duck",
-        "kind": "prism",
-        "hero": 0,
-        "z": 85,
-        "h": 6,
-        "pts": [
-          [
-            -9,
-            -13
-          ],
-          [
-            10,
-            -13
-          ],
-          [
-            7.5,
-            -26
-          ],
-          [
-            -8,
-            -26
-          ]
-        ],
-        "material": "duckBeak",
-        "rot": [
-          -4,
-          0,
-          0
-        ]
-      },
-      {
-        "id": "duckEyeL",
-        "layer": "duck",
-        "kind": "ball",
-        "hero": 1,
-        "x": -7,
-        "y": -12.86,
-        "z": 102,
-        "r": 2.4,
-        "segU": 10,
-        "segV": 6,
-        "material": "duckEye"
-      },
-      {
-        "id": "duckEyeR",
-        "layer": "duck",
-        "kind": "ball",
-        "hero": 2,
-        "x": 7,
-        "y": -12.86,
-        "z": 102,
-        "r": 2.4,
-        "segU": 10,
-        "segV": 6,
-        "material": "duckEye"
-      },
-      {
-        "id": "duckTail",
-        "layer": "duck",
-        "kind": "ball",
-        "x": 0,
-        "y": 30,
-        "z": 26,
-        "rx": 10,
-        "ry": 9,
-        "rz": 8,
-        "segU": 10,
-        "segV": 7,
-        "material": "duck"
-      },
-      {
         "id": "brick",
         "layer": "prop",
         "x": -78,
@@ -310,6 +211,41 @@
         "h": 12,
         "r": 2.5,
         "material": "porcelain"
+      },
+      {
+        "id": "duckHead",
+        "layer": "duck",
+        "kind": "sprite",
+        "src": "assets/gen/duck-head.png",
+        "x": 0,
+        "y": -1,
+        "z": 88,
+        "w": 46,
+        "h": 37,
+        "material": "duck",
+        "showIn": [
+          "hero",
+          "rise",
+          "assemble",
+          "end"
+        ]
+      },
+      {
+        "id": "duckFull",
+        "layer": "duck",
+        "kind": "sprite",
+        "src": "assets/gen/duck-sprite.png",
+        "x": 0,
+        "y": -1,
+        "z": 8,
+        "w": 70,
+        "h": 78,
+        "material": "duck",
+        "showIn": [
+          "explode",
+          "layer",
+          "orbit"
+        ]
       }
     ],
     "backdrop": "assets/gen/studio-backdrop.jpg"
@@ -407,9 +343,9 @@
       "args": {
         "layer": "duck",
         "transition": "orbit",
-        "yaw": -46,
-        "pitch": 16,
-        "fill": 0.46,
+        "yaw": -14,
+        "pitch": 10,
+        "fill": 0.44,
         "card": {
           "big": "一只鸭",
           "small": "球体 · 喙 · 两眼"
