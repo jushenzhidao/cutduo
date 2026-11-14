@@ -74,3 +74,4 @@ const mb = (fs.statSync(output).size / 1e6).toFixed(2);
 
 console.log(`✓ ${path.relative(ROOT, output)}`);
 console.log(`   ${W}×${H} (${ratio}) · ${Number(dur).toFixed(1)}s · ${mb}MB · 内容未裁，上下为模糊填充`);
+console.log(`   字幕落在距底 0.28–0.45；跑 caption-check 记得带 --subtitle-y 0.28,0.45`);

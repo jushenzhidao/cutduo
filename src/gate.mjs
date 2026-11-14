@@ -217,7 +217,7 @@ function checkBlank(file, { minStd = 12, minDur = 2, skipTail = 4 } = {}) {
  * 覆盖率天然打不满。所以它抓的是"整条字幕没出现 / 被裁掉大半"，不是逐字校对。
  * 门槛 0.6：漏一两个字仍然过，漏半句就报出来。
  */
-function checkCaptions(params, ocrLines, fps) {
+function checkCaptions(params, ocrLines, fps, band = [0, 0.3]) {
   const caps = Array.isArray(params?.captions) ? params.captions : [];
   if (!caps.length) return null;
   let worst = null, shown = 0;
@@ -235,7 +235,9 @@ function checkCaptions(params, ocrLines, fps) {
   }
   for (const c of caps) {
     const mid = (Number(c.start) + Number(c.end)) / 2;
-    const near = ocrLines.filter((l) => Math.abs(l.t - mid) <= 1.4 && l.y < 0.3);
+    // band = 字幕带（距底部的归一化起止）。横屏字幕在 0–13%，竖屏在 35–40%：
+    // 写死 0.3 会让竖屏片 15/15 条全报"没读全"（实测），而画面其实清清楚楚。
+    const near = ocrLines.filter((l) => Math.abs(l.t - mid) <= 1.4 && l.y >= band[0] && l.y <= band[1]);
     const screen = near.map((l) => l.text).join('');
     const chars = [...String(c.text || '')].filter((ch) => !/[，。、；：？！,.;:!?\s]/.test(ch));
     if (!chars.length) continue;
@@ -404,7 +406,8 @@ function judge(file, opt) {
   if (opt.captionParams && oc) {
     try {
       const cp = JSON.parse(readFileSync(opt.captionParams, 'utf8'));
-      capCheck = checkCaptions(cp, oc.lines, opt.ocr);
+      // 字幕带：横屏默认 [0,0.3]（距底 30% 内）；竖屏字幕在 0.35–0.40，要显式传 --subtitle-y
+      capCheck = checkCaptions(cp, oc.lines, opt.ocr, opt.subtitleBand || [0, 0.3]);
       if (capCheck && capCheck.rushing.length) {
         const w = capCheck.rushing.reduce((a, b) => (b.hold - b.need < a.hold - a.need ? b : a));
         warns.push(`字幕 ${capCheck.rushing.length}/${capCheck.total} 条停留不足（最短 ${w.hold}s / 需 ${w.need}s：`
@@ -528,6 +531,10 @@ function parseArgs(argv) {
     else if (a === '--facts') opt.facts = argv[++i];
     else if (a === '--caption-check') opt.captionParams = argv[++i];
     else if (a === '--blank') opt.blank = true;
+    else if (a === '--subtitle-y') {
+      const [lo, hi] = String(argv[++i]).split(',').map(Number);
+      opt.subtitleBand = [lo, hi];
+    }
     else if (a === '--require-facts') opt.requireFacts = true;
     else if (a === '--ocr-out') opt.ocrOut = argv[++i];
     else files.push(a);
@@ -543,7 +550,8 @@ if (!files.length) {
     '       node gate.mjs <film.mp4> --loudness | --require-loudness   # -16 LUFS 口径 + 真峰值\n' +
     '       node gate.mjs <film.mp4> --facts facts.md [--require-facts]  # 台账里的数字必须在屏幕上出现\n' +
     '       node gate.mjs <film.mp4> --caption-check params.json        # 字幕是否真的显示出来（容错）\n' +
-    '       node gate.mjs <film.mp4> --blank                            # 画面是否"空着"（信息量判据）');
+    '       node gate.mjs <film.mp4> --blank                            # 画面是否"空着"（信息量判据）',
+    '       node gate.mjs <film.mp4> --caption-check p.json --subtitle-y 0.28,0.45   # 竖屏的字幕带');
   process.exit(2);
 }
 if (opt.facts && !opt.ocr) opt.ocr = 2;    // 台账对照要靠屏幕字，没给 --ocr 就默认 2 秒一帧
