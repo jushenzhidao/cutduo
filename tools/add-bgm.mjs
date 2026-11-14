@@ -6,7 +6,9 @@
  *   1. 把音乐循环/裁到与视频等长，首尾淡入淡出、轻微低通（去掉刺耳的高频齿音）；
  *   2. 用 voice 当 sidechain 把音乐压下去（说话时自动下潜，句间回弹）——不做这一步，
  *      要么 BGM 盖人声、要么把 BGM 调到听不见；
- *   3. 整体 loudnorm 到 -16 LUFS，与交付口径一致。
+ *   3. 只做固定增益 + 限幅，**不做 loudnorm**——单趟 loudnorm 是动态增益，段间电平被来回拉，
+ *      实测加 BGM 后同一秒反而比原片低 2.8 dB（听感"忽大忽小"），所以不用。
+ *      ⇒ 响度必须在**配音环节**归一（见下方"旁白电平"），成片这里补不回来。
  *
  *   node tools/add-bgm.mjs --video in.mp4 --loop "Mellow Drizzle Soft Pad" --out out.mp4
  *   node tools/add-bgm.mjs --video in.mp4 --music /path/track.m4a --gain -20 --out out.mp4
@@ -36,6 +38,8 @@ const FADE_IN = Number(arg('fade-in', 2.0));
 const FADE_OUT = Number(arg('fade-out', 3.0));
 if (!VIDEO || !OUT) { console.error('用法: node tools/add-bgm.mjs --video in.mp4 [--audio 旁白.wav] [--loop 名字|--music 路径] --out out.mp4'); process.exit(2); }
 
+// 旁白电平：edge-tts 原始输出约 -23.7 LUFS，不归一就直接混，成片会落在 -23 档（偏离交付口径 -16）。
+// 正确做法是在配音阶段加一步：ffmpeg -i vo.wav -af loudnorm=I=-16:TP=-1.5:LRA=11 -ar 48000 vo-norm.wav
 const LOOPS_ROOT = '/Library/Audio/Apple Loops';
 
 function findLoop(name) {

@@ -1,0 +1,747 @@
+{
+  "_how": "kits/knowledge 的内容模型：6 种脚本母版 × 4 档时长 × 对位硬规则。这是【讲法】层，不含任何视觉实现——骨架产出 science 的 segments，渲染交给 kits/science。数据来源：andyhuo520/vibe-knowledge（MIT）references/01-templates.md、13-duration.md、11-absorbed.md，按本仓需要改写成机器可读。",
+  "_priority": "1=必留 2=可砍 3=先砍；裁拍时从 3 砍到 1，砍不动就说明时长档选小了。expand=n 表示该拍可拆成 n 拍（深挖档用）。",
+  "narration": {
+    "charsPerSecond": 5.5,
+    "sentenceMax": 22,
+    "beatGapMax": 0.25,
+    "sentenceGapMax": 0.35,
+    "screenCharsMax": 8,
+    "screenGroupsMax": 2,
+    "subtitleCharsMax": 16,
+    "sfxCuesMax": 8,
+    "segmentMax": 8,
+    "_segmentMaxWhy": "science/paper 这类版式单段是静态构图 + 入场动画，超过 8s 就是死画面（实测 16s 一段 → freezedetect 报 15.6s 静止）。母版拍长 12–16s 时必须拆段，或改用有推拉能力的版式。"
+  },
+  "durations": {
+    "速览": {
+      "seconds": [
+        45,
+        60
+      ],
+      "words": [
+        250,
+        360
+      ],
+      "beats": [
+        5,
+        7
+      ],
+      "detail": 1,
+      "canTell": "一个钩子 + 一个结论 + 一个例子 + 回问",
+      "cut": "前情、出处展开、对照组；反转最多一句"
+    },
+    "精讲": {
+      "seconds": [
+        90,
+        120
+      ],
+      "words": [
+        500,
+        720
+      ],
+      "beats": [
+        7,
+        9
+      ],
+      "detail": 2,
+      "canTell": "主线讲完 + 1 个关键证据 + 1 次反转",
+      "cut": "第二条证据、历史对照、误区纠正"
+    },
+    "标准": {
+      "seconds": [
+        150,
+        180
+      ],
+      "words": [
+        820,
+        1080
+      ],
+      "beats": [
+        10,
+        12
+      ],
+      "detail": 3,
+      "canTell": "主线 + 2–3 个证据 + 1 次反转 + 对照组 + 回问",
+      "cut": "完整因果链里的次要环节、两说并列只留一处"
+    },
+    "深挖": {
+      "seconds": [
+        210,
+        300
+      ],
+      "words": [
+        1160,
+        1800
+      ],
+      "beats": [
+        14,
+        20
+      ],
+      "detail": 4,
+      "canTell": "完整因果链（每步一个画面证据）+ 两说并列 + 误区纠正 + 延伸",
+      "cut": "基本不砍，注意每章一个王炸防疲劳"
+    }
+  },
+  "complexity": {
+    "_how": "五项各 0–2 分，合计 0–10。0–3 简单 / 4–6 中等 / 7–10 复杂。打分时每项写一句理由，用户要能看懂为什么推荐这一档。",
+    "dims": [
+      {
+        "key": "concepts",
+        "label": "概念数：要讲清的新概念／术语",
+        "levels": [
+          "1 个",
+          "2–3 个",
+          "4 个以上"
+        ]
+      },
+      {
+        "key": "prereq",
+        "label": "前置知识：观众得先懂什么",
+        "levels": [
+          "不用",
+          "一点常识",
+          "得先补一个概念"
+        ]
+      },
+      {
+        "key": "causal",
+        "label": "因果链：从起点到结论几步",
+        "levels": [
+          "≤2 步",
+          "3–4 步",
+          "5 步以上"
+        ]
+      },
+      {
+        "key": "evidence",
+        "label": "证据密度：数字、引文、人名年份",
+        "levels": [
+          "≤4 条",
+          "5–10 条",
+          "10 条以上"
+        ]
+      },
+      {
+        "key": "dispute",
+        "label": "分歧／反转：说法不一、反例、误区",
+        "levels": [
+          "没有",
+          "1 处",
+          "2 处以上"
+        ]
+      }
+    ],
+    "recommend": {
+      "简单": [
+        "速览",
+        "精讲"
+      ],
+      "中等": [
+        "标准"
+      ],
+      "复杂": [
+        "深挖"
+      ]
+    }
+  },
+  "rules": {
+    "_how": "所有母版共用，写稿时逐条自查。前三条是钩子层，后四条是交付层。",
+    "hook3s": "前 3 秒让观众参与：猜一个字、选一个按钮、认出一个日常场景。不要先上标题、不要先自我介绍。",
+    "titleDelay": "标题延后：钩子讲完再出系列片头。",
+    "oneProp": "一个主道具贯穿全片，概念变了道具变形，不换道具。",
+    "everyFactSourced": "每个事实挂出处；示意画面标明；分歧两说并列。",
+    "screenWordsOnly": "画面字只放关键词（≤8 字）、数字、出处；整句交给旁白和字幕。",
+    "chapterQuote": "每章一句金句收尾，能截图。",
+    "loopBack": "结尾回扣开头、把问题交回观众（评论区互动）。"
+  },
+  "templates": {
+    "A": {
+      "name": "猜谜概念片",
+      "suitable": "抽象概念（熵、本福特定律、贝叶斯、纳什均衡、相变）",
+      "bench": "电子智人《信息论》142 万赞",
+      "durationHint": "3:30–4:30",
+      "keyMoves": [
+        "标题延后（原作 27 秒才出标题）",
+        "一个视觉主角贯穿全片",
+        "章节签带英文小标题"
+      ],
+      "beats": [
+        {
+          "id": "B01",
+          "role": "hook",
+          "priority": 1,
+          "expand": 1,
+          "screen": "大问题卡；字在乱跳；先不出标题",
+          "intent": "给一个人人能接的半句话或一道直觉题，停 1 秒，再给一个猜不到的版本",
+          "scienceType": "cover",
+          "paperType": "hero"
+        },
+        {
+          "id": "B02",
+          "role": "title",
+          "priority": 1,
+          "expand": 1,
+          "screen": "系列片头 + 片名；配乐第一次到达",
+          "intent": "一句话说出这个反差就是本期的概念",
+          "scienceType": "cover",
+          "paperType": "hero"
+        },
+        {
+          "id": "B03",
+          "role": "chapter1",
+          "priority": 1,
+          "expand": 2,
+          "screen": "计数器 / 柱状",
+          "intent": "一个能玩的小游戏把概念量化",
+          "scienceType": "diagram",
+          "paperType": "number"
+        },
+        {
+          "id": "B04",
+          "role": "chapter1",
+          "priority": 2,
+          "expand": 1,
+          "screen": "人物配图（示意）",
+          "intent": "谁、哪年第一次命名它",
+          "scienceType": "talk",
+          "paperType": "point"
+        },
+        {
+          "id": "B05",
+          "role": "chapter2",
+          "priority": 1,
+          "expand": 2,
+          "screen": "关键词 slam；公式淡入",
+          "intent": "两个中国观众熟悉的例子（一个≈0、一个很大）→ 公式只出现一次 + 一句大白话",
+          "scienceType": "compare",
+          "paperType": "steps"
+        },
+        {
+          "id": "B06",
+          "role": "chapter2",
+          "priority": 2,
+          "expand": 1,
+          "screen": "公式淡入",
+          "intent": "公式只出现一次，配一句大白话",
+          "scienceType": "diagram",
+          "paperType": "quote"
+        },
+        {
+          "id": "B07",
+          "role": "chapter3",
+          "priority": 2,
+          "expand": 2,
+          "screen": "互动画面（乱序字、错觉）",
+          "intent": "让观众亲身体验一次",
+          "scienceType": "focus",
+          "paperType": "point"
+        },
+        {
+          "id": "B08",
+          "role": "chapter3",
+          "priority": 1,
+          "expand": 1,
+          "screen": "金句关键词",
+          "intent": "金句收段",
+          "scienceType": "talk",
+          "paperType": "quote"
+        },
+        {
+          "id": "B09",
+          "role": "chapter4",
+          "priority": 2,
+          "expand": 2,
+          "screen": "主视觉动态镜头",
+          "intent": "尺度拉到宇宙／历史",
+          "scienceType": "focus",
+          "paperType": "number"
+        },
+        {
+          "id": "B10",
+          "role": "twist",
+          "priority": 1,
+          "expand": 1,
+          "screen": "主视觉动态镜头",
+          "intent": "被当成噪声的东西恰恰是最大发现",
+          "scienceType": "focus",
+          "paperType": "compare"
+        },
+        {
+          "id": "B11",
+          "role": "elevate",
+          "priority": 3,
+          "expand": 1,
+          "screen": "对比两栏",
+          "intent": "概念的边界：它解释不了什么",
+          "scienceType": "compare",
+          "paperType": "compare"
+        },
+        {
+          "id": "B12",
+          "role": "land",
+          "priority": 2,
+          "expand": 1,
+          "screen": "生活化配图",
+          "intent": "回到观众今天的手机／工作",
+          "scienceType": "talk",
+          "paperType": "point"
+        },
+        {
+          "id": "B13",
+          "role": "loop",
+          "priority": 1,
+          "expand": 1,
+          "screen": "与 B01 同构图",
+          "intent": "重现 B01 那一幕，这一次让观众来填",
+          "scienceType": "outro",
+          "paperType": "outro"
+        }
+      ]
+    },
+    "B": {
+      "name": "两难选择片",
+      "suitable": "历史事件、博弈论、心理学实验",
+      "bench": "Iwanau《唐太宗放死囚回家》22.7 万赞",
+      "durationHint": "定长 2:55（系列化，观众形成预期）",
+      "keyMoves": [
+        "每句底部都有出处小字",
+        "示意画面写「为示意」",
+        "数字有分歧时两个都写"
+      ],
+      "beats": [
+        {
+          "id": "B01",
+          "role": "hook",
+          "priority": 1,
+          "expand": 1,
+          "screen": "全屏配图 + 史书原文脚注",
+          "intent": "一句话讲完离奇事实，最后几个字是结果",
+          "scienceType": "cover",
+          "paperType": "hero"
+        },
+        {
+          "id": "B02",
+          "role": "ask",
+          "priority": 1,
+          "expand": 1,
+          "screen": "大问题卡",
+          "intent": "「换你：……你，……不……？」",
+          "scienceType": "talk",
+          "paperType": "point"
+        },
+        {
+          "id": "B03",
+          "role": "title",
+          "priority": 1,
+          "expand": 1,
+          "screen": "seriesCard",
+          "intent": "「如果你活在古代，第 N 期」",
+          "scienceType": "cover",
+          "paperType": "hero"
+        },
+        {
+          "id": "B04",
+          "role": "setup",
+          "priority": 2,
+          "expand": 2,
+          "screen": "场景配图 + 竖排古文",
+          "intent": "事件前一个具体细节让人物立起来；一句古今连接",
+          "scienceType": "talk",
+          "paperType": "point"
+        },
+        {
+          "id": "B05",
+          "role": "process",
+          "priority": 1,
+          "expand": 2,
+          "screen": "地图 + 扩散点 + 计数器",
+          "intent": "时间、地点、动作，数字一步步滚上去；史书分歧两说并列",
+          "scienceType": "diagram",
+          "paperType": "number"
+        },
+        {
+          "id": "B06",
+          "role": "wait",
+          "priority": 2,
+          "expand": 1,
+          "screen": "动态镜头（春耕、麦收）",
+          "intent": "倒计时，普通人这段时间在做什么",
+          "scienceType": "focus",
+          "paperType": "point"
+        },
+        {
+          "id": "B07",
+          "role": "reveal",
+          "priority": 1,
+          "expand": 1,
+          "screen": "关键词 slam + 音效",
+          "intent": "结果，停顿",
+          "scienceType": "focus",
+          "paperType": "quote"
+        },
+        {
+          "id": "B08",
+          "role": "twist",
+          "priority": 1,
+          "expand": 1,
+          "screen": "竖排古文",
+          "intent": "另一位史家／后人怎么拆穿，原话上屏",
+          "scienceType": "talk",
+          "paperType": "quote"
+        },
+        {
+          "id": "B09",
+          "role": "control",
+          "priority": 2,
+          "expand": 2,
+          "screen": "同一张地图，点数对比",
+          "intent": "另一个时代照做，结果完全不同",
+          "scienceType": "compare",
+          "paperType": "compare"
+        },
+        {
+          "id": "B10",
+          "role": "loop",
+          "priority": 1,
+          "expand": 1,
+          "screen": "choice 按钮 + 下期预告",
+          "intent": "再问一遍 B02，出现两个按钮",
+          "scienceType": "outro",
+          "paperType": "outro"
+        }
+      ]
+    },
+    "C": {
+      "name": "痛点原理片",
+      "suitable": "打工人／学生的日常困扰 × 一个冷门物理或心理学原理",
+      "bench": "墨有意思《兰道尔原理》转发 2.4 万 > 收藏",
+      "durationHint": "2:00–2:30",
+      "keyMoves": [
+        "一个贯穿道具（4 格小黑板、电量条）在每一拍出现并变形",
+        "结尾电量回升"
+      ],
+      "flow": [
+        {
+          "role": "hook",
+          "priority": 1,
+          "intent": "日常反常",
+          "scienceType": "cover"
+        },
+        {
+          "role": "ask",
+          "priority": 1,
+          "intent": "「到底是谁偷走了……」",
+          "scienceType": "talk"
+        },
+        {
+          "role": "principle",
+          "priority": 1,
+          "intent": "冷门原理（人名 + 年份）",
+          "scienceType": "diagram"
+        },
+        {
+          "role": "prop",
+          "priority": 1,
+          "intent": "一个贯穿道具（4 格小黑板、电量条）",
+          "scienceType": "focus"
+        },
+        {
+          "role": "empathy",
+          "priority": 2,
+          "intent": "代入观众的一个下午（每条挂论文出处）",
+          "scienceType": "matrix"
+        },
+        {
+          "role": "solution",
+          "priority": 1,
+          "intent": "3 秒能做的解法",
+          "scienceType": "tip"
+        },
+        {
+          "role": "twist",
+          "priority": 2,
+          "intent": "第二个反常（为什么休息更累）",
+          "scienceType": "compare"
+        },
+        {
+          "role": "heal",
+          "priority": 1,
+          "intent": "治愈收尾，电量回升",
+          "scienceType": "outro"
+        }
+      ]
+    },
+    "D": {
+      "name": "一条主线片",
+      "suitable": "学科体系、技术史、一门课的全貌、一个家族／器物的身世",
+      "bench": "FredTao《高考政治七本书》、骑老爷爷《opus家族史》17 万赞",
+      "durationHint": "约 3:00",
+      "keyMoves": [
+        "一条发光的线依次穿过 5–7 个节点",
+        "每个时代一张配图、一种画风",
+        "首尾用同一张图回环"
+      ],
+      "flow": [
+        {
+          "role": "hook",
+          "priority": 1,
+          "intent": "N 个碎片看似无关",
+          "scienceType": "cover"
+        },
+        {
+          "role": "turn",
+          "priority": 1,
+          "intent": "「其实有一条线」",
+          "scienceType": "talk"
+        },
+        {
+          "role": "trail",
+          "priority": 1,
+          "intent": "一条线依次穿过 5–7 个节点，每节点一张时代配图",
+          "scienceType": "diagram"
+        },
+        {
+          "role": "converge",
+          "priority": 2,
+          "intent": "线收成网／树",
+          "scienceType": "diagram"
+        },
+        {
+          "role": "ask",
+          "priority": 1,
+          "intent": "问观众哪两个联系最紧",
+          "scienceType": "outro"
+        }
+      ]
+    },
+    "E": {
+      "name": "闯关片",
+      "suitable": "考试题型、方法论、流程",
+      "bench": "考蛙蛙《加强削弱》收藏率 54%",
+      "durationHint": "4–6 分钟",
+      "keyMoves": [
+        "一屏秘籍总表就是被收藏的理由",
+        "每关：题干 → 陷阱选项 → 正解暴击 → 掉落秘籍卡"
+      ],
+      "flow": [
+        {
+          "role": "map",
+          "priority": 1,
+          "intent": "冒险地图（几个世界、几只 Boss）",
+          "scienceType": "cover"
+        },
+        {
+          "role": "level",
+          "priority": 1,
+          "intent": "每关：题干 → 陷阱选项 → 正解「暴击」",
+          "scienceType": "compare"
+        },
+        {
+          "role": "drop",
+          "priority": 1,
+          "intent": "掉落一张秘籍卡",
+          "scienceType": "tip"
+        },
+        {
+          "role": "boss",
+          "priority": 2,
+          "intent": "最终 Boss 综合题",
+          "scienceType": "focus"
+        },
+        {
+          "role": "sheet",
+          "priority": 1,
+          "intent": "一屏秘籍总表（被收藏的理由）",
+          "scienceType": "matrix"
+        }
+      ]
+    },
+    "F": {
+      "name": "六面轮转片",
+      "suitable": "哲学流派、观点对比、一件事的六种答法",
+      "bench": "骑老爷爷《悟了》45 秒 1.9 万赞",
+      "durationHint": "45–60 秒",
+      "keyMoves": [
+        "一个立方体／魔方每转一面换一种颜色",
+        "每种 5–7 秒：人名 · 书名 · 年份 + 一句原话"
+      ],
+      "flow": [
+        {
+          "role": "hook",
+          "priority": 1,
+          "intent": "一个大问题",
+          "scienceType": "cover"
+        },
+        {
+          "role": "faces",
+          "priority": 1,
+          "intent": "「有人给过六种答案」，每种 5–7 秒",
+          "scienceType": "matrix"
+        },
+        {
+          "role": "close",
+          "priority": 1,
+          "intent": "「没有一面是纯色的」→「你，转到哪一面了？」",
+          "scienceType": "outro"
+        }
+      ]
+    },
+    "G": {
+      "name": "数据叙事片",
+      "suitable": "有时间序列、排名、分布或前后对比的题材：气候、人口、体育纪录、价格史、死亡率",
+      "bench": "《一百个夏天的全球气温，一支铅笔画出来》",
+      "durationHint": "11 拍 · 约 2:00–2:30（不裁拍，靠每拍密度调整）",
+      "keyMoves": [
+        "图表即影片：每个标记是真实数字，每个动作是有意义的图表操作（标记落下/轴生长/尺度变化/序列变形/注释钉上）。改取景，不改数字。",
+        "三层让它成为故事而非信息图：人的尺度（手写笔记钉在标记上）+ 一个表演者（铅笔画出每个标记）+ 声音化（每个标记是一个音高）",
+        "The cut：把「未知的下一个值」当高潮——硬切到一个空槽（虚线柱 + 年份 + 水平线）"
+      ],
+      "chartFit": {
+        "_how": "选图判据：先看数据是关于什么，再决定画什么。蒸自 lemo-opuscar 的 dataviz/STYLE.md §1。",
+        "比较类别或排名": "bars / ranked bar race",
+        "两个量的关系": "scatter / bubble（一个点可以是一个角色）",
+        "地点": "map / choropleth / dots on a map",
+        "部分与整体或人数": "unit chart / waffle / proportional squares",
+        "前后对比": "slope / dumbbell",
+        "分布": "histogram / beeswarm",
+        "流向": "flow / Sankey",
+        "随时间变化": "line / dot series / stripes / area"
+      },
+      "flow": [
+        {
+          "role": "hook",
+          "priority": 1,
+          "intent": "极近特写第一个数据点（≈4×），观众还不知道这是一张图",
+          "screen": "一个点占据画面中央，其余留白",
+          "scienceType": "cover",
+          "paperType": "hero"
+        },
+        {
+          "role": "title",
+          "priority": 1,
+          "intent": "拉远到 1.55×；那条垂线变成 x 轴，标题排在上方",
+          "screen": "轴生长的那一刻",
+          "scienceType": "talk",
+          "paperType": "hero"
+        },
+        {
+          "role": "chapter1",
+          "priority": 1,
+          "intent": "从一个点开始，跟着最新的点往前推（过去的在后面，未来的在前面）",
+          "screen": "最新点约在 62% 画幅宽处",
+          "scienceType": "talk",
+          "paperType": "point"
+        },
+        {
+          "role": "chapter2",
+          "priority": 1,
+          "intent": "数据加速：点的密度从四分音符升到十六分音符，观众感到「越来越快」",
+          "screen": "点密集落下，几乎成线",
+          "scienceType": "diagram",
+          "paperType": "steps"
+        },
+        {
+          "role": "chapter3",
+          "priority": 1,
+          "intent": "破框：两帧内 punch-in，配衰减抖动——数据第一次让画面失稳",
+          "screen": "画面冲出图表框",
+          "scienceType": "talk",
+          "paperType": "point"
+        },
+        {
+          "role": "chapter4",
+          "priority": 1,
+          "intent": "冲刺：快速拉回全景，带一点滚转与持续微颤",
+          "screen": "全部数据压进一屏",
+          "scienceType": "focus",
+          "paperType": "number"
+        },
+        {
+          "role": "twist",
+          "priority": 1,
+          "intent": "The cut：硬切到一个空槽——虚线柱、年份标签、水平线。这里本该有下一个值，而它还没发生",
+          "screen": "一个空格，等待未知的值",
+          "scienceType": "compare",
+          "paperType": "compare"
+        },
+        {
+          "role": "reveal",
+          "priority": 1,
+          "intent": "停在最后一个点上，把手写注释写完，再拉回全景；轴重新缩放以容纳全部",
+          "screen": "注释钉在点上，一条抖动的指引线，末端不闭合的圈",
+          "scienceType": "quote",
+          "paperType": "quote"
+        },
+        {
+          "role": "process",
+          "priority": 1,
+          "intent": "变形：点带变成条纹带（镜头锁死——变形本身就是运动，不需要运镜）",
+          "screen": "每个标记落向带中心，再拉伸成整条",
+          "scienceType": "diagram",
+          "paperType": "steps"
+        },
+        {
+          "role": "elevate",
+          "priority": 1,
+          "intent": "尺度：拉到 0.72×，把更早的纪录也放进来，让今天显得没那么特别",
+          "screen": "时间跨度突然变长",
+          "scienceType": "talk",
+          "paperType": "point"
+        },
+        {
+          "role": "loop",
+          "priority": 1,
+          "intent": "回声：推向那个空格，它扩张成片尾卡（画中画）",
+          "screen": "画框套画框收尾",
+          "scienceType": "outro",
+          "paperType": "outro"
+        }
+      ]
+    }
+  },
+  "pairing": {
+    "_how": "母版 × 首选风格（对应本仓 kits）。上游按 44 套风格给的表，这里只落到我们已有的 7 支版式上。",
+    "A": {
+      "first": "science",
+      "also": [
+        "paper"
+      ]
+    },
+    "B": {
+      "first": "paper",
+      "also": [
+        "editorial"
+      ]
+    },
+    "C": {
+      "first": "science",
+      "also": [
+        "clay"
+      ]
+    },
+    "D": {
+      "first": "paper",
+      "also": [
+        "editorial"
+      ]
+    },
+    "E": {
+      "first": "clay",
+      "also": [
+        "science"
+      ]
+    },
+    "F": {
+      "first": "paper",
+      "also": [
+        "science"
+      ]
+    },
+    "G": {
+      "first": "paper",
+      "also": [],
+      "_note": "图表是**内容呈现方式**，不是视觉语言——所以不做独立版式，而是 paper 的 chart 段（line/bar）与 grid 段（waffle）。原计划蒸成 kits/dataviz，评估后改为段型：新建版式会重复纸感背景、字幕、关键词卡三套基础设施，而图表本身只关心数据。"
+    }
+  }
+}
