@@ -20,6 +20,7 @@ import { applyProfile } from './kits/science/profile.mjs';
 import { createWebCanvasRenderer } from './src/webcanvas.mjs';
 import { createClayRenderer } from './kits/clay/clay.mjs';
 import { createCollageRenderer } from './kits/collage/collage.mjs';
+import { createIsoRenderer } from './kits/iso/iso.mjs';
 import { registerFonts } from './src/fonts.mjs';
 import { buildMix } from './src/audio-mix.mjs';
 import { auditTiming, normalizeTiming } from './src/temporal.mjs';
@@ -31,7 +32,7 @@ import { REPO_ROOT, DIRS, resolveInput } from './src/root.mjs';
  * 或直接的 src 目录。通用路径要求三件套 kit.js / layouts.js / stage.js。
  */
 function kitSpec(kit) {
-  if (kit === 'science' || kit === 'paper' || kit === 'clay' || kit === 'collage') return { kind: kit };
+  if (kit === 'science' || kit === 'paper' || kit === 'clay' || kit === 'collage' || kit === 'iso') return { kind: kit };
   // 三种写法都认：模板名 / 模板根目录 / src 目录本身
   const cands = [
     path.resolve(REPO_ROOT, 'templates', 'own', kit, 'src'),
@@ -46,7 +47,7 @@ function kitSpec(kit) {
       `找不到 kit：${kit}\n` +
       (ownEntry ? `  这支版式有自己的入口：${ownEntry}（不走 --kit）\n` : '') +
       `  试过：${cands.join('\n        ')}\n` +
-      '  可走 --kit：paper / science / clay / collage / night-card / chalkboard / cute-mv / sketchnote\n' +
+      '  可走 --kit：paper / science / clay / collage / iso / night-card / chalkboard / cute-mv / sketchnote\n' +
       '  独立入口：desk（npm run desk）/ editorial（npm run editorial）/ mg（npm run mg）\n' +
       '  模板须在 templates/own/<name>/src（三件套）或直接传目录路径'
     );
@@ -101,10 +102,87 @@ function parseArgs(argv) {
     x264Threads: get('x264-threads', '1'),   // 每个 worker 一个编码线程：8 路时避免线程超订
     probe: get('probe', null),
     at: Number(get('at', 2.5)),
+    // --check-determinism [auto|t1,t2,t3]：不带值时 auto（片长的 25/50/75%）。
+    // 不能复用 get()：它会把后面的 --kit 当成取值，于是「--check-determinism --kit paper」静默变成 spec='--kit'。
+    determinism: (() => {
+      const i = argv.indexOf('--check-determinism');
+      if (i < 0) return null;
+      const v = argv[i + 1];
+      return v && !v.startsWith('--') ? v : 'auto';
+    })(),
   };
 }
 
 const A = parseArgs(process.argv.slice(2));
+
+/**
+ * 确定性检查：同一时刻渲两次，必须逐像素相同。
+ *
+ * 为什么要单独查：`renderFrame(t)` 只重画、不重置 ctx。任何一处漏写
+ * `ctx.globalAlpha = 1` / `setLineDash([])` / `lineJoin`，状态就会漏到下一帧。
+ * 这类缺陷**按时间顺序出片看不出来**，单独出静帧又是对的——所以出片后肉眼验收发现不了。
+ * （同源实现见 dashi-animationstyle 的 render.mjs --check-determinism；它的受害名单是
+ *  立体卡通、黑底科技、复古报刊三套模板。）
+ *
+ * 做法：渲 t → 快照 A → 跳到靠近片尾的远处 → 回到 t → 快照 B，逐像素比较。
+ * A≠B 说明这一帧的画面取决于「之前画过什么」，而不是只取决于 t。
+ */
+function determinismTimes(spec, duration) {
+  if (!spec || spec === 'auto') return [0.25, 0.5, 0.75].map((f) => +(duration * f).toFixed(3));
+  const t = String(spec).split(',').map((x) => Number(x.trim())).filter((x) => Number.isFinite(x) && x >= 0);
+  return t.length ? t : [0.25, 0.5, 0.75].map((f) => +(duration * f).toFixed(3));
+}
+
+function checkDeterminism({ renderer, ctx, width, height, duration, spec, label }) {
+  const snap = () => ctx.getImageData(0, 0, width, height).data;
+  const cmp = (a, b) => {
+    let n = 0, max = 0, first = -1;
+    for (let i = 0; i < a.length; i += 4) {
+      const d = Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1])
+        + Math.abs(a[i + 2] - b[i + 2]) + Math.abs(a[i + 3] - b[i + 3]);
+      if (d) { if (first < 0) first = i >> 2; n++; if (d > max) max = d; }
+    }
+    return { n, max, first };
+  };
+  const times = determinismTimes(spec, duration);
+  const far = +(duration * 0.97).toFixed(3);
+  const rows = [];
+  let bad = 0;
+  for (const t of times) {
+    const tt = +Number(t).toFixed(3);
+    renderer.renderFrame(tt);
+    const A = snap();
+    // 中间这一跳要足够远、且不能等于 tt 本身（片长 97% 恰好等于 tt 时等于没跳）
+    renderer.renderFrame(Math.abs(far - tt) < 0.5 ? +(duration * 0.5).toFixed(3) : far);
+    renderer.renderFrame(0.017);
+    renderer.renderFrame(tt);
+    const B = snap();
+    const d = cmp(A, B);
+    if (d.n) bad++;
+    rows.push({ t: tt, ...d, x: d.first >= 0 ? d.first % width : -1, y: d.first >= 0 ? Math.floor(d.first / width) : -1 });
+  }
+  const total = width * height;
+  console.log(`\n确定性检查 · ${label}`);
+  console.log('─'.repeat(64));
+  for (const r of rows) {
+    if (!r.n) { console.log(`  t=${String(r.t).padEnd(8)} 一致`); continue; }
+    const pct = (r.n / total * 100).toFixed(2);
+    console.log(`  t=${String(r.t).padEnd(8)} 不一致 ${r.n} px (${pct}%)，最差 Δ=${r.max}，首处 (${r.x}, ${r.y})`);
+  }
+  console.log('─'.repeat(64));
+  if (!bad) {
+    console.log(`全部一致（${rows.length} 个时刻）——帧内容只由 t 决定\n`);
+    return 0;
+  }
+  console.log(
+    `RESULT: FAIL (${bad}/${rows.length}) — 帧内容与绘制顺序相关，即 ctx 状态漏到了下一帧。\n` +
+    '  逐项排查：globalAlpha / shadowBlur / setLineDash / lineWidth / lineJoin / lineCap\n' +
+    '            / textAlign / textBaseline / globalCompositeOperation / clip 未 save-restore。\n' +
+    '  修法：renderFrame 开头统一 resetCtx()，或每帧 ctx.save()→画→ctx.restore()。\n'
+  );
+  return 2;
+}
+
 
 /**
  * 主题：只换 palette（色），不动任何几何——几何是 paper-perspective 的测量值，改了就不是复刻了。
@@ -189,6 +267,8 @@ if (!isMainThread) {
         ? createClayRenderer({ canvas, ctx, width: W, height: H, subtitle, brand })
         : spec.kind === 'collage'
         ? createCollageRenderer({ canvas, ctx, width: W, height: H, fps: P.fps })
+        : spec.kind === 'iso'
+        ? createIsoRenderer({ canvas, ctx, width: W, height: H, fps: P.fps })
         : createWebCanvasRenderer({ srcDir: spec.srcDir, templateDir: spec.templateDir, canvas, ctx, width: W, height: H });
   r.setContent(spec.kind === 'paper' ? { scenes: P.scenes, captions: P.captions, avatar } : stageContent);
   if (spec.kind === 'science' || spec.kind === 'webcanvas' || spec.kind === 'collage') await r.ready();
@@ -201,7 +281,16 @@ if (!isMainThread) {
 } else {
   const t0 = Date.now();
   registerFonts(DIRS.fonts);
-  const P = loadParams(A.params, A.fps, A.kit);
+  // loadParams 会展开声明式时间与关键词锚点。锚点引用的词不在表里、或落点越出本段，
+  // 都会在这里抛——必须给人话 + 退出码 2，而不是让 Node 把堆栈甩出来（退出码 1 会被
+  // 上层脚本当成"崩溃"而不是"参数错"）。
+  let P;
+  try {
+    P = loadParams(A.params, A.fps, A.kit);
+  } catch (e) {
+    console.error(`\n参数无法载入：${path.basename(A.params)}\n  ${e.message}\n`);
+    process.exit(2);
+  }
 
   // 时间轴校验（src/temporal.mjs）：空窗口、越界、取整后重叠都会在成片上变成可见错误，
   // 而 gate 看不出这类问题（它只验成片像素，不读 params —— 实测倒序能骗过全部门禁）。
@@ -219,7 +308,7 @@ if (!isMainThread) {
     }
   }
 
-  if (A.probe) {
+  if (A.probe || A.determinism) {
     const avatar = await loadAvatar(A.avatar);
     const SPEC = kitSpec(A.kit);
     const OUT_W = Number(P.width || SPEC.width || 1920);
@@ -236,9 +325,20 @@ if (!isMainThread) {
           ? createClayRenderer({ canvas, ctx: r0, width: OUT_W, height: OUT_H, subtitle: P.subtitle, brand: P.brand })
           : spec.kind === 'collage'
           ? createCollageRenderer({ canvas, ctx: r0, width: OUT_W, height: OUT_H, fps: P.fps })
+          : spec.kind === 'iso'
+          ? createIsoRenderer({ ctx: r0, width: OUT_W, height: OUT_H, fps: P.fps })
           : createWebCanvasRenderer({ srcDir: spec.srcDir, templateDir: spec.templateDir, canvas, ctx: r0, width: OUT_W, height: OUT_H });
     r.setContent(spec.kind === 'paper' ? { scenes: P.scenes, captions: P.captions, avatar } : probeContent);
     if (spec.kind === 'science' || spec.kind === 'webcanvas' || spec.kind === 'collage') await r.ready();
+    if (A.determinism) {
+      const code = checkDeterminism({
+        renderer: r, ctx: r0, width: OUT_W, height: OUT_H,
+        duration: Number(P.durationSeconds || P.frames / P.fps || 0),
+        spec: A.determinism,
+        label: `${A.kit} · ${path.basename(A.params)} · ${OUT_W}×${OUT_H}`,
+      });
+      process.exit(code);
+    }
     r.renderFrame(A.at);
     fs.writeFileSync(A.probe, canvas.toBuffer('image/png'));
     console.log('probe →', A.probe, `${P.frames} 帧计划`);

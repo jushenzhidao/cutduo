@@ -40,6 +40,7 @@ probe collage   render.mjs --kit collage --params kits/collage/presets/demo.json
 probe editorial kits/editorial/canvas-editorial.mjs --inputs content/inputs-v6.json --probe "$OUT/editorial.png"
 probe mg        kits/mg/render.mjs --params kits/mg/params.json --probe "$OUT/mg.png" --at 3
 probe night-card render.mjs --kit night-card --params templates/own/night-card/presets/default.json --probe "$OUT/night-card.png" --at 4
+probe iso       render.mjs --kit iso --params content/iso-powerbank/params.json --probe "$OUT/iso.png" --at 8
 
 # API 契约层：每支 kit 都要能被 api.probe 调度（子进程 + 契约校验）
 # 断言写成「能力清单 == kits/ 目录集合」，而不是写死数量 ——

@@ -11,6 +11,7 @@
 | `editorial` | 杂志 | 1920×1080 @30 | `kits/editorial/canvas-editorial.mjs` | `content/inputs-*.json` |
 | `mg` | 通用 | 1920×1080 @30 | `kits/mg/render.mjs` | `kits/mg/params.json` |
 | `clay` | 黏土图示 | 1920×1080 @30 | `render.mjs --kit clay` | `kits/clay/presets/*.json`（7 种机制） |
+| `iso` | 等轴爆炸 | 1920×1080 @60 | `render.mjs --kit iso` | `content/iso-powerbank/params.json`（9 种镜头） |
 
 六者共用 `@napi-rs/canvas`（Skia），**换版式不换速度档**。
 

@@ -1,0 +1,648 @@
+{
+  "fps": 60,
+  "width": 1920,
+  "height": 1080,
+  "content": {
+    "title": "PB-1",
+    "name": "PB-1",
+    "look": "split",
+    "radius": 148,
+    "bounds": [
+      [
+        -84,
+        84
+      ],
+      [
+        -37,
+        37
+      ],
+      [
+        0,
+        35.6
+      ]
+    ],
+    "stackLayer": "cells",
+    "stackArray": "cells",
+    "materials": {
+      "shell": "#e7e6e0",
+      "shellDark": "#c6c4bb",
+      "bracket": "#3b3c42",
+      "cell": "#2f5fc6",
+      "pcb": "#1e3a2c",
+      "chip": "#232529",
+      "steel": "#b7bbc2",
+      "copper": "#b06a3c",
+      "pad": "#83868c",
+      "accent": "#d64b32",
+      "signal": "#f4f1e4",
+      "prop": "#dad7cf"
+    },
+    "layers": [
+      {
+        "id": "top",
+        "zh": "上壳",
+        "en": "TOP SHELL"
+      },
+      {
+        "id": "guide",
+        "zh": "导光",
+        "en": "LIGHT GUIDE"
+      },
+      {
+        "id": "cells",
+        "zh": "电芯",
+        "en": "CELLS"
+      },
+      {
+        "id": "bracket",
+        "zh": "支架",
+        "en": "BRACKET"
+      },
+      {
+        "id": "pcb",
+        "zh": "主板",
+        "en": "MAIN BOARD"
+      },
+      {
+        "id": "pad",
+        "zh": "导热垫",
+        "en": "THERMAL PAD"
+      },
+      {
+        "id": "bottom",
+        "zh": "底壳",
+        "en": "BOTTOM SHELL"
+      }
+    ],
+    "arrays": [
+      {
+        "id": "cells",
+        "layer": "cells",
+        "rise": 34,
+        "spread": 0.85,
+        "cx": 0,
+        "cy": 0,
+        "rings": 40
+      },
+      {
+        "id": "chips",
+        "layer": "pcb",
+        "rise": 26,
+        "spread": 0.5,
+        "cx": 0,
+        "cy": 0
+      }
+    ],
+    "hero": {
+      "part": "buttonCap",
+      "size": 10.4,
+      "pull": 22,
+      "hover": 11,
+      "steps": [
+        10,
+        6
+      ]
+    },
+    "mech": [
+      {
+        "dir": [
+          0,
+          0,
+          -1
+        ],
+        "travel": 1.6
+      }
+    ],
+    "parts": [
+      {
+        "id": "propA1",
+        "layer": "bottom",
+        "static": true,
+        "x": -104,
+        "y": 54,
+        "z": 0,
+        "w": 26,
+        "d": 26,
+        "h": 16,
+        "r": 2,
+        "material": "prop"
+      },
+      {
+        "id": "propA2",
+        "layer": "bottom",
+        "static": true,
+        "x": -104,
+        "y": 32,
+        "z": 0,
+        "w": 26,
+        "d": 18,
+        "h": 8,
+        "r": 2,
+        "material": "prop"
+      },
+      {
+        "id": "propB1",
+        "layer": "bottom",
+        "static": true,
+        "x": 108,
+        "y": 54,
+        "z": 0,
+        "w": 26,
+        "d": 26,
+        "h": 16,
+        "r": 2,
+        "material": "prop"
+      },
+      {
+        "id": "propB2",
+        "layer": "bottom",
+        "static": true,
+        "x": 108,
+        "y": 32,
+        "z": 0,
+        "w": 26,
+        "d": 18,
+        "h": 8,
+        "r": 2,
+        "material": "prop"
+      },
+      {
+        "id": "bottomShell",
+        "layer": "bottom",
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 152,
+        "d": 74,
+        "h": 7.6,
+        "r": 9,
+        "material": "shell"
+      },
+      {
+        "id": "screwB1",
+        "layer": "bottom",
+        "kind": "cyl",
+        "x": -64,
+        "y": -30,
+        "z": 7.6,
+        "r": 2.4,
+        "h": 1.2,
+        "material": "steel"
+      },
+      {
+        "id": "screwB2",
+        "layer": "bottom",
+        "kind": "cyl",
+        "x": 64,
+        "y": -30,
+        "z": 7.6,
+        "r": 2.4,
+        "h": 1.2,
+        "material": "steel"
+      },
+      {
+        "id": "screwB3",
+        "layer": "bottom",
+        "kind": "cyl",
+        "x": -64,
+        "y": 30,
+        "z": 7.6,
+        "r": 2.4,
+        "h": 1.2,
+        "material": "steel"
+      },
+      {
+        "id": "screwB4",
+        "layer": "bottom",
+        "kind": "cyl",
+        "x": 64,
+        "y": 30,
+        "z": 7.6,
+        "r": 2.4,
+        "h": 1.2,
+        "material": "steel"
+      },
+      {
+        "id": "wallN",
+        "layer": "bottom",
+        "x": 0,
+        "y": 34.5,
+        "z": 7.6,
+        "w": 152,
+        "d": 5,
+        "h": 14.8,
+        "r": 1.5,
+        "material": "shellDark"
+      },
+      {
+        "id": "wallS",
+        "layer": "bottom",
+        "x": 0,
+        "y": -34.5,
+        "z": 7.6,
+        "w": 152,
+        "d": 5,
+        "h": 14.8,
+        "r": 1.5,
+        "material": "shellDark"
+      },
+      {
+        "id": "wallW",
+        "layer": "bottom",
+        "x": -70.5,
+        "y": 0,
+        "z": 7.6,
+        "w": 5,
+        "d": 62,
+        "h": 14.8,
+        "r": 1.5,
+        "material": "shellDark"
+      },
+      {
+        "id": "wallE",
+        "layer": "bottom",
+        "x": 70.5,
+        "y": 0,
+        "z": 7.6,
+        "w": 5,
+        "d": 62,
+        "h": 14.8,
+        "r": 1.5,
+        "material": "shellDark"
+      },
+      {
+        "id": "padPlate",
+        "layer": "pad",
+        "x": 0,
+        "y": 0,
+        "z": 7.6,
+        "w": 112,
+        "d": 46,
+        "h": 2.0,
+        "r": 2,
+        "material": "pad"
+      },
+      {
+        "id": "pcbPlate",
+        "layer": "pcb",
+        "x": 0,
+        "y": 0,
+        "z": 9.6,
+        "w": 140,
+        "d": 62,
+        "h": 1.6,
+        "r": 2,
+        "material": "pcb"
+      },
+      {
+        "id": "usbC",
+        "layer": "pcb",
+        "x": 77,
+        "y": 0,
+        "z": 11.2,
+        "w": 8,
+        "d": 13,
+        "h": 3.4,
+        "r": 1.2,
+        "material": "steel"
+      },
+      {
+        "id": "coil",
+        "layer": "pcb",
+        "kind": "cyl",
+        "x": -34,
+        "y": -6,
+        "z": 11.2,
+        "r": 8,
+        "h": 1.4,
+        "material": "copper"
+      },
+      {
+        "id": "chipA",
+        "layer": "pcb",
+        "array": "chips",
+        "x": -44,
+        "y": 17,
+        "z": 11.2,
+        "w": 15,
+        "d": 12,
+        "h": 1.9,
+        "r": 0.6,
+        "material": "chip"
+      },
+      {
+        "id": "chipB",
+        "layer": "pcb",
+        "array": "chips",
+        "x": -44,
+        "y": -17,
+        "z": 11.2,
+        "w": 15,
+        "d": 12,
+        "h": 1.9,
+        "r": 0.6,
+        "material": "chip"
+      },
+      {
+        "id": "chipC",
+        "layer": "pcb",
+        "array": "chips",
+        "x": 30,
+        "y": 17,
+        "z": 11.2,
+        "w": 10,
+        "d": 9,
+        "h": 1.3,
+        "r": 0.5,
+        "material": "chip"
+      },
+      {
+        "id": "chipD",
+        "layer": "pcb",
+        "array": "chips",
+        "x": 30,
+        "y": -17,
+        "z": 11.2,
+        "w": 10,
+        "d": 9,
+        "h": 1.3,
+        "r": 0.5,
+        "material": "chip"
+      },
+      {
+        "id": "barTop",
+        "layer": "bracket",
+        "x": 0,
+        "y": 27,
+        "z": 11.5,
+        "w": 136,
+        "d": 6,
+        "h": 5.2,
+        "r": 1.4,
+        "material": "bracket"
+      },
+      {
+        "id": "barBottom",
+        "layer": "bracket",
+        "x": 0,
+        "y": -27,
+        "z": 11.5,
+        "w": 136,
+        "d": 6,
+        "h": 5.2,
+        "r": 1.4,
+        "material": "bracket"
+      },
+      {
+        "id": "post1",
+        "layer": "bracket",
+        "x": -67,
+        "y": 21,
+        "z": 11.5,
+        "w": 6,
+        "d": 6,
+        "h": 5.2,
+        "r": 1.4,
+        "material": "bracket"
+      },
+      {
+        "id": "post2",
+        "layer": "bracket",
+        "x": 67,
+        "y": 21,
+        "z": 11.5,
+        "w": 6,
+        "d": 6,
+        "h": 5.2,
+        "r": 1.4,
+        "material": "bracket"
+      },
+      {
+        "id": "post3",
+        "layer": "bracket",
+        "x": -67,
+        "y": -21,
+        "z": 11.5,
+        "w": 6,
+        "d": 6,
+        "h": 5.2,
+        "r": 1.4,
+        "material": "bracket"
+      },
+      {
+        "id": "post4",
+        "layer": "bracket",
+        "x": 67,
+        "y": -21,
+        "z": 11.5,
+        "w": 6,
+        "d": 6,
+        "h": 5.2,
+        "r": 1.4,
+        "material": "bracket"
+      },
+      {
+        "id": "cellA",
+        "layer": "cells",
+        "array": "cells",
+        "x": -34,
+        "y": 0,
+        "z": 17.2,
+        "w": 62,
+        "d": 58,
+        "h": 4.3,
+        "r": 2.6,
+        "material": "cell"
+      },
+      {
+        "id": "cellB",
+        "layer": "cells",
+        "array": "cells",
+        "x": 34,
+        "y": 0,
+        "z": 17.2,
+        "w": 62,
+        "d": 58,
+        "h": 4.3,
+        "r": 2.6,
+        "material": "cell"
+      },
+      {
+        "id": "guidePlate",
+        "layer": "guide",
+        "x": 0,
+        "y": -14,
+        "z": 21.5,
+        "w": 72,
+        "d": 8,
+        "h": 0.9,
+        "r": 3,
+        "material": "signal"
+      },
+      {
+        "id": "guidePipe",
+        "layer": "guide",
+        "x": 0,
+        "y": 14,
+        "z": 21.5,
+        "w": 52,
+        "d": 4,
+        "h": 0.9,
+        "r": 1.8,
+        "material": "signal"
+      },
+      {
+        "id": "topShell",
+        "layer": "top",
+        "x": 0,
+        "y": 0,
+        "z": 22.4,
+        "w": 152,
+        "d": 74,
+        "h": 6.6,
+        "r": 9,
+        "material": "shell"
+      },
+      {
+        "id": "lightBar",
+        "layer": "top",
+        "x": 0,
+        "y": -31,
+        "z": 29.0,
+        "w": 44,
+        "d": 2.4,
+        "h": 0.7,
+        "r": 1,
+        "material": "signal"
+      },
+      {
+        "id": "buttonSwitch",
+        "layer": "top",
+        "hero": "out",
+        "x": 44,
+        "y": 8,
+        "z": 29.0,
+        "w": 10,
+        "d": 8,
+        "h": 2.0,
+        "r": 0.8,
+        "material": "chip"
+      },
+      {
+        "id": "buttonSpring",
+        "layer": "top",
+        "hero": 1,
+        "kind": "cyl",
+        "x": 44,
+        "y": 8,
+        "z": 31.0,
+        "r": 3.2,
+        "h": 2.0,
+        "material": "steel"
+      },
+      {
+        "id": "buttonCap",
+        "layer": "top",
+        "hero": 0,
+        "mech": 0,
+        "kind": "cyl",
+        "x": 44,
+        "y": 8,
+        "z": 33.0,
+        "r": 5.2,
+        "h": 2.6,
+        "material": "accent"
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hero",
+      "t0": 0.0,
+      "t1": 3.4,
+      "args": {
+        "intro": "act"
+      }
+    },
+    {
+      "type": "rise",
+      "t0": 3.4,
+      "t1": 5.4,
+      "args": {}
+    },
+    {
+      "type": "explode",
+      "t0": 5.4,
+      "t1": 10.5,
+      "args": {
+        "card": {
+          "big": "7 层",
+          "small": "152 × 74 × 36 mm · {parts} 件"
+        }
+      }
+    },
+    {
+      "type": "part",
+      "t0": 10.5,
+      "t1": 12.8,
+      "args": {
+        "card": {
+          "big": "3 件",
+          "small": "按键模组 · 目视可拆"
+        }
+      }
+    },
+    {
+      "type": "action",
+      "t0": 12.8,
+      "t1": 15.4,
+      "args": {
+        "card": {
+          "big": "1.6 mm",
+          "small": "按键行程"
+        }
+      }
+    },
+    {
+      "type": "array",
+      "t0": 15.4,
+      "t1": 18.3,
+      "args": {
+        "array": "cells",
+        "card": {
+          "big": "2 × 10 000",
+          "small": "电芯 · 并联"
+        }
+      }
+    },
+    {
+      "type": "stack",
+      "t0": 18.3,
+      "t1": 21.0,
+      "args": {
+        "layer": "cells",
+        "card": {
+          "big": "20 000 mAh",
+          "small": "额定容量"
+        }
+      }
+    },
+    {
+      "type": "assemble",
+      "t0": 21.0,
+      "t1": 24.8,
+      "args": {}
+    },
+    {
+      "type": "end",
+      "t0": 24.8,
+      "t1": 27.3,
+      "args": {
+        "card": {
+          "big": "PB-1",
+          "small": "一块移动电源的结构"
+        }
+      }
+    }
+  ]
+}

@@ -14,8 +14,9 @@ import * as mg from './kits/mg.mjs';
 import * as clay from './kits/clay.mjs';
 import * as collage from './kits/collage.mjs';
 import * as nightCard from './kits/night-card.mjs';
+import * as iso from './kits/iso.mjs';
 
-const MODULES = [paper, science, desk, editorial, mg, clay, collage, nightCard];
+const MODULES = [paper, science, desk, editorial, mg, clay, collage, nightCard, iso];
 
 /** 别名 → 规范 id。别名只做输入宽容，不扩张契约。 */
 const ALIASES = {
@@ -30,6 +31,8 @@ const ALIASES = {
   'mg-kit': 'mg',
   'screen-collage': 'collage',
   'promo-main': 'collage',
+  'iso-explode': 'iso',
+  'exploded-view': 'iso',
 };
 
 const BY_ID = new Map();

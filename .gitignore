@@ -68,5 +68,7 @@ Thumbs.db
 # 只入库 script.json / facts.md / build.* / bgm.* / mix.* / make.sh / README.md。
 # 按身份特征匹配（不是逐个枚举文件名）——新增一支片不该再改这里。
 content/*/params*.json
+# 例外：iso 的 params.json 是内容源（几何与分镜全在这份文件里，没有 script.json 可派生）
+!content/iso-powerbank/params.json
 content/*/audio/
 content/*/ocr.txt
