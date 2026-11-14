@@ -249,6 +249,46 @@ function checkCaptions(params, ocrLines, fps, band = [0, 0.3]) {
   return { total: caps.length, shown, worst, rushing };
 }
 
+/* ---------------- 动效密度 ---------------- */
+
+/**
+ * 画面"什么时候不动了"。
+ *
+ * freezedetect 抓不到这类问题：它的判据是 0.2% 的像素变化，而电平柱之类的常驻小元素
+ * 只占画面 0.02%。要用**全画面平均差分**，并且不能缩图（13px 的鼠标缩到 240px 宽就没了）。
+ *
+ * 做法：2fps 抽帧 → tblend 与前一帧求差 → signalstats 取 Y 均值（0–255）。
+ * 实测参考值：完全静止 0.00–0.05｜只有电平柱在动 0.10–0.30｜元素入场/鼠标 0.4–3｜换屏 10+
+ *
+ * 判据：连续 ≥2s 的差分都低于 0.08（≈0.03%）就算"这段卡住了"。
+ */
+function motionOf(file, quiet = 0.08, minRun = 2) {
+  const p = spawnSync(FFMPEG, ['-v', 'info', '-i', file, '-vf',
+    // select 跳过 tblend 的预热帧：它前 7 帧输出的是原图而不是差分（YAVG=原图平均亮度），
+    // 不跳过会把"完全静止"的片判成"一直在动"（实测静态图前 7 个值是 3.47）。
+    'fps=2,scale=320:-2,tblend=all_mode=difference,select=\'gte(n\\,2)\',signalstats,metadata=print:key=lavfi.signalstats.YAVG',
+    '-f', 'null', '-'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const vals = [...(p.stderr || '').matchAll(/YAVG=([\d.]+)/g)].map((m) => +m[1]);
+  if (!vals.length) return null;
+  const runs = [];
+  let cur = null;
+  vals.forEach((v, i) => {
+    if (v < quiet) {
+      if (!cur) cur = { from: i / 2, to: (i + 1) / 2 };
+      else cur.to = (i + 1) / 2;
+    } else if (cur) { runs.push(cur); cur = null; }
+  });
+  if (cur) runs.push(cur);
+  const long = runs.filter((r) => r.to - r.from >= minRun);
+  const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+  return {
+    avg: +avg.toFixed(3),
+    still: long.length,
+    worst: long.sort((a, b) => (b.to - b.from) - (a.to - a.from))[0] || null,
+    // 有电平柱的片天然 >=0.1，没有的片会到 0.03——这是版式差异，不是质量问题
+  };
+}
+
 /* ---------------- 响度 ---------------- */
 
 // ebur128 的 Summary 打在 stderr，且 Integrated loudness 与 True peak 是两段，要跨行取。
@@ -401,6 +441,17 @@ function judge(file, opt) {
     }
   }
 
+  // 动效密度：有没有超过 2 秒画面完全不动（只报不拦，见 motionOf 注释）
+  let motion = null;
+  if (opt.motion) {
+    motion = motionOf(file);
+    if (motion && motion.still) {
+      const w = motion.worst;
+      warns.push(`画面静止 ${motion.still} 处（最长 ${w.from}–${w.to}s，平均差分 ${motion.avg}）`
+        + ' —— 段是不是太长了？加 cursor 落点或拆段');
+    }
+  }
+
   // 字幕回读：字幕真的显示出来了吗（只报不拦，见 checkCaptions 注释）
   let capCheck = null;
   if (opt.captionParams && oc) {
@@ -450,7 +501,7 @@ function judge(file, opt) {
     ...p, ...s, hook: hk, freeze: fz, expect, ocr: oc ? { frames: oc.frames, lines: oc.lines.length } : null,
     facts: factCheck ? { total: factCheck.hits.length + factCheck.missing.length + factCheck.noNumbers.length,
       hits: factCheck.hits.length, missing: factCheck.missing.length, orphans: factCheck.orphans.length } : null,
-    ocrLines: oc ? oc.lines : null, bgm: bed, loud, capCheck, blank,
+    ocrLines: oc ? oc.lines : null, bgm: bed, loud, capCheck, blank, motion,
     expectHits, verdict: fails.length ? 'FAIL' : 'PASS', fails, warns,
   };
 }
@@ -531,6 +582,7 @@ function parseArgs(argv) {
     else if (a === '--facts') opt.facts = argv[++i];
     else if (a === '--caption-check') opt.captionParams = argv[++i];
     else if (a === '--blank') opt.blank = true;
+    else if (a === '--motion') opt.motion = true;
     else if (a === '--subtitle-y') {
       const [lo, hi] = String(argv[++i]).split(',').map(Number);
       opt.subtitleBand = [lo, hi];
@@ -551,7 +603,8 @@ if (!files.length) {
     '       node gate.mjs <film.mp4> --facts facts.md [--require-facts]  # 台账里的数字必须在屏幕上出现\n' +
     '       node gate.mjs <film.mp4> --caption-check params.json        # 字幕是否真的显示出来（容错）\n' +
     '       node gate.mjs <film.mp4> --blank                            # 画面是否"空着"（信息量判据）',
-    '       node gate.mjs <film.mp4> --caption-check p.json --subtitle-y 0.28,0.45   # 竖屏的字幕带');
+    '       node gate.mjs <film.mp4> --caption-check p.json --subtitle-y 0.28,0.45   # 竖屏的字幕带',
+    '       node gate.mjs <film.mp4> --motion                           # 有没有超过 2 秒画面完全不动');
   process.exit(2);
 }
 if (opt.facts && !opt.ocr) opt.ocr = 2;    // 台账对照要靠屏幕字，没给 --ocr 就默认 2 秒一帧
