@@ -153,7 +153,10 @@ for (const s of scenes) {
 const abs = {
   brand: { name: script.template + '-' + script.title },
   accent: '#E8503A', accent2: '#2F6F8F',
-  audio: { cues }, durationSeconds: total, fps: FPS, scenes, captions: [],
+  // durationSeconds 只按音频长度写会让末段越界 1–2 帧（实测 six-angles：音频 34.556s、
+  // 末段 t1=34.59s，mix 报 scenes[6] 超出时间线 2073 帧）。取「音频长度与末段末端中较大者 +0.02」。
+  audio: { cues }, durationSeconds: +(Math.max(total, ...scenes.map((s) => s.t1)) + 0.02).toFixed(4),
+  fps: FPS, scenes, captions: [],
 };
 
 /* 4. 字幕：一条至少停 max(1.8s, 字数/语速)，放不下就合并相邻条

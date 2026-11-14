@@ -44,6 +44,9 @@ function lintOne(slug) {
   const beats = s.beats || [];
   const tier = GUIDE.durations[s.tier] || null;
   const findings = [];
+  // 显式豁免：老片按旧口径（5.5 字/秒）写的，篇幅对不上新档位。**例外必须写进文件并给理由**，
+  // 不能靠放宽阈值——放宽等于对所有新片失效，而这里要的是"这一支有据可查"。
+  const waivers = new Set(s.lintWaivers || []);
 
   const chars = beats.map((b) => clean(b.text).length);
   const total = chars.reduce((a, b) => a + b, 0);
@@ -83,7 +86,12 @@ function lintOne(slug) {
     const [lo, hi] = tier.seconds;
     const dev = est < lo ? (lo - est) / lo : (est > hi ? (est - hi) / hi : 0);
     if (dev > 0.2) {
-      findings.push({ level: '中', rule: '§ 篇幅', what: `估算 ${est.toFixed(0)}s，${s.tier}档目标 ${lo}–${hi}s，偏差 ${(dev * 100).toFixed(0)}%` });
+      const waived = waivers.has('篇幅');
+      findings.push({
+        level: waived ? '低' : '中',
+        rule: waived ? '§ 篇幅（已豁免）' : '§ 篇幅',
+        what: `估算 ${est.toFixed(0)}s，${s.tier}档目标 ${lo}–${hi}s，偏差 ${(dev * 100).toFixed(0)}%${waived ? ` —— ${s.waiverNote || '已登记豁免'}` : ''}`,
+      });
     }
   }
 
