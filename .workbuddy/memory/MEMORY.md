@@ -168,6 +168,9 @@ pacing 0/9 不达标。内容模型 `layers/parts/arrays/hero/mech` 全是 JSON�
 - 近摄（part/action/array/stack）把非主体降到 8% 幽灵；阵列保留同层作上下文。
 - 动作幅度不能越过上覆零件（iPhone 镜片升 2mm 顶穿 0.55mm 的屏 ⇒ 屏幕上出现蓝点）。
 - 两支片：powerbank（7 层 40 件）/ iphone（6 层 36 件），均 27.3s，换产品只改 params.json。
+- 运动：`args.transition` = whip / orbit（侧绕+荷兰角+变焦压）/ spin（360°、0.52s、正弦缓动，不能进关键帧）；
+  `orbit` 镜头（正弦摆动）段首尾同相可直接循环。运动模糊 = 8 子帧**两级离屏**累加（叠残影只会得重影边；
+  单图累加会过曝）。
 - 已知弱项：array/stack 取景（薄层上方的大件闯进画面）、无穿插检测。
 
 ## 七、音频

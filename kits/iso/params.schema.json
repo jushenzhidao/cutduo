@@ -2,41 +2,115 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "等轴测爆炸大片（iso）",
   "type": "object",
-  "required": ["fps", "scenes", "content"],
+  "required": [
+    "fps",
+    "scenes",
+    "content"
+  ],
   "properties": {
-    "fps": { "type": "number", "default": 60 },
-    "width": { "type": "number", "default": 1920 },
-    "height": { "type": "number", "default": 1080 },
+    "fps": {
+      "type": "number",
+      "default": 60
+    },
+    "width": {
+      "type": "number",
+      "default": 1920
+    },
+    "height": {
+      "type": "number",
+      "default": 1080
+    },
     "scenes": {
       "type": "array",
       "minItems": 1,
       "description": "九种镜头按 type 分派，t0/t1 相邻相接。顺序建议 hero → rise → explode → part → action → array → stack → assemble → end；array / stack 可重复。",
       "items": {
         "type": "object",
-        "required": ["type", "t0", "t1"],
+        "required": [
+          "type",
+          "t0",
+          "t1"
+        ],
         "properties": {
           "type": {
-            "enum": ["hero", "rise", "explode", "part", "action", "array", "stack", "assemble", "end"]
+            "enum": [
+              "hero",
+              "rise",
+              "explode",
+              "part",
+              "action",
+              "array",
+              "stack",
+              "assemble",
+              "orbit",
+              "end"
+            ]
           },
-          "t0": { "type": "number" },
-          "t1": { "type": "number" },
+          "t0": {
+            "type": "number"
+          },
+          "t1": {
+            "type": "number"
+          },
           "args": {
             "type": "object",
             "properties": {
               "card": {
                 "type": "object",
                 "description": "字卡：一个大字（≤4 字用 132px）+ 一行小字。全片最多 6 张。",
-                "required": ["big"],
+                "required": [
+                  "big"
+                ],
                 "properties": {
-                  "big": { "type": "string" },
-                  "small": { "type": "string" },
-                  "x": { "type": "number" },
-                  "y": { "type": "number" }
+                  "big": {
+                    "type": "string"
+                  },
+                  "small": {
+                    "type": "string"
+                  },
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  }
                 }
               },
-              "intro": { "enum": ["act", "none"], "description": "hero 镜头的小动作：act = 按两下按钮" },
-              "array": { "type": "string", "description": "array 镜头拍哪个阵列（content.arrays 的 id）" },
-              "layer": { "type": "string", "description": "stack 镜头对准哪一层（content.layers 的 id）" }
+              "intro": {
+                "enum": [
+                  "act",
+                  "none"
+                ],
+                "description": "hero 镜头的小动作：act = 按两下按钮"
+              },
+              "array": {
+                "type": "string",
+                "description": "array 镜头拍哪个阵列（content.arrays 的 id）"
+              },
+              "layer": {
+                "type": "string",
+                "description": "stack 镜头对准哪一层（content.layers 的 id）"
+              },
+              "transition": {
+                "enum": [
+                  "whip",
+                  "orbit",
+                  "spin"
+                ],
+                "description": "这个镜头怎么进来：whip 甩镜 / orbit 绕过去（带荷兰角）/ spin 原地转 360°（首尾同向）"
+              },
+              "view": {
+                "type": "object",
+                "description": "hero 镜头的取景覆盖 {yaw, pitch, fill, aim}"
+              },
+              "sweep": {
+                "type": "number",
+                "description": "orbit 镜头的摆动幅度（度）"
+              },
+              "cycles": {
+                "type": "number",
+                "description": "orbit 镜头段内循环次数"
+              }
             }
           }
         }
@@ -44,33 +118,69 @@
     },
     "content": {
       "type": "object",
-      "required": ["layers", "parts"],
+      "required": [
+        "layers",
+        "parts"
+      ],
       "description": "产品本体：层、凸块零件、阵列、核心件、机构。几何即一切——画面里只有这里描述的零件，不贴图。",
       "properties": {
-        "title": { "type": "string", "description": "右上角图版标记与收尾型号" },
-        "look": { "enum": ["split", "dark"], "default": "split", "description": "split = 灰橙分割桌面；dark = 深色柔光" },
-        "radius": { "type": "number", "description": "场景半径 mm，取 ≈0.8 × 包围盒对角线；所有机位按它缩放" },
+        "title": {
+          "type": "string",
+          "description": "右上角图版标记与收尾型号"
+        },
+        "look": {
+          "enum": [
+            "split",
+            "dark"
+          ],
+          "default": "split",
+          "description": "split = 灰橙分割桌面；dark = 深色柔光"
+        },
+        "radius": {
+          "type": "number",
+          "description": "场景半径 mm，取 ≈0.8 × 包围盒对角线；所有机位按它缩放"
+        },
         "bounds": {
           "type": "array",
           "description": "[[x0,x1],[y0,y1],[z0,z1]]，世界坐标 mm，z 向上",
           "minItems": 3,
           "maxItems": 3
         },
-        "stackLayer": { "type": "string", "description": "stack 镜头默认对准的层" },
-        "stackArray": { "type": "string", "description": "array 镜头默认拍的阵列" },
-        "materials": { "type": "object", "description": "材质名 → #rrggbb。外壳一个主色、内部 2–3 中性色 + 一个功能色（只给一件用强调色）" },
+        "stackLayer": {
+          "type": "string",
+          "description": "stack 镜头默认对准的层"
+        },
+        "stackArray": {
+          "type": "string",
+          "description": "array 镜头默认拍的阵列"
+        },
+        "materials": {
+          "type": "object",
+          "description": "材质名 → #rrggbb。外壳一个主色、内部 2–3 中性色 + 一个功能色（只给一件用强调色）"
+        },
         "layers": {
           "type": "array",
           "minItems": 2,
           "description": "从上到下的装配层。爆炸时按这个顺序逐层抬起：最上层飞得最高，最下层略微下沉。",
           "items": {
             "type": "object",
-            "required": ["id"],
+            "required": [
+              "id"
+            ],
             "properties": {
-              "id": { "type": "string" },
-              "zh": { "type": "string" },
-              "en": { "type": "string" },
-              "travel": { "type": "number", "description": "覆盖默认行程（mm，负数向下）" }
+              "id": {
+                "type": "string"
+              },
+              "zh": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              },
+              "travel": {
+                "type": "number",
+                "description": "覆盖默认行程（mm，负数向下）"
+              }
             }
           }
         },
@@ -80,24 +190,71 @@
           "description": "凸块零件。kind=box 用 w/d/h/r；kind=cyl 用 r；kind=prism 用 pts。零件之间不许穿插（穿插会让遮挡顺序无解）。",
           "items": {
             "type": "object",
-            "required": ["id", "layer", "material"],
+            "required": [
+              "id",
+              "layer",
+              "material"
+            ],
             "properties": {
-              "id": { "type": "string" },
-              "layer": { "type": "string" },
-              "kind": { "enum": ["box", "cyl", "prism"], "default": "box" },
-              "material": { "type": "string" },
-              "x": { "type": "number" },
-              "y": { "type": "number" },
-              "z": { "type": "number", "description": "底面高度 mm" },
-              "w": { "type": "number" },
-              "d": { "type": "number" },
-              "h": { "type": "number" },
-              "r": { "type": "number", "description": "圆角半径（box）或半径（cyl）" },
-              "pts": { "type": "array", "description": "kind=prism 的凸多边形顶点 [[x,y],…]，逆时针" },
-              "static": { "type": "boolean", "description": "桌面道具：不参与爆炸与位移" },
-              "array": { "type": "string", "description": "属于哪个阵列（content.arrays 的 id）" },
-              "hero": { "description": "\"out\" = 核心件的底座；0/1/2… = 第 i 个子件（拆解时依次抬起）" },
-              "mech": { "type": "number", "description": "被哪个机构驱动（content.mech 的下标）" }
+              "id": {
+                "type": "string"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "box",
+                  "cyl",
+                  "prism"
+                ],
+                "default": "box"
+              },
+              "material": {
+                "type": "string"
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "z": {
+                "type": "number",
+                "description": "底面高度 mm"
+              },
+              "w": {
+                "type": "number"
+              },
+              "d": {
+                "type": "number"
+              },
+              "h": {
+                "type": "number"
+              },
+              "r": {
+                "type": "number",
+                "description": "圆角半径（box）或半径（cyl）"
+              },
+              "pts": {
+                "type": "array",
+                "description": "kind=prism 的凸多边形顶点 [[x,y],…]，逆时针"
+              },
+              "static": {
+                "type": "boolean",
+                "description": "桌面道具：不参与爆炸与位移"
+              },
+              "array": {
+                "type": "string",
+                "description": "属于哪个阵列（content.arrays 的 id）"
+              },
+              "hero": {
+                "description": "\"out\" = 核心件的底座；0/1/2… = 第 i 个子件（拆解时依次抬起）"
+              },
+              "mech": {
+                "type": "number",
+                "description": "被哪个机构驱动（content.mech 的下标）"
+              }
             }
           }
         },
@@ -106,28 +263,65 @@
           "description": "重复件。按相对阵列中心的角度分 8 扇区、按 rings 间距分圈，一起向外飞散。",
           "items": {
             "type": "object",
-            "required": ["id", "layer"],
+            "required": [
+              "id",
+              "layer"
+            ],
             "properties": {
-              "id": { "type": "string" },
-              "layer": { "type": "string" },
-              "rise": { "type": "number", "description": "飞多高 mm，默认 0.4 × radius" },
-              "spread": { "type": "number", "description": "侧向比例 0–1，默认 0.6" },
-              "rings": { "type": "number", "description": "圈间距 mm；不写则全部算第 0 圈" },
-              "cx": { "type": "number" },
-              "cy": { "type": "number" }
+              "id": {
+                "type": "string"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "rise": {
+                "type": "number",
+                "description": "飞多高 mm，默认 0.4 × radius"
+              },
+              "spread": {
+                "type": "number",
+                "description": "侧向比例 0–1，默认 0.6"
+              },
+              "rings": {
+                "type": "number",
+                "description": "圈间距 mm；不写则全部算第 0 圈"
+              },
+              "cx": {
+                "type": "number"
+              },
+              "cy": {
+                "type": "number"
+              }
             }
           }
         },
         "hero": {
           "type": "object",
           "description": "特写拆解的核心件",
-          "required": ["part"],
+          "required": [
+            "part"
+          ],
           "properties": {
-            "part": { "type": "string", "description": "取景基准零件的 id" },
-            "size": { "type": "number", "description": "最大尺寸 mm，决定特写倍率" },
-            "pull": { "type": "number", "description": "整体抽出高度 mm" },
-            "hover": { "type": "number", "description": "动作镜头回落高度 mm" },
-            "steps": { "type": "array", "description": "各子件的拆解行程 mm，按 hero 序号排列" }
+            "part": {
+              "type": "string",
+              "description": "取景基准零件的 id"
+            },
+            "size": {
+              "type": "number",
+              "description": "最大尺寸 mm，决定特写倍率"
+            },
+            "pull": {
+              "type": "number",
+              "description": "整体抽出高度 mm"
+            },
+            "hover": {
+              "type": "number",
+              "description": "动作镜头回落高度 mm"
+            },
+            "steps": {
+              "type": "array",
+              "description": "各子件的拆解行程 mm，按 hero 序号排列"
+            }
           }
         },
         "mech": {
@@ -136,8 +330,14 @@
           "items": {
             "type": "object",
             "properties": {
-              "dir": { "type": "array", "description": "方向向量 [x,y,z]，默认 [0,0,-1]" },
-              "travel": { "type": "number", "description": "行程 mm" }
+              "dir": {
+                "type": "array",
+                "description": "方向向量 [x,y,z]，默认 [0,0,-1]"
+              },
+              "travel": {
+                "type": "number",
+                "description": "行程 mm"
+              }
             }
           }
         }
@@ -153,6 +353,7 @@
     "array": "array? · card?",
     "stack": "layer? · card?",
     "assemble": "无",
-    "end": "card?（型号 + 一句话）"
+    "end": "card?（型号 + 一句话）",
+    "orbit": "sweep? · cycles? · roll? · card?"
   }
 }

@@ -16,6 +16,7 @@
  *   r.setContent({ scenes, content });
  *   r.renderFrame(3.2);
  */
+import { createCanvas } from '@napi-rs/canvas';
 import { createModel, makeCamera, partOffset, facing, orderParts, clamp, rgba } from './model.mjs';
 import { buildPlan } from './plan.mjs';
 
@@ -23,7 +24,7 @@ import { buildPlan } from './plan.mjs';
  * 九种镜头。放在渲染器文件里是有意的：tools/check-kit-contract.mjs 只扫渲染器源码，
  * 段型常量写在 plan.mjs 里它提取不到，会把 EASE / LOOK 的键当成段型（实测 7 种假段型）。
  */
-export const SCENE_TYPES = ['hero', 'rise', 'explode', 'part', 'action', 'array', 'stack', 'assemble', 'end'];
+export const SCENE_TYPES = ['hero', 'rise', 'explode', 'part', 'action', 'array', 'stack', 'assemble', 'orbit', 'end'];
 
 const FONT = {
   big: 'NotoSC Regular',
@@ -219,6 +220,7 @@ export function createIsoRenderer(opts = {}) {
   // ---------------- 物体 ----------------
 
   let currentCam = null;
+  let blurCanvas = null, blurCtx = null, subCanvas = null, subCtx = null;
 
   function shadeColor(base, n) {
     const lam = Math.max(0, n[0] * LIGHT[0] + n[1] * LIGHT[1] + n[2] * LIGHT[2]);
@@ -229,7 +231,7 @@ export function createIsoRenderer(opts = {}) {
     return [base[0] * f, base[1] * f, base[2] * f];
   }
 
-  function drawObject(state) {
+  function drawObject(state, alphaMul = 1, target = ctx) {
     const cam = currentCam;
     const { S } = state;
     // 先定零件级顺序（分离轴 + 拓扑），再在零件内部按面深度画。
@@ -252,31 +254,31 @@ export function createIsoRenderer(opts = {}) {
       list.push(...local);
     }
 
-    ctx.lineJoin = 'round';
+    target.lineJoin = 'round';
     for (const item of list) {
       const { f, off } = item;
-      ctx.globalAlpha = item.ghost ? 0.08 : 1;
+      target.globalAlpha = (item.ghost ? 0.08 : 1) * alphaMul;
       const pts = f.pts;
-      ctx.beginPath();
+      target.beginPath();
       for (let i = 0; i < pts.length; i++) {
         const p = cam.project([pts[i][0] + off[0], pts[i][1] + off[1], pts[i][2] + off[2]]);
-        if (i === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]);
+        if (i === 0) target.moveTo(p[0], p[1]); else target.lineTo(p[0], p[1]);
       }
-      ctx.closePath();
+      target.closePath();
       const col = shadeColor(f.color, f.n);
-      ctx.fillStyle = rgba(col);
-      ctx.fill();
+      target.fillStyle = rgba(col);
+      target.fill();
       // 同色描边盖住相邻面的抗锯齿缝（细到看不出是描边）
-      ctx.strokeStyle = rgba(col);
-      ctx.lineWidth = 0.8;
-      ctx.stroke();
+      target.strokeStyle = rgba(col);
+      target.lineWidth = 0.8;
+      target.stroke();
       if (look.rim && !item.ghost) {
-        ctx.strokeStyle = rgba(look.rim);
-        ctx.lineWidth = 0.7;
-        ctx.stroke();
+        target.strokeStyle = rgba(look.rim);
+        target.lineWidth = 0.7;
+        target.stroke();
       }
     }
-    ctx.globalAlpha = 1;
+    target.globalAlpha = 1;
   }
 
   // ---------------- 层标注 ----------------
@@ -437,7 +439,45 @@ export function createIsoRenderer(opts = {}) {
     drawBackdrop();
     drawShadow();
     drawHeroShadow(state);
-    drawObject(state);
+    // 运动模糊：转场期间往回采 4 个样本，越旧越淡，最后再画当前帧。
+    // 单帧只多画 3 次物体（36 件 / 886 面），只发生在 0.2–0.3 s 的转场窗口里。
+    if (state.blur > 0.15) {
+      // 真运动模糊：每个子帧先单独画成一张不透明的离屏图，再按 1/N 加性叠到累加图上。
+      // 直接在主画布叠半透明残影只会得到"重影边"；直接在一张图上叠子帧会因同帧多面叠加而过曝。
+      const n = 8;
+      const shutter = 0.8 / fps;
+      if (!blurCanvas) {
+        blurCanvas = createCanvas(W, H);
+        blurCtx = blurCanvas.getContext('2d');
+        subCanvas = createCanvas(W, H);
+        subCtx = subCanvas.getContext('2d');
+      }
+      blurCtx.setTransform(1, 0, 0, 1, 0, 0);
+      blurCtx.globalCompositeOperation = 'source-over';
+      blurCtx.globalAlpha = 1;
+      blurCtx.clearRect(0, 0, W, H);
+      for (let i = 0; i < n; i++) {
+        const s2 = plan.sample(Math.max(0, t - (shutter * i) / n));
+        const cam2 = makeCamera({ ...s2.cam, W, H, radius, distance: clamp((9 * radius * 2.2) / Math.max(1, s2.cam.zoom), 2.6 * radius, 9 * radius) });
+        cam2.pitchAngle = s2.cam.pitch;
+        const keep = currentCam;
+        currentCam = cam2;
+        subCtx.setTransform(1, 0, 0, 1, 0, 0);
+        subCtx.globalCompositeOperation = 'source-over';
+        subCtx.globalAlpha = 1;
+        subCtx.clearRect(0, 0, W, H);
+        drawObject(s2, 1, subCtx);
+        currentCam = keep;
+        blurCtx.globalCompositeOperation = 'lighter';
+        blurCtx.globalAlpha = 1 / n;
+        blurCtx.drawImage(subCanvas, 0, 0);
+      }
+      blurCtx.globalAlpha = 1;
+      ctx.globalAlpha = 1;
+      ctx.drawImage(blurCanvas, 0, 0);
+    } else {
+      drawObject(state);
+    }
     drawLabels(state);
     drawVignette();
     drawCards(state, t);

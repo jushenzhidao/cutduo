@@ -54,6 +54,7 @@ function sampleCam(keys, t) {
       const L = (p, q) => p + (q - p) * e;
       return {
         yaw: L(a.yaw, b.yaw), pitch: L(a.pitch, b.pitch), zoom: L(a.zoom, b.zoom),
+        roll: L(a.roll || 0, b.roll || 0),
         panX: L(a.panX, b.panX), panY: L(a.panY, b.panY),
         focus: [L(a.focus[0], b.focus[0]), L(a.focus[1], b.focus[1]), L(a.focus[2], b.focus[2])],
       };
@@ -136,11 +137,32 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
     return { yaw, pitch, zoom, panX: cx - m.mx, panY: cy - m.my, focus: c };
   }
 
-  /** 甩镜：起点钉在当前机位，0.26 s 后到目标。 */
-  const whipTo = (t, target, dur = 0.26) => {
+  // 转场：whip（甩）/ orbit（绕到目标，带荷兰角）/ spin（原地转 360°，首尾同向）
+  const spins = [];
+  const blurs = [];
+  const whipTo = (t, target, dur = 0.26, kind = 'whip') => {
+    // 一圈 360° 不能塞进 0.26 s：60fps 下每帧 58°，只剩频闪。转场用 0.52 s，峰值仍 1800°/s。
+    if (kind === 'spin') dur = Math.max(dur, 0.52);
     const cur = camCur(Math.max(0, t - 1e-4));
-    if (cur) camK(t - 1e-3, { ...cur }, 'lin');
-    camK(t + dur, target, 'whip');
+    if (cur) camK(t - 1e-3, { ...cur, roll: cur.roll || 0 }, 'lin');
+    if (kind === 'orbit') {
+      // 中点抬高一点、绕过去、并压一点 roll：视差与轮廓变化同时发生，才像"绕过去"而不是"滑过去"
+      const y0 = cur ? cur.yaw : target.yaw;
+      const mid = {
+        ...target,
+        yaw: y0 + (target.yaw - y0) * 0.55 + 20,
+        zoom: target.zoom * 0.84,
+        roll: 10,
+        panX: (target.panX + (cur ? cur.panX : target.panX)) * 0.5,
+        panY: (target.panY + (cur ? cur.panY : target.panY)) * 0.5,
+      };
+      camK(t + dur * 0.52, mid, 'io');
+      camK(t + dur, { ...target, roll: 0 }, 'whip');
+    } else {
+      camK(t + dur, { ...target, roll: 0 }, 'whip');
+    }
+    if (kind === 'spin') spins.push({ t0: t, t1: t + dur, sign: 1 });
+    blurs.push({ t0: t, t1: t + dur });
   };
   const drift = (base, dyaw = 4, dzoom = 0.035) => ({ ...base, yaw: base.yaw + dyaw, zoom: base.zoom * (1 + dzoom) });
   /** 末尾静止：最后 0.45 s 机位不动。落位还在漂的镜头会被 pacing 的 hold 判据抓住。 */
@@ -192,16 +214,20 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
     const d = t1 - t0;
     const type = scene.type || 'hero';
     const args = scene.args || {};
+    // 每个镜头可以指定"怎么进来"：whip 甩 / orbit 绕 / spin 原地转一圈（默认甩）
+    const tr = args.transition || 'whip';
     pin(t0);
 
     if (type === 'hero') {
       K('lift', t0 + 0.01, 0);
       K('ex', t0 + 0.01, 0);
-      const target = fitCam({ parts: solid, S: poseAt(t1), yaw: YAW.hero, pitch: PITCH.hero, aim: [0.54, 0.5], fill: 0.6 });
+      const v = args.view || {};
+      const target = fitCam({ parts: solid, S: poseAt(t1), yaw: v.yaw ?? YAW.hero, pitch: v.pitch ?? PITCH.hero, aim: v.aim ?? [0.54, 0.5], fill: v.fill ?? 0.6 });
       // 开场要有可见的运动：只推 3% 时 gate 的 hook 判 0.02（几乎静止），观众也读不出镜头在走
-      if (t0 > 0.01) whipTo(t0, target);
+      if (t0 > 0.01) whipTo(t0, target, 0.26, tr);
       else camK(t0 + 0.02, { ...target, zoom: target.zoom * 0.94, yaw: target.yaw - 3 }, 'io');
       settle(t1, drift(target, 5, 0.08));
+      addCard(t0 + 0.3, t1 - 0.12, args.card, 'top');
       if (args.intro === 'act') {
         const p0 = t0 + 0.45;
         for (let i = 0; i < 2; i++) {
@@ -232,7 +258,7 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
       // 前三分之一的时间用一个远景拍一堆还挤在一起的层（实测主体只占画面 1/4）。
       const target = fitCam({ parts: solid, S: poseAt(t1 - 0.02), yaw: YAW.wide, pitch: PITCH.wide, aim: [0.58, 0.5], fill: 0.66 });
       const midA = fitCam({ parts: solid, S: poseAt(t0 + 0.7 * d), yaw: YAW.wide, pitch: PITCH.wide, aim: [0.56, 0.5], fill: 0.66 });
-      whipTo(t0, midA, 0.3);
+      whipTo(t0, midA, 0.3, tr);
       camK(t0 + 0.72 * d, midA, 'io');
       K('ex', t0 + 0.25 + 0.58 * d, NL, 'io');
       settle(t1, drift(target, 4, 0.025));
@@ -253,7 +279,7 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
         K('split', t0 + Math.min(d - 0.03, 0.6 + 0.42 * steps.length), steps.length, 'io');
       }
       const target = fitCam({ parts: heroParts, S: poseAt(t1 - 0.02), yaw: YAW.part, pitch: PITCH.part, aim: [0.54, 0.5], fill: 0.62 });
-      whipTo(t0 + 0.16, target, 0.2);
+      whipTo(t0 + 0.16, target, 0.2, tr);
       settle(t1, { ...target, yaw: target.yaw - 3, zoom: target.zoom * 1.02 });
       addCard(t0 + 0.3, t1 - 0.06, args.card, 'top');
       heroWins.push({ t0, t1, ref: heroLift(poseAt(t1 - 0.02)) });
@@ -273,7 +299,7 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
       }
       K('act', t1 - 0.55, 1, 'io');
       const target = fitCam({ parts: heroParts, S: poseAt(t1 - 0.02), yaw: YAW.action, pitch: PITCH.action, aim: [0.54, 0.52], fill: 0.6 });
-      whipTo(t0 + 0.06, target, 0.18);
+      whipTo(t0 + 0.06, target, 0.18, tr);
       settle(t1, { ...target, yaw: target.yaw - 2 });
       addCard(t0 + 0.25, t1 - 0.06, args.card, 'top');
       heroWins.push({ t0, t1, ref: heroLift(poseAt(t1 - 0.02)) });
@@ -301,7 +327,7 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
       const yawEnd = YAW.array + 8;
       const target = fitCam({ parts: byLayer(a.layer), S: poseAt(t1 - 0.02), yaw: yawEnd, pitch: PITCH.array, aim: [0.58, 0.52], fill: 0.78 });
       const early = fitCam({ parts: byLayer(a.layer), S: poseAt(t0 + 0.3), yaw: yawEnd + 16, pitch: PITCH.array, aim: [0.58, 0.52], fill: 0.78 });
-      whipTo(t0 + 0.05, early, 0.2);
+      whipTo(t0 + 0.05, early, 0.2, tr);
       camK(t0 + Math.min(d - 0.15, 0.34 + 0.55 * d), target, 'io');
       settle(t1, target);
       addCard(t0 + 0.3, t1 - 0.06, args.card, 'top');
@@ -315,14 +341,14 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
       const yawEnd = YAW.stack + 8;
       const target = fitCam({ parts: byLayer(layerId), S: poseAt(t1 - 0.02), yaw: yawEnd, pitch: PITCH.stack, aim: [0.58, 0.5], fill: 0.56 });
       const early = fitCam({ parts: byLayer(layerId), S: poseAt(t0 + 0.25), yaw: YAW.stack, pitch: PITCH.stack, aim: [0.58, 0.5], fill: 0.56 });
-      whipTo(t0 + 0.05, early, 0.2);
+      whipTo(t0 + 0.05, early, 0.2, tr);
       camK(t0 + 0.5 * d, target, 'io');
       settle(t1, target);
       addCard(t0 + 0.32, t1 - 0.06, args.card, 'top');
       subjectWins.push({ t0, t1, ids: byLayer(layerId).map((x) => x.id) });
     } else if (type === 'assemble') {
       const exploded = fitCam({ parts: solid, S: poseAt(t0 + 0.02), yaw: YAW.wide, pitch: PITCH.wide, aim: [0.58, 0.5], fill: 0.66 });
-      whipTo(t0, exploded, 0.24);
+      whipTo(t0, exploded, 0.24, tr);
       K('ex', t0 + 0.05, val('ex', t0), 'lin');
       K('ex', t0 + 0.05 + 0.55 * d, 0, 'io');
       for (const id of Object.keys(model.arrays)) {
@@ -337,12 +363,31 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
       const hero = fitCam({ parts: solid, S: poseAt(t1), yaw: YAW.hero, pitch: PITCH.hero, aim: [0.54, 0.5], fill: 0.6 });
       settle(t1, hero);
       labelsWindow = { t0: t0 + 0.05, t1: t0 + 0.3 * d };
+    } else if (type === 'orbit') {
+      // 循环自转：正弦摆动，段首段尾完全相同（sin 0 = sin 2π）⇒ 这一段可以直接当循环素材
+      K('lift', t0 + 0.01, val('lift', t0));
+      K('ex', t0 + 0.01, val('ex', t0));
+      const base = fitCam({ parts: solid, S: poseAt(t0 + 0.02), yaw: YAW.hero, pitch: PITCH.hero, aim: [0.5, 0.5], fill: args.fill ?? 0.62 });
+      const sweep = args.sweep ?? 26;
+      const cycles = Math.max(1, Math.round((args.cycles ?? 1) * d / d));
+      const segs = 16;
+      for (let i = 0; i <= segs; i++) {
+        const u = i / segs;
+        const s2 = Math.sin(2 * Math.PI * u * cycles);
+        camK(t0 + d * u, {
+          ...base,
+          yaw: base.yaw + sweep * s2,
+          roll: (args.roll ?? 3) * s2,
+          zoom: base.zoom * (1 + 0.015 * Math.cos(2 * Math.PI * u * cycles)),
+        }, 'lin');
+      }
+      addCard(t0 + 0.25, t1 - 0.1, args.card, 'top');
     } else if (type === 'end') {
       K('lift', t0 + 0.01, 0);
       K('ex', t0 + 0.01, 0);
       for (const id of Object.keys(model.arrays)) burstK(id, t0 + 0.01, 0);
       const target = fitCam({ parts: solid, S: poseAt(t1), yaw: YAW.hero, pitch: PITCH.hero, aim: [0.5, 0.48], fill: 0.58 });
-      whipTo(t0, target);
+      whipTo(t0, target, 0.26, tr);
       camK(t1 - 0.5, drift(target, 1.4, 0.012), 'io');
       camK(t1, drift(target, 1.4, 0.012), 'lin');
       addCard(t0 + 0.1, t1, args.card, 'end');
@@ -368,6 +413,23 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
       for (const id of Object.keys(model.arrays)) S.burst[id] = val(`burst:${id}`, t);
 
       const cam = { ...sampleCam(camKeys, t) };
+      // spin：在基础机位上叠一圈 360°（首尾同向 ⇒ 衔接天然无缝），不进关键帧，
+      // 否则后续关键帧要一直带着 +360 的偏置，越转越乱
+      for (const sp of spins) {
+        if (t >= sp.t0 && t <= sp.t1) {
+          const u = (t - sp.t0) / Math.max(1e-6, sp.t1 - sp.t0);
+          // 用正弦缓动（峰值 ≈1.57×平均）；五次方缓动峰值 5× ⇒ 360° 会变成每帧 46°，只剩频闪
+          const e = 0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, u));
+          cam.yaw += 360 * sp.sign * e;
+        }
+      }
+      let blur = 0;
+      for (const bw of blurs) {
+        if (t > bw.t0 && t < bw.t1) {
+          const u = (t - bw.t0) / Math.max(1e-6, bw.t1 - bw.t0);
+          blur = Math.max(blur, Math.sin(Math.PI * Math.min(1, u)));
+        }
+      }
       const win = heroWins.find((w) => t >= w.t0 && t <= w.t1);
       if (win) {
         // 只补「当前 − 取景时」的差值：取景本身已按末状态算过，重复加会把主体顶出画面
@@ -384,7 +446,7 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
 
       const showLabels = labelsWindow && t >= labelsWindow.t0 && t <= labelsWindow.t1;
       const sw = subjectWins.find((w) => t >= w.t0 && t <= w.t1);
-      return { t, cam, S, cards: live, labels: showLabels, heroWindow: !!win, subject: sw ? new Set(sw.ids) : null, model };
+      return { t, cam, S, cards: live, labels: showLabels, heroWindow: !!win, subject: sw ? new Set(sw.ids) : null, blur, model };
     },
     _tracks: tracks,
     _cams: camKeys,

@@ -285,14 +285,22 @@ export function partOffset(model, part, S) {
 }
 
 /** 相机基向量：把世界点投到屏幕（含针孔透视，近距离特写才有广告感）。 */
-export function makeCamera({ yaw, pitch, zoom, panX = 0, panY = 0, focus = [0, 0, 0], W, H, radius, distance }) {
+export function makeCamera({ yaw, pitch, roll = 0, zoom, panX = 0, panY = 0, focus = [0, 0, 0], W, H, radius, distance }) {
   const a = yaw * RAD, e = pitch * RAD;
   const ca = Math.cos(a), sa = Math.sin(a), ce = Math.cos(e), se = Math.sin(e);
   const k = (zoom * H) / (2.2 * radius);
   const D = distance || 9 * radius;
-  const right = [ca, sa, 0];
-  const up = [-sa * se, ca * se, ce];
+  let right = [ca, sa, 0];
+  let up = [-sa * se, ca * se, ce];
   const dir = [sa * ce, -ca * ce, se]; // 指向观察者
+  if (roll) {
+    // 荷兰角：绕视线轴转屏幕基向量（right/up 仍正交，dir 不变）
+    const cr = Math.cos(roll * RAD), sr = Math.sin(roll * RAD);
+    const r2 = [right[0] * cr + up[0] * sr, right[1] * cr + up[1] * sr, right[2] * cr + up[2] * sr];
+    const u2 = [-right[0] * sr + up[0] * cr, -right[1] * sr + up[1] * cr, -right[2] * sr + up[2] * cr];
+    right = r2;
+    up = u2;
+  }
   return {
     k, D, right, up, dir, panX, panY, focus, W, H,
     project(p) {
