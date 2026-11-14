@@ -29,4 +29,7 @@ export const adapter = cliAdapter(capability, {
   script: 'kits/editorial/canvas-editorial.mjs',
   // 这支的参数名与其他四支不同：读 --inputs 而不是 --params
   paramsFlag: '--inputs',
+  // 帧率/worker/编码都在 inputs 里，入口不读 --fps/--workers/--crf/--preset；
+  // 传了只会静默不生效，所以直接拒绝（探针的 --at 由 adapter 单独放行）。
+  supportedOverrides: [],
 });

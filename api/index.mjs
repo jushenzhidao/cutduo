@@ -202,7 +202,8 @@ export async function probe(req) {
   const { capability, adapter } = registry.get(req?.kit);
   const normalized = normalizeRequest(req, capability);
   const png = normalized.out.replace(/\.mp4$/i, '.png');
-  const at = req?.overrides?.at ?? 2.5;
+  // 用归一化后的值：contract 已把 CLI 字符串转成数字并校验范围。
+  const at = normalized.overrides.at ?? 2.5;
 
   const t0 = Date.now();
   await adapter.probe({ ...normalized, overrides: { ...normalized.overrides, at } }, png);

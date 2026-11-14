@@ -8,6 +8,441 @@
   },
   "kits": [
     {
+      "id": "clay",
+      "name": "黏土图示",
+      "description": "换宿主自 knowledge-explainer-clay v2.7.4 的 7 种机制：split-merge / interface-bind / shear-break / lineage-track / channel-transport / focus-return / alternative-compare。数值驱动的黏土物体形变，适合过程解释、科学图示、拆解合并。",
+      "contentModel": {
+        "name": "segments[]",
+        "required": true,
+        "note": "每个 segment 是一条 recipe：type 填机制名，dur 为该段时长，再带 title / nodes[{id,label,value}] / unit / valueUnit / decimals 与该机制专有字段。captions 可选（本套自带字幕绘制）。"
+      },
+      "output": {
+        "width": 1920,
+        "height": 1080,
+        "fpsChoices": [
+          30,
+          60
+        ],
+        "fpsDefault": 30
+      },
+      "paramsSchema": "kits/clay/params.schema.json",
+      "schemaStatus": "complete",
+      "presets": [
+        {
+          "id": "default",
+          "path": "kits/clay/presets/default.json",
+          "note": "7 段 / 70s，覆盖全部机制"
+        }
+      ],
+      "defaultPreset": "kits/clay/presets/default.json",
+      "audio": {
+        "required": false,
+        "note": "上游片为无声演示；有口播时给 --audio，音轨会转 aac"
+      },
+      "extras": {
+        "theme": [
+          "clay"
+        ],
+        "transition": [
+          "cut"
+        ]
+      },
+      "entry": {
+        "type": "cli",
+        "script": "render.mjs"
+      }
+    },
+    {
+      "id": "collage",
+      "name": "屏拼贴（深色科技风宣传片）",
+      "description": "半蒸馏自 motiongit.com/motiongit/motiongit-promo-main（template-585，v2.6.5-alpha.1）的 11 段结构：hero / recipe / open / pack / flow / adapt / reuse / spec / share / finale / end。深色底 + 全息字标 + 编辑器风 HUD + 底部时间轴，适合产品发布、工具介绍、规格说明。上游是 html-canvas/1 且渲染核 AES-256-GCM 加密，换宿主不成立，故走半蒸馏（自写 Skia 渲染层）。",
+      "contentModel": {
+        "name": "scenes[]",
+        "required": true,
+        "note": "每段 {type, t0, t1, args}。args 承载该段全部内容：hero 是 chip/kline/klineGrad/decode，recipe 是 cards[] + 对照文案，flow 是 steps[] + messages[]，spec 是 tools[]，share 是 branches[]。完整字段见 params.schema.json 的 x-sceneArgs。文案里用 klineGrad 指定要渐变的那一段（必须是子串）。"
+      },
+      "output": {
+        "width": 1920,
+        "height": 1080,
+        "fpsChoices": [
+          30,
+          60
+        ],
+        "fpsDefault": 60
+      },
+      "paramsSchema": "kits/collage/params.schema.json",
+      "schemaStatus": "complete",
+      "presets": [
+        {
+          "id": "cutduo",
+          "path": "kits/collage/presets/cutduo.json",
+          "note": "11 段 / 57s，本仓自己的短片（成片 out/cutduo-film-57s.mp4）；就是一份 params JSON"
+        },
+        {
+          "id": "demo",
+          "path": "kits/collage/presets/demo.json",
+          "note": "11 段 / 57s，参考片复刻件（唯一保留 MotionGit 品牌的地方，用于逐帧对位）"
+        },
+        {
+          "id": "capability-test",
+          "path": "kits/collage/presets/capability-test.json",
+          "note": "能力验收件：7 个静止点加停留（57→68.5s）+ 真实素材接 adapt/reuse，用来验 hold 与 media"
+        }
+      ],
+      "defaultPreset": "kits/collage/presets/cutduo.json",
+      "audio": {
+        "required": false,
+        "note": "params.audio 支持事件轨：cues[{at,src,gain}] 按绝对秒定位，src 可指向文件或内置合成音 （whoosh/tick/impact/rise，程序合成，非上游音效）。mode=effects-only 只出音效，external-music 叠配乐，有 voice 时自动 sidechain ducking。命令行 --audio 优先级更高。"
+      },
+      "extras": {
+        "theme": [],
+        "transition": [
+          "cut"
+        ]
+      },
+      "entry": {
+        "type": "cli",
+        "script": "render.mjs"
+      }
+    },
+    {
+      "id": "desk",
+      "name": "桌面片场",
+      "description": "把整台 Mac 桌面重写成模板：桌面骨架 + 16 个版式镜头 + photo/clip 两类素材镜头，13 项量化自检。适合软件演示、产品叙事。",
+      "contentModel": {
+        "name": "shots[]",
+        "required": true,
+        "note": "需要 fps / durationSeconds / shots；chapters 决定壁纸与整屏翻牌，brand 是右下角角标。"
+      },
+      "output": {
+        "width": 1440,
+        "height": 1080,
+        "fpsChoices": [
+          24,
+          30,
+          60
+        ],
+        "fpsDefault": 60
+      },
+      "paramsSchema": "kits/desk/params.schema.json",
+      "schemaStatus": "complete",
+      "presets": [
+        {
+          "id": "demo",
+          "path": "content/demo.json",
+          "note": "基础演示，无配音"
+        },
+        {
+          "id": "demo-voiced",
+          "path": "content/demo-voiced.json",
+          "note": "带配音对齐"
+        },
+        {
+          "id": "hotpot",
+          "path": "content/hotpot.json",
+          "note": "实拍 + 分镜混合"
+        },
+        {
+          "id": "nanjing",
+          "path": "content/nanjing.json",
+          "note": "城市叙事"
+        },
+        {
+          "id": "uv",
+          "path": "content/uv.json",
+          "note": "单概念讲解"
+        }
+      ],
+      "defaultPreset": "content/demo.json",
+      "audio": {
+        "required": false,
+        "note": "口播片必须给；`-voiced` 系列参数已按配音时长重排"
+      },
+      "extras": {
+        "presenter": "头像路径或 off",
+        "profiles": [
+          "standard",
+          "quality"
+        ]
+      },
+      "entry": {
+        "type": "cli",
+        "script": "kits/desk/render.mjs"
+      }
+    },
+    {
+      "id": "diagram",
+      "name": "说明性图示（13 类段型库）",
+      "description": "把「数据怎么比、关系怎么走、结构怎么分」画成图，而不是写成句子。13 类段型：data-bar / data-line / hierarchy / cycle / definition / compare / process / causal / parts / experiment / evidence / formula / recap。这是段型库而不是完整版式：不自带片头、讲解员与字幕条，出片入口只用于版式验证；要成片请把它当段型来源，或在 presets 里串成一条验证片。",
+      "contentModel": {
+        "name": "segments[]",
+        "required": true,
+        "note": "每段 { family, duration, title?, unit?, note?, items[] }，字段契约见 kits/diagram/README.md。字级锚点：params.timing 指向 ASR 产出的 timing.json（也可用 CLI --timing）；给了之后 item 的 at/rowAt 改为「念到才动」，不给则按序号均分。段内时刻是相对秒，跨段用前缀和——与 paper 的绝对秒不是一套语义。"
+      },
+      "output": {
+        "width": 1920,
+        "height": 1080,
+        "fpsChoices": [
+          30,
+          60
+        ],
+        "fpsDefault": 30
+      },
+      "paramsSchema": "kits/diagram/params.schema.json",
+      "schemaStatus": "complete",
+      "presets": [
+        {
+          "id": "default",
+          "path": "kits/diagram/presets/default.json",
+          "note": "4 类示范 · 26s"
+        },
+        {
+          "id": "all",
+          "path": "kits/diagram/presets/all.json",
+          "note": "13 类全量 · 84s"
+        },
+        {
+          "id": "render-cost",
+          "path": "kits/diagram/presets/render-cost.json",
+          "note": "8 段 · 64s"
+        },
+        {
+          "id": "render-cost-20s",
+          "path": "kits/diagram/presets/render-cost-20s.json",
+          "note": "3 段 · 22s"
+        },
+        {
+          "id": "talkcraft-15s",
+          "path": "kits/diagram/presets/talkcraft-15s.json",
+          "note": "5 段 · 22s"
+        }
+      ],
+      "defaultPreset": "kits/diagram/presets/default.json",
+      "audio": {
+        "required": false,
+        "note": "无声可出片。要音轨用请求的 audio 字段（会转成 --audio）；也可在 params.audio 里写相对仓库根的路径。"
+      },
+      "extras": {
+        "palette": [
+          "paper",
+          "neutral"
+        ],
+        "families": [
+          "data-bar",
+          "data-line",
+          "hierarchy",
+          "cycle",
+          "definition",
+          "compare",
+          "process",
+          "causal",
+          "parts",
+          "experiment",
+          "evidence",
+          "formula",
+          "recap"
+        ]
+      },
+      "entry": {
+        "type": "cli",
+        "script": "kits/diagram/render.mjs"
+      }
+    },
+    {
+      "id": "editorial",
+      "name": "杂志剪辑",
+      "description": "8 段分镜的杂志排版：强网格、大字号标题、色块分区。改造自 MIT 项目，适合观点输出与品牌短片。",
+      "contentModel": {
+        "name": "scenes[]",
+        "required": true,
+        "note": "需要 scenes 与 durationSeconds；brand / accent 可选。参数文件在 content/inputs-*.json。"
+      },
+      "output": {
+        "width": 1920,
+        "height": 1080,
+        "fpsChoices": [
+          24,
+          30,
+          60
+        ],
+        "fpsDefault": 24,
+        "fpsNote": "实际帧率由 params.fps 决定，inputs-v6 是 24fps"
+      },
+      "paramsSchema": "kits/editorial/params.schema.json",
+      "schemaStatus": "complete",
+      "schemaNote": "schema 只约束 scenes 的骨架（type/t0/t1）与少量全局字段；args 内部结构由各版式自己决定，不在 schema 里锁死。",
+      "presets": [
+        {
+          "id": "inputs-v6",
+          "path": "content/inputs-v6.json",
+          "note": "6 版分镜"
+        },
+        {
+          "id": "inputs-v8t",
+          "path": "content/inputs-v8t.json",
+          "note": "8 版分镜"
+        },
+        {
+          "id": "inputs-kit",
+          "path": "content/inputs-kit.json",
+          "note": "纸感同源内容"
+        },
+        {
+          "id": "inputs-md",
+          "path": "content/inputs-md.json",
+          "note": "基准用固定内容"
+        }
+      ],
+      "defaultPreset": "content/inputs-v6.json",
+      "audio": {
+        "required": false,
+        "note": "口播片必须给；无音轨只出画面"
+      },
+      "extras": {
+        "theme": "强调色",
+        "skin": "排版风格",
+        "avatar": "头像路径或 off"
+      },
+      "entry": {
+        "type": "cli",
+        "script": "kits/editorial/canvas-editorial.mjs"
+      }
+    },
+    {
+      "id": "iso",
+      "name": "等轴测爆炸大片（产品拆装）",
+      "description": "蒸馏自 Warrickchenxin/iso-explode-film（等轴爆炸大片 skill）的内容模型与镜头库：把一件产品拆成几十个凸块零件，按层爆炸、阵列飞散、核心件特写拆解、机构按压、夹层推镜，最后一层层合拢。0.25 s 甩镜做转场、停留时镜头缓慢漂移、最后半秒静止。上游是 SVG + Chrome 逐帧截图 + numpy 透视合成，本实现整条链压进 Skia Canvas2D（无浏览器、无中间帧），零件几何与整支分镜全部是声明式 JSON，改产品不改代码。",
+      "contentModel": {
+        "name": "scenes[] + content{layers,parts,arrays,hero,mech}",
+        "required": true,
+        "note": "scenes 是九种镜头（hero/rise/explode/part/action/array/stack/assemble/end），每段 {type,t0,t1,args}；content 是产品本体：layers 从上到下、parts 是凸块（box/cyl/prism）、arrays 是重复件、hero 是被拆的核心件、mech 是机构动作。几何即一切：画面里只有零件，不贴图。零件之间不许穿插——穿插会让画家算法的遮挡顺序无解。"
+      },
+      "output": {
+        "width": 1920,
+        "height": 1080,
+        "fpsChoices": [
+          30,
+          60
+        ],
+        "fpsDefault": 60
+      },
+      "paramsSchema": "kits/iso/params.schema.json",
+      "schemaStatus": "complete",
+      "presets": [
+        {
+          "id": "powerbank",
+          "path": "content/iso-powerbank/params.json",
+          "note": "PB-1 移动电源 · 7 层 36 件 · 25.6s · 成片 out/iso-powerbank.mp4"
+        }
+      ],
+      "defaultPreset": "content/iso-powerbank/params.json",
+      "audio": {
+        "required": false,
+        "note": "本支默认无声（几何与运镜本身就是节奏）。要配乐可走 params.audio 的 external-music，或先出无声片再用 tools/audio-bed.mjs 叠。上游的配乐是 film/synth.py 代码合成（Am–F–C–G / 120 BPM），本仓不移植。"
+      },
+      "extras": {
+        "look": [
+          "split",
+          "dark"
+        ]
+      },
+      "entry": {
+        "type": "cli",
+        "script": "render.mjs"
+      }
+    },
+    {
+      "id": "mg",
+      "name": "MG 动效",
+      "description": "5 类镜头的动效验证：文字 / 档案时间轴 / 黑洞 2.5D 粒子 / 等轴积木 / 信息卡，带确定性自检。2026-11-10 后未改动。",
+      "contentModel": {
+        "name": "params.json",
+        "required": true,
+        "note": "结构自成一套（非 scenes/shots/segments），以 kits/mg/params.json 为准。"
+      },
+      "output": {
+        "width": 1920,
+        "height": 1080,
+        "fpsChoices": [
+          24,
+          30,
+          60
+        ],
+        "fpsDefault": 60
+      },
+      "paramsSchema": "kits/mg/params.schema.json",
+      "schemaStatus": "complete",
+      "schemaNote": "schema 只约束 scenes 骨架与画幅字段；镜头参数在 args 里，结构随 type 变化，不在 schema 里锁死。",
+      "presets": [
+        {
+          "id": "default",
+          "path": "kits/mg/params.json",
+          "note": "唯一参数集"
+        }
+      ],
+      "defaultPreset": "kits/mg/params.json",
+      "audio": {
+        "required": false,
+        "note": "无口播，通常不出音轨"
+      },
+      "extras": {},
+      "entry": {
+        "type": "cli",
+        "script": "kits/mg/render.mjs"
+      }
+    },
+    {
+      "id": "night-card",
+      "name": "夜色卡片",
+      "description": "竖屏 9:16 情绪向卡片：一屏一句话，深色底加暖金点缀，四角取景框 + 底部进度线。六个版式 cover / statement / quote / contrast / number / outro，段长中位 7s，适合深夜独白、情绪向口播。",
+      "contentModel": {
+        "name": "segments[]",
+        "required": true,
+        "note": "每段需要 type / dur 与对应版式参数（cover: title/sub/kicker；statement: text/note；quote: text/from；contrast: before/after；number: value/label/note；outro: title/sub/brand）。durationSeconds 必须等于 dur 之和。"
+      },
+      "output": {
+        "width": 1080,
+        "height": 1920,
+        "fpsChoices": [
+          24,
+          30,
+          60
+        ],
+        "fpsDefault": 30
+      },
+      "paramsSchema": "templates/own/night-card/params.schema.json",
+      "schemaStatus": "complete",
+      "presets": [
+        {
+          "id": "default",
+          "path": "templates/own/night-card/presets/default.json",
+          "note": "8 段示例，56s，覆盖全部六个版式"
+        }
+      ],
+      "defaultPreset": "templates/own/night-card/presets/default.json",
+      "audio": {
+        "required": false,
+        "note": "情绪向卡片默认无声，正文即大字；有旁白时给 m4a，字幕走 subtitle 口径"
+      },
+      "extras": {
+        "theme": [
+          "night"
+        ],
+        "layouts": [
+          "cover",
+          "statement",
+          "quote",
+          "contrast",
+          "number",
+          "outro"
+        ]
+      },
+      "entry": {
+        "type": "cli",
+        "script": "render.mjs"
+      }
+    },
+    {
       "id": "paper",
       "name": "纸感口播",
       "description": "从 paper-perspective 成片逐像素反推的 8 个版式：hero / point / number / compare / steps / quote / checklist / outro。适合知识口播、单主持、强排版。",
@@ -48,6 +483,10 @@
           "cut",
           "fade"
         ]
+      },
+      "entry": {
+        "type": "cli",
+        "script": "render.mjs"
       }
     },
     {
@@ -126,335 +565,10 @@
       "extras": {
         "theme": "任意强调色对象",
         "dualHost": "同一份 kit.js/layouts.js 可跑浏览器宿主"
-      }
-    },
-    {
-      "id": "desk",
-      "name": "桌面片场",
-      "description": "把整台 Mac 桌面重写成模板：桌面骨架 + 16 个版式镜头 + photo/clip 两类素材镜头，13 项量化自检。适合软件演示、产品叙事。",
-      "contentModel": {
-        "name": "shots[]",
-        "required": true,
-        "note": "需要 fps / durationSeconds / shots；chapters 决定壁纸与整屏翻牌，brand 是右下角角标。"
       },
-      "output": {
-        "width": 1440,
-        "height": 1080,
-        "fpsChoices": [
-          24,
-          30,
-          60
-        ],
-        "fpsDefault": 60
-      },
-      "paramsSchema": "kits/desk/params.schema.json",
-      "schemaStatus": "complete",
-      "presets": [
-        {
-          "id": "demo",
-          "path": "content/demo.json",
-          "note": "基础演示，无配音"
-        },
-        {
-          "id": "demo-voiced",
-          "path": "content/demo-voiced.json",
-          "note": "带配音对齐"
-        },
-        {
-          "id": "hotpot",
-          "path": "content/hotpot.json",
-          "note": "实拍 + 分镜混合"
-        },
-        {
-          "id": "nanjing",
-          "path": "content/nanjing.json",
-          "note": "城市叙事"
-        },
-        {
-          "id": "uv",
-          "path": "content/uv.json",
-          "note": "单概念讲解"
-        }
-      ],
-      "defaultPreset": "content/demo.json",
-      "audio": {
-        "required": false,
-        "note": "口播片必须给；`-voiced` 系列参数已按配音时长重排"
-      },
-      "extras": {
-        "presenter": "头像路径或 off",
-        "profiles": [
-          "standard",
-          "quality"
-        ]
-      }
-    },
-    {
-      "id": "editorial",
-      "name": "杂志剪辑",
-      "description": "8 段分镜的杂志排版：强网格、大字号标题、色块分区。改造自 MIT 项目，适合观点输出与品牌短片。",
-      "contentModel": {
-        "name": "scenes[]",
-        "required": true,
-        "note": "需要 scenes 与 durationSeconds；brand / accent 可选。参数文件在 content/inputs-*.json。"
-      },
-      "output": {
-        "width": 1920,
-        "height": 1080,
-        "fpsChoices": [
-          24,
-          30,
-          60
-        ],
-        "fpsDefault": 24,
-        "fpsNote": "实际帧率由 params.fps 决定，inputs-v6 是 24fps"
-      },
-      "paramsSchema": "kits/editorial/params.schema.json",
-      "schemaStatus": "complete",
-      "schemaNote": "schema 只约束 scenes 的骨架（type/t0/t1）与少量全局字段；args 内部结构由各版式自己决定，不在 schema 里锁死。",
-      "presets": [
-        {
-          "id": "inputs-v6",
-          "path": "content/inputs-v6.json",
-          "note": "6 版分镜"
-        },
-        {
-          "id": "inputs-v8t",
-          "path": "content/inputs-v8t.json",
-          "note": "8 版分镜"
-        },
-        {
-          "id": "inputs-kit",
-          "path": "content/inputs-kit.json",
-          "note": "纸感同源内容"
-        },
-        {
-          "id": "inputs-md",
-          "path": "content/inputs-md.json",
-          "note": "基准用固定内容"
-        }
-      ],
-      "defaultPreset": "content/inputs-v6.json",
-      "audio": {
-        "required": false,
-        "note": "口播片必须给；无音轨只出画面"
-      },
-      "extras": {
-        "theme": "强调色",
-        "skin": "排版风格",
-        "avatar": "头像路径或 off"
-      }
-    },
-    {
-      "id": "mg",
-      "name": "MG 动效",
-      "description": "5 类镜头的动效验证：文字 / 档案时间轴 / 黑洞 2.5D 粒子 / 等轴积木 / 信息卡，带确定性自检。2026-11-10 后未改动。",
-      "contentModel": {
-        "name": "params.json",
-        "required": true,
-        "note": "结构自成一套（非 scenes/shots/segments），以 kits/mg/params.json 为准。"
-      },
-      "output": {
-        "width": 1920,
-        "height": 1080,
-        "fpsChoices": [
-          24,
-          30,
-          60
-        ],
-        "fpsDefault": 60
-      },
-      "paramsSchema": "kits/mg/params.schema.json",
-      "schemaStatus": "complete",
-      "schemaNote": "schema 只约束 scenes 骨架与画幅字段；镜头参数在 args 里，结构随 type 变化，不在 schema 里锁死。",
-      "presets": [
-        {
-          "id": "default",
-          "path": "kits/mg/params.json",
-          "note": "唯一参数集"
-        }
-      ],
-      "defaultPreset": "kits/mg/params.json",
-      "audio": {
-        "required": false,
-        "note": "无口播，通常不出音轨"
-      },
-      "extras": {}
-    },
-    {
-      "id": "clay",
-      "name": "黏土图示",
-      "description": "换宿主自 knowledge-explainer-clay v2.7.4 的 7 种机制：split-merge / interface-bind / shear-break / lineage-track / channel-transport / focus-return / alternative-compare。数值驱动的黏土物体形变，适合过程解释、科学图示、拆解合并。",
-      "contentModel": {
-        "name": "segments[]",
-        "required": true,
-        "note": "每个 segment 是一条 recipe：type 填机制名，dur 为该段时长，再带 title / nodes[{id,label,value}] / unit / valueUnit / decimals 与该机制专有字段。captions 可选（本套自带字幕绘制）。"
-      },
-      "output": {
-        "width": 1920,
-        "height": 1080,
-        "fpsChoices": [
-          30,
-          60
-        ],
-        "fpsDefault": 30
-      },
-      "paramsSchema": "kits/clay/params.schema.json",
-      "schemaStatus": "complete",
-      "presets": [
-        {
-          "id": "default",
-          "path": "kits/clay/presets/default.json",
-          "note": "7 段 / 70s，覆盖全部机制"
-        }
-      ],
-      "defaultPreset": "kits/clay/presets/default.json",
-      "audio": {
-        "required": false,
-        "note": "上游片为无声演示；有口播时给 --audio，音轨会转 aac"
-      },
-      "extras": {
-        "theme": [
-          "clay"
-        ],
-        "transition": [
-          "cut"
-        ]
-      }
-    },
-    {
-      "id": "collage",
-      "name": "屏拼贴（深色科技风宣传片）",
-      "description": "半蒸馏自 motiongit.com/motiongit/motiongit-promo-main（template-585，v2.6.5-alpha.1）的 11 段结构：hero / recipe / open / pack / flow / adapt / reuse / spec / share / finale / end。深色底 + 全息字标 + 编辑器风 HUD + 底部时间轴，适合产品发布、工具介绍、规格说明。上游是 html-canvas/1 且渲染核 AES-256-GCM 加密，换宿主不成立，故走半蒸馏（自写 Skia 渲染层）。",
-      "contentModel": {
-        "name": "scenes[]",
-        "required": true,
-        "note": "每段 {type, t0, t1, args}。args 承载该段全部内容：hero 是 chip/kline/klineGrad/decode，recipe 是 cards[] + 对照文案，flow 是 steps[] + messages[]，spec 是 tools[]，share 是 branches[]。完整字段见 params.schema.json 的 x-sceneArgs。文案里用 klineGrad 指定要渐变的那一段（必须是子串）。"
-      },
-      "output": {
-        "width": 1920,
-        "height": 1080,
-        "fpsChoices": [
-          30,
-          60
-        ],
-        "fpsDefault": 60
-      },
-      "paramsSchema": "kits/collage/params.schema.json",
-      "schemaStatus": "complete",
-      "presets": [
-        {
-          "id": "cutduo",
-          "path": "kits/collage/presets/cutduo.json",
-          "note": "11 段 / 57s，本仓自己的短片（成片 out/cutduo-film-57s.mp4）；就是一份 params JSON"
-        },
-        {
-          "id": "demo",
-          "path": "kits/collage/presets/demo.json",
-          "note": "11 段 / 57s，参考片复刻件（唯一保留 MotionGit 品牌的地方，用于逐帧对位）"
-        },
-        {
-          "id": "capability-test",
-          "path": "kits/collage/presets/capability-test.json",
-          "note": "能力验收件：7 个静止点加停留（57→68.5s）+ 真实素材接 adapt/reuse，用来验 hold 与 media"
-        }
-      ],
-      "defaultPreset": "kits/collage/presets/cutduo.json",
-      "audio": {
-        "required": false,
-        "note": "params.audio 支持事件轨：cues[{at,src,gain}] 按绝对秒定位，src 可指向文件或内置合成音 （whoosh/tick/impact/rise，程序合成，非上游音效）。mode=effects-only 只出音效，external-music 叠配乐，有 voice 时自动 sidechain ducking。命令行 --audio 优先级更高。"
-      },
-      "extras": {
-        "theme": [],
-        "transition": [
-          "cut"
-        ]
-      }
-    },
-    {
-      "id": "night-card",
-      "name": "夜色卡片",
-      "description": "竖屏 9:16 情绪向卡片：一屏一句话，深色底加暖金点缀，四角取景框 + 底部进度线。六个版式 cover / statement / quote / contrast / number / outro，段长中位 7s，适合深夜独白、情绪向口播。",
-      "contentModel": {
-        "name": "segments[]",
-        "required": true,
-        "note": "每段需要 type / dur 与对应版式参数（cover: title/sub/kicker；statement: text/note；quote: text/from；contrast: before/after；number: value/label/note；outro: title/sub/brand）。durationSeconds 必须等于 dur 之和。"
-      },
-      "output": {
-        "width": 1080,
-        "height": 1920,
-        "fpsChoices": [
-          24,
-          30,
-          60
-        ],
-        "fpsDefault": 30
-      },
-      "paramsSchema": "templates/own/night-card/params.schema.json",
-      "schemaStatus": "complete",
-      "presets": [
-        {
-          "id": "default",
-          "path": "templates/own/night-card/presets/default.json",
-          "note": "8 段示例，56s，覆盖全部六个版式"
-        }
-      ],
-      "defaultPreset": "templates/own/night-card/presets/default.json",
-      "audio": {
-        "required": false,
-        "note": "情绪向卡片默认无声，正文即大字；有旁白时给 m4a，字幕走 subtitle 口径"
-      },
-      "extras": {
-        "theme": [
-          "night"
-        ],
-        "layouts": [
-          "cover",
-          "statement",
-          "quote",
-          "contrast",
-          "number",
-          "outro"
-        ]
-      }
-    },
-    {
-      "id": "iso",
-      "name": "等轴测爆炸大片（产品拆装）",
-      "description": "蒸馏自 Warrickchenxin/iso-explode-film（等轴爆炸大片 skill）的内容模型与镜头库：把一件产品拆成几十个凸块零件，按层爆炸、阵列飞散、核心件特写拆解、机构按压、夹层推镜，最后一层层合拢。0.25 s 甩镜做转场、停留时镜头缓慢漂移、最后半秒静止。上游是 SVG + Chrome 逐帧截图 + numpy 透视合成，本实现整条链压进 Skia Canvas2D（无浏览器、无中间帧），零件几何与整支分镜全部是声明式 JSON，改产品不改代码。",
-      "contentModel": {
-        "name": "scenes[] + content{layers,parts,arrays,hero,mech}",
-        "required": true,
-        "note": "scenes 是九种镜头（hero/rise/explode/part/action/array/stack/assemble/end），每段 {type,t0,t1,args}；content 是产品本体：layers 从上到下、parts 是凸块（box/cyl/prism）、arrays 是重复件、hero 是被拆的核心件、mech 是机构动作。几何即一切：画面里只有零件，不贴图。零件之间不许穿插——穿插会让画家算法的遮挡顺序无解。"
-      },
-      "output": {
-        "width": 1920,
-        "height": 1080,
-        "fpsChoices": [
-          30,
-          60
-        ],
-        "fpsDefault": 60
-      },
-      "paramsSchema": "kits/iso/params.schema.json",
-      "schemaStatus": "complete",
-      "presets": [
-        {
-          "id": "powerbank",
-          "path": "content/iso-powerbank/params.json",
-          "note": "PB-1 移动电源 · 7 层 36 件 · 25.6s · 成片 out/iso-powerbank.mp4"
-        }
-      ],
-      "defaultPreset": "content/iso-powerbank/params.json",
-      "audio": {
-        "required": false,
-        "note": "本支默认无声（几何与运镜本身就是节奏）。要配乐可走 params.audio 的 external-music，或先出无声片再用 tools/audio-bed.mjs 叠。上游的配乐是 film/synth.py 代码合成（Am–F–C–G / 120 BPM），本仓不移植。"
-      },
-      "extras": {
-        "look": [
-          "split",
-          "dark"
-        ]
+      "entry": {
+        "type": "cli",
+        "script": "render.mjs"
       }
     }
   ]

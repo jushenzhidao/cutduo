@@ -1,7 +1,7 @@
 # API · agent 契约
 
 > 这份文档定义的是**契约**，不是命令手册。命令会变，契约不变。
-> 五个动词 `capabilities / describe / validate / render / probe / gate` 是唯一的对外面，
+> 六个同步动词 `capabilities / describe / validate / render / probe / gate` 是唯一的对外面，
 > CLI 只是它的一个宿主。同一个 `api/index.mjs` 可以再挂 HTTP 或 MCP，不需要改任何 kit。
 
 ## 为什么要有这一层
@@ -15,11 +15,11 @@
 
 api first 的做法是反过来：**先把契约定死，实现按契约补齐**。具体三个决定：
 
-1. **能力清单是数据，不是文档**。`api/capabilities.json` 由代码生成，五支的 id、画幅、帧率、内容模型、schema 状态都可枚举。agent 不需要读 Markdown。
-2. **回执只信探测**。帧数/时长/分辨率一律由 ffprobe 读产物得出，不解析渲染器的 stdout。五支的实现差异因此不会泄漏到回执字段上。
+1. **能力清单是数据，不是文档**。`api/capabilities.json` 由代码生成，各支的 id、画幅、帧率、内容模型、schema 状态都可枚举。agent 不需要读 Markdown。
+2. **回执只信探测**。帧数/时长/分辨率一律由 ffprobe 读产物得出，不解析渲染器的 stdout。各支的实现差异因此不会泄漏到回执字段上。
 3. **错误必须可纠正**。每个错误带 `code`（可分支）、`hint`（为什么）、`fix`（改什么）。只写 `throw new Error('找不到 kit')` 的调用方只能把原文甩给用户，agent 无法自我修复。
 
-## 五个动词
+## 六个同步动词 + 四个异步任务动词
 
 | 动词 | 语义 | 是否出片 | 失败行为 |
 |---|---|---|---|
@@ -117,14 +117,14 @@ node api/cli.mjs cancel --id "$ID"
 | `preset` | 三选一 | 具名预设，必须来自该 kit 的 `presets[].id` |
 | `audio` | 否 | 音轨。口播片必给；纯画面片省略 |
 | `out` | 否 | 产物路径，默认 `out/<kit>.mp4` |
-| `overrides` | 否 | **只放渲染超参**：`fps` `workers` `crf` `preset` `pipe` `at` `theme` `transition` |
+| `overrides` | 否 | **只放渲染超参**：`fps` `workers` `crf` `preset` `pipe` `at` `theme` `transition`。数字字段接受数字或数字字符串，进 API 后统一转成 number；`fps` 1–240、`workers` 1–64、`crf` 0–51、`at` ≥0，越界直接 `BAD_REQUEST` |
 
 > `overrides` 里出现内容字段（文案、分镜）会被拒。内容只能走 `params`，否则回执里的
 > `request` 与实际输入对不上，回执就不能用于重放。
 
 ## 回执
 
-字段名一旦定下就是契约，五支必须一致。
+字段名一旦定下就是契约，所有 kit 必须一致。
 
 ```json
 {
@@ -145,7 +145,7 @@ node api/cli.mjs cancel --id "$ID"
 ```
 
 - `output.*` 全部来自 ffprobe 读产物，**不是**渲染器打印的计划值。
-- `unvalidated: true` 表示该支没有 `params.schema.json`，参数未被校验（当前是 `editorial` 与 `mg`）。
+- `unvalidated: true` 表示该支没有 `params.schema.json`，参数未被校验（当前所有内置 kit 都有 schema；三件套模板按自身声明）。
 - `timings.framesPerSecond` 是有效吞吐（帧数 / 墙钟），可直接用于横向比较，但**必须同片比较**。
 
 ## 错误
@@ -157,7 +157,7 @@ node api/cli.mjs cancel --id "$ID"
     "code": "KIT_NOT_FOUND",
     "message": "未知 kit：nope",
     "hint": "kit 必须取自 capabilities() 返回的 id 或已知别名",
-    "fix": "可用：paper / science / desk / editorial / mg",
+    "fix": "可用：见 capabilities().kits[].id 或 details.available",
     "details": { "requested": "nope", "available": ["paper", "..."] }
   }
 }
@@ -193,7 +193,7 @@ node api/cli.mjs gate out/demo.mp4 --json
 ```js
 import { capabilities, describe, validate, render, probe, gate } from './api/index.mjs';
 
-const { kits } = capabilities();                 // 5 支
+const { kits } = capabilities();                 // 全部 kit
 const r = await render({ kit: 'paper', preset: 'v8t' });
 console.log(r.output.frames, r.timings.framesPerSecond);
 ```
@@ -203,23 +203,26 @@ console.log(r.output.frames, r.timings.framesPerSecond);
 ```
 api/index.mjs        ← 唯一的业务实现
   ├─ api/cli.mjs     ← 宿主 1：命令行（本仓默认）
-  ├─ api/kits/*.mjs  ← 五支 adapter：把各自的 CLI 包成契约
-  └─ （待建）HTTP / MCP 宿主：复用同一份实现，不改 kit
+  ├─ api/kits/*.mjs  ← 每支一个 adapter：把各自 CLI 包成契约（目录自动发现）
+  ├─ mcp/server.mjs  ← 宿主 2：Streamable HTTP MCP
+  └─ web/ + harness/ ← 宿主 3/4：自助台与评测闭环（复用同一实现）
 ```
 
-**新增一支 kit 只需要**：写 `api/kits/<name>.mjs` 导出 `capability` 与 `adapter`，
-在 `api/registry.mjs` 的 `MODULES` 里加一行。CLI、文档、能力清单、冒烟全部自动跟上。
+**新增一支 kit 只需要**：写 `api/kits/<id>.mjs` 导出 `capability` 与 `adapter`
+（文件名必须等于 `capability.id`，`api/registry.mjs` 会扫描目录自动注册），
+再跑 `npm run inv && npm run check`。CLI、能力清单、文档清单、冒烟全部自动跟上。
+漏接会在两项检查里直接 FAIL：`kits/ 有目录没接 API` 与 `inventory 过期`。
 
 ## 已知限制
 
 1. **并发上限是启发式估算**。`maxConcurrentJobs` 按核数除以 8 得出，不看内存与当前负载。
    机器上同时跑别的重活时，这个值偏乐观；反过来在只跑本仓的机器上偏保守。
    `CUTDUO_MAX_JOBS` 可以覆盖，但要自己承担后果。
-2. **schema 只约束骨架**。五支现在都有 `params.schema.json`，但都刻意不设
+2. **schema 只约束骨架**。所有内置 kit 现在都有 `params.schema.json`，但都刻意不设
    `additionalProperties: false`，且 `scenes[].args` 的内部结构不校验——因为各版式的 args
    形态完全不同，锁死会把历史参数全部误杀。所以「schema 通过」只意味着骨架对了，
    字段拼错仍可能静默忽略。
-3. **五支走子进程**。为的是隔离与不动实现；实测进程启动约 70ms（`render` 6.37s vs 端到端 6.5s）。
+3. **各支走子进程**。为的是隔离与不动实现；实测进程启动约 70ms（`render` 6.37s vs 端到端 6.5s）。
    若将来要省，把 `_runner.mjs` 的 spawn 换成 import 即可，契约不变。
 4. **overrides 白名单是硬编码**。新增可覆盖的超参要同时改 `contract.mjs` 的 `ALLOWED_OVERRIDES`，
    否则会被拒——这是刻意的，防止内容与超参混在同一个字段里。

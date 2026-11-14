@@ -106,6 +106,22 @@
         palette: null,
       });
 
+      // 底部压暗（可选）：白字压在浅色场景（纸面/奶油底）上对比不足。
+      // 默认 scrim=0 不画，既有参数位不动；设了才铺一层暖灰渐变，且整片常亮，
+      // 不跟着单句歌词出现/消失——那样两句之间会闪一条带子。
+      const ls = state.lyricStyle || {};
+      const scrim = Number(ls.scrim) || 0;
+      if (scrim > 0) {
+        const y0 = H - (Number(ls.bottom) || 96) - 150;
+        const g = ctx.createLinearGradient(0, y0, 0, H);
+        g.addColorStop(0, 'rgba(46,30,16,0)');
+        g.addColorStop(1, 'rgba(46,30,16,' + Math.min(0.6, scrim).toFixed(3) + ')');
+        ctx.save();
+        ctx.fillStyle = g;
+        ctx.fillRect(0, y0, W, H - y0);
+        ctx.restore();
+      }
+
       // 三类文字固定顺序：大字在底、纸条压人、歌词条最上
       const c = state.content;
       for (const w of c.keywords || []) MK.bigWord(ctx, W, H, w, t);

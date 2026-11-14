@@ -41,6 +41,16 @@ node src/gate.mjs out/cute-mv.mp4
 
 `scenes` 是 9 个固定镜头，**不要增删**；只允许调 `args.x / y / s`（机位）与 `pose`（动作名）。
 
+### 歌词条的三个坑（2026-11-15 实测）
+
+| 症状 | 原因 | 修法 |
+|---|---|---|
+| 白字压在浅底上看不清 | 纸面/奶油底亮度接近 `#FFFFFF`，投影只有 18px 模糊 | `lyricStyle.scrim: 0.35–0.5`（默认 0＝不画）铺底部暖灰渐变；整片常亮，不跟单句闪烁 |
+| 字幕横穿角色小腿、盖住鞋 | 人物脚底 `y≈962`，`bottom:96` 时字号 62 的顶边到 `y≈922` | 歌词条下移到 `bottom: 58`、字号 58，落到鞋线以下 |
+| 改了 `lyricStyle` 完全没生效 | 根入口 `stageContent` 原先不透传该字段（只传 scenes/content/theme） | 已在 `render.mjs` 两处补 `lyricStyle: P.lyricStyle` |
+
+`scrim` 已进 `params.schema.json`（0–0.6）。既有预设不写该字段 ⇒ 出片逐帧不变（实测同帧 md5 一致）。
+
 ## 三、文件
 
 | 文件 | 职责 |

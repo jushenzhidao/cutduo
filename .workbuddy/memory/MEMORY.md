@@ -23,6 +23,8 @@
 先问用途再问技术，默认 Chrome，别把换宿主当性能手段：一次性出片 → Chrome（0）；短期反复且源码可读 +
 Canvas2D → 换宿主（几小时）；长期产线 → 半蒸馏（蒸**内容模型**，不蒸视觉代码，2–4 天）。
 
+换宿主的真实成本**不在能不能跑，在角色/道具是否也被写死**：先渲 4–6 张关键帧再写文案，
+否则会像 lemo 那样文案写完后被开箱镜头、充电座、电线全部否决。
 吸收外来项目（hypit / vibe-knowledge / anything2explainer / iso-explode-film）：**先定性它是什么（引擎？方法包？
 素材包？），再分"能平移的规则"与"不可平移的假设"**，产出一份 `docs/<名>-蒸馏-<日期>.md` + 至少一个能跑的检查工具，
 不整仓拷贝。anything2explainer 是方法包，三条不可平移：帧率基线（上游 0.1s）、底色极性（`lum>120` 取前景，
@@ -82,6 +84,8 @@ Canvas2D → 换宿主（几小时）；长期产线 → 半蒸馏（蒸**内容
   是铺底**（鼓组有空档 ⇒ 判"无铺底"FAIL）；各曲风电平差 8–9 dB，TRIM 要乘在**包络上**（hiphop ×2.6），不能乘
   在 amix 后。`content/<片>/bgm.mjs` 是 paper 遗留，别给 science 用。
 - `vo.py` 的 `mouthCurve` 是死数据（写在 preset 顶层）⇒ 口型一直走模拟。
+- **macOS 原生 `aac` 编码器会把真峰值抬起约 10 dB**（源 −2.2 dBFS → 解码 +7.7；同段 `aac_at` 为 −1.8）。
+  一律 `-c:a aac_at`，且**编码后复测峰值**；`loudnorm` 单遍动态模式压不住。
 
 ## 八、半蒸馏与换宿主
 
@@ -100,6 +104,8 @@ Canvas2D → 换宿主（几小时）；长期产线 → 半蒸馏（蒸**内容
   只信 ffprobe；错误必带 `code/hint/fix`；validate 永不抛。`overrides` 只放渲染超参，内容走 `params`。
 - **validate 支持 `if/then/else`**（补之前 paper 9 组必填约束全失效）；仍不支持 `$ref`/`format`。
 - 异步 job：一 job 一进程；**判终态先读 stdout 不看 pid**（pid 复用致永久 running）；`status()` 会拉队首。
+- **注册表自动发现（2026-11-15）**：`api/kits/*.mjs` 文件名=capability.id，加 kit 不改 registry；`npm run inv` 生成 `docs/inventory.{json,md}`，`npm run check` 带 15 项文档漂移检查。容器打包必须含 `templates/own`（night-card 依赖），`.dockerignore` 只排 fixtures。
+- **模板接入（2026-11-15）**：`node tools/intake.mjs plan --source <目录或 .motion>` 只读分类/阻塞/提取，产物 `out/intake/<id>/`；`node tools/intake-apply.mjs --plan ... --yes` 落机械动作（rehost 生成 adapter，semi/full 生成骨架；默认 dry-run、失败撤回 adapter）。自测 `npm run intake:selftest` / `intake:apply:selftest`。画面语言仍要人写。 许可/协议按用户指令不作为阻断项（保留 LICENSE/出处，凭据 personal 仍排除）；vendor 源码用 `tools/intake-copy.mjs` 抽到 `refs/replicas/`，抽取物不是可直出模板。
 
 ## 十、仓库与内容
 

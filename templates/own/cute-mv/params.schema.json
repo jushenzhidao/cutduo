@@ -62,6 +62,12 @@
         },
         "color": {
           "type": "string"
+        },
+        "scrim": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.6,
+          "description": "底部压暗强度。0（缺省）=不画；浅色场景（纸面/奶油底）上白字对比不足时设 0.35–0.5"
         }
       }
     },

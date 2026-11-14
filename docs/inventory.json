@@ -1,0 +1,313 @@
+{
+  "schema": "cutduo-inventory/1",
+  "note": "由 tools/inventory.mjs 生成，不要手改。uid 是唯一键（kit:<id> / template:<id>）；同名时以 kind 区分。改版式后跑 npm run inv。",
+  "counts": {
+    "kits": 9,
+    "kitsInApi": 9,
+    "templatesRenderable": 4,
+    "templatesInApi": 1,
+    "apiRegistered": 10,
+    "totalRenderable": 13
+  },
+  "styles": [
+    {
+      "uid": "kit:clay",
+      "id": "clay",
+      "kind": "kit",
+      "renderable": true,
+      "api": true,
+      "entry": "render.mjs --kit clay",
+      "entryType": "root-cli",
+      "defaultPreset": "kits/clay/presets/default.json",
+      "schemaStatus": "complete",
+      "presets": 1,
+      "output": {
+        "width": 1920,
+        "height": 1080,
+        "fpsChoices": [
+          30,
+          60
+        ],
+        "fpsDefault": 30
+      }
+    },
+    {
+      "uid": "kit:collage",
+      "id": "collage",
+      "kind": "kit",
+      "renderable": true,
+      "api": true,
+      "entry": "render.mjs --kit collage",
+      "entryType": "root-cli",
+      "defaultPreset": "kits/collage/presets/cutduo.json",
+      "schemaStatus": "complete",
+      "presets": 3,
+      "output": {
+        "width": 1920,
+        "height": 1080,
+        "fpsChoices": [
+          30,
+          60
+        ],
+        "fpsDefault": 60
+      }
+    },
+    {
+      "uid": "kit:desk",
+      "id": "desk",
+      "kind": "kit",
+      "renderable": true,
+      "api": true,
+      "entry": "kits/desk/render.mjs --params <preset>",
+      "entryType": "kit-cli",
+      "defaultPreset": "content/demo.json",
+      "schemaStatus": "complete",
+      "presets": 5,
+      "output": {
+        "width": 1440,
+        "height": 1080,
+        "fpsChoices": [
+          24,
+          30,
+          60
+        ],
+        "fpsDefault": 60
+      }
+    },
+    {
+      "uid": "kit:diagram",
+      "id": "diagram",
+      "kind": "kit",
+      "renderable": true,
+      "api": true,
+      "entry": "kits/diagram/render.mjs --params <preset>",
+      "entryType": "kit-cli",
+      "defaultPreset": "kits/diagram/presets/default.json",
+      "schemaStatus": "complete",
+      "presets": 5,
+      "output": {
+        "width": 1920,
+        "height": 1080,
+        "fpsChoices": [
+          30,
+          60
+        ],
+        "fpsDefault": 30
+      }
+    },
+    {
+      "uid": "kit:editorial",
+      "id": "editorial",
+      "kind": "kit",
+      "renderable": true,
+      "api": true,
+      "entry": "kits/editorial/canvas-editorial.mjs --params <preset>",
+      "entryType": "kit-cli",
+      "defaultPreset": "content/inputs-v6.json",
+      "schemaStatus": "complete",
+      "presets": 4,
+      "output": {
+        "width": 1920,
+        "height": 1080,
+        "fpsChoices": [
+          24,
+          30,
+          60
+        ],
+        "fpsDefault": 24,
+        "fpsNote": "实际帧率由 params.fps 决定，inputs-v6 是 24fps"
+      }
+    },
+    {
+      "uid": "kit:iso",
+      "id": "iso",
+      "kind": "kit",
+      "renderable": true,
+      "api": true,
+      "entry": "render.mjs --kit iso",
+      "entryType": "root-cli",
+      "defaultPreset": "content/iso-powerbank/params.json",
+      "schemaStatus": "complete",
+      "presets": 1,
+      "output": {
+        "width": 1920,
+        "height": 1080,
+        "fpsChoices": [
+          30,
+          60
+        ],
+        "fpsDefault": 60
+      }
+    },
+    {
+      "uid": "kit:mg",
+      "id": "mg",
+      "kind": "kit",
+      "renderable": true,
+      "api": true,
+      "entry": "kits/mg/render.mjs --params <preset>",
+      "entryType": "kit-cli",
+      "defaultPreset": "kits/mg/params.json",
+      "schemaStatus": "complete",
+      "presets": 1,
+      "output": {
+        "width": 1920,
+        "height": 1080,
+        "fpsChoices": [
+          24,
+          30,
+          60
+        ],
+        "fpsDefault": 60
+      }
+    },
+    {
+      "uid": "kit:paper",
+      "id": "paper",
+      "kind": "kit",
+      "renderable": true,
+      "api": true,
+      "entry": "render.mjs --kit paper",
+      "entryType": "root-cli",
+      "defaultPreset": "kits/paper/presets/v8t.json",
+      "schemaStatus": "complete",
+      "presets": 1,
+      "output": {
+        "width": 1920,
+        "height": 1080,
+        "fpsChoices": [
+          24,
+          30,
+          60
+        ],
+        "fpsDefault": 60
+      }
+    },
+    {
+      "uid": "kit:science",
+      "id": "science",
+      "kind": "kit",
+      "renderable": true,
+      "api": true,
+      "entry": "render.mjs --kit science",
+      "entryType": "root-cli",
+      "defaultPreset": "kits/science/template/presets/demo.json",
+      "schemaStatus": "complete",
+      "presets": 7,
+      "output": {
+        "width": 1920,
+        "height": 1080,
+        "fpsChoices": [
+          24,
+          30,
+          60
+        ],
+        "fpsDefault": 30
+      }
+    },
+    {
+      "uid": "template:chalkboard",
+      "id": "chalkboard",
+      "kind": "template",
+      "renderable": true,
+      "api": false,
+      "entry": "render.mjs --kit chalkboard",
+      "entryType": "root-cli",
+      "defaultPreset": "templates/own/chalkboard/presets/default.json",
+      "schemaStatus": "template",
+      "presets": 0,
+      "output": {
+        "width": 1920,
+        "height": 1080
+      }
+    },
+    {
+      "uid": "template:cute-mv",
+      "id": "cute-mv",
+      "kind": "template",
+      "renderable": true,
+      "api": false,
+      "entry": "render.mjs --kit cute-mv",
+      "entryType": "root-cli",
+      "defaultPreset": "templates/own/cute-mv/presets/default.json",
+      "schemaStatus": "template",
+      "presets": 0,
+      "output": {
+        "width": 1920,
+        "height": 1080
+      }
+    },
+    {
+      "uid": "template:distill",
+      "id": "distill",
+      "kind": "template",
+      "renderable": false,
+      "api": false,
+      "entry": null,
+      "entryType": "none",
+      "defaultPreset": null,
+      "schemaStatus": "n/a",
+      "presets": 0,
+      "output": {
+        "width": 1280,
+        "height": 720
+      },
+      "note": "不是三件套（缺 kit.js/layouts.js/stage.js），不能走 --kit 直出"
+    },
+    {
+      "uid": "template:editorial",
+      "id": "editorial",
+      "kind": "template",
+      "renderable": false,
+      "api": false,
+      "entry": null,
+      "entryType": "none",
+      "defaultPreset": null,
+      "schemaStatus": "n/a",
+      "presets": 0,
+      "output": {
+        "width": 1920,
+        "height": 1080
+      },
+      "note": "不是三件套（缺 kit.js/layouts.js/stage.js），不能走 --kit 直出"
+    },
+    {
+      "uid": "template:night-card",
+      "id": "night-card",
+      "kind": "template",
+      "renderable": true,
+      "api": true,
+      "entry": "render.mjs --kit night-card",
+      "entryType": "root-cli",
+      "defaultPreset": "templates/own/night-card/presets/default.json",
+      "schemaStatus": "complete",
+      "presets": 1,
+      "output": {
+        "width": 1080,
+        "height": 1920,
+        "fpsChoices": [
+          24,
+          30,
+          60
+        ],
+        "fpsDefault": 30
+      }
+    },
+    {
+      "uid": "template:sketchnote",
+      "id": "sketchnote",
+      "kind": "template",
+      "renderable": true,
+      "api": false,
+      "entry": "render.mjs --kit sketchnote",
+      "entryType": "root-cli",
+      "defaultPreset": "templates/own/sketchnote/presets/default.json",
+      "schemaStatus": "template",
+      "presets": 0,
+      "output": {
+        "width": 1920,
+        "height": 1080
+      }
+    }
+  ]
+}

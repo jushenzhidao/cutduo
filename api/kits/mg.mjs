@@ -22,4 +22,5 @@ export const capability = {
 
 export const adapter = cliAdapter(capability, {
   script: 'kits/mg/render.mjs',
+  supportedOverrides: ['fps', 'workers', 'crf', 'preset'],
 });

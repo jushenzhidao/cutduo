@@ -88,10 +88,40 @@ export function normalizeRequest(raw, capability) {
 
   // overrides 只允许改「明显与内容无关」的出片超参，不允许改内容。
   // 内容改动必须走 params，否则回执与实际输入对不上，无法重放。
-  const ALLOWED_OVERRIDES = ['fps', 'workers', 'crf', 'preset', 'pipe', 'probe', 'at', 'theme', 'transition'];
+  const ALLOWED_OVERRIDES = ['fps', 'workers', 'crf', 'preset', 'pipe', 'at', 'theme', 'transition'];
+  // 类型在这里收敛，不留给各 kit 各自 Number()：
+  // CLI 传进来是字符串、JSON 调用方传数字，若不归一，回执里同一字段会有两种类型。
+  const NUMERIC = { fps: [1, 240], workers: [1, 64], crf: [0, 51], at: [0, 86400] };
   const overrides = {};
   for (const k of ALLOWED_OVERRIDES) {
-    if (raw.overrides && raw.overrides[k] !== undefined) overrides[k] = raw.overrides[k];
+    if (!raw.overrides || raw.overrides[k] === undefined) continue;
+    const v = raw.overrides[k];
+    if (NUMERIC[k]) {
+      // 布尔值是 CLI 漏写取值的典型形态（--fps 后面跟了 --out），
+      // Number(true) === 1 会把它当成合法值，必须在转数字前拦掉。
+      const n = (typeof v === 'number' || typeof v === 'string') ? Number(v) : NaN;
+      if (!Number.isFinite(n)) {
+        throw new ApiError(CODE.BAD_REQUEST, `overrides.${k} 必须是数字（收到 ${JSON.stringify(v)}）`, {
+          hint: 'CLI 的 flag 与 JSON 请求在这里统一收敛为数字',
+          fix: `传 ${k}=${NUMERIC[k][0]} 这类数值，不要传空串或单位`,
+        });
+      }
+      const [lo, hi] = NUMERIC[k];
+      if (n < lo || n > hi) {
+        throw new ApiError(CODE.BAD_REQUEST, `overrides.${k} 超出范围：${n}（允许 ${lo}–${hi}）`, {
+          hint: '越界值会在渲染中途才炸，或产出空片',
+          fix: `把 ${k} 改到 ${lo}–${hi}`,
+        });
+      }
+      overrides[k] = n;
+    } else {
+      if (typeof v !== 'string' || !v) {
+        throw new ApiError(CODE.BAD_REQUEST, `overrides.${k} 必须是非空字符串`, {
+          fix: `例如 "${k}": "raw"`,
+        });
+      }
+      overrides[k] = v;
+    }
   }
   const unknown = Object.keys(raw.overrides || {}).filter((k) => !ALLOWED_OVERRIDES.includes(k));
   if (unknown.length) {

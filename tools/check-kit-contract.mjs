@@ -154,7 +154,10 @@ if (process.argv.includes('--json')) {
   process.exit(rows.every((r) => r.ok) ? 0 : 1);
 }
 
-console.log(`\n版式契约体检 · ${rows.length} 支\n`);
+// 口径：只扫 kits/<id>/params.schema.json。science 的 schema 在 template/ 下、
+// night-card 在 templates/own/ 下，二者由 template-smoke / check-template 覆盖；
+// 不把它们混进来，避免两种模板形态用同一套段型提取器误判。
+console.log(`\n版式契约体检 · ${rows.length} 支（kits/ 下有独立 schema 的）\n`);
 let bad = 0;
 for (const r of rows) {
   console.log(`${r.ok ? '✓' : '✗'} ${r.kit.padEnd(12)} ${r.renderer.replace('kits/', '')}`);

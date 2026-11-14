@@ -1,0 +1,145 @@
+{
+  "product": "扫地机",
+  "kind": "居家原理",
+  "title": "没电了，它怎么接着扫",
+  "subtitle": "回充与断点续扫",
+  "hook": {
+    "kicker": "它不是从头再来。",
+    "line": "扫地机扫到一半没电了，为什么不用从头再扫一遍？"
+  },
+  "steps": [
+    {
+      "title": "扫过的格子会记住",
+      "detail": "按房间切片",
+      "icon": "check",
+      "action": "show",
+      "line": "第一步。它把地面切成小格子，扫过一格，就涂掉一格。"
+    },
+    {
+      "title": "剩 15% 就回充",
+      "detail": "红外找充电座",
+      "icon": "dock",
+      "action": "show",
+      "line": "第二步。电量掉到百分之十五，它就开始找充电座。"
+    },
+    {
+      "title": "充完回到断点",
+      "detail": "接着上次那格",
+      "icon": "clock",
+      "action": "show",
+      "line": "第三步。充完电，它回到断点，接着上次那一格继续扫。"
+    }
+  ],
+  "payoff": {
+    "caption": "它扫过的每一格，都记在这张图上",
+    "plan": {
+      "y0": 235,
+      "y1": 990,
+      "dock": [
+        252,
+        986
+      ],
+      "zones": [
+        {
+          "name": "客厅",
+          "x0": 170,
+          "x1": 900,
+          "color": "#F0B4A8"
+        },
+        {
+          "name": "走廊",
+          "x0": 900,
+          "x1": 1120,
+          "color": "#F4EAD5"
+        },
+        {
+          "name": "书房",
+          "x0": 1120,
+          "x1": 1750,
+          "color": "#B5C8DE"
+        }
+      ],
+      "rug": {
+        "x": 520,
+        "y": 700,
+        "rx": 210,
+        "ry": 130,
+        "color": "#CBD08E"
+      },
+      "items": [
+        {
+          "shape": "sofa",
+          "x": 760,
+          "y": 420,
+          "s": 128,
+          "color": "#FBF6EA",
+          "accent": "#6E4A6B"
+        },
+        {
+          "shape": "table",
+          "x": 380,
+          "y": 400,
+          "s": 62,
+          "color": "#FBF6EA",
+          "accent": "#E8B43A"
+        },
+        {
+          "shape": "chair",
+          "x": 1320,
+          "y": 420,
+          "s": 0.9,
+          "color": "#A8704A",
+          "accent": "#F4EAD5"
+        },
+        {
+          "shape": "plant",
+          "x": 1660,
+          "y": 760,
+          "s": 46,
+          "color": "#7E8538"
+        }
+      ]
+    }
+  },
+  "tip": {
+    "label": "Tip",
+    "text": "地上留一根电线，它回充会被绊住",
+    "icon": "cable",
+    "line": "小提示：地上留一根电线，它回充时就会被绊住。"
+  },
+  "outro": {
+    "line": "它不聪明，只是每一步都记下来了。",
+    "cta": "下次看它回充，注意那条虚线"
+  },
+  "palette": {
+    "paper": "#F4EAD5",
+    "ink": "#2B2420",
+    "product": "#3FA7A0",
+    "productDark": "#257A74",
+    "accent": "#E4613F",
+    "hook": "#E8B43A",
+    "steps": [
+      "#7F9CC0",
+      "#E8B43A",
+      "#A7AE5B",
+      "#F0B4A8",
+      "#6E4A6B"
+    ],
+    "tip": "#F0B4A8",
+    "plan": [
+      "#F0B4A8",
+      "#F4EAD5",
+      "#B5C8DE",
+      "#E8B43A"
+    ]
+  },
+  "voice": {
+    "id": "zh-CN-YunyangNeural",
+    "speed": 1.0
+  },
+  "film": {
+    "name": "没电了，它怎么接着扫",
+    "style": "Mid-century Cartoon (lemo-opuscar)",
+    "credits": "模板 lemomo-ai/lemo-opuscar · styles/midcentury-toon；中文内容、配音与配乐为本仓自制"
+  }
+}

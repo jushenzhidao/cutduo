@@ -76,3 +76,7 @@ content/*/params*.json
 !content/iso-mug/params.json
 content/*/audio/
 content/*/ocr.txt
+
+# vendor/lemo：内容母本在 content/，页面目录里的副本不留
+vendor/lemo/styles/*/demo/content-zh.json
+vendor/lemo/styles/*/demo/durs-zh.json

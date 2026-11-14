@@ -1,6 +1,6 @@
 # cutduo
 
-**Skia 直出的视频管线：七套版式，一条命令出片，不经过浏览器。**
+**Skia 直出的视频管线：九套版式，一条命令出片，不经过浏览器。**
 
 Node + [`@napi-rs/canvas`](https://github.com/Brooooooklyn/canvas)（Skia）逐帧绘制 → 管道喂给 ffmpeg 编码 → 合成音轨。
 没有 Chromium，没有截图，没有中间 JPEG。4127 帧 / 1440×1080 / 60fps 出片 12.0 秒，约 **344 fps**，是实时的 5.7 倍。
@@ -18,7 +18,7 @@ node kits/desk/render.mjs --params content/demo.json --audio assets/audio/audio-
 人用 CLI，程序 import API，agent 走远程 MCP。**API 是唯一实现，其余都是宿主。**
 
 ```bash
-node api/cli.mjs capabilities            # 六支版式：id / 画幅 / 帧率 / 内容模型 / schema 状态
+node api/cli.mjs capabilities            # 全部版式：id / 画幅 / 帧率 / 内容模型 / schema 状态
 node api/cli.mjs describe --kit science  # 单支详情，含完整 params schema
 node api/cli.mjs validate --kit paper --preset v8t     # 只校验，不出片
 node api/cli.mjs render   --kit paper --preset v8t --json
@@ -48,22 +48,28 @@ node mcp/server.mjs        # 本地默认 :8787，POST /mcp
 新增一支版式只需在 `api/kits/` 声明 `capability` 与 `adapter`，CLI、能力清单、
 冒烟全部自动跟上——不需要改 API 层。
 
-## 七套版式
+## 九套版式
 
 | 代号 | 中文 | 画幅 | 入口 | 说明 |
 |---|---|---|---|---|
 | `paper` | 纸感 | 1920×1080 | `render.mjs --kit paper` | 从 paper-perspective 成片逐像素反推的 8 个版式 |
-| `science` | 科普 | 1920×1080 | `render.mjs --kit science` | 自建，9 版式，讲解位 37% / 图解释意 33% |
+| `science` | 科普 | 1920×1080 | `render.mjs --kit science` | 自建，8 版式，讲解位 37% / 图解释意 33% |
 | `desk` | 桌面 | 1440×1080@60 | `kits/desk/render.mjs` | 整台 Mac 桌面 + 16 个版式镜头 + 素材镜头 |
 | `editorial` | 杂志 | 1920×1080 | `kits/editorial/canvas-editorial.mjs` | 8 段分镜，改造自 MIT 项目 |
 | `mg` | 通用 | 1920×1080 | `kits/mg/render.mjs` | 5 类镜头的动效验证（2026-11-10 后未改动） |
 | `clay` | 黏土图示 | 1920×1080 | `render.mjs --kit clay` | **换宿主**：原样跑 knowledge-explainer-clay 的 Canvas2D 源码，7 种物体拆合机制 |
 | `collage` | 屏拼贴 | 1920×1080@60 | `render.mjs --kit collage` | **半蒸馏**：借 motiongit-promo-main 的 11 段内容模型，渲染层自写（深色科技风 / 全息字标 / 编辑器 HUD） |
+| `iso` | 等轴爆炸 | 1920×1080@60 | `render.mjs --kit iso` | **全蒸馏**：蒸馏 iso-explode-film 的零件几何与 11 种镜头，JSON 声明式拆装/爆炸/合拢 |
+| `diagram` | 说明性图示 | 1920×1080@30 | `kits/diagram/render.mjs` | **规则吸收**：13 类段型库（数据条/折线/层级/循环/因果/部件…），支持字级锚点；单进程 |
 
-七者共用同一个渲染库，所以**换版式不换速度档**。
+九者共用同一个渲染库，所以**换版式不换速度档**。
+
+完整清单（含三件套模板与 API 注册状态）见 [`docs/inventory.md`](docs/inventory.md)，由 `tools/inventory.mjs` 生成。
 
 前三支是反推/自建，`clay` 是换宿主（不改上游代码，只接管环境与时间轴），
-`collage` 是半蒸馏（上游渲染核加密，只能重写渲染层、保留内容模型）。
+`collage` 是半蒸馏（上游渲染核加密，只能重写渲染层、保留内容模型），
+`iso` 是全蒸馏（只借零件几何与镜头模型，渲染层自写），
+`diagram` 是规则吸收（13 类段型的字段契约与揭示节奏，绘制代码自写）。
 
 > `desk` / `editorial` / `mg` 仍各有自己的 `render.mjs`，但**管道已不再重复**：
 > 「分片 → ffmpeg → concat → 音轨」收进了 `src/pipeline.mjs`，三个入口只剩渲染器构造与画幅参数
@@ -106,12 +112,16 @@ uv run python tools/check-template.py --src templates/own/my-template        # �
 
 | 目录 | 装什么 | 改它会影响 |
 |---|---|---|
-| `api/` | **契约层**：能力清单、参数校验、统一回执、五支 adapter | agent 的全部调用面 |
+| `api/` | **契约层**：能力清单、参数校验、统一回执、每支 kit 一个 adapter | agent 的全部调用面 |
 | `mcp/` | **云服务端 MCP**：Streamable HTTP + 上传 + 产物下载 | 远程调用面 |
 | `deploy/` | compose 与 nginx 配置（端口只绑回环） | 上线方式 |
+| `web/` | 客户自助出片台：表单 → 配音 → 出片 → 下载 | 面向非技术用户的那条链路 |
+| `harness/` | agent 迭代闭环：渲染 → 三门判据 → 结构化建议 → 白名单改参 | 自动调参流程 |
+| `packages/` | 打好的 `.motion` 产物包（不入库） | 分发物 |
+| `deliverables/` | 对外交付物与 QA 证据（报告 / 截图 / 样片） | 交付归档 |
 | `render.mjs` | 主 CLI，按 `--kit` 分发 | 全部版式 |
 | `src/` | 引擎：仓库根探测、字体注册、门禁、参数校验、计时账本 | 全部版式 |
-| `kits/` | 七套版式，每支自治（渲染器 + 参数 schema + presets） | 只影响自己 |
+| `kits/` | 九套版式，每支自治（渲染器 + 参数 schema + presets） | 只影响自己 |
 | `content/` | 分镜 JSON：文案、镜头、素材引用、配音对齐 | 不动代码 |
 | `assets/` | 字体（Noto Sans SC 三档）、配音 m4a、字幕 srt、图片 | 全部版式 |
 | `templates/` | MotionGit `.motion` 格式模板 + 四级接入索引 | 模板格式 |
@@ -164,7 +174,7 @@ node src/gate.mjs out/film.mp4 --require-loudness                   # −16 LUFS
 ## 选哪一支
 
 `kits/STYLES.md` 是版式图鉴：按用途（知识科普 / 界面演示 / 观点长文 / 图示 / 快剪 / 竖屏）
-给首选与次选，并列出各支的段型。**讲法（6 母版）与版式（8 支）正交**，可以自由组合。
+给首选与次选，并列出各支的段型。**讲法（6 母版）与版式（9 支）正交**，可以自由组合。
 
 ## 新建一支片
 
@@ -189,7 +199,7 @@ node tools/render-all.mjs --rebuild  # 走 make.sh，重配音 + 重混音
 ## 改完代码的回归
 
 ```bash
-bash tools/smoke.sh      # 全部版式各出一帧（当前 8 支），> 5KB 视为有效
+bash tools/smoke.sh      # 全部版式各出一帧（9 支 kit + night-card），> 5KB 视为有效
 
 # 单支模板四关：结构 → 单帧渲染 → 打包 → 包校验（骨架会自动实例化）
 python3 tools/template-smoke.py --template kits/science/template
@@ -235,10 +245,16 @@ Skia 是 CPU 光栅化，这类负载吃单核远多于吃核数。
 
 | 想知道什么 | 看哪里 |
 |---|---|
-| agent 找文件 / 任务路由 / 改动纪律 | `docs/AGENTS.md` |
+| agent 找文件 / 任务路由 / 改动纪律 | 根 `AGENTS.md`（短入口）→ `docs/AGENTS.md`（细则） |
+| 现在到底有哪些版式、入口与 API 状态 | `docs/inventory.md`（自动生成） |
+| 吸收一个外部技能该产出什么 | `docs/蒸馏-方法论.md` + `docs/蒸馏-索引.md` |
+| 新加/蒸馏一个模板先做只读评估 | `node tools/intake.mjs plan --source <目录或 .motion 文件>` → `out/intake/<id>/plan.md` |
+| 评估后落机械动作 | `node tools/intake-apply.mjs --plan out/intake/<id>/plan.json`（默认 dry-run；`--yes` 写 adapter/骨架） |
+| 71 个脚本各是干什么的 | `tools/README.md` |
 | 一条模板该停在哪一级（原版→换宿主→半蒸馏→全蒸馏） | `templates/README.md` |
 | MotionGit 模板格式与前因后果 | `docs/MOTIONGIT-PLAYBOOK.md` |
 | 科普版式的结构规律（37/33/10 是怎么来的） | `kits/science/template/SPEC.md` |
 | 编码与并行优化实测 | `docs/编码优化-2026-11-13.md` |
 | `.motion` 模板换宿主到 Skia 的可行性 | `docs/motion换宿主-2026-11-13.md` |
+| 本次深度整理与对抗审查 | `docs/仓库体检-2026-11-15.md` |
 | 仓库体积治理记录 | `docs/仓库清理-*.md` |

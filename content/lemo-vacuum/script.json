@@ -1,0 +1,83 @@
+{
+  "product": "扫地机",
+  "kind": "居家原理",
+  "title": "它怎么知道房间有多大",
+  "subtitle": "一台机器人的三次测量",
+  "hook": {
+    "kicker": "它没有眼睛。",
+    "line": "一台扫地机，是怎么知道你家有多大的？"
+  },
+  "steps": [
+    {
+      "title": "先沿墙蹭一圈",
+      "detail": "碰一下，记一次",
+      "icon": "check",
+      "action": "show",
+      "line": "第一步。它先贴着墙走一圈，碰一下，就记一次边界。"
+    },
+    {
+      "title": "充电座当原点",
+      "detail": "红外信号定位",
+      "icon": "dock",
+      "action": "show",
+      "line": "第二步。充电座发出红外信号，那是它地图上的原点。"
+    },
+    {
+      "title": "中间走弓字",
+      "detail": "隔一个机身",
+      "icon": "gear",
+      "action": "show",
+      "line": "第三步。中间按弓字形来回走，两条线之间，正好隔一个机身。"
+    }
+  ],
+  "payoff": {
+    "caption": "它画的不是地图，是一条能走完的路线",
+    "plan": {
+      "y0": 235,
+      "y1": 990,
+      "dock": [240, 990],
+      "zones": [
+        { "name": "客厅", "x0": 170, "x1": 980, "color": "#F0B4A8" },
+        { "name": "走廊", "x0": 980, "x1": 1180, "color": "#F4EAD5" },
+        { "name": "厨房", "x0": 1180, "x1": 1750, "color": "#CBD08E", "checks": true }
+      ],
+      "rug": { "x": 640, "y": 770, "rx": 196, "ry": 112, "color": "#B5C8DE" },
+      "items": [
+        { "shape": "sofa", "x": 480, "y": 450, "s": 132, "color": "#FBF6EA", "accent": "#6E4A6B" },
+        { "shape": "table", "x": 820, "y": 700, "s": 62, "color": "#FBF6EA", "accent": "#E8B43A" },
+        { "shape": "plant", "x": 300, "y": 330, "s": 44, "color": "#7E8538" },
+        { "shape": "boomerang", "x": 1580, "y": 690, "s": 86, "rot": 0.2, "color": "#A8704A" }
+      ]
+    }
+  },
+  "tip": {
+    "label": "Tip",
+    "text": "地上留一根电线，它就得绕上半天",
+    "icon": "cable",
+    "line": "小提示：地上留一根电线，它就得绕上半天。"
+  },
+  "outro": {
+    "line": "它没有眼睛，是靠走出来的。",
+    "cta": "下次看它沿墙走，那不是乱撞"
+  },
+  "palette": {
+    "paper": "#F4EAD5",
+    "ink": "#2B2420",
+    "product": "#3FA7A0",
+    "productDark": "#257A74",
+    "accent": "#E4613F",
+    "hook": "#E8B43A",
+    "steps": ["#7F9CC0", "#E8B43A", "#A7AE5B", "#F0B4A8", "#6E4A6B"],
+    "tip": "#F0B4A8",
+    "plan": ["#F0B4A8", "#F4EAD5", "#CBD08E", "#E8B43A"]
+  },
+  "voice": {
+    "id": "zh-CN-YunyangNeural",
+    "speed": 1.0
+  },
+  "film": {
+    "name": "它怎么知道房间有多大",
+    "style": "Mid-century Cartoon (lemo-opuscar)",
+    "credits": "模板 lemomo-ai/lemo-opuscar · styles/midcentury-toon；中文内容、配音与配乐为本仓自制"
+  }
+}

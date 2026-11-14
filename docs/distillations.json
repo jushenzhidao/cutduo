@@ -1,0 +1,136 @@
+{
+  "schema": "cutduo-distillations/1",
+  "note": "吸收外部技能的登记表。doc 是分析记录，artifacts 是实际落进本仓的产物；改完跑 npm run distill:check。",
+  "entries": [
+    {
+      "id": "hypit",
+      "date": "2026-11-14",
+      "upstream": "hypit-ai/hypit",
+      "kind": "engine",
+      "depth": "rules",
+      "status": "assessed",
+      "verdict": "只吸收四层时间模型；协议禁止代码移植，且 64 进程 Chromium 与本仓路线不同。",
+      "doc": "docs/hypit-蒸馏-2026-11-14.md",
+      "artifacts": []
+    },
+    {
+      "id": "vibe-knowledge",
+      "date": "2026-11-14",
+      "upstream": "vibe-knowledge skill",
+      "kind": "mixed",
+      "depth": "rules",
+      "status": "partial",
+      "verdict": "吸收 earshot 音效库、三项门禁判据与 6 母版内容模型；风格注册表暂缓。",
+      "doc": "docs/vibe-knowledge-蒸馏-2026-11-14.md",
+      "artifacts": [
+        "src/audio-mix.mjs",
+        "tools/esfx-render.py",
+        "tools/esfx-warm.mjs",
+        "tools/ocr.swift",
+        "tools/facts-check.mjs",
+        "tools/knowledge/guide.json",
+        "tools/knowledge/new.mjs",
+        "docs/音效-earshot-2026-11-14.md"
+      ]
+    },
+    {
+      "id": "anything2explainer",
+      "date": "2026-11-14",
+      "upstream": "anything2explainer skill",
+      "kind": "method",
+      "depth": "rules",
+      "status": "landed",
+      "verdict": "落地节奏体检与科普写作原则；帧率基线、底色极性、版式家族三条不可平移。",
+      "doc": "docs/探究-anything2explainer-2026-11-14.md",
+      "artifacts": [
+        "tools/pacing.mjs",
+        "docs/科普口播-写作原则.md"
+      ]
+    },
+    {
+      "id": "iso-explode-film",
+      "date": "2026-11-14",
+      "upstream": "Warrickchenxin/iso-explode-film",
+      "kind": "method",
+      "depth": "full",
+      "status": "landed",
+      "verdict": "零件几何、层叠与 11 种镜头全部 JSON 声明化，渲染层重写为 Skia 直出。",
+      "doc": "docs/iso-explode-蒸馏-2026-11-14.md",
+      "artifacts": [
+        "kits/iso",
+        "api/kits/iso.mjs",
+        "content/iso-powerbank/params.json"
+      ]
+    },
+    {
+      "id": "video-talkcraft",
+      "date": "2026-11-15",
+      "upstream": "video-talkcraft skill",
+      "kind": "method",
+      "depth": "rules",
+      "status": "landed",
+      "verdict": "吸收卡片元数据模型、13 类语义索引与版式轮换闸，落成渲染前空窗体检。",
+      "doc": "docs/video-talkcraft-蒸馏-2026-11-15.md",
+      "artifacts": [
+        "tools/check-shotbook.mjs"
+      ]
+    },
+    {
+      "id": "lemo-opuscar",
+      "date": "2026-11-14",
+      "upstream": "lemo-opuscar",
+      "kind": "mixed",
+      "depth": "semi",
+      "status": "partial",
+      "verdict": "midcentury-toon 已换宿主出中文片（vendor/lemo + content/lemo-vacuum）；其余风格镜头写死，换内容=重写分镜。",
+      "doc": "docs/lemo-midcentury-落地-2026-11-15.md",
+      "artifacts": [
+        "vendor/lemo",
+        "content/lemo-vacuum",
+        "content/lemo-recharge"
+      ]
+    },
+    {
+      "id": "knowledge-explainer-clay",
+      "date": "2026-11-13",
+      "upstream": "knowledge-explainer-clay",
+      "kind": "engine",
+      "depth": "rehost",
+      "status": "landed",
+      "verdict": "原样跑上游 Canvas2D 源码，只接管环境与时间轴；7 种物体拆合机制。",
+      "doc": "kits/clay/README.md",
+      "artifacts": [
+        "kits/clay",
+        "api/kits/clay.mjs"
+      ]
+    },
+    {
+      "id": "motiongit-promo-main",
+      "date": "2026-11-13",
+      "upstream": "motiongit-promo-main（template-585）",
+      "kind": "method",
+      "depth": "semi",
+      "status": "landed",
+      "verdict": "上游渲染核加密，保留 11 段内容模型，渲染层自写为深色科技风。",
+      "doc": "kits/collage/README.md",
+      "artifacts": [
+        "kits/collage",
+        "api/kits/collage.mjs",
+        "docs/collage-对抗审查-2026-11-13.md"
+      ]
+    },
+    {
+      "id": "cute-character-lyric-mv",
+      "date": "2026-11-14",
+      "upstream": "cute-character-lyric-mv（Remotion 4 + Canvas2D）",
+      "kind": "method",
+      "depth": "semi",
+      "status": "landed",
+      "verdict": "只借 lyrics/keywords/notes 三字段与 9 镜头时长，渲染层自写。",
+      "doc": "docs/motiongit-templates.md",
+      "artifacts": [
+        "templates/own/cute-mv"
+      ]
+    }
+  ]
+}

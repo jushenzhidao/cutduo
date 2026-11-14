@@ -96,7 +96,7 @@ const pad = (s, n) => String(s) + ' '.repeat(Math.max(0, n - dispWidth(s)));
 
 function human(kind, r) {
   if (kind === 'capabilities') {
-    const lines = [`api ${r.apiVersion} · ${r.kits.length} 支版式`];
+    const lines = [`api ${r.apiVersion} · ${r.kits.length} 支能力（kit + 模板）`];
     for (const k of r.kits) {
       const o = k.output;
       const schema = k.schemaStatus === 'complete' ? 'schema 完整' : '无 schema';

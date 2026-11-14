@@ -1,0 +1,6 @@
+/* 中文映射（本仓加的，上游没有）：把三个西文字族名指到中文字体。
+   上游 fonts.css 仍保留，字体缺失时浏览器会回退到它；这里后加载，优先命中中文。 */
+@font-face { font-family: 'Oleo'; src: url(/assets/fonts/ZCOOLKuaiLe-Regular.ttf) format('truetype'); font-weight: 400; font-display: block; }
+@font-face { font-family: 'Oleo'; src: url(/assets/fonts/ZCOOLKuaiLe-Regular.ttf) format('truetype'); font-weight: 700; font-display: block; }
+@font-face { font-family: 'Slab'; src: url(/assets/fonts/NotoSansSC-Black.otf) format('opentype'); font-display: block; }
+@font-face { font-family: 'Jost'; src: url(/assets/fonts/NotoSansSC-Medium.otf) format('opentype'); font-weight: 100 900; font-display: block; }

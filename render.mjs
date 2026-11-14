@@ -192,7 +192,7 @@ if (!isMainThread) {
   const spec = kitSpec(kit);
   // content 是「与时间轴无关的内容块」（歌词/关键词/纸条这类）。
   // 不显式透传的话，通用宿主只拿到 scenes，模板会静默变成"有画面没文字"。
-  const stageContent = { scenes: P.scenes, captions: P.captions, media: P.media, content: P.content || null, brand, subtitle, theme, fadeInSeconds: P.fadeInSeconds, fadeOutSeconds };
+  const stageContent = { scenes: P.scenes, captions: P.captions, media: P.media, content: P.content || null, lyricStyle: P.lyricStyle || null, brand, subtitle, theme, fadeInSeconds: P.fadeInSeconds, fadeOutSeconds };
   const r = spec.kind === 'science'
     ? createScienceRenderer({ canvas, ctx, width: W, height: H, fps: P.fps, brand, subtitle, theme, fadeOutSeconds })
     : spec.kind === 'paper'
@@ -250,7 +250,7 @@ if (!isMainThread) {
     const canvas = createCanvas(OUT_W, OUT_H);
     const r0 = canvas.getContext('2d');
     const spec = SPEC;
-    const probeContent = { scenes: P.scenes, captions: P.captions, media: P.media, content: P.content || null, brand: P.brand, subtitle: P.subtitle, theme: P.theme, fadeInSeconds: P.fadeInSeconds, fadeOutSeconds: P.fadeOutSeconds };
+    const probeContent = { scenes: P.scenes, captions: P.captions, media: P.media, content: P.content || null, lyricStyle: P.lyricStyle || null, brand: P.brand, subtitle: P.subtitle, theme: P.theme, fadeInSeconds: P.fadeInSeconds, fadeOutSeconds: P.fadeOutSeconds };
     const r = spec.kind === 'science'
       ? createScienceRenderer({ canvas, ctx: r0, width: OUT_W, height: OUT_H, brand: P.brand, subtitle: P.subtitle, theme: P.theme, fadeOutSeconds: P.fadeOutSeconds })
       : spec.kind === 'paper'

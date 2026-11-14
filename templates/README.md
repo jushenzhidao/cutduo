@@ -41,7 +41,7 @@
 怎么选，一句话：**一次性出片走原版；要反复出且引擎是 Canvas2D 走换宿主；
 要长期产线走半蒸馏；要有自己的镜头语言才全蒸馏。** `原版` 是默认档，不是落后档。
 
-## 二、五支内置模板（与「速度档」正交）
+## 二、九支内置版式（kits/，与「速度档」正交）
 
 速度档只决定快慢（有无浏览器、中间帧压不压缩），模板只决定画面长相。
 四档实测与判据见 `docs/AGENTS.md` §0，此处不重复。
@@ -53,11 +53,15 @@
 | `paper` | 纸感 | `kits/paper/paper.mjs`（经 `render.mjs --kit paper`） | `kits/paper/presets/v8t.json` |
 | `editorial` | 杂志 | `kits/editorial/canvas-editorial.mjs` | `content/inputs-*.json`（默认 `inputs-inc-a.json`） |
 | `mg` | 通用 | `kits/mg/render.mjs` | `kits/mg/params.json`（2026-11-10 后未改动，无交付片） |
+| `clay` | 黏土图示 | `kits/clay/clay.mjs`（经 `render.mjs --kit clay`） | `kits/clay/presets/*.json` |
+| `collage` | 屏拼贴 | `kits/collage/collage.mjs`（经 `render.mjs --kit collage`） | `kits/collage/presets/*.json` |
+| `iso` | 等轴爆炸 | `kits/iso/iso.mjs`（经 `render.mjs --kit iso`） | `content/iso-*/params.json` |
+| `diagram` | 说明性图示 | `kits/diagram/render.mjs` | `kits/diagram/presets/*.json` |
 
-五者共用同一个渲染库 `@napi-rs/canvas`（Skia），所以**换模板不换速度档**。
+九者共用同一个渲染库 `@napi-rs/canvas`（Skia），所以**换模板不换速度档**。
 `science` 额外支持浏览器宿主（同一份 `kit.js` + `layouts.js`），那是双跑能力，不是另一套栈。
 
-**还有第六种：任意三件套模板。** 只要 `src/` 有 `kit.js` + `layouts.js` + `stage.js`，
+**还有另一类：任意三件套模板。** 只要 `src/` 有 `kit.js` + `layouts.js` + `stage.js`，
 就能不占内置代号直出：
 
 ```bash
@@ -69,6 +73,10 @@ node render.mjs --kit <模板名> --params templates/own/<模板名>/presets/def
 
 现有三件套模板：`sketchnote`（手绘解说）、`chalkboard`（粉笔黑板）、`night-card`、
 `cute-mv`（可爱角色歌词 MV）。四者都不占内置代号，直接 `--kit <名字>` 调用。
+`templates/own/` 下的 `distill` 与 `editorial` **不是三件套**（缺 `kit.js` / `layouts.js` / `stage.js`），
+不能走 `--kit` 直出；`editorial` 是上游 DOM 版存档，Skia 实现在 `kits/editorial/`。
+
+完整清单（可渲染数 / API 注册状态）见 [`docs/inventory.md`](../docs/inventory.md)。
 
 > 别把「接入深度四级」和「模板内部五层」搞混：前者是本文件回答的（这条模板停在哪一级），
 > 后者是 `templates/_scaffold/README.md` 回答的（一份模板内部该有哪些文件）。两者正交。
@@ -155,8 +163,8 @@ python3 tools/distill-inspect.py --package refs/vendor/<名字>/template.motion
 
    四关全过才算接上。`node --check` 抓不住路径错误——import 合法、运行时才 404。
 
-6. 打包后把新代号补进本文件第二节与 `docs/AGENTS.md` §0 的模板表 —— 两处都要改，
-   只改一处就会出现「文档写着五支、实际六支」。
+6. 打包后跑 `npm run inv && npm run check`：版式清单自动生成，文档漏了某一支会直接 FAIL。
+   不要再手抄第二节——手抄就是上一版「文档写着五支、实际六支」的来源。
 
 ## 五、本文件与 `_scaffold/README.md` 的分工
 

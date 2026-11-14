@@ -27,4 +27,7 @@ export const capability = {
 
 export const adapter = cliAdapter(capability, {
   script: 'kits/desk/render.mjs',
+  // 入口只读 --params/--audio/--out/--fps/--workers/--crf/--preset/--at；
+  // pipe/theme/transition 传了不会生效，直接拒绝。
+  supportedOverrides: ['fps', 'workers', 'crf', 'preset'],
 });

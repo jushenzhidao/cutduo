@@ -22,6 +22,7 @@ tar czf "$OUT" \
   kits \
   content \
   assets \
+  templates/own \
   deploy \
   package.json \
   package-lock.json \
@@ -34,7 +35,8 @@ ls -lh "$OUT" | awk '{print "  体积", $5}'
 echo "关键文件自检："
 for f in render.mjs api/index.mjs mcp/server.mjs src/pipeline.mjs src/root.mjs \
          kits/paper/paper.mjs kits/desk/render.mjs kits/mg/render.mjs \
-         kits/editorial/canvas-editorial.mjs assets/fonts/NotoSansSC-Black.otf; do
+         kits/editorial/canvas-editorial.mjs assets/fonts/NotoSansSC-Black.otf \
+         templates/own/night-card/src/kit.js; do
   if tar tzf "$OUT" | grep -qx "$f"; then
     printf '  ✓ %s\n' "$f"
   else

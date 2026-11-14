@@ -64,7 +64,9 @@ function main() {
 
   // 字级时间戳（可选）：给了就把每项的锚点词解析成段内秒，画面改成"念到才动"。
   // 没给就退回按序号均分的 stagger —— 旧预设、样张、13 类图示全部照旧。
-  const timingPath = arg('timing', '');
+  // 字级时间戳既可由 CLI --timing 指定，也可写进 params.timing ——
+  // 后者是 API 调用方唯一能走的路（请求形状里没有 timing 字段）。
+  const timingPath = arg('timing', params.timing || '');
   if (timingPath) {
     const timing = JSON.parse(fs.readFileSync(resolveInput(timingPath), 'utf8'));
     const byIndex = new Map((timing.segments ?? []).map((s) => [s.index, s]));
@@ -120,7 +122,11 @@ function main() {
 
   const width = params.width ?? CANVAS.w;
   const height = params.height ?? CANVAS.h;
-  const fps = params.fps ?? CANVAS.fps;
+  // CLI 覆盖 > params > 默认。API 的 overrides 只能改渲染超参，不走这里就没有一致性。
+  const fps = Number(arg('fps', params.fps ?? CANVAS.fps));
+  const audio = arg('audio', params.audio || '');
+  const crf = Number(arg('crf', params.crf ?? 18));
+  const x264Preset = arg('preset', params.preset ?? 'veryfast');
   const palette = PALETTES[params.palette ?? 'paper'] ?? PALETTES.paper;
   const box = {
     x: params.frame?.x ?? FRAME.x,
@@ -264,24 +270,37 @@ function main() {
     },
   };
 
+  // 探针：API 的 probe 依赖这个分支。必须放在建临时目录与 ffmpeg 之前。
+  const probePath = arg('probe', '');
+  if (probePath) {
+    const at = Number(arg('at', 2.5));
+    renderer.renderFrame(at);
+    const png = path.resolve(REPO_ROOT, probePath);
+    fs.mkdirSync(path.dirname(png), { recursive: true });
+    fs.writeFileSync(png, canvas.toBuffer('image/png'));
+    console.log('probe →', probePath, `at ${at}s`);
+    return;
+  }
+
   const out = path.resolve(REPO_ROOT, arg('out', 'out/diagram.mp4'));
   fs.mkdirSync(path.dirname(out), { recursive: true });
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'diagram-'));
   const part = path.join(tmpDir, 'seg-0.ts');
 
   const ff = spawnPart(
-    partArgs({ pipe: 'raw', fps, width, height, crf: params.crf ?? 18, preset: params.preset ?? 'veryfast', part })
+    partArgs({ pipe: 'raw', fps, width, height, crf, preset: x264Preset, part })
   );
 
   const startedAt = Date.now();
   return pumpFrames({ renderer, canvas, fps, start: 0, end: frames, ff, pipe: 'raw' }).then(() => {
-    concatParts({ parts: [part], tmpDir, out, audio: params.audio, fps, frames });
+    concatParts({ parts: [part], tmpDir, out, audio: audio || undefined, fps, frames });
     report({ out, frames, fps, startedAt, workers: 1 });
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 }
 
-main().catch((e) => {
+// main() 在探针分支是同步返回 undefined；直接 .catch 会炸在 undefined 上。
+Promise.resolve(main()).catch((e) => {
   console.error(e?.stack || String(e));
   process.exit(1);
 });

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tools/smoke.sh · 五套版式各出一帧
+# tools/smoke.sh · 全部版式各出一帧
 #
 # 存在的理由：2026-11-13 的目录重构把 skia-kit 从 motiongit-lab/ 拆成 src/ + kits/，
 # 四个 kit 原先都用 `dirname(..)` 猜仓库根，深度一变全错。语法检查发现不了这类问题
@@ -41,6 +41,7 @@ probe editorial kits/editorial/canvas-editorial.mjs --inputs content/inputs-v6.j
 probe mg        kits/mg/render.mjs --params kits/mg/params.json --probe "$OUT/mg.png" --at 3
 probe night-card render.mjs --kit night-card --params templates/own/night-card/presets/default.json --probe "$OUT/night-card.png" --at 4
 probe iso       render.mjs --kit iso --params content/iso-powerbank/params.json --probe "$OUT/iso.png" --at 8
+probe diagram   kits/diagram/render.mjs --params kits/diagram/presets/default.json --probe "$OUT/diagram.png" --at 3
 
 # API 契约层：每支 kit 都要能被 api.probe 调度（子进程 + 契约校验）
 # 断言写成「能力清单 == kits/ 目录集合」，而不是写死数量 ——
@@ -63,7 +64,8 @@ else
   printf 'FAIL  %-10s 未接入：%s\n' capabilities "${MISSING:-<清单为空>}"
   fail=1
 fi
-for k in paper science desk clay editorial mg collage night-card; do
+# 遍历能力清单，而不是手写一遍：手写时漏过 iso 与 diagram（2026-11-15 实测）。
+for k in $(echo "$CAPS" | tr ',' ' '); do
   if node api/cli.mjs probe --kit "$k" --out "$OUT/api-$k.mp4" --at 3 >/dev/null 2>&1; then
     printf 'PASS  %-10s api.probe\n' "api:$k"
   else
@@ -122,6 +124,17 @@ if node tools/check-kit-contract.mjs > /tmp/kit-contract.txt 2>&1; then
 else
   printf 'FAIL  %-10s 段型与 schema 不一致\n' contract
   tail -6 /tmp/kit-contract.txt | sed 's/^/      /'
+  fail=1
+fi
+
+# 文档漂移：数量声明 / 漏掉的版式 / 失效路径 / 未登记的脚本 / 蒸馏索引
+echo
+echo "── 文档漂移 ──"
+if node tools/check-docs.mjs >/tmp/smoke-docs.log 2>&1; then
+  printf 'PASS  %-10s 文档与代码一致\n' docs
+else
+  printf 'FAIL  %-10s 文档已漂移\n' docs
+  tail -8 /tmp/smoke-docs.log | sed 's/^/        /'
   fail=1
 fi
 

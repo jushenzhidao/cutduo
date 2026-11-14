@@ -43,10 +43,14 @@
 | `paper` | 纸感 | `kits/paper/paper.mjs` | `kits/paper/presets/` |
 | `editorial` | 杂志 | `kits/editorial/canvas-editorial.mjs` | `content/inputs*.json` |
 | `mg` | 通用 | `kits/mg/` | `kits/mg/params.json`（2026-11-10 后未改动、无交付片） |
-| `collage` | 屏拼贴 | `kits/collage/` | `kits/collage/presets/cutduo.json`（半蒸馏自 motiongit-promo-main，11 段；`demo.json` 是参考片复刻件） |
+| `clay` | 黏土图示 | `kits/clay/` | `kits/clay/presets/*.json`（换宿主，7 种机制） |
+| `collage` | 屏拼贴 | `kits/collage/` | `kits/collage/presets/cutduo.json`（半蒸馏自 motiongit-promo-main，11 段） |
+| `iso` | 等轴爆炸 | `kits/iso/` | `content/iso-*/params.json`（全蒸馏，几何与镜头全 JSON） |
+| `diagram` | 说明性图示 | `kits/diagram/` | `kits/diagram/presets/*.json`（13 类段型，单进程） |
 
-五个模板用的是**同一个渲染库**（`@napi-rs/canvas` / Skia），所以模板不改变速度档。
-（2026-11-13 又加了 `clay`（换宿主）与 `collage`（半蒸馏），共七支，仍是同一个渲染库。）
+九支版式用的是**同一个渲染库**（`@napi-rs/canvas` / Skia），所以模板不改变速度档。
+`clay` 是换宿主、`collage` 是半蒸馏、`iso` 是全蒸馏、`diagram` 是规则吸收；
+四种来源不影响宿主与速度。完整清单见 `docs/inventory.md`。
 `science` 额外支持浏览器宿主（同一份 `kit.js` + `layouts.js`），那是它的双跑能力，不是另一套栈。
 
 ### 超参预设（把四个维度打包成档）
@@ -112,7 +116,7 @@ MotionGit `.motion` 模板的运行时实验与出片产线。两条主线：
 速度只有两处能白拿：模板的 QA/记账链路（关审计）、重复绘制（缓存）。多进程是最后手段，
 且只对「纯 JS 计算型」模板有效（Chrome 多实例在重绘制场景几乎不扩展）。
 
-已评估过的模板，别再重复试：
+已评估过的模板，别再重复试（完整登记与落地产物见 `docs/蒸馏-索引.md`）：
 
 | 模板 | 结论 |
 |---|---|
@@ -154,13 +158,19 @@ uv run python tools/check-template.py --src templates/own/my-template      # 随
 
 | 层 | 路径 | 放什么 | 能不能随便动 |
 |---|---|---|---|
-| 入口 | `render.mjs` | 主 CLI，`--kit` 分发 | 改它影响全部版式 |
+| 入口 | `render.mjs` / `AGENTS.md` | 主 CLI 分发；agent 短入口 | 改渲染入口影响全部版式 |
+| 契约 | `api/` | 能力清单、校验、回执、每支 kit 一个 adapter | agent 的全部调用面；改完跑 `npm run check` |
+| 远程 | `mcp/` + `deploy/` | Streamable HTTP MCP、上传与产物下载、compose/nginx | 远程调用面 |
 | 引擎 | `src/` | 根探测、字体注册、门禁、校验、计时 | 动完跑 `bash tools/smoke.sh` |
 | 版式 | `kits/<name>/` | 渲染器 + params.schema + presets，各支自治 | 只影响自己；共享能力从 `src/` 取 |
 | 内容 | `content/` | 分镜 JSON（镜头/文案/素材引用/配音对齐） | 可自由改，改完重跑 TTS |
 | 素材 | `assets/{fonts,audio,captions,media}/` | 字体、配音、字幕、实拍与生成图 | 唯一副本，**不删** |
-| 产物 | `out/` | 成片、探针帧、报告 | 可重跑，已忽略入库 |
-| 自建模板 | `templates/own/` | `.motion` 格式的 distill / editorial | 可改、可分发；保留上游 LICENSE |
+| 产物 | `out/` | 成片、探针帧、报告、异步 job 状态 | 可重跑，已忽略入库 |
+| 自助台 | `web/` | 表单 → 配音 → 出片 → 下载（内网/演示） | 无鉴权，不要直接暴露公网 |
+| 评测闭环 | `harness/` | 渲染 → 三门判据 → 结构化建议 → 白名单改参 | 自动调参流程 |
+| 分发 | `packages/` | 打好的 `.motion` 产物包 | 不入库，按需重建 |
+| 交付 | `deliverables/` | 对外报告、样片与 QA 证据 | 归档；不要当源码 |
+| 自建模板 | `templates/own/` | 三件套（night-card / cute-mv / sketchnote / chalkboard）与上游存档（distill / editorial） | 可改、可分发；保留上游 LICENSE |
 | 模板样本 | `templates/fixtures/` | 模板格式的测试包（10 个 `.motion`） | 格式回归用 |
 | 模板骨架 | `templates/_scaffold/` | 新建模板时复制的空骨架 | 改完跑 `tools/check-template.py --src templates/_scaffold` |
 | 下载模板 | `refs/vendor/` | 个人下载包（含账户 Key） | **不入库、不外传** |
@@ -169,6 +179,12 @@ uv run python tools/check-template.py --src templates/own/my-template      # 随
 
 | 你想做 | 去哪 |
 |---|---|
+| 选版式 / 查有哪些 | `docs/inventory.md`（事实）→ `kits/STYLES.md`（怎么选） |
+| 加一支版式 | `kits/<id>/` + `api/kits/<id>.mjs`（文件名 = id）→ `npm run inv` → `npm run check` |
+| 吸收一个外部技能 | `docs/蒸馏-方法论.md` → 登记 `docs/distillations.json` → `npm run distill:check` |
+| 新模板先做接入评估 | `node tools/intake.mjs plan --source <目录或 .motion 文件>`（只读；protected / 凭据 / DOM 引擎会报阻塞） |
+| 评估后落机械动作 | `node tools/intake-apply.mjs --plan out/intake/<id>/plan.json`（dry-run 默认；`--yes` 写 adapter 或骨架） |
+| vendor 源码抽到参考目录 | `node tools/intake-copy.mjs --plan out/intake/<id>/plan.json --yes`（保留 LICENSE；排除凭据；仍要人接 adapter） |
 | 改一支片的文案/分镜 | `content/<name>.json` → `tools/build-voices.sh` → 出片 |
 | 加一种镜头/改版式 | `kits/desk/desktop.mjs` 的 `SHOTS` → 探针帧 → `kits/desk/verify.mjs` |
 | 换壁纸/氛围层 | `kits/desk/tools/bg-providers.mjs` |
@@ -181,44 +197,26 @@ uv run python tools/check-template.py --src templates/own/my-template      # 随
 
 出片的一键编排在用户级 skill：`~/.workbuddy/skills/desktop-video-pipeline/scripts/make_film.py`。
 
-## 4. 脚本索引
+## 4. 脚本索引（全部在 tools/，完整清单见 tools/README.md）
 
-根目录已收敛为 **入口 / 引擎 / 工具** 三类（18 个）；一次性基准、探针、拼图脚本全部在 `bench/`（19 个）。
-
-### 根目录（18）
+根目录只保留 `render.mjs` / `package.json` / `README.md` / `AGENTS.md`。
+2026-11-13 起原先散在根的入口与引擎脚本已收进 `tools/`；下表只列高频入口，查全量看索引。
 
 | 类别 | 文件 | 用途 |
 |---|---|---|
-| 入口 | `motion-render.mjs` | `.motion` 通用宿主（doctor/check-params/preview/render） |
-| 入口 | `setup.sh` / `fetch-fonts.sh` | 首次环境：Playwright/Chromium/FFmpeg、Noto 字体 |
-| 入口 | `build-template.py` | 把 `templates/own/<name>/` 打成 `.motion` |
-| 入口 | `safe-unpack.py` | 只读安全解包（拒绝越界/软链/压缩炸弹） |
-| 引擎 | `canvas-editorial.mjs` | Skia 版 editorial 剪辑（36K，读 `edits/inputs*.json`） |
-| 引擎 | `render-daemon.mjs` | 常驻 daemon（复用 Skia/字体/worker） |
-| 引擎 | `render-parallel.mjs` | 分片并行渲染原型 |
-| 引擎 | `render-batch.py` | 多条片各跑一条完整流水线 |
-| 引擎 | `render-parallel-tpl.py` | **实验失败，默认禁用**（文件头有实测结论） |
-| 工具 | `build-sync.py` | 旁白逐句合成 + 时间轴重排 |
-| 工具 | `build-voices.sh` / `build-voices-more.sh` | 批量换音色/方言 |
-| 工具 | `gen-tpl-params.py` / `make-tpl.sh` / `shard-tpl.py` / `test-theme.sh` | 模板参数/打包/切片/主题测试 |
-| 门禁 | `qa-gate.py` | 交付完整性（黑帧/重复段/音画时长）；**skill 写死此路径，勿移** |
+| 入口 | `tools/motion-render.mjs` | `.motion` 通用宿主（doctor/check-params/preview/render） |
+| 入口 | `tools/setup.sh` / `tools/fetch-fonts.sh` | 首次环境：Playwright/Chromium/FFmpeg、Noto 字体 |
+| 入口 | `tools/build-template.py` / `tools/safe-unpack.py` | 打包 `.motion` / 只读安全解包 |
+| 建片 | `tools/new-film.mjs` / `tools/new-template.py` | 新片骨架 / 新模板骨架 |
+| 出片 | `tools/render-all.mjs` / `tools/render-daemon.mjs` | 批量出片 / 常驻 daemon |
+| 配音 | `tools/build-sync.py` / `tools/build-voices.sh` | 逐句 TTS + 时间轴重排 / 批量换音色 |
+| 校验 | `tools/smoke.sh` / `tools/check-docs.mjs` / `tools/inventory.mjs` | 出帧冒烟 / 文档漂移 / 版式清单 |
+| 门禁 | `src/gate.mjs`（主）/ `tools/qa-gate.py`（legacy，skill 写死路径） | 交付完整性 |
+| 音频 | `tools/audio-bed.mjs` / `tools/synth-bgm.mjs` / `tools/add-bgm.mjs` | 配乐 / 代码合成 / 混入 |
+| 报告 | `tools/report.mjs` / `tools/coverage.mjs` / `tools/contact-sheet.mjs` | 片库总览 / 段型覆盖 / 审片表 |
+| 归档 | `tools/legacy/`、`bench/`（19 个基准与探针） | 历史脚本与一次性基准 |
 
-### `bench/`（19）
-
-| 类别 | 文件 |
-|---|---|
-| 成本基准 | `bench-draw` `bench-enc` `bench-pipe` `bench-ffmpeg` |
-| 并发/内存 | `bench-limit.sh` `bench-three.sh` `mem-monitor.py` `proc-args.py` |
-| 探针 | `cankit-probe` `grain-probe` `probe-kit` `profile-chrome` `profile-engines` |
-| 拼图/截图 | `mk-compare` `mk-compare-skia` `mk-label` `shot` `shot2` |
-| 宿主 | `motion-host/poc.mjs` | `.motion` 单镜头跑在 Skia 上（依赖 `templates/vendor`） |
-| 宿主 | `motion-host/poc-full.mjs` | `.motion` 整片宿主 main.js 跑在 Skia 上，`--bench` 测单帧 1.01 ms |
-| 宿主 | `motion-host/render-parallel.mjs` | 换宿主 + 并行出片，24 worker 480 fps（8.7× 官方） |
-| 宿主 | `motion-host/check-hostable.mjs` | 判据：5 个 vendor 模板里只有 `mac-desktop` 可换宿主 |
-| 字体 | `font-metrics`（原 `t.mjs`） |
-
-**必须在仓库根运行**（脚本用 `process.cwd()` 解析 `assets/fonts`、`content/inputs-md.json`），
-两个 shell 已改成 `cd "$(dirname "$0")/.."`。详见 `bench/README.md`。
+`bench/` 必须在仓库根运行（脚本用 `process.cwd()` 解析 `assets/fonts`），详见 `bench/README.md`。
 
 ## 5. 禁区
 
@@ -234,7 +232,8 @@ uv run python tools/check-template.py --src templates/own/my-template      # 随
 3. **改文案必重跑 TTS**：`tools/build-sync.py --tts edge` 会按真实句长重排时间轴（`build-voices.py` 是旧名，已不存在）。
 4. **内容不进代码目录**：新分镜写 `content/`，不要写回 `kits/`。
 5. **一次只改一个变量**：比较管线/版式时固定分镜、音轨、分辨率。
-6. **收口前跑全套**：`tools/qa-gate.py --expect-frames <round(dur*60)>` + `node src/gate.mjs`。
+6. **收口前跑全套**：`npm run check`（出帧 + 文档漂移）+ `node src/gate.mjs <成片>`；
+   旧 `tools/qa-gate.py --expect-frames` 仍可单独用（skill 写死该路径）。
 
 ## 7. 目录演进记录
 
@@ -249,7 +248,7 @@ uv run python tools/check-template.py --src templates/own/my-template      # 随
 2. **不要用 `dirname(..)` 推仓库根**。统一向上找 `.git`（`src/root.mjs`）；否则每支 kit 的目录深度一变，路径就全错。
 3. **搬家只改路径，不改逻辑**。混在一起的改动无法二分定位。这次唯一顺带修的是
    `kits/desk/render.mjs` 的 `makeRenderer` 漏传 `start`/`end`（probe 与 worker 两条路径都会崩）。
-4. **验收靠冒烟，不靠语法检查**。`node --check` 全过，运行时仍可能 404。`bash tools/smoke.sh` 五支各出一帧。
+4. **验收靠冒烟，不靠语法检查**。`node --check` 全过，运行时仍可能 404。`bash tools/smoke.sh` 全部版式各出一帧。
 
 已删除并归档到仓库外：`cutproof/`（208M）、`cinecode-probe/`（163M）→ `~/Desktop/wb/_archive-20261113/`。
 `renderd/` 的验收文档在 `docs/renderd-archive/`，代码只在 git 历史里。
