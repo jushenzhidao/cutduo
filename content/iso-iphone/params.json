@@ -1,0 +1,734 @@
+{
+  "fps": 60,
+  "width": 1920,
+  "height": 1080,
+  "content": {
+    "title": "iPhone",
+    "name": "iPhone",
+    "look": "dark",
+    "radius": 136,
+    "bounds": [
+      [
+        -76,
+        76
+      ],
+      [
+        -38,
+        38
+      ],
+      [
+        0,
+        8.25
+      ]
+    ],
+    "stackLayer": "battery",
+    "stackArray": "frame",
+    "materials": {
+      "back": "#cfc9c0",
+      "glass": "#0d1014",
+      "panel": "#08090b",
+      "titanium": "#9a9c9e",
+      "pcb": "#0f1a14",
+      "chip": "#4b515a",
+      "steel": "#c2c7cd",
+      "copper": "#c08a4a",
+      "battery": "#2b3340",
+      "camBody": "#24282f",
+      "lens": "#0a0c10",
+      "signal": "#f2e9c8",
+      "prop": "#dad7cf",
+      "lensBarrel": "#3a414b",
+      "lensGlass": "#1e4a72",
+      "label": "#3b4149"
+    },
+    "layers": [
+      {
+        "id": "display",
+        "zh": "屏幕",
+        "en": "DISPLAY"
+      },
+      {
+        "id": "camera",
+        "zh": "相机",
+        "en": "CAMERA"
+      },
+      {
+        "id": "haptics",
+        "zh": "振动",
+        "en": "HAPTICS"
+      },
+      {
+        "id": "battery",
+        "zh": "电池",
+        "en": "BATTERY"
+      },
+      {
+        "id": "board",
+        "zh": "主板",
+        "en": "LOGIC BOARD"
+      },
+      {
+        "id": "back",
+        "zh": "后壳",
+        "en": "REAR"
+      }
+    ],
+    "arrays": [
+      {
+        "id": "frame",
+        "layer": "back",
+        "rise": 22,
+        "spread": 1.0
+      }
+    ],
+    "hero": {
+      "part": "camBody",
+      "size": 34,
+      "pull": 26,
+      "hover": 10,
+      "steps": [
+        18,
+        12,
+        7
+      ]
+    },
+    "mech": [
+      {
+        "dir": [
+          0,
+          0,
+          1
+        ],
+        "travel": 2.0
+      }
+    ],
+    "parts": [
+      {
+        "id": "backGlass",
+        "layer": "back",
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 146.6,
+        "d": 70.6,
+        "h": 0.9,
+        "r": 10.5,
+        "material": "back"
+      },
+      {
+        "id": "railL",
+        "layer": "back",
+        "x": -70.3,
+        "y": 0,
+        "z": 0,
+        "w": 3.0,
+        "d": 62,
+        "h": 7.7,
+        "r": 1.2,
+        "material": "titanium",
+        "array": "frame"
+      },
+      {
+        "id": "railR",
+        "layer": "back",
+        "x": 70.3,
+        "y": 0,
+        "z": 0,
+        "w": 3.0,
+        "d": 62,
+        "h": 7.7,
+        "r": 1.2,
+        "material": "titanium",
+        "array": "frame"
+      },
+      {
+        "id": "railT",
+        "layer": "back",
+        "x": 0,
+        "y": 34.3,
+        "z": 0,
+        "w": 134,
+        "d": 3.0,
+        "h": 7.7,
+        "r": 1.2,
+        "material": "titanium",
+        "array": "frame"
+      },
+      {
+        "id": "railB",
+        "layer": "back",
+        "x": 0,
+        "y": -34.3,
+        "z": 0,
+        "w": 134,
+        "d": 3.0,
+        "h": 7.7,
+        "r": 1.2,
+        "material": "titanium",
+        "array": "frame"
+      },
+      {
+        "id": "btnPower",
+        "layer": "back",
+        "x": 72.9,
+        "y": 8,
+        "z": 0.15,
+        "w": 1.0,
+        "d": 11,
+        "h": 0.6,
+        "r": 0.4,
+        "material": "titanium",
+        "array": "frame"
+      },
+      {
+        "id": "btnVolUp",
+        "layer": "back",
+        "x": -72.9,
+        "y": 14,
+        "z": 0.15,
+        "w": 1.0,
+        "d": 6,
+        "h": 0.6,
+        "r": 0.4,
+        "material": "titanium",
+        "array": "frame"
+      },
+      {
+        "id": "btnVolDn",
+        "layer": "back",
+        "x": -72.9,
+        "y": 6,
+        "z": 0.15,
+        "w": 1.0,
+        "d": 6,
+        "h": 0.6,
+        "r": 0.4,
+        "material": "titanium",
+        "array": "frame"
+      },
+      {
+        "id": "pcb",
+        "layer": "board",
+        "x": 0,
+        "y": 0,
+        "z": 0.9,
+        "w": 134,
+        "d": 58,
+        "h": 0.8,
+        "r": 5,
+        "material": "pcb"
+      },
+      {
+        "id": "cpu",
+        "layer": "board",
+        "x": -12,
+        "y": 4,
+        "z": 1.7,
+        "w": 13,
+        "d": 13,
+        "h": 0.9,
+        "r": 0.5,
+        "material": "chip"
+      },
+      {
+        "id": "mem",
+        "layer": "board",
+        "x": 3,
+        "y": 6,
+        "z": 1.7,
+        "w": 9,
+        "d": 9,
+        "h": 0.7,
+        "r": 0.4,
+        "material": "chip"
+      },
+      {
+        "id": "rf",
+        "layer": "board",
+        "x": 26,
+        "y": 12,
+        "z": 1.7,
+        "w": 8,
+        "d": 7,
+        "h": 0.6,
+        "r": 0.3,
+        "material": "chip"
+      },
+      {
+        "id": "pmic",
+        "layer": "board",
+        "x": 26,
+        "y": -4,
+        "z": 1.7,
+        "w": 7,
+        "d": 6,
+        "h": 0.5,
+        "r": 0.3,
+        "material": "chip"
+      },
+      {
+        "id": "modem",
+        "layer": "board",
+        "x": 42,
+        "y": 6,
+        "z": 1.7,
+        "w": 6,
+        "d": 6,
+        "h": 0.5,
+        "r": 0.3,
+        "material": "chip"
+      },
+      {
+        "id": "simTray",
+        "layer": "board",
+        "x": 62,
+        "y": -16,
+        "z": 1.7,
+        "w": 3,
+        "d": 14,
+        "h": 0.6,
+        "r": 1,
+        "material": "steel"
+      },
+      {
+        "id": "shieldCan",
+        "layer": "board",
+        "x": -40,
+        "y": -14,
+        "z": 1.7,
+        "w": 22,
+        "d": 18,
+        "h": 0.7,
+        "r": 1,
+        "material": "steel"
+      },
+      {
+        "id": "btb",
+        "layer": "board",
+        "x": -6,
+        "y": -24,
+        "z": 1.7,
+        "w": 16,
+        "d": 4,
+        "h": 0.6,
+        "r": 0.4,
+        "material": "copper"
+      },
+      {
+        "id": "cell",
+        "layer": "battery",
+        "x": 0,
+        "y": -2,
+        "z": 2.6,
+        "w": 100,
+        "d": 56,
+        "h": 2.3,
+        "r": 4,
+        "material": "battery"
+      },
+      {
+        "id": "cellTab",
+        "layer": "battery",
+        "x": 20,
+        "y": 22,
+        "z": 4.9,
+        "w": 20,
+        "d": 5,
+        "h": 0.3,
+        "r": 1,
+        "material": "copper"
+      },
+      {
+        "id": "taptic",
+        "layer": "haptics",
+        "x": -34,
+        "y": -20,
+        "z": 4.9,
+        "w": 26,
+        "d": 16,
+        "h": 0.8,
+        "r": 2,
+        "material": "steel"
+      },
+      {
+        "id": "speaker",
+        "layer": "haptics",
+        "x": 36,
+        "y": -22,
+        "z": 4.9,
+        "w": 30,
+        "d": 10,
+        "h": 0.8,
+        "r": 2,
+        "material": "steel"
+      },
+      {
+        "id": "camPlate",
+        "layer": "camera",
+        "x": -28,
+        "y": 16,
+        "z": 5.7,
+        "w": 40,
+        "d": 40,
+        "h": 0.3,
+        "r": 3,
+        "material": "steel"
+      },
+      {
+        "id": "camBody",
+        "layer": "camera",
+        "hero": "out",
+        "x": -28,
+        "y": 16,
+        "z": 6.0,
+        "w": 34,
+        "d": 34,
+        "h": 1.0,
+        "r": 2.5,
+        "material": "camBody"
+      },
+      {
+        "id": "lensA",
+        "layer": "camera",
+        "hero": 0,
+        "x": -35,
+        "y": 23,
+        "z": 7.0,
+        "kind": "cyl",
+        "r": 5.4,
+        "h": 0.7,
+        "material": "lensBarrel"
+      },
+      {
+        "id": "lensB",
+        "layer": "camera",
+        "hero": 1,
+        "mech": 0,
+        "x": -21,
+        "y": 23,
+        "z": 7.0,
+        "kind": "cyl",
+        "r": 5.4,
+        "h": 0.7,
+        "material": "lensBarrel"
+      },
+      {
+        "id": "lensC",
+        "layer": "camera",
+        "hero": 2,
+        "x": -35,
+        "y": 9,
+        "z": 7.0,
+        "kind": "cyl",
+        "r": 5.4,
+        "h": 0.7,
+        "material": "lensBarrel"
+      },
+      {
+        "id": "flash",
+        "layer": "camera",
+        "x": -14,
+        "y": 3,
+        "z": 6.0,
+        "kind": "cyl",
+        "r": 2.2,
+        "h": 0.6,
+        "material": "signal"
+      },
+      {
+        "id": "panel",
+        "layer": "display",
+        "x": 0,
+        "y": 0,
+        "z": 7.7,
+        "w": 138,
+        "d": 64,
+        "h": 0.3,
+        "r": 6,
+        "material": "panel"
+      },
+      {
+        "id": "glass",
+        "layer": "display",
+        "x": 0,
+        "y": 0,
+        "z": 8.0,
+        "w": 146.6,
+        "d": 70.6,
+        "h": 0.25,
+        "r": 10.5,
+        "material": "glass"
+      },
+      {
+        "id": "flex",
+        "layer": "display",
+        "x": -40,
+        "y": -20,
+        "z": 7.7,
+        "w": 14,
+        "d": 30,
+        "h": 0.2,
+        "r": 1,
+        "material": "copper"
+      },
+      {
+        "id": "island",
+        "layer": "display",
+        "x": 0,
+        "y": 24,
+        "z": 8.25,
+        "w": 13,
+        "d": 4.2,
+        "h": 0.08,
+        "r": 2,
+        "material": "panel"
+      },
+      {
+        "id": "lensAGlass",
+        "layer": "camera",
+        "hero": 0,
+        "x": -35,
+        "y": 23,
+        "z": 7.7,
+        "kind": "cyl",
+        "r": 3.6,
+        "h": 0.05,
+        "material": "lensGlass"
+      },
+      {
+        "id": "lensBGlass",
+        "layer": "camera",
+        "hero": 1,
+        "mech": 0,
+        "x": -21,
+        "y": 23,
+        "z": 7.7,
+        "kind": "cyl",
+        "r": 3.6,
+        "h": 0.05,
+        "material": "lensGlass"
+      },
+      {
+        "id": "lensCGlass",
+        "layer": "camera",
+        "hero": 2,
+        "x": -35,
+        "y": 9,
+        "z": 7.7,
+        "kind": "cyl",
+        "r": 3.6,
+        "h": 0.05,
+        "material": "lensGlass"
+      },
+      {
+        "id": "batLabel",
+        "layer": "battery",
+        "x": 8,
+        "y": -6,
+        "z": 4.9,
+        "w": 44,
+        "d": 26,
+        "h": 0.05,
+        "r": 2,
+        "material": "label"
+      },
+      {
+        "id": "batBms",
+        "layer": "battery",
+        "x": -38,
+        "y": 20,
+        "z": 4.9,
+        "w": 16,
+        "d": 10,
+        "h": 0.3,
+        "r": 1,
+        "material": "pcb"
+      }
+    ]
+  },
+  "audio": {
+    "mode": "external-music",
+    "music": "assets/audio/bgm/iso-iphone.m4a",
+    "musicGain": 0.9,
+    "cues": [
+      {
+        "at": 3.35,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 5.35,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 6.1,
+        "src": "impact",
+        "gain": 0.5
+      },
+      {
+        "at": 6.6,
+        "src": "tick",
+        "gain": 0.55
+      },
+      {
+        "at": 7.05,
+        "src": "tick",
+        "gain": 0.55
+      },
+      {
+        "at": 7.5,
+        "src": "tick",
+        "gain": 0.55
+      },
+      {
+        "at": 7.95,
+        "src": "tick",
+        "gain": 0.55
+      },
+      {
+        "at": 10.45,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 12.75,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 13.52,
+        "src": "tick",
+        "gain": 0.55
+      },
+      {
+        "at": 13.87,
+        "src": "tick",
+        "gain": 0.55
+      },
+      {
+        "at": 14.22,
+        "src": "tick",
+        "gain": 0.55
+      },
+      {
+        "at": 15.35,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 15.7,
+        "src": "rise",
+        "gain": 0.5
+      },
+      {
+        "at": 18.25,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 20.95,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 22.2,
+        "src": "impact",
+        "gain": 0.5
+      },
+      {
+        "at": 24.75,
+        "src": "impact",
+        "gain": 0.5
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hero",
+      "t0": 0,
+      "t1": 3.4,
+      "args": {}
+    },
+    {
+      "type": "rise",
+      "t0": 3.4,
+      "t1": 5.4,
+      "args": {}
+    },
+    {
+      "type": "explode",
+      "t0": 5.4,
+      "t1": 10.5,
+      "args": {
+        "card": {
+          "big": "6 层",
+          "small": "146.6 × 70.6 × 8.25 mm · {parts} 件"
+        }
+      }
+    },
+    {
+      "type": "part",
+      "t0": 10.5,
+      "t1": 12.8,
+      "args": {
+        "card": {
+          "big": "3 摄",
+          "small": "相机模组 · 三片镜片"
+        }
+      }
+    },
+    {
+      "type": "action",
+      "t0": 12.8,
+      "t1": 15.4,
+      "args": {
+        "card": {
+          "big": "2.0 mm",
+          "small": "镜片对焦行程"
+        }
+      }
+    },
+    {
+      "type": "array",
+      "t0": 15.4,
+      "t1": 18.3,
+      "args": {
+        "array": "frame",
+        "card": {
+          "big": "7 件",
+          "small": "中框与按键"
+        }
+      }
+    },
+    {
+      "type": "stack",
+      "t0": 18.3,
+      "t1": 21.0,
+      "args": {
+        "layer": "battery",
+        "card": {
+          "big": "4422 mAh",
+          "small": "电池"
+        }
+      }
+    },
+    {
+      "type": "assemble",
+      "t0": 21.0,
+      "t1": 24.8,
+      "args": {}
+    },
+    {
+      "type": "end",
+      "t0": 24.8,
+      "t1": 27.3,
+      "args": {
+        "card": {
+          "big": "iPhone",
+          "small": "一台手机的结构"
+        }
+      }
+    }
+  ]
+}

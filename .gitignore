@@ -70,5 +70,8 @@ Thumbs.db
 content/*/params*.json
 # 例外：iso 的 params.json 是内容源（几何与分镜全在这份文件里，没有 script.json 可派生）
 !content/iso-powerbank/params.json
+!content/iso-iphone/params.json
+!content/iso-motion/params.json
+!content/iso-iphone-deep/params.json
 content/*/audio/
 content/*/ocr.txt

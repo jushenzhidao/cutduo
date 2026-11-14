@@ -1,0 +1,1224 @@
+{
+  "fps": 60,
+  "width": 1920,
+  "height": 1080,
+  "content": {
+    "title": "iPhone",
+    "name": "iPhone · 24 层",
+    "look": "dark",
+    "radius": 136,
+    "spacing": 13,
+    "bounds": [
+      [
+        -76,
+        76
+      ],
+      [
+        -38,
+        38
+      ],
+      [
+        0,
+        8.25
+      ]
+    ],
+    "stackLayer": "camera",
+    "stackArray": "magnets",
+    "materials": {
+      "back": "#cfc9c0",
+      "glass": "#0d1014",
+      "panel": "#08090b",
+      "titanium": "#9a9c9e",
+      "pcb": "#0f1a14",
+      "chip": "#4b515a",
+      "steel": "#c2c7cd",
+      "copper": "#c08a4a",
+      "battery": "#38424f",
+      "battery2": "#323b4a",
+      "camBody": "#24282f",
+      "lens": "#1a2430",
+      "lensBarrel": "#3a414b",
+      "lensGlass": "#1e4a72",
+      "signal": "#f2e9c8",
+      "flex": "#b98a4e",
+      "pad": "#5c6068",
+      "prop": "#dad7cf"
+    },
+    "layers": [
+      {
+        "id": "glass",
+        "zh": "盖板玻璃",
+        "en": "COVER GLASS"
+      },
+      {
+        "id": "panel",
+        "zh": "显示面板",
+        "en": "DISPLAY"
+      },
+      {
+        "id": "touch",
+        "zh": "触控层",
+        "en": "TOUCH"
+      },
+      {
+        "id": "dispFrame",
+        "zh": "显示支架",
+        "en": "BRACKET"
+      },
+      {
+        "id": "camCover",
+        "zh": "镜头盖",
+        "en": "SAPPHIRE"
+      },
+      {
+        "id": "camera",
+        "zh": "相机模组",
+        "en": "CAMERA"
+      },
+      {
+        "id": "camFlex",
+        "zh": "相机排线",
+        "en": "CAM FLEX"
+      },
+      {
+        "id": "topBracket",
+        "zh": "顶部支架",
+        "en": "TOP BRACKET"
+      },
+      {
+        "id": "board",
+        "zh": "主板",
+        "en": "LOGIC BOARD"
+      },
+      {
+        "id": "shield",
+        "zh": "屏蔽罩",
+        "en": "SHIELD"
+      },
+      {
+        "id": "boardBack",
+        "zh": "主板背面",
+        "en": "BOARD BACK"
+      },
+      {
+        "id": "batPlate",
+        "zh": "电池盖",
+        "en": "BAT PLATE"
+      },
+      {
+        "id": "cellA",
+        "zh": "电芯一",
+        "en": "CELL A"
+      },
+      {
+        "id": "cellB",
+        "zh": "电芯二",
+        "en": "CELL B"
+      },
+      {
+        "id": "bms",
+        "zh": "保护板",
+        "en": "BMS"
+      },
+      {
+        "id": "coil",
+        "zh": "无线充",
+        "en": "COIL"
+      },
+      {
+        "id": "magnet",
+        "zh": "磁吸环",
+        "en": "MAGSAFE"
+      },
+      {
+        "id": "taptic",
+        "zh": "振动马达",
+        "en": "TAPTIC"
+      },
+      {
+        "id": "speaker",
+        "zh": "扬声器",
+        "en": "SPEAKER"
+      },
+      {
+        "id": "antenna",
+        "zh": "天线",
+        "en": "ANTENNA"
+      },
+      {
+        "id": "frameUp",
+        "zh": "中框上",
+        "en": "FRAME UPPER"
+      },
+      {
+        "id": "frameDown",
+        "zh": "中框下",
+        "en": "FRAME LOWER"
+      },
+      {
+        "id": "buttonFlex",
+        "zh": "按键排线",
+        "en": "BUTTON FLEX"
+      },
+      {
+        "id": "backGlass",
+        "zh": "后玻璃",
+        "en": "REAR GLASS"
+      }
+    ],
+    "arrays": [
+      {
+        "id": "magnets",
+        "layer": "magnet",
+        "rise": 30,
+        "spread": 1.0
+      }
+    ],
+    "hero": {
+      "part": "camBody",
+      "size": 34,
+      "pull": 22,
+      "hover": 10,
+      "steps": [
+        14,
+        9,
+        5
+      ]
+    },
+    "mech": [
+      {
+        "dir": [
+          0,
+          0,
+          1
+        ],
+        "travel": 2.0
+      }
+    ],
+    "parts": [
+      {
+        "id": "coverGlass",
+        "layer": "glass",
+        "x": 0,
+        "y": 0,
+        "z": 7.9,
+        "w": 146.6,
+        "d": 70.6,
+        "h": 0.35,
+        "r": 10.5,
+        "material": "glass"
+      },
+      {
+        "id": "displayPanel",
+        "layer": "panel",
+        "x": 0,
+        "y": 0,
+        "z": 7.6,
+        "w": 140,
+        "d": 66,
+        "h": 0.3,
+        "r": 6,
+        "material": "panel"
+      },
+      {
+        "id": "touchFlex",
+        "layer": "touch",
+        "x": 0,
+        "y": -21,
+        "z": 7.48,
+        "w": 128,
+        "d": 9,
+        "h": 0.12,
+        "r": 1.5,
+        "material": "flex"
+      },
+      {
+        "id": "touchIC",
+        "layer": "touch",
+        "x": 34,
+        "y": -21,
+        "z": 7.48,
+        "w": 9,
+        "d": 7,
+        "h": 0.12,
+        "r": 0.4,
+        "material": "chip"
+      },
+      {
+        "id": "dispFrame",
+        "layer": "dispFrame",
+        "x": 0,
+        "y": 0,
+        "z": 7.28,
+        "w": 142,
+        "d": 62,
+        "h": 0.2,
+        "r": 6,
+        "material": "steel"
+      },
+      {
+        "id": "sapphire1",
+        "layer": "camCover",
+        "x": -35,
+        "y": 23,
+        "z": 7.18,
+        "kind": "cyl",
+        "r": 5.2,
+        "h": 0.1,
+        "material": "lens"
+      },
+      {
+        "id": "sapphire2",
+        "layer": "camCover",
+        "x": -21,
+        "y": 23,
+        "z": 7.18,
+        "kind": "cyl",
+        "r": 5.2,
+        "h": 0.1,
+        "material": "lens"
+      },
+      {
+        "id": "sapphire3",
+        "layer": "camCover",
+        "x": -35,
+        "y": 9,
+        "z": 7.18,
+        "kind": "cyl",
+        "r": 5.2,
+        "h": 0.1,
+        "material": "lens"
+      },
+      {
+        "id": "flashCover",
+        "layer": "camCover",
+        "x": -14,
+        "y": 3,
+        "z": 7.18,
+        "kind": "cyl",
+        "r": 2.2,
+        "h": 0.1,
+        "material": "signal"
+      },
+      {
+        "id": "camBody",
+        "layer": "camera",
+        "hero": "out",
+        "x": -28,
+        "y": 16,
+        "z": 6.63,
+        "w": 34,
+        "d": 34,
+        "h": 0.55,
+        "r": 2.5,
+        "material": "camBody"
+      },
+      {
+        "id": "lens1",
+        "layer": "camera",
+        "hero": 0,
+        "x": -35,
+        "y": 23,
+        "z": 6.78,
+        "kind": "cyl",
+        "r": 5.4,
+        "h": 0.35,
+        "material": "lensBarrel"
+      },
+      {
+        "id": "lens1Glass",
+        "layer": "camera",
+        "hero": 0,
+        "x": -35,
+        "y": 23,
+        "z": 7.13,
+        "kind": "cyl",
+        "r": 3.4,
+        "h": 0.05,
+        "material": "lensGlass"
+      },
+      {
+        "id": "lens2",
+        "layer": "camera",
+        "hero": 1,
+        "mech": 0,
+        "x": -21,
+        "y": 23,
+        "z": 6.78,
+        "kind": "cyl",
+        "r": 5.4,
+        "h": 0.35,
+        "material": "lensBarrel"
+      },
+      {
+        "id": "lens2Glass",
+        "layer": "camera",
+        "hero": 1,
+        "mech": 0,
+        "x": -21,
+        "y": 23,
+        "z": 7.13,
+        "kind": "cyl",
+        "r": 3.4,
+        "h": 0.05,
+        "material": "lensGlass"
+      },
+      {
+        "id": "lens3",
+        "layer": "camera",
+        "hero": 2,
+        "x": -35,
+        "y": 9,
+        "z": 6.78,
+        "kind": "cyl",
+        "r": 5.4,
+        "h": 0.35,
+        "material": "lensBarrel"
+      },
+      {
+        "id": "lens3Glass",
+        "layer": "camera",
+        "hero": 2,
+        "x": -35,
+        "y": 9,
+        "z": 7.13,
+        "kind": "cyl",
+        "r": 3.4,
+        "h": 0.05,
+        "material": "lensGlass"
+      },
+      {
+        "id": "camFlex",
+        "layer": "camFlex",
+        "x": -28,
+        "y": 16,
+        "z": 6.55,
+        "w": 28,
+        "d": 10,
+        "h": 0.08,
+        "r": 1,
+        "material": "flex"
+      },
+      {
+        "id": "topBracket",
+        "layer": "topBracket",
+        "x": -26,
+        "y": 18,
+        "z": 6.4,
+        "w": 60,
+        "d": 20,
+        "h": 0.15,
+        "r": 2,
+        "material": "steel"
+      },
+      {
+        "id": "topBracketB",
+        "layer": "topBracket",
+        "x": 34,
+        "y": 22,
+        "z": 6.4,
+        "w": 30,
+        "d": 12,
+        "h": 0.15,
+        "r": 2,
+        "material": "steel"
+      },
+      {
+        "id": "pcb",
+        "layer": "board",
+        "x": 0,
+        "y": 0,
+        "z": 6.05,
+        "w": 134,
+        "d": 58,
+        "h": 0.25,
+        "r": 5,
+        "material": "pcb"
+      },
+      {
+        "id": "cpu",
+        "layer": "board",
+        "x": -12,
+        "y": 4,
+        "z": 6.3,
+        "w": 13,
+        "d": 13,
+        "h": 0.1,
+        "r": 0.4,
+        "material": "chip"
+      },
+      {
+        "id": "mem",
+        "layer": "board",
+        "x": 3,
+        "y": 6,
+        "z": 6.3,
+        "w": 9,
+        "d": 9,
+        "h": 0.1,
+        "r": 0.4,
+        "material": "chip"
+      },
+      {
+        "id": "rf",
+        "layer": "board",
+        "x": 26,
+        "y": 12,
+        "z": 6.3,
+        "w": 8,
+        "d": 7,
+        "h": 0.1,
+        "r": 0.4,
+        "material": "chip"
+      },
+      {
+        "id": "pmic",
+        "layer": "board",
+        "x": 26,
+        "y": -4,
+        "z": 6.3,
+        "w": 7,
+        "d": 6,
+        "h": 0.1,
+        "r": 0.4,
+        "material": "chip"
+      },
+      {
+        "id": "modem",
+        "layer": "board",
+        "x": 42,
+        "y": 6,
+        "z": 6.3,
+        "w": 6,
+        "d": 6,
+        "h": 0.1,
+        "r": 0.4,
+        "material": "chip"
+      },
+      {
+        "id": "shieldA",
+        "layer": "shield",
+        "x": -30,
+        "y": -14,
+        "z": 5.85,
+        "w": 44,
+        "d": 26,
+        "h": 0.2,
+        "r": 2,
+        "material": "steel"
+      },
+      {
+        "id": "shieldB",
+        "layer": "shield",
+        "x": 22,
+        "y": 10,
+        "z": 5.85,
+        "w": 20,
+        "d": 16,
+        "h": 0.2,
+        "r": 2,
+        "material": "steel"
+      },
+      {
+        "id": "pcbBack",
+        "layer": "boardBack",
+        "x": 0,
+        "y": -4,
+        "z": 5.6,
+        "w": 110,
+        "d": 44,
+        "h": 0.15,
+        "r": 4,
+        "material": "pcb"
+      },
+      {
+        "id": "btb",
+        "layer": "boardBack",
+        "x": -6,
+        "y": -20,
+        "z": 5.75,
+        "w": 16,
+        "d": 5,
+        "h": 0.1,
+        "r": 0.4,
+        "material": "copper"
+      },
+      {
+        "id": "batPlate",
+        "layer": "batPlate",
+        "x": 0,
+        "y": -2,
+        "z": 5.5,
+        "w": 104,
+        "d": 58,
+        "h": 0.1,
+        "r": 3,
+        "material": "pad"
+      },
+      {
+        "id": "cellA",
+        "layer": "cellA",
+        "x": 0,
+        "y": -2,
+        "z": 4.9,
+        "w": 100,
+        "d": 54,
+        "h": 0.6,
+        "r": 4,
+        "material": "battery"
+      },
+      {
+        "id": "cellB",
+        "layer": "cellB",
+        "x": 0,
+        "y": -2,
+        "z": 4.35,
+        "w": 96,
+        "d": 52,
+        "h": 0.55,
+        "r": 4,
+        "material": "battery2"
+      },
+      {
+        "id": "bms",
+        "layer": "bms",
+        "x": -30,
+        "y": 16,
+        "z": 4.2,
+        "w": 26,
+        "d": 14,
+        "h": 0.15,
+        "r": 1,
+        "material": "pcb"
+      },
+      {
+        "id": "coil",
+        "layer": "coil",
+        "x": 0,
+        "y": -4,
+        "z": 4.08,
+        "kind": "cyl",
+        "r": 29,
+        "h": 0.12,
+        "material": "copper"
+      },
+      {
+        "id": "mag1",
+        "layer": "magnet",
+        "array": "magnets",
+        "x": 27.0,
+        "y": -4.0,
+        "z": 3.83,
+        "w": 7,
+        "d": 4,
+        "h": 0.25,
+        "r": 1,
+        "material": "steel"
+      },
+      {
+        "id": "mag2",
+        "layer": "magnet",
+        "array": "magnets",
+        "x": 24.94,
+        "y": 6.33,
+        "z": 3.83,
+        "w": 7,
+        "d": 4,
+        "h": 0.25,
+        "r": 1,
+        "material": "steel"
+      },
+      {
+        "id": "mag3",
+        "layer": "magnet",
+        "array": "magnets",
+        "x": 19.09,
+        "y": 15.09,
+        "z": 3.83,
+        "w": 7,
+        "d": 4,
+        "h": 0.25,
+        "r": 1,
+        "material": "steel"
+      },
+      {
+        "id": "mag4",
+        "layer": "magnet",
+        "array": "magnets",
+        "x": 10.33,
+        "y": 20.94,
+        "z": 3.83,
+        "w": 7,
+        "d": 4,
+        "h": 0.25,
+        "r": 1,
+        "material": "steel"
+      },
+      {
+        "id": "mag5",
+        "layer": "magnet",
+        "array": "magnets",
+        "x": 0.0,
+        "y": 23.0,
+        "z": 3.83,
+        "w": 7,
+        "d": 4,
+        "h": 0.25,
+        "r": 1,
+        "material": "steel"
+      },
+      {
+        "id": "mag6",
+        "layer": "magnet",
+        "array": "magnets",
+        "x": -10.33,
+        "y": 20.94,
+        "z": 3.83,
+        "w": 7,
+        "d": 4,
+        "h": 0.25,
+        "r": 1,
+        "material": "steel"
+      },
+      {
+        "id": "mag7",
+        "layer": "magnet",
+        "array": "magnets",
+        "x": -19.09,
+        "y": 15.09,
+        "z": 3.83,
+        "w": 7,
+        "d": 4,
+        "h": 0.25,
+        "r": 1,
+        "material": "steel"
+      },
+      {
+        "id": "mag8",
+        "layer": "magnet",
+        "array": "magnets",
+        "x": -24.94,
+        "y": 6.33,
+        "z": 3.83,
+        "w": 7,
+        "d": 4,
+        "h": 0.25,
+        "r": 1,
+        "material": "steel"
+      },
+      {
+        "id": "mag9",
+        "layer": "magnet",
+        "array": "magnets",
+        "x": -27.0,
+        "y": -4.0,
+        "z": 3.83,
+        "w": 7,
+        "d": 4,
+        "h": 0.25,
+        "r": 1,
+        "material": "steel"
+      },
+      {
+        "id": "mag10",
+        "layer": "magnet",
+        "array": "magnets",
+        "x": -24.94,
+        "y": -14.33,
+        "z": 3.83,
+        "w": 7,
+        "d": 4,
+        "h": 0.25,
+        "r": 1,
+        "material": "steel"
+      },
+      {
+        "id": "mag11",
+        "layer": "magnet",
+        "array": "magnets",
+        "x": -19.09,
+        "y": -23.09,
+        "z": 3.83,
+        "w": 7,
+        "d": 4,
+        "h": 0.25,
+        "r": 1,
+        "material": "steel"
+      },
+      {
+        "id": "mag12",
+        "layer": "magnet",
+        "array": "magnets",
+        "x": -10.33,
+        "y": -28.94,
+        "z": 3.83,
+        "w": 7,
+        "d": 4,
+        "h": 0.25,
+        "r": 1,
+        "material": "steel"
+      },
+      {
+        "id": "mag13",
+        "layer": "magnet",
+        "array": "magnets",
+        "x": -0.0,
+        "y": -31.0,
+        "z": 3.83,
+        "w": 7,
+        "d": 4,
+        "h": 0.25,
+        "r": 1,
+        "material": "steel"
+      },
+      {
+        "id": "mag14",
+        "layer": "magnet",
+        "array": "magnets",
+        "x": 10.33,
+        "y": -28.94,
+        "z": 3.83,
+        "w": 7,
+        "d": 4,
+        "h": 0.25,
+        "r": 1,
+        "material": "steel"
+      },
+      {
+        "id": "mag15",
+        "layer": "magnet",
+        "array": "magnets",
+        "x": 19.09,
+        "y": -23.09,
+        "z": 3.83,
+        "w": 7,
+        "d": 4,
+        "h": 0.25,
+        "r": 1,
+        "material": "steel"
+      },
+      {
+        "id": "mag16",
+        "layer": "magnet",
+        "array": "magnets",
+        "x": 24.94,
+        "y": -14.33,
+        "z": 3.83,
+        "w": 7,
+        "d": 4,
+        "h": 0.25,
+        "r": 1,
+        "material": "steel"
+      },
+      {
+        "id": "taptic",
+        "layer": "taptic",
+        "x": -32,
+        "y": -20,
+        "z": 3.38,
+        "w": 28,
+        "d": 16,
+        "h": 0.45,
+        "r": 3,
+        "material": "steel"
+      },
+      {
+        "id": "speaker",
+        "layer": "speaker",
+        "x": 36,
+        "y": -22,
+        "z": 2.98,
+        "w": 30,
+        "d": 12,
+        "h": 0.4,
+        "r": 3,
+        "material": "steel"
+      },
+      {
+        "id": "antA",
+        "layer": "antenna",
+        "x": 0,
+        "y": 28,
+        "z": 2.86,
+        "w": 40,
+        "d": 4,
+        "h": 0.12,
+        "r": 1,
+        "material": "copper"
+      },
+      {
+        "id": "antB",
+        "layer": "antenna",
+        "x": 0,
+        "y": -28,
+        "z": 2.86,
+        "w": 40,
+        "d": 4,
+        "h": 0.12,
+        "r": 1,
+        "material": "copper"
+      },
+      {
+        "id": "railL1",
+        "layer": "frameUp",
+        "x": -70.3,
+        "y": 0,
+        "z": 4.4,
+        "w": 3,
+        "d": 62,
+        "h": 3.5,
+        "r": 1.2,
+        "material": "titanium"
+      },
+      {
+        "id": "railR1",
+        "layer": "frameUp",
+        "x": 70.3,
+        "y": 0,
+        "z": 4.4,
+        "w": 3,
+        "d": 62,
+        "h": 3.5,
+        "r": 1.2,
+        "material": "titanium"
+      },
+      {
+        "id": "btnPower",
+        "layer": "frameUp",
+        "x": 73.2,
+        "y": 14,
+        "z": 2.26,
+        "w": 1.2,
+        "d": 10,
+        "h": 0.3,
+        "r": 0.5,
+        "material": "titanium"
+      },
+      {
+        "id": "railL2",
+        "layer": "frameDown",
+        "x": -70.3,
+        "y": 0,
+        "z": 1.0,
+        "w": 3,
+        "d": 62,
+        "h": 3.4,
+        "r": 1.2,
+        "material": "titanium"
+      },
+      {
+        "id": "railR2",
+        "layer": "frameDown",
+        "x": 70.3,
+        "y": 0,
+        "z": 1.0,
+        "w": 3,
+        "d": 62,
+        "h": 3.4,
+        "r": 1.2,
+        "material": "titanium"
+      },
+      {
+        "id": "railT",
+        "layer": "frameDown",
+        "x": 0,
+        "y": 34.3,
+        "z": 1.0,
+        "w": 134,
+        "d": 3,
+        "h": 6.9,
+        "r": 1.2,
+        "material": "titanium"
+      },
+      {
+        "id": "railB",
+        "layer": "frameDown",
+        "x": 0,
+        "y": -34.3,
+        "z": 1.0,
+        "w": 134,
+        "d": 3,
+        "h": 6.9,
+        "r": 1.2,
+        "material": "titanium"
+      },
+      {
+        "id": "btnVolUp",
+        "layer": "buttonFlex",
+        "x": -73.2,
+        "y": 14,
+        "z": 1.01,
+        "w": 1.2,
+        "d": 6,
+        "h": 0.06,
+        "r": 0.4,
+        "material": "titanium"
+      },
+      {
+        "id": "btnVolDn",
+        "layer": "buttonFlex",
+        "x": -73.2,
+        "y": 6,
+        "z": 1.01,
+        "w": 1.2,
+        "d": 6,
+        "h": 0.06,
+        "r": 0.4,
+        "material": "titanium"
+      },
+      {
+        "id": "btnFlex",
+        "layer": "buttonFlex",
+        "x": -66,
+        "y": 10,
+        "z": 0.98,
+        "w": 8,
+        "d": 20,
+        "h": 0.06,
+        "r": 1,
+        "material": "flex"
+      },
+      {
+        "id": "backGlass",
+        "layer": "backGlass",
+        "x": 0,
+        "y": 0,
+        "z": 0.0,
+        "w": 146.6,
+        "d": 70.6,
+        "h": 0.96,
+        "r": 10.5,
+        "material": "back"
+      }
+    ]
+  },
+  "audio": {
+    "mode": "external-music",
+    "music": "assets/audio/bgm/iso-iphone-deep.m4a",
+    "musicGain": 0.9,
+    "cues": [
+      {
+        "at": 3.15,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 4.75,
+        "src": "impact",
+        "gain": 0.5
+      },
+      {
+        "at": 6.6,
+        "src": "tick",
+        "gain": 0.5
+      },
+      {
+        "at": 8.4,
+        "src": "tick",
+        "gain": 0.5
+      },
+      {
+        "at": 9.55,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 11.55,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 13.55,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 15.55,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 17.55,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 19.55,
+        "src": "rise",
+        "gain": 0.6
+      },
+      {
+        "at": 22.15,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 25.15,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 29.15,
+        "src": "impact",
+        "gain": 0.55
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hero",
+      "t0": 0.0,
+      "t1": 3.2,
+      "args": {
+        "view": {
+          "yaw": -27,
+          "pitch": 44,
+          "fill": 0.6
+        }
+      }
+    },
+    {
+      "type": "rise",
+      "t0": 3.2,
+      "t1": 4.8,
+      "args": {
+        "transition": "whip"
+      }
+    },
+    {
+      "type": "explode",
+      "t0": 4.8,
+      "t1": 9.6,
+      "args": {
+        "card": {
+          "big": "24 层",
+          "small": "146.6 × 70.6 × 8.25 mm · {parts} 件"
+        }
+      }
+    },
+    {
+      "type": "layer",
+      "t0": 9.6,
+      "t1": 11.6,
+      "args": {
+        "layer": "glass",
+        "card": {
+          "big": "屏幕",
+          "small": "盖板 · 面板 · 触控"
+        },
+        "transition": "orbit",
+        "yaw": -38,
+        "pitch": 26,
+        "fill": 0.62
+      }
+    },
+    {
+      "type": "layer",
+      "t0": 11.6,
+      "t1": 13.6,
+      "args": {
+        "layer": "camera",
+        "card": {
+          "big": "3 摄",
+          "small": "模组 · 三片镜片"
+        },
+        "transition": "orbit",
+        "yaw": -30,
+        "pitch": 22,
+        "fill": 0.6
+      }
+    },
+    {
+      "type": "layer",
+      "t0": 13.6,
+      "t1": 15.6,
+      "args": {
+        "layer": "board",
+        "card": {
+          "big": "A17 Pro",
+          "small": "主板 · 双层堆叠"
+        },
+        "transition": "orbit",
+        "yaw": -24,
+        "pitch": 30,
+        "fill": 0.66
+      }
+    },
+    {
+      "type": "layer",
+      "t0": 15.6,
+      "t1": 17.6,
+      "args": {
+        "layer": "cellA",
+        "card": {
+          "big": "4422 mAh",
+          "small": "双电芯 · 串联"
+        },
+        "transition": "orbit",
+        "yaw": -34,
+        "pitch": 24,
+        "fill": 0.68
+      }
+    },
+    {
+      "type": "layer",
+      "t0": 17.6,
+      "t1": 19.6,
+      "args": {
+        "layer": "magnet",
+        "card": {
+          "big": "16 极",
+          "small": "磁吸环 · 无线充"
+        },
+        "transition": "orbit",
+        "yaw": -46,
+        "pitch": 34,
+        "fill": 0.72
+      }
+    },
+    {
+      "type": "part",
+      "t0": 19.6,
+      "t1": 22.2,
+      "args": {
+        "card": {
+          "big": "2.0 mm",
+          "small": "镜片对焦行程"
+        },
+        "transition": "spin"
+      }
+    },
+    {
+      "type": "array",
+      "t0": 22.2,
+      "t1": 25.2,
+      "args": {
+        "array": "magnets",
+        "card": {
+          "big": "16 颗",
+          "small": "磁铁 · 环形阵列"
+        },
+        "transition": "orbit"
+      }
+    },
+    {
+      "type": "assemble",
+      "t0": 25.2,
+      "t1": 29.2,
+      "args": {
+        "transition": "whip"
+      }
+    },
+    {
+      "type": "end",
+      "t0": 29.2,
+      "t1": 31.8,
+      "args": {
+        "card": {
+          "big": "iPhone",
+          "small": "24 层 · 一块玻璃和金属"
+        }
+      }
+    }
+  ]
+}
