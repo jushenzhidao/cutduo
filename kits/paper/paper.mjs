@@ -235,7 +235,9 @@ function paperAvatarCard(sc) {
   // 没有人物素材时，这一格改成「本章关键词卡」：
   // 既不放通用人脸素材（观感廉价），也不留一块空灰卡（右半画幅全废）。
   if (!avatarImg) {
-    const cast = (sc && sc.args && (sc.args.cast || sc.args.title)) || (sc ? String(sc.type) : '');
+    // 兜底顺序：显式 cast > 标题 > 标签。**不要退到 scene.type** —— 那会把 "compare"/"hero"
+    // 这类实现名当内容画上屏（2026-11-14 在生日悖论片里实际看到 "comp are" 断行）。
+    const cast = (sc && sc.args && (sc.args.cast || sc.args.title || sc.args.label)) || '';
     if (!cast) return;
     const idx = Math.max(0, scenes.indexOf(sc));
     ctx.save();
@@ -328,6 +330,255 @@ function trackWidth(chars, font, track) {
 
 function clampStart(at, t0, maxDelay = 0.06) {
   return Math.min(at, (t0 || 0) + maxDelay);
+}
+
+/**
+ * pChart —— 真图表（蒸自 lemo-opuscar 的 dataviz：*The chart is the film*）
+ *
+ * 每个标记是一个真实数值，每次出现是一次**有意义的图表操作**：标记落下、轴生长、
+ * 注释钉上。装饰性的折线动画不属于这里——数据不在轴上，就不该画出来。
+ *
+ * 两种图型（waffle 由 pGrid 承担）：
+ *   line  时间序列：x 是年份，点按顺序逐帧落下并连线
+ *   bar   排名或比较：柱子从基线长出来，按值排序
+ *
+ * args:
+ *   chart: 'line' | 'bar'
+ *   title, xLabel, yLabel
+ *   series: [{ label, points: [[x,y], ...] }]       line 用
+ *   items:  [{ label, value }]                       bar 用
+ *   axis:   { xFrom, xTo, yFrom, yTo }              留空则从数据推
+ *   notes:  [{ at:[x,y], text, side:'left'|'right' }]  注释钉在标记上
+ *   at, stagger                                     出现时机与节奏
+ */
+function pChart(t, a) {
+  paperBg();
+  const t0 = a.t0 ?? 0;
+  const at = a.at ?? (t0 + 0.4);
+  const stagger = a.stagger ?? 0.12;
+  const kind = a.chart || 'line';
+
+  // 绘图区（左半画幅，右边留给关键词卡）
+  const X0 = 300, X1 = 1080, Y0 = 392, Y1 = 716;
+
+  const series = (a.series || []).filter((s) => s && Array.isArray(s.points) && s.points.length);
+  const items = (a.items || []).filter((s) => s && Number.isFinite(Number(s.value)));
+  const flat = kind === 'bar' ? items.map((d) => Number(d.value)) : series.flatMap((s) => s.points.map((p) => Number(p[1])));
+
+  // 轴范围：显式给优先，否则按数据推（上下各留 8% 余量）
+  const ax = a.axis || {};
+  const xs = kind === 'bar' ? items.map((_, i) => i) : series.flatMap((s) => s.points.map((p) => Number(p[0])));
+  const xFrom = ax.xFrom ?? (xs.length ? Math.min(...xs) : 0);
+  const xTo = ax.xTo ?? (xs.length ? Math.max(...xs) : 1);
+  let yFrom = ax.yFrom, yTo = ax.yTo;
+  if (yFrom === undefined || yTo === undefined) {
+    const lo = flat.length ? Math.min(...flat) : 0;
+    const hi = flat.length ? Math.max(...flat) : 1;
+    const pad = (hi - lo) * 0.08 || Math.abs(hi || 1) * 0.1;
+    yFrom = yFrom ?? lo - pad;
+    yTo = yTo ?? hi + pad;
+  }
+  const xS = (v) => X0 + ((v - xFrom) / ((xTo - xFrom) || 1)) * (X1 - X0);
+  const yS = (v) => Y1 - ((v - yFrom) / ((yTo - yFrom) || 1)) * (Y1 - Y0);
+
+  pLabel(a.title || '', (X0 + X1) / 2, 246, PK.label, 4.7);
+
+  // ── 轴：先长出来，再落点（顺序本身就是"图表在被画"） ──
+  const pa = eo(pr(t, at - 0.45, at + 0.15));
+  if (pa > 0) {
+    ctx.save();
+    ctx.globalAlpha *= pa;
+    ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(X0, Y1); ctx.lineTo(X0, Y0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(X0, Y1); ctx.lineTo(X0 + (X1 - X0) * pa, Y1); ctx.stroke();
+    // 零线（若跨零）
+    if (yFrom < 0 && yTo > 0) {
+      ctx.strokeStyle = 'rgba(0,0,0,0.22)'; ctx.lineWidth = 1.5; ctx.setLineDash([7, 7]);
+      ctx.beginPath(); ctx.moveTo(X0, yS(0)); ctx.lineTo(X0 + (X1 - X0) * pa, yS(0)); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    // 刻度文字：bar 图的 x 是类目（标签已在柱下），再画数字会和标签打架
+    ctx.font = `500 22px ${PF.mono}`; ctx.fillStyle = PK.label;
+    ctx.textAlign = 'center';
+    if (kind !== 'bar') {
+      const nX = 5;
+      for (let i = 0; i <= nX; i++) {
+        const v = xFrom + (xTo - xFrom) * (i / nX);
+        ctx.fillText(String(Math.round(v)), xS(v), Y1 + 34);
+      }
+    }
+    ctx.textAlign = 'right';
+    for (let i = 0; i <= 3; i++) {
+      const v = yFrom + (yTo - yFrom) * (i / 3);
+      ctx.fillText(v.toFixed(1), X0 - 14, yS(v) + 8);
+    }
+    ctx.restore();
+  }
+  if (a.xLabel) {
+    ctx.save(); ctx.globalAlpha *= pa;
+    ctx.font = `500 24px ${PF.med}`; ctx.fillStyle = PK.label; ctx.textAlign = 'center';
+    ctx.fillText(a.xLabel, (X0 + X1) / 2, Y1 + 74);
+    ctx.restore();
+  }
+
+  // ── 标记 ──
+  if (kind === 'bar') {
+    const gap = (X1 - X0) / Math.max(1, items.length);
+    const bw = Math.min(88, gap * 0.6);
+    const base = yS(0);
+    items.forEach((it, i) => {
+      const p = pr(t, at + i * stagger, at + i * stagger + 0.42);
+      if (p <= 0) return;
+      const e = eo(p);
+      const x = X0 + gap * (i + 0.5) - bw / 2;
+      const yTop = yS(Number(it.value));
+      const y = base + (yTop - base) * e;                 // 从基线长出来
+      ctx.save();
+      ctx.fillStyle = i === (a.emphasis ?? -1) ? PK.accent : 'rgba(70,80,66,0.80)';
+      ctx.beginPath(); ctx.roundRect(x, Math.min(y, base), bw, Math.abs(base - y), 3); ctx.fill();
+      ctx.font = `500 22px ${PF.med}`; ctx.fillStyle = PK.ink; ctx.textAlign = 'center';
+      ctx.globalAlpha *= e;
+      ctx.fillText(it.label, x + bw / 2, base + 34);
+      // 数值标签：口播念出的数字必须在画面找得到，否则台账核对会报"未上屏"，
+      // 观众也没法把"十七点六"和某根柱子对上。默认显示，showValues:false 关掉。
+      if (a.showValues !== false) {
+        ctx.font = `600 19px ${PF.mono}`;
+        ctx.fillStyle = PK.body;
+        ctx.fillText(Number(it.value).toFixed(1), x + bw / 2, Math.min(y, base) - 12);
+      }
+      ctx.restore();
+    });
+  } else {
+    series.forEach((se, si) => {
+      let prev = null;
+      se.points.forEach((pt, i) => {
+        const gi = si * 1000 + i;
+        const p = pr(t, at + gi * stagger, at + gi * stagger + 0.26);
+        if (p <= 0) return;
+        const e = eo(p);
+        const x = xS(Number(pt[0])), y = yS(Number(pt[1]));
+        if (prev) {                                          // 连线只连已经出现的点
+          ctx.save();
+          ctx.strokeStyle = si === 0 ? INK : PK.accent;
+          ctx.lineWidth = 2.2; ctx.globalAlpha *= 0.75 * e;
+          ctx.beginPath(); ctx.moveTo(prev[0], prev[1]); ctx.lineTo(x, y); ctx.stroke();
+          ctx.restore();
+        }
+        ctx.save();
+        ctx.globalAlpha *= e;
+        ctx.beginPath(); ctx.arc(x, y, 6 * lerp(0.5, 1, e), 0, Math.PI * 2);
+        ctx.fillStyle = si === 0 ? INK : PK.accent; ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.restore();
+        prev = [x, y];
+        // 最后一个点的注释
+        const note = (a.notes || []).find((n) => n && n.at && Number(n.at[0]) === Number(pt[0]) && Number(n.at[1]) === Number(pt[1]));
+        if (note) {
+          const pn = pr(t, at + gi * stagger + 0.2, at + gi * stagger + 0.7);
+          if (pn > 0) {
+            ctx.save();
+            ctx.globalAlpha *= eo(pn);
+            const toLeft = note.side === 'left';
+            const tx = toLeft ? x - 22 : x + 22;
+            ctx.strokeStyle = PK.accent; ctx.lineWidth = 1.8; ctx.setLineDash([4, 5]);
+            ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(tx, y - 34); ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.font = `600 30px ${PF.black}`; ctx.fillStyle = PK.ink;
+            ctx.textAlign = toLeft ? 'right' : 'left';
+            ctx.fillText(note.text, tx, y - 44);
+            ctx.restore();
+          }
+        }
+      });
+    });
+  }
+  if (a.caption) {
+    const p = pr(t, at + 1.2, at + 1.8);
+    if (p > 0) {
+      ctx.save(); ctx.globalAlpha *= eo(p);
+      ctx.font = `500 26px ${PF.med}`; ctx.fillStyle = PK.body; ctx.textAlign = 'left';
+      ctx.fillText(a.caption, X0, Y1 + 108);
+      ctx.restore();
+    }
+  }
+}
+
+/**
+ * pGrid —— 网格即数量（lemo-opuscar「swiss-motion」§8 的两个原生动作）
+ *
+ * 行列不是装饰，是数量本身：23 列 × 11 行 = 253 个点，观众能一眼数出"这么密"。
+ * `exception` 是第 5 个动作「例外」：一个点不吸附到网格、颜色不同、带一点偏移——
+ * 用来讲"反直觉的那一个"。两件事共用同一套绘制，所以做成一个段而不是两个。
+ */
+function pGrid(t, a) {
+  paperBg();
+  const t0 = a.t0 ?? 0;
+  const rows = Math.max(1, a.rows || 10);
+  const cols = Math.max(1, a.cols || 10);
+  const gap = a.gap || 30;
+  const r = a.size || 9;
+  const ox = a.origin ? a.origin[0] : 300;
+  const oy = a.origin ? a.origin[1] : 392;
+  const stagger = a.stagger ?? 0.008;          // 每个点之间错开多久出现
+  const at = a.at ?? t0;
+  const hl = new Set((a.highlight || []).map(([i, j]) => i + ':' + j));
+  const ex = a.exception ? [a.exception[0], a.exception[1]] : null;
+
+  // 标题要对齐点阵中心：ox + 半宽，不是 (ox + 全宽)/2（那样会偏到左边一半）
+  pLabel(a.title || '', ox + ((cols - 1) * gap) / 2, 246, PK.label, 4.7);
+
+  let n = 0;
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      const isEx = ex && ex[0] === i && ex[1] === j;
+      // 例外点晚一点出现，且从网格里"脱开"
+      const at2 = at + n * stagger + (isEx ? 0.12 : 0);
+      const p = pr(t, at2, at2 + 0.30);
+      if (p <= 0) { n++; continue; }
+      const e = eo(p);
+      const gx = ox + j * gap, gy = oy + i * gap;
+      let x = gx, y = gy;
+      // 例外干脆**跳出网格**：留在格子附近只是"换个颜色"，跳出去才是"它不属于这里"。
+      // 一根虚线牵回原格位，说明它本该在那儿。
+      if (isEx) { x += gap * 2.6; y -= gap * 1.9; }
+      const isHl = hl.has(i + ':' + j);
+      ctx.save();
+      ctx.globalAlpha = e;
+      const rr = r * lerp(0.35, 1, e);
+      if (isEx) {
+        // 虚线牵回原格位
+        ctx.save();
+        ctx.globalAlpha *= 0.45 * e;
+        ctx.strokeStyle = PK.accent; ctx.lineWidth = 2; ctx.setLineDash([5, 6]);
+        ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(x, y); ctx.stroke();
+        ctx.restore();
+        // 一个明显更大的实心圆 + 白环：与周围的小点形成尺度差
+        const R2 = rr * 2.2;
+        ctx.beginPath(); ctx.arc(x, y, R2, 0, Math.PI * 2);
+        ctx.fillStyle = PK.accent; ctx.fill();
+        ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 4; ctx.stroke();
+      } else {
+        ctx.beginPath(); ctx.arc(x, y, rr, 0, Math.PI * 2);
+        ctx.fillStyle = isHl ? PK.accent : 'rgba(70,80,66,0.72)';
+        ctx.fill();
+      }
+      ctx.restore();
+      n++;
+    }
+  }
+
+  // 底部说明：数量 + 一句人话
+  if (a.note) {
+    const p = pr(t, at + rows * cols * stagger + 0.15, at + rows * cols * stagger + 0.6);
+    if (p > 0) {
+      ctx.save();
+      ctx.globalAlpha *= eo(p);
+      ctx.font = `600 ${a.noteSize || 46}px ${PF.black}`;
+      ctx.fillStyle = PK.ink; ctx.textAlign = 'left';
+      ctx.fillText(a.note, ox, oy + (rows - 1) * gap + 84);
+      ctx.restore();
+    }
+  }
 }
 
 function pLabel(text, cx, inkTop, color = PK.label, track = 4.7) {
@@ -842,6 +1093,8 @@ function drawContent(sc, t) {
     case 'hero': pHero(t, a); break;
     case 'point': pPoint(t, a); break;
     case 'number': pNumber(t, a); break;
+    case 'grid': pGrid(t, a); break;
+    case 'chart': pChart(t, a); break;
     case 'compare': pCompare(t, a); break;
     case 'steps': pSteps(t, a); break;
     case 'quote': pQuote(t, a); break;
@@ -849,7 +1102,13 @@ function drawContent(sc, t) {
     case 'outro': pOutro(t, a); break;
     // 空镜：不画正文，只出字幕条/时间码/头像卡；画面由生成素材提供（配 transparentBg 叠加）
     case 'broll': paperBg(); break;
-    default: paperBg();
+    default:
+      // 原来这里是 `paperBg()`——不认识的段型就画一张白纸。与 editorial 同一个坑：
+      // 喂错参数（比如 science 的 cover/talk）会静默产出空白画面，而 gate 只验像素统计，
+      // 帧数/空帧/黑帧全部通过。静默降级比报错危险，改成抛错。
+      throw new Error(
+        `paper 不支持段型 "${sc.type}"。支持：hero / point / number / compare / steps / quote / checklist / outro / broll / grid / chart。`
+      );
   }
 }
 
@@ -916,9 +1175,15 @@ function renderPaper(t, sc) {
 
   /** 当前时间该画哪一镜 + 时间码 + 头像 + 字幕。 */
   function renderFrame(t) {
-    const sc = scenes.find((s) => t >= s.t0 && t < s.t1) || scenes[scenes.length - 1];
+    const hit = scenes.find((s) => t >= s.t0 && t < s.t1);
+    if (hit) { renderPaper(t, hit); return; }
+    // 落在两个场景之间的空隙（gap=0.25s）时，原来取的是 scenes[scenes.length-1]，
+    // 也就是**最后一个场景**——于是每个间隙都闪一帧片尾卡（实测 43.0s 闪出 outro 的「不是巧合」）。
+    // 正确做法：保持上一个已结束场景的末态。
+    const done = scenes.filter((s) => s.t1 <= t);
+    const sc = done.length ? done[done.length - 1] : scenes[0];
     if (!sc) { paperBg(); return; }
-    renderPaper(t, sc);
+    renderPaper(Math.min(t, sc.t1 - 0.001), sc);
   }
 
   /** 单独画某一镜（预览/对比用）。 */

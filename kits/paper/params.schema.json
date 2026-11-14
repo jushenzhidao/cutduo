@@ -1,107 +1,437 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "skia-paper params",
-  "type": "object",
-  "required": ["scenes"],
-  "properties": {
-    "fps": { "type": "number", "default": 60 },
-    "durationSeconds": { "type": "number" },
-    "captions": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["start", "end", "text"],
-        "properties": { "start": { "type": "number" }, "end": { "type": "number" }, "text": { "type": "string" } }
-      }
-    },
-    "scenes": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "type": "object",
-        "required": ["type", "t0", "t1", "args"],
-        "properties": {
-          "type": { "enum": ["hero", "point", "number", "compare", "steps", "quote", "checklist", "outro", "broll"] },
-          "t0": { "type": "number" },
-          "t1": { "type": "number" },
-          "args": { "type": "object" }
-        },
-        "allOf": [
-          { "if": { "properties": { "type": { "const": "hero" } } },
-            "then": { "properties": { "args": {
-              "type": "object", "required": ["lines"],
-              "properties": {
-                "lines": { "type": "array", "items": { "type": "array", "items": [{ "type": "string" }, { "type": "number" }] },
-                  "description": "[[文案, 入场秒], ...]；*词* 标强调色" },
-                "sub": { "type": "string", "description": "眉标（可带 // 前缀，会被去掉）" }
-              } } } } },
-          { "if": { "properties": { "type": { "const": "point" } } },
-            "then": { "properties": { "args": {
-              "type": "object", "required": ["words"],
-              "properties": {
-                "words": { "type": "array", "items": { "type": "array", "items": [{ "type": "string" }, { "type": "number" }] } },
-                "cards": { "type": "array", "items": { "type": "array", "items": [{ "type": "string" }, { "type": "number" }] } }
-              } } } } },
-          { "if": { "properties": { "type": { "const": "number" } } },
-            "then": { "properties": { "args": {
-              "type": "object", "required": ["value"],
-              "properties": {
-                "label": { "type": "string" }, "from": { "type": "number" }, "value": { "type": "number" },
-                "unit": { "type": "string" }, "dur": { "type": "number" }, "sub": { "type": "string" }, "at": { "type": "number" }
-              } } } } },
-          { "if": { "properties": { "type": { "const": "compare" } } },
-            "then": { "properties": { "args": {
-              "type": "object", "required": ["left", "right"],
-              "properties": {
-                "left": { "$ref": "#/definitions/side" }, "right": { "$ref": "#/definitions/side" },
-                "leftAt": { "type": "number" }, "rightAt": { "type": "number" },
-                "strikeAt": { "type": "number", "description": "划掉左栏大标题的起始秒（缺省 = leftAt + 1.4）" }
-              } } } } },
-          { "if": { "properties": { "type": { "const": "steps" } } },
-            "then": { "properties": { "args": {
-              "type": "object", "required": ["steps"],
-              "properties": {
-                "title": { "type": "string" },
-                "steps": { "type": "array", "maxItems": 5, "items": { "type": "array", "items": [{ "type": "string" }, { "type": "number" }] } }
-              } } } } },
-          { "if": { "properties": { "type": { "const": "quote" } } },
-            "then": { "properties": { "args": {
-              "type": "object", "required": ["lines"],
-              "properties": {
-                "lines": { "type": "array", "minItems": 1, "maxItems": 2, "items": { "type": "string" } },
-                "at": { "type": "number" }, "by": { "type": "string" }
-              } } } } },
-          { "if": { "properties": { "type": { "const": "checklist" } } },
-            "then": { "properties": { "args": {
-              "type": "object", "required": ["items"],
-              "properties": {
-                "title": { "type": "string" },
-                "items": { "type": "array", "minItems": 1, "maxItems": 5, "items": { "type": "array", "items": [{ "type": "string" }, { "type": "number" }] } }
-              } } } } },
-          { "if": { "properties": { "type": { "const": "outro" } } },
-            "then": { "properties": { "args": {
-              "type": "object", "required": ["title"],
-              "properties": {
-                "title": { "type": "string" }, "lines": { "type": "array", "items": { "type": "string" } },
-                "prompt": { "type": "string", "description": "CTA 胶囊文案，留空则不画" }
-              } } } } },
-          { "if": { "properties": { "type": { "const": "broll" } } },
-            "then": { "properties": { "args": {
-              "type": "object",
-              "description": "空镜/素材插入：不画正文，只画字幕条、时间码、头像卡；配合 transparentBg 叠到生成素材上"
-            } } } }
-        ]
-      }
-    }
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "skia-paper params",
+ "type": "object",
+ "required": [
+  "scenes"
+ ],
+ "properties": {
+  "fps": {
+   "type": "number",
+   "default": 60
   },
-  "definitions": {
-    "side": {
-      "type": "object",
-      "required": ["title", "items"],
-      "properties": {
-        "title": { "type": "string", "description": "小标签，如「旧做法」" },
-        "items": { "type": "array", "minItems": 2, "items": { "type": "string" }, "description": "第 1 条是大标题，其余是正文" }
-      }
+  "durationSeconds": {
+   "type": "number"
+  },
+  "captions": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "required": [
+     "start",
+     "end",
+     "text"
+    ],
+    "properties": {
+     "start": {
+      "type": "number"
+     },
+     "end": {
+      "type": "number"
+     },
+     "text": {
+      "type": "string"
+     }
     }
+   }
+  },
+  "scenes": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "object",
+    "required": [
+     "type",
+     "t0",
+     "t1",
+     "args"
+    ],
+    "properties": {
+     "type": {
+      "enum": [
+       "hero",
+       "point",
+       "number",
+       "compare",
+       "steps",
+       "quote",
+       "checklist",
+       "outro",
+       "broll",
+       "grid",
+       "chart"
+      ]
+     },
+     "t0": {
+      "type": "number"
+     },
+     "t1": {
+      "type": "number"
+     },
+     "args": {
+      "type": "object"
+     }
+    },
+    "allOf": [
+     {
+      "if": {
+       "properties": {
+        "type": {
+         "const": "hero"
+        }
+       }
+      },
+      "then": {
+       "properties": {
+        "args": {
+         "type": "object",
+         "required": [
+          "lines"
+         ],
+         "properties": {
+          "lines": {
+           "type": "array",
+           "items": {
+            "type": "array",
+            "items": [
+             {
+              "type": "string"
+             },
+             {
+              "type": "number"
+             }
+            ]
+           },
+           "description": "[[文案, 入场秒], ...]；*词* 标强调色"
+          },
+          "sub": {
+           "type": "string",
+           "description": "眉标（可带 // 前缀，会被去掉）"
+          }
+         }
+        }
+       }
+      }
+     },
+     {
+      "if": {
+       "properties": {
+        "type": {
+         "const": "point"
+        }
+       }
+      },
+      "then": {
+       "properties": {
+        "args": {
+         "type": "object",
+         "required": [
+          "words"
+         ],
+         "properties": {
+          "words": {
+           "type": "array",
+           "items": {
+            "type": "array",
+            "items": [
+             {
+              "type": "string"
+             },
+             {
+              "type": "number"
+             }
+            ]
+           }
+          },
+          "cards": {
+           "type": "array",
+           "items": {
+            "type": "array",
+            "items": [
+             {
+              "type": "string"
+             },
+             {
+              "type": "number"
+             }
+            ]
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     {
+      "if": {
+       "properties": {
+        "type": {
+         "const": "number"
+        }
+       }
+      },
+      "then": {
+       "properties": {
+        "args": {
+         "type": "object",
+         "required": [
+          "value"
+         ],
+         "properties": {
+          "label": {
+           "type": "string"
+          },
+          "from": {
+           "type": "number"
+          },
+          "value": {
+           "type": "number"
+          },
+          "unit": {
+           "type": "string"
+          },
+          "dur": {
+           "type": "number"
+          },
+          "sub": {
+           "type": "string"
+          },
+          "at": {
+           "type": "number"
+          }
+         }
+        }
+       }
+      }
+     },
+     {
+      "if": {
+       "properties": {
+        "type": {
+         "const": "compare"
+        }
+       }
+      },
+      "then": {
+       "properties": {
+        "args": {
+         "type": "object",
+         "required": [
+          "left",
+          "right"
+         ],
+         "properties": {
+          "left": {
+           "$ref": "#/definitions/side"
+          },
+          "right": {
+           "$ref": "#/definitions/side"
+          },
+          "leftAt": {
+           "type": "number"
+          },
+          "rightAt": {
+           "type": "number"
+          },
+          "strikeAt": {
+           "type": "number",
+           "description": "划掉左栏大标题的起始秒（缺省 = leftAt + 1.4）"
+          }
+         }
+        }
+       }
+      }
+     },
+     {
+      "if": {
+       "properties": {
+        "type": {
+         "const": "steps"
+        }
+       }
+      },
+      "then": {
+       "properties": {
+        "args": {
+         "type": "object",
+         "required": [
+          "steps"
+         ],
+         "properties": {
+          "title": {
+           "type": "string"
+          },
+          "steps": {
+           "type": "array",
+           "maxItems": 5,
+           "items": {
+            "type": "array",
+            "items": [
+             {
+              "type": "string"
+             },
+             {
+              "type": "number"
+             }
+            ]
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     {
+      "if": {
+       "properties": {
+        "type": {
+         "const": "quote"
+        }
+       }
+      },
+      "then": {
+       "properties": {
+        "args": {
+         "type": "object",
+         "required": [
+          "lines"
+         ],
+         "properties": {
+          "lines": {
+           "type": "array",
+           "minItems": 1,
+           "maxItems": 2,
+           "items": {
+            "type": "string"
+           }
+          },
+          "at": {
+           "type": "number"
+          },
+          "by": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     {
+      "if": {
+       "properties": {
+        "type": {
+         "const": "checklist"
+        }
+       }
+      },
+      "then": {
+       "properties": {
+        "args": {
+         "type": "object",
+         "required": [
+          "items"
+         ],
+         "properties": {
+          "title": {
+           "type": "string"
+          },
+          "items": {
+           "type": "array",
+           "minItems": 1,
+           "maxItems": 5,
+           "items": {
+            "type": "array",
+            "items": [
+             {
+              "type": "string"
+             },
+             {
+              "type": "number"
+             }
+            ]
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     {
+      "if": {
+       "properties": {
+        "type": {
+         "const": "outro"
+        }
+       }
+      },
+      "then": {
+       "properties": {
+        "args": {
+         "type": "object",
+         "required": [
+          "title"
+         ],
+         "properties": {
+          "title": {
+           "type": "string"
+          },
+          "lines": {
+           "type": "array",
+           "items": {
+            "type": "string"
+           }
+          },
+          "prompt": {
+           "type": "string",
+           "description": "CTA 胶囊文案，留空则不画"
+          }
+         }
+        }
+       }
+      }
+     },
+     {
+      "if": {
+       "properties": {
+        "type": {
+         "const": "broll"
+        }
+       }
+      },
+      "then": {
+       "properties": {
+        "args": {
+         "type": "object",
+         "description": "空镜/素材插入：不画正文，只画字幕条、时间码、头像卡；配合 transparentBg 叠到生成素材上"
+        }
+       }
+      }
+     }
+    ]
+   }
   }
+ },
+ "definitions": {
+  "side": {
+   "type": "object",
+   "required": [
+    "title",
+    "items"
+   ],
+   "properties": {
+    "title": {
+     "type": "string",
+     "description": "小标签，如「旧做法」"
+    },
+    "items": {
+     "type": "array",
+     "minItems": 2,
+     "items": {
+      "type": "string"
+     },
+     "description": "第 1 条是大标题，其余是正文"
+    }
+   }
+  }
+ }
 }
