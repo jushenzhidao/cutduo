@@ -602,7 +602,15 @@ function renderFrame(t) {
     case 'quote': drawQuote(t, a); break;
     case 'checklist': drawChecklist(t, a); break;
     case 'outro': drawOutro(t, a); break;
-    default: bg('paper');
+    default:
+      // 原来这里是 `bg('paper')`——不认识的段型就画一张白纸。
+      // 把 paper 的 grid 段喂进来时会产出一片白，成片看着像"加载失败的 PPT"，
+      // 而 gate 的帧数/空帧/黑帧检查全部通过（实测 6126 帧全过、判 PASS）。
+      // 静默降级比报错危险：宁可让渲染失败。
+      throw new Error(
+        `editorial 不支持段型 "${sc.type}"。支持：hero / point / number / compare / steps / quote / checklist / outro。` +
+        (sc.type === 'grid' || sc.type === 'chart' ? '（grid / chart 是 paper 的段型，editorial 没有对应画法）' : '')
+      );
   }
   drawCaption(t);
   drawAvatar(t);
