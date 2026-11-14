@@ -98,10 +98,9 @@ Canvas2D → 换宿主（几小时）；长期产线 → 半蒸馏（蒸**内容
 
 `hero / point / number / compare / steps / quote / checklist / outro / broll / grid / chart`
 
-- `grid`：点阵表数量。**例外点必须跳出网格 + 2.2 倍半径 + 虚线牵回**（换色/换方形都分不出）。
-- `chart`：轴先长再落点、跨零画虚线、bar 必标数值、bar 不画 x 数字；该段 freeze 被严重高估（标记点占 0.02%
-  < freezedetect 0.2% 阈值）。图表是内容呈现方式 ⇒ 做段型，不做独立版式。
-- `checklist` 是**半圆仪表盘 + 指针 + 当前项**（R=330 弧），不是勾选框，设计如此。
+每型的参数手感与坑见 **`kits/paper/segments/`**（number/grid/chart 已写，其余待写）。三条不搬走的结论：
+`grid` 的例外点必须跳出网格（换色/换方形都分不出）｜`chart` 的 freeze 被 freezedetect 严重高估（标记点
+占 0.02% < 0.2% 阈值）｜`checklist` 是半圆仪表盘不是勾选框。
 
 ### 6.3 science ≠ paper
 
@@ -157,7 +156,10 @@ pacing 0/9 不达标。内容模型 `layers/parts/arrays/hero/mech` 全是 JSON�
 - **机位不能手抄**：按主体包围盒反算 zoom/pan；核心件被 pull 抬走后只补"当前−取景时"的高度差。
 - 桌面**不进三维投影**（特写 D≈2.6R 时远端翻面 ⇒ 橙色铺满帧），改屏幕斜线 `lx=0.58W`。
 - 每镜末段 `settle()` 留 0.8s 静止，否则 pacing 的 hold（≥30f@30fps）4/9 段不达标。
-- 已知弱项：array/stack 取景（薄层上方的大件闯进画面）、无穿插检测、dark 未验收。
+- 两版配色：`ISO_LOOK=dark`（与上游同名），深底外壳要 `look.tone=0.82` 压 18%，否则顶到纯白。
+- 配乐母带**两步**：先 acompressor+alimiter(level=false) 压 crest，再 loudnorm I=-16:TP=-2.2；
+  直接归一顶到 -0.2 dBTP（gate 线 -0.5）。`synth-bgm` 的 drop 自动落在最长段 = 爆炸开头。
+- 已知弱项：array/stack 取景（薄层上方的大件闯进画面）、无穿插检测。
 
 ## 七、音频
 

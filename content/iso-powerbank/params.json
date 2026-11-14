@@ -644,5 +644,107 @@
         }
       }
     }
-  ]
+  ],
+  "audio": {
+    "mode": "external-music",
+    "music": "assets/audio/bgm/iso-demo.m4a",
+    "musicGain": 0.9,
+    "cues": [
+      {
+        "at": 3.35,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 5.35,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 6.1,
+        "src": "impact",
+        "gain": 0.5
+      },
+      {
+        "at": 6.55,
+        "src": "tick",
+        "gain": 0.55
+      },
+      {
+        "at": 6.95,
+        "src": "tick",
+        "gain": 0.55
+      },
+      {
+        "at": 7.35,
+        "src": "tick",
+        "gain": 0.55
+      },
+      {
+        "at": 7.75,
+        "src": "tick",
+        "gain": 0.55
+      },
+      {
+        "at": 8.15,
+        "src": "tick",
+        "gain": 0.55
+      },
+      {
+        "at": 10.45,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 12.75,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 13.52,
+        "src": "tick",
+        "gain": 0.55
+      },
+      {
+        "at": 13.87,
+        "src": "tick",
+        "gain": 0.55
+      },
+      {
+        "at": 14.22,
+        "src": "tick",
+        "gain": 0.55
+      },
+      {
+        "at": 15.35,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 15.7,
+        "src": "rise",
+        "gain": 0.5
+      },
+      {
+        "at": 18.25,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 20.95,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 22.2,
+        "src": "impact",
+        "gain": 0.5
+      },
+      {
+        "at": 24.75,
+        "src": "impact",
+        "gain": 0.5
+      }
+    ]
+  }
 }

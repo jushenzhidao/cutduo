@@ -168,7 +168,7 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
   const PITCH = { hero: 46, wide: 25, part: 20, action: 12, array: 19, stack: 11 };
 
   const firstCam = fitCam({ parts: solid, S: poseAt(0), yaw: YAW.hero, pitch: PITCH.hero, aim: [0.54, 0.5], fill: 0.6 });
-  camK(0, { ...firstCam, zoom: firstCam.zoom * 0.98 }, 'lin');
+  camK(0, { ...firstCam, zoom: firstCam.zoom * 0.965, yaw: firstCam.yaw - 2 }, 'lin');
 
   for (const scene of scenes) {
     const t0 = Number(scene.t0) || 0;

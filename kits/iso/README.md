@@ -15,6 +15,16 @@ node render.mjs --kit iso --params content/iso-powerbank/params.json --probe out
 
 实测 1638 帧 / 27.3s / 1920×1080@60：**13.3s（123 fps，15 worker）**。
 
+同一份 content 出两版配色（与上游一致）：
+
+```bash
+node render.mjs --kit iso --params content/iso-powerbank/params.json --out out/a.mp4
+ISO_LOOK=dark node render.mjs --kit iso --params content/iso-powerbank/params.json --out out/b.mp4
+```
+
+音频走 params.audio（`src/audio-mix.mjs`）：配乐用 `tools/synth-bgm.mjs` 代码合成（零素材、
+drop 自动落在最长/信息最满那一段 = 爆炸开头），转场与落位用内置 `whoosh / tick / impact / rise` 事件轨。
+
 ## 内容模型
 
 ```jsonc

@@ -48,6 +48,7 @@ const looks = {
     line: [40, 38, 40, 0.32],
     card: [24, 24, 27],
     rim: null,
+    tone: 1,
   },
   dark: {
     wall: ['#0a0b10', '#06070a'],
@@ -56,6 +57,8 @@ const looks = {
     line: [210, 220, 255, 0.3],
     card: [246, 244, 238],
     rim: [198, 214, 255, 0.13],
+    // 深色底上白色外壳会顶到纯白、看着像没过色调映射；整体压 18%，亮边交给 rim
+    tone: 0.82,
   },
 };
 
@@ -92,7 +95,10 @@ export function createIsoRenderer(opts = {}) {
     const content = c.content || {};
     model = createModel(content);
     plan = buildPlan({ scenes: c.scenes || [], content, model, W, H, types: SCENE_TYPES });
-    lookName = content.look === 'dark' ? 'dark' : 'split';
+    // 同一套动画出两版配色：上游也是这么做的（process.env.ISO_LOOK）。
+    // 环境变量优先，其次 params.content.look，默认橙色桌面版。
+    const envLook = process.env.ISO_LOOK;
+    lookName = envLook === 'dark' || envLook === 'split' ? envLook : (content.look === 'dark' ? 'dark' : 'split');
     look = looks[lookName];
     title = content.title || content.name || 'PRODUCT';
     return { parts: model.parts.length, layers: model.layers.length };
@@ -219,7 +225,7 @@ export function createIsoRenderer(opts = {}) {
     let idx = Math.min(3, Math.floor(lam * 4));
     // 侧面比 top 稍暗一档，避免大面积同色读不出转折
     if (n[2] < 0.5) idx = Math.max(0, idx - 1);
-    const f = SHADE_LEVELS[idx];
+    const f = SHADE_LEVELS[idx] * (look.tone || 1);
     return [base[0] * f, base[1] * f, base[2] * f];
   }
 
