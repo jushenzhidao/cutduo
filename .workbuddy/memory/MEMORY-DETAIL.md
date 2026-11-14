@@ -191,3 +191,26 @@ pacing 0/9 不达标。内容模型 `layers/parts/arrays/hero/mech` 全是 JSON�
 - **explode 起手取景按 `poseAt(t0+0.05d)`**：原先用 0.7d ⇒ 甩镜一到位画面缩到 1/3（实测）。
 - **part/action 取景必须按"落定后 yaw" fit**：fit 完再转 3°，特写下主体横移近 1/6 屏。
 - 低多边形边界：球+贴片做的鸭子，3/4 角度像，正对镜头像 emoji ⇒ 特写改"整只鸭的层镜头"避开。
+
+### 6.9 母版骨架（`tools/knowledge/`，2026-11-15 修）
+
+`new.mjs` 从 7 个母版（A–G）生成参数骨架，只出**两种格式**，命令必须同源：
+
+| target | 产物 | 渲染 |
+|---|---|---|
+| `science`（默认） | `segments[]`（cover/talk/compare/diagram/matrix/focus/tip/outro） | `--kit science` |
+| `paper`（`--target paper`） | `scenes[]`（hero/point/number/compare/steps/quote/checklist/outro…） | `--kit paper` |
+
+- **不能拿 `guide.json` 的 `pairing.first` 拼 `--kit`**。那张表是上游 44 套风格时代的旧值，机读含义只有
+  「骨架的 `paperType`/`scienceType` 能映射到哪几支」。曾经 `new.mjs` 用它拼命令，导致 **B/D/E/F/G 五个
+  母版** 骨架是 segments、命令是 paper/clay，必然报「paper 不支持段型 "cover"」。现在用 `_meta.target`
+  （记录**实际产出的格式**，不是用户请求值）。
+- `rebaseArgs` 的时间键**不含 `from` / `until`**：`number.from` 是**数值起点**（`kits/paper/paper.mjs:799`
+  的 `a.from ?? a.value ?? 0`），当时刻平移会把 0→8 的滚动变成 7.58→8，第二段还倒滚。顶层 `{from,for}`
+  的时间语义在 `src/temporal.mjs`，两套不共用同一个正则。
+- 子段比样例段短时，靠后元素会落到段末之外，`auditTiming` 判「这个元素永远不会出现」并**拦渲染**。
+  `clampArgsTime` 钳到 `[segT0+0.05, segT1-0.3]`；**只钳不缩放**（缩放会把前段元素挤在一起，实测更差）。
+- A/B 有 `beats[]` 拍表，C–G 只有 `flow`，`planBeats` 统一成同一种拍结构，`paperType` 走
+  `PAPER_BY_SCIENCE` 兜底。七支都能出 9–11 段。
+- API 回执的 `details.stderr` 用 `tail()`（末 8 行），**必须补回首个 `Error:` 行**——Node 的 stack
+  trace 有 6–10 行，只取尾部会只剩一串 `at`，根因全丢。

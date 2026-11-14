@@ -705,7 +705,7 @@
   }
  },
  "pairing": {
-  "_how": "母版 × 首选风格（对应本仓 kits）。上游按 44 套风格给的表，这里只落到我们已有的 7 支版式上。",
+  "_how": "母版 × 骨架能落到哪些渲染器（**不是题材选型推荐**）。上游按 44 套风格给的表，机读含义只有一条：这份骨架的 paperType/scienceType 能映射到哪几支。选视觉请查 kits/STYLES.md；渲染命令以 new.mjs 产出的 _meta.target 为准，别用这里的 first 拼 --kit（历史上 B/D/E/F/G 五个母版因此指向了错误渲染器）。",
   "A": {
    "first": "science",
    "also": [

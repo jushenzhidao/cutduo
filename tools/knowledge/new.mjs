@@ -54,8 +54,9 @@ if (has('audit')) {
 /* 生成 */
 const template = arg('template');
 const tier = arg('tier', '标准');
+const target = arg('target', 'science');
 if (!template) {
-  console.error('用法: new.mjs --template A|B|C|D|E|F --tier 速览|精讲|标准|深挖 --title "标题" [-o out.json]');
+  console.error('用法: new.mjs --template A|B|C|D|E|F|G --tier 速览|精讲|标准|深挖 --title "标题" [--target science|paper] [-o out.json]');
   console.error('      new.mjs --score 1,0,2,2,1        # 只算复杂度与推荐档');
   console.error('      new.mjs --audit file.json        # 审一份稿子');
   process.exit(2);
@@ -65,10 +66,19 @@ if (!guide.templates[template]) {
   process.exit(2);
 }
 
+// 骨架只有两种格式：science 的 segments[] 与 paper 的 scenes[]。
+// 渲染命令必须与骨架同源，否则必报「不支持段型」——所以 target 与 --kit 绑死，
+// 不再从 guide.pairing 里猜（那张表的 first 是旧值，B/D/E/F/G 都会猜错）。
+if (!['science', 'paper'].includes(target)) {
+  console.error(`未知 target ${target}。骨架只有 science（segments）与 paper（scenes）两种格式。`);
+  process.exit(2);
+}
+
 const params = buildSkeleton({
   template, tier,
   title: arg('title', '未命名'),
   subtitle: arg('sub', ''),
+  target,
 });
 const out = arg('out', null, 'o');
 const json = JSON.stringify(params, null, 2);
@@ -79,8 +89,9 @@ if (out) {
   console.log(`✓ ${out}`);
   console.log(`  ${guide.templates[template].name} · ${tier} · ${beats.length} 拍 · ${params.durationSeconds}s` +
     (dropped ? `（从母版裁掉 ${dropped} 拍）` : ''));
-  console.log(`  配对版式：${params._meta.pairing.first}（也可 ${params._meta.pairing.also.join(' / ')}）`);
-  console.log(`  渲染：node render.mjs --kit ${params._meta.pairing.first} --params ${out}`);
+  // 题材首选只是参考；命令必须用骨架自己的 target，两条不能混。
+  console.log(`  题材首选（仅参考，不决定命令）：${params._meta.pairing.first}（也可 ${params._meta.pairing.also.join(' / ')}）`);
+  console.log(`  渲染：node render.mjs --kit ${params._meta.target} --params ${out}`);
   console.log(`  换文案后审查：node tools/knowledge/new.mjs --audit ${out}`);
 } else {
   console.log(json);

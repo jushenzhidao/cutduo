@@ -1,4 +1,4 @@
-# kits/ · 八套版式
+# kits/ · 九套版式
 
 每支 kit 是一个自治单元：**渲染器 + 参数 schema + presets**。版式之间不互相 import，
 共享的东西一律下沉到 `src/`（依赖方向单向：`kits/* → src/*`）。
@@ -8,8 +8,8 @@
 | `paper` | 纸感 | 1920×1080 @60 | `render.mjs --kit paper` | `kits/paper/presets/v8t.json` |
 | `science` | 科普 | 1920×1080 @30 | `render.mjs --kit science` | `kits/science/template/presets/*.json` |
 | `desk` | 桌面 | 1440×1080 @60 | `kits/desk/render.mjs` | `content/*.json`（`*-voiced.json` 带配音） |
-| `editorial` | 杂志 | 1920×1080 @30 | `kits/editorial/canvas-editorial.mjs` | `content/inputs-*.json` |
-| `mg` | 通用 | 1920×1080 @30 | `kits/mg/render.mjs` | `kits/mg/params.json` |
+| `editorial` | 杂志 | 1920×1080 @24 | `kits/editorial/canvas-editorial.mjs` | `content/inputs-*.json` |
+| `mg` | 通用 | 1920×1080 @60 | `kits/mg/render.mjs` | `kits/mg/params.json` |
 | `clay` | 黏土图示 | 1920×1080 @30 | `render.mjs --kit clay` | `kits/clay/presets/*.json`（7 种机制） |
 | `iso` | 等轴爆炸 | 1920×1080 @60 | `render.mjs --kit iso` | `content/iso-powerbank/params.json`（9 种镜头） |
 | `collage` | 深色科技宣传 | 1920×1080 @60 | `render.mjs --kit collage` | `kits/collage/presets/*.json` |
@@ -21,13 +21,13 @@
 `diagram` 是**段型库**（13 类图示），不自带片头字幕，出片入口只是验证用。
 
 ```bash
-bash tools/smoke.sh     # 五支各出一帧，回归用
+bash tools/smoke.sh     # 全部版式各出一帧，回归用
 ```
 
 ## 为什么 desk / editorial / mg 不走根入口
 
-四份 `render.mjs` 里各有一段约 350 行重复的骨架：参数解析、worker 分片、
-ffmpeg 管道、mpegts concat。合并它们要动分片边界与编码参数，是独立的一步工作。
+根入口之外，`desk` / `editorial` / `mg` 三份 `render.mjs` 里各有一段约 350 行重复的骨架：
+参数解析、worker 分片、ffmpeg 管道、mpegts concat（`diagram` 已直接走 `src/pipeline.mjs`）。合并它们要动分片边界与编码参数，是独立的一步工作。
 
 目录已按「版式自治」摆好，合并时只需把各自的 `render.mjs` 改成一层薄适配器，
 调用 `src/` 里的公共管道，不动这里的文件位置。

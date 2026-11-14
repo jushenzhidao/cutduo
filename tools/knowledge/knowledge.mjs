@@ -109,7 +109,11 @@ export function planBeats(templateKey, tier) {
  * 在新段开始时"早就出现过"，画面立刻静止 —— 实测 freeze 16.7 s，而样片只有 4.1 s。
  * 按 (新 t0 − 原 t0) 整体平移，元素重新按时出现。
  */
-const TIME_KEY = /^(at|leftAt|rightAt|strikeAt|itemAt|from|until)$/;
+// args 内部的时刻键。**刻意不含 from / until**：paper 的 number 段用
+// `from` 表示数值起点（kits/paper/paper.mjs:799 `a.from ?? a.value ?? 0`），
+// 把它当时刻平移会让「0 → 8 的滚动」变成「7.58 → 8」，动画几乎不可见；
+// 第二段更会变成 13.51 → 8 的倒滚。顶层时间声明另有一套（src/temporal.mjs）。
+const TIME_KEY = /^(at|leftAt|rightAt|strikeAt|itemAt)$/;
 function rebaseArgs(node, srcT0, dstT0, scale = 1) {
   const map = (t) => +(dstT0 + (t - srcT0) * scale).toFixed(2);
   if (Array.isArray(node)) {
@@ -123,6 +127,30 @@ function rebaseArgs(node, srcT0, dstT0, scale = 1) {
     for (const [k, v] of Object.entries(node)) {
       if (TIME_KEY.test(k) && typeof v === 'number') node[k] = map(v);
       else if (v && typeof v === 'object') rebaseArgs(v, srcT0, dstT0, scale);
+    }
+  }
+  return node;
+}
+
+/**
+ * 把 args 里的时刻钳进 [lo, hi]。
+ * 为什么需要：一拍拆成多段后，子段常比样例段短（3.65s vs 7s），样例里靠后的
+ * 元素平移过来就落到段末之外，auditTiming 判「这个元素永远不会出现」并直接拦下渲染
+ * （B 母版实测 2 处）。只钳不缩放——缩放会把前段元素挤到一起，实测比钳制更差。
+ */
+function clampArgsTime(node, lo, hi) {
+  const clamp = (t) => +Math.min(Math.max(t, lo), hi).toFixed(2);
+  if (Array.isArray(node)) {
+    if ((node.length === 2 || node.length === 3) && typeof node[0] === 'string' && typeof node[1] === 'number') {
+      node[1] = clamp(node[1]);
+    }
+    for (const v of node) if (v && typeof v === 'object') clampArgsTime(v, lo, hi);
+    return node;
+  }
+  if (node && typeof node === 'object') {
+    for (const [k, v] of Object.entries(node)) {
+      if (TIME_KEY.test(k) && typeof v === 'number') node[k] = clamp(v);
+      else if (v && typeof v === 'object') clampArgsTime(v, lo, hi);
     }
   }
   return node;
@@ -223,6 +251,10 @@ export function buildSkeleton({ template, tier, title, subtitle = '', theme, tar
     segments,
     _meta: {
       generator: 'kits/knowledge',
+      // 记录**实际产出的骨架格式**，不是用户请求值：new.mjs 拿它拼 --kit。
+      // 以前这里缺 target，new.mjs 就退回去用 pairing.first，于是 B/D/E/F/G
+      // 五个母版「骨架是 segments、命令是 paper/clay」——必然报「不支持段型」。
+      target: 'science',
       template, tier,
       templateName: tpl.name,
       beats: beats.length,
@@ -261,6 +293,9 @@ function buildPaperSkeleton({ template, tier, title, subtitle, theme, beats, fra
     for (let k = 0; k < parts; k++) {
       const tplEntry = argsTpl[type] || { args: {}, t0: 0, t1: 0 };
       const args = JSON.parse(JSON.stringify(tplEntry.args));
+      const segDur = k === parts - 1 ? dur - each * (parts - 1) : each;
+      const segT0 = +t.toFixed(2);
+      const segT1 = +(t + segDur).toFixed(2);
       // 只平移，**不缩放**：试过按段长拉伸元素时间，A 母版 5.3→6.1s 反而更差、C 母版不变。
       // 原因不在元素挤在前面，而在"同拍子段内容相同 + 每段元素出现完就静止"，相邻子段首尾相接就连成死画面。
       // 这件事骨架解决不了：paper 的镜头设计是 4–7 s，母版一拍 12–15 s，一拍必须拆成**内容不同**的
@@ -270,15 +305,17 @@ function buildPaperSkeleton({ template, tier, title, subtitle, theme, beats, fra
         if (Array.isArray(args.lines)) args.lines = [[title, +(t + 0.7).toFixed(2)]];
         if ('sub' in args) args.sub = subtitle || tpl.name;
       }
+      // 钳到段内（见 clampArgsTime 注释）：保底 0.05s 起始、留 0.3s 收尾。
+      clampArgsTime(args, +(segT0 + 0.05).toFixed(2), +Math.max(segT0 + 0.05, segT1 - 0.3).toFixed(2));
       const tag = parts > 1 ? `（第 ${k + 1}/${parts} 段，内容接着上一段写）` : '';
       scenes.push({
-        type, t0: +t.toFixed(2), t1: +(t + (k === parts - 1 ? dur - each * (parts - 1) : each)).toFixed(2),
+        type, t0: segT0, t1: segT1,
         note: `${b.id} ${b.role}${tag}｜${b.intent}｜画面：${b.screen || '—'}`,
         beat: b.id, args,
       });
       // 子段之间**不留 gap**：gap 是"拍间隔"，不是"段间隔"。
       // 每段都加会让 12 拍拆成 32 段后凭空多出 5 秒（实测 167.75 → 172.75）。
-      t += (k === parts - 1 ? dur - each * (parts - 1) : each);
+      t += segDur;
       if (k === parts - 1) t += GAP;
     }
   });

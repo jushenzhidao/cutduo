@@ -50,7 +50,18 @@ function runNode(scriptPath, args, { cwd = REPO_ROOT, timeoutMs = 0 } = {}) {
   });
 }
 
-const tail = (s, n = 8) => s.trim().split('\n').slice(-n).join('\n');
+/**
+ * 只取尾部会把根因切掉：Node 的 stack trace 有 6–10 行，真正的
+ * `Error: paper 不支持段型 "cover"` 在第一行，回执里就只剩一串 at。
+ * 所以尾部之外补回首条错误行——根因比调用栈有用得多。
+ */
+const tail = (s, n = 8) => {
+  const lines = String(s || '').trim().split('\n').filter(Boolean);
+  const last = lines.slice(-n);
+  const firstErr = lines.find((l) => /^\s*(?:\w*Error)\b:/.test(l));
+  if (firstErr && !last.includes(firstErr)) last.unshift(firstErr);
+  return last.join('\n');
+};
 
 /** 通用参数构造：五支只在 args 名与 kit 前缀上有差别。 */
 export function buildArgs(req, { paramsFlag = '--params', kitId = null, extra = () => [] } = {}) {
@@ -79,6 +90,23 @@ export function buildArgs(req, { paramsFlag = '--params', kitId = null, extra = 
 export function cliAdapter(capability, spec) {
   const scriptPath = path.join(REPO_ROOT, spec.script);
 
+  // 有的 kit 只有一部分超参有意义（diagram 是单进程、无主题切换）。
+  // 默认全部接受；声明了 supportedOverrides 就按白名单拒绝，而不是静默忽略——
+  // 静默忽略会让调用方以为 workers=8 生效了，回执里的耗时却对不上。
+  const supported = spec.supportedOverrides || null;
+  const assertOverrides = (req, extra = []) => {
+    if (!supported) return;
+    const bad = Object.keys(req.overrides || {})
+      .filter((k) => !supported.includes(k) && !extra.includes(k));
+    if (bad.length) {
+      throw new ApiError(CODE.BAD_REQUEST, `kit ${capability.id} 不支持 overrides：${bad.join(', ')}`, {
+        hint: '该支的渲染入口没有这些开关，传了也不会生效',
+        fix: `可用 overrides：${[...supported, ...extra].join(' / ')}`,
+        details: { unsupported: bad, supported: [...supported, ...extra] },
+      });
+    }
+  };
+
   const assertEntry = () => {
     if (!fs.existsSync(scriptPath)) {
       throw new ApiError(CODE.INTERNAL, `kit ${capability.id} 的入口不存在：${spec.script}`, {
@@ -94,6 +122,7 @@ export function cliAdapter(capability, spec) {
 
     async render(req) {
       assertEntry();
+      assertOverrides(req);
       const args = buildArgs(req, spec);
 
       // 产物目录要提前建：ffmpeg 不会替你 mkdir，失败信息还很隐晦
@@ -115,6 +144,7 @@ export function cliAdapter(capability, spec) {
 
     async probe(req, pngPath) {
       assertEntry();
+      assertOverrides(req, ['at']);
       fs.mkdirSync(path.dirname(pngPath), { recursive: true });
       // 把 out 指到 png：五支的 probe 分支都在写 mp4 之前就 process.exit，
       // 所以 --out 只是占位，不改语义。
