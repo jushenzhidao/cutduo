@@ -411,7 +411,19 @@ export function createDesktopRenderer(opts = {}) {
     G.beginPath(); G.arc(cx + 24, cy + 17, 9, Math.PI, 0); G.stroke();
     G.beginPath(); G.moveTo(cx + 24, cy + 26); G.lineTo(cx + 24, cy + 30); G.stroke();
     G.restore();
-    for (let i = 0; i < 7; i++) box(cx + 52 + i * 9, cy + 16, 5, 6 + (i < 4 ? 6 : 2), i < 4 ? P.green : 'rgba(255,255,255,0.34)', 2);
+    // 电平柱：原来高度写死（前 4 根 12px、后 3 根 8px），整片一动不动。
+    // 改成三条不同频率的正弦叠加，模拟说话时的起伏；每根相位错开，才有"来回扫"的感觉。
+    {
+      const baseY = cy + 28;
+      for (let i = 0; i < 7; i++) {
+        const ph = i * 0.85;
+        const lvl = Math.abs(Math.sin(t * 5.4 + ph) * 0.55 + Math.sin(t * 9.7 + ph * 1.7) * 0.3
+                           + Math.sin(t * 2.1 + ph * 0.6) * 0.15);
+        const h = 4 + lvl * 13;
+        const on = i < 4 || lvl > 0.45;   // 后 3 根只在电平高时点亮
+        box(cx + 52 + i * 9, baseY - h, 5, h, on ? P.green : 'rgba(255,255,255,0.34)', 2);
+      }
+    }
     G.beginPath(); G.arc(cx + cw - 26, cy + C.controlsH / 2, 13, 0, Math.PI * 2); G.fillStyle = '#E8463C'; G.fill();
     G.save(); G.strokeStyle = '#FFFFFF'; G.lineWidth = 3; G.lineCap = 'round';
     G.beginPath(); G.moveTo(cx + cw - 34, cy + 15); G.lineTo(cx + cw - 18, cy + 21); G.stroke();
