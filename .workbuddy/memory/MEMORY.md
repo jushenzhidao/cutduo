@@ -153,6 +153,19 @@ gate 判 PASS，实际 22s 白屏、后半段卡死（根因 `default: bg('paper
 
 **台词字数换算：4.9 字/秒**（336 字→70s、448 字→91s），别用 3.2 估。
 
+### 6.6 五套母版的段型结构（全部实测可渲染）
+
+| 母版 | 名 | 拍数（精讲） | 段型序列 |
+|---|---|---|---|
+| A | 反直觉探针 | 9 | hero/point/number/compare/quote/grid/steps/outro… |
+| B | 两难选择 | 9 | hero/point/**hero**/number/point/quote/quote/compare/outro（两段 hero 是"给选项"和"下判断"） |
+| C | 痛点原理 | 7–8 | hero/point/number/diagram/steps/quote/compare/outro |
+| D | 一条主线 | 5 | hero/point/steps/steps/outro（每拍 18s，必拆多段 ⇒ 每拍要多个 screens） |
+| E | 闯关 | 5 | hero/compare/quote/number/**checklist** |
+
+`checklist` 段不是勾选框列表，是**半圆仪表盘 + 指针扫过 + 当前项**（pChecklist：R=330 的弧，
+指针按 items 出现顺序推进，中间显示当前项文字）。这是设计，不是缺漏。
+
 ## 七、音频
 
 - **`vo.py` 产 wav，不能 `-c:a copy` 进 MP4**（PCM 在浏览器整轨静音），非 aac 一律转 `aac 160k`。
