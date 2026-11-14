@@ -11,7 +11,10 @@
 - 根因：tag 提交的**正文**里写了跳过标记，而逃生阀判定跑在模式判定之前且匹配整条 message。
   `release.yml` 已修：先定 MODE，跳过标记只在 `MODE=auto` 生效。
 - 惯例：tag-only、0 资产、标题=tag 名；自动补丁 `v0.x.y+1`，**契约变化才人工打 tag**。
-- 纯 CI / 纯文档提交用 `[skip release]`。
+- 纯 CI / 纯文档提交用 `[skip release]`。**但 `[skip release]` 会让 tag 也不打**：
+  2026-11-14 推了 18 笔全带跳过标记，CI run=success 而 tag 停在旧版本、Release 零个。
+  要发版必须**人工打 tag 再推**（`git tag -a vX.Y.Z && git push origin vX.Y.Z`），
+  且 tag message 里**不能**出现跳过标记。
 
 ## 二、速度口径（比较必须同片）
 
@@ -140,6 +143,13 @@ gate 判 PASS，实际 22s 白屏、后半段卡死（根因 `default: bg('paper
 
 ## 八、半蒸馏与换宿主
 
+- **`check-kit-contract` 的段型提取有三种写法**：switch 块、白名单数组、**对象映射**
+  （`const PAINTERS = {...}` + `PAINTERS[cur.type]`）。只认前两种时 collage 提取为 0，
+  与 schema 一比全错。段型名可能是驼峰（`flipBoard`），正则要允许大写。
+  当前覆盖：paper 11 / desk 18 / collage 11 全部与 schema 对表；clay / mg 无枚举（真实情况）。
+- **竖屏用 `tools/reframe.mjs`**（模糊填充，不裁内容），不要重排版式：
+  paper 的栅格按 1920×1080 定、全是绝对坐标，改 1080×1920 等于重写布局；
+  直接裁又会切掉关键词卡和字幕。背景 sigma 48 / 压暗 0.18 / 降饱和 0.55，否则原画面色块抢前景。
 - **`protection` 不是门槛**：open 可换宿主，protected 只能 Chrome 或照片反推；换宿主还需引擎是 Canvas2D。
 - 已评估：`mac-desktop` 最优（480fps/24w）；`sketchnote` 手绘单核 14fps、要 12 worker；`camera-mode` 引擎 DOM。
 - **science 双宿主只快 20–27%**（Chrome 154fps vs Skia 196fps），别照抄 paper 的 6.9×
