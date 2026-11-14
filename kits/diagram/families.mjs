@@ -1411,8 +1411,318 @@ export function drawRecap(ctx, r, p, box, env) {
   return { bounds, revealed: items.length, capacity: items.length, notes: [] };
 }
 
+/* ────────────── 以下四个是「元镜头」：讲这条流水线自己 ────────────── */
+
+/** mmss.cc：时间轴上标的是真实秒，不是"第几句" */
+function fmtClock(t) {
+  const v = Math.max(0, Number(t) || 0);
+  const m = Math.floor(v / 60);
+  const s = v - m * 60;
+  return `${String(m).padStart(2, '0')}${String(Math.floor(s)).padStart(2, '0')}.${String(Math.floor((s % 1) * 100)).padStart(2, '0')}`;
+}
+
+/**
+ * 一个巨大数字 + 一行说明。
+ * 一句话的核心如果就是一个数（"零个图层"），条形图是降级 —— 单项的条什么也没比较。
+ * 大数字承担的是"停顿一拍"：观众脑子里只需要装一个东西。
+ */
+export function drawBigNum(ctx, r, p, box, env) {
+  const { palette, fonts } = env;
+  const q = env.rowReveal(p, 0, 1, 0.1);
+  if (q <= 0.01) return { bounds: [], revealed: 0, capacity: 1, notes: [] };
+
+  const num = String(r.value ?? '0');
+  const f = fitText(ctx, num, box.width * 0.88, fonts.black, {
+    start: Math.min(Math.round(box.height * 0.62), 520),
+    min: 90,
+    maxLines: 1,
+  });
+  const blockH = f.size * 1.04;
+  const top = box.y + Math.max(0, (box.height - blockH) / 2 + 34);
+  const rise = (1 - easeOutQuint(q)) * 28; // 静止的巨字没有落地感
+
+  ctx.save();
+  ctx.globalAlpha = q;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = `${f.size}px ${fonts.black}`;
+  ctx.fillStyle = palette.ink;
+  ctx.fillText(f.lines[0] ?? num, box.x, top + f.size * 0.9 + rise);
+  ctx.restore();
+
+  if (r.label) {
+    // 标签跟数字横排，不压在下面：单个数字（尤其 "0"）视觉重量太窄，
+    // 竖着堆在左下角会让半张画面空着。横排以后整行从版心左缘铺开，重心才稳。
+    const lq = easeOutCubic(clamp((q - 0.35) / 0.65));
+    ctx.save();
+    ctx.font = `${f.size}px ${fonts.black}`;
+    const numW = ctx.measureText(f.lines[0] ?? num).width;
+    const labelX = box.x + numW + 48;
+    const baseY = top + f.size * 0.9 + rise;
+
+    ctx.globalAlpha = lq;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.font = `42px ${fonts.med}`;
+    ctx.fillStyle = palette.ink;
+    ctx.fillText(r.label, labelX, baseY - f.size * 0.26);
+
+    if (r.sub) {
+      ctx.font = `25px ${fonts.reg}`;
+      ctx.fillStyle = palette.label;
+      ctx.fillText(r.sub, labelX, baseY - f.size * 0.26 + 48);
+    }
+
+    ctx.globalAlpha = lq * 0.9;
+    ctx.fillStyle = palette.accent;
+    ctx.fillRect(labelX - 26, baseY - f.size * 0.26 - 30, 4, 68);
+    ctx.restore();
+  }
+
+  return { bounds: [{ x: box.x, y: top, width: box.width, height: blockH }], revealed: 1, capacity: 1, notes: [] };
+}
+
+/**
+ * 全片时间轴：每句一条范围条，条下面是一排「每个字真实发音时刻」的刻线。
+ *
+ * 这是自证图 —— 轴上位置全部来自 timing.json。刻线在该字被念到时由灰转红，
+ * 所以"图上亮到哪儿"必须等于"嘴里说到哪儿"；不同步的话这张图反而成了反证。
+ */
+export function drawTimeline(ctx, r, p, box, env) {
+  const { palette, fonts } = env;
+  const segs = r._timeline ?? [];
+  if (!segs.length) throw new CapacityError('DIAGRAM_TIMELINE', 'timeline 需要 _timeline（render 侧从 timing.json 注入）');
+  const total = Number(r._total) || segs.reduce((a, s) => Math.max(a, s.start + s.duration), 0);
+  const now = Number(env.now ?? 0);
+
+  const labelW = 170;
+  const trackX = box.x + labelW;
+  const trackW = box.width - labelW - 150;
+  const mapX = (t) => trackX + (clamp(t, 0, total) / total) * trackW;
+
+  const rowH = Math.min(124, (box.height - 40) / segs.length);
+  const blockH = rowH * segs.length;
+  const top = box.y + Math.max(0, (box.height - blockH - 50) / 2) + 16;
+  const barH = 28;
+
+  const bounds = [];
+  segs.forEach((s, i) => {
+    const q = env.rowReveal(p, i, segs.length, 0.12);
+    const y = top + i * rowH;
+    const x0 = mapX(s.audioAt);
+    const x1 = mapX(s.audioAt + s.speech);
+
+    ctx.save();
+    ctx.globalAlpha = q;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.font = `26px ${fonts.med}`;
+    ctx.fillStyle = palette.ink;
+    ctx.fillText(`第 ${i + 1} 句`, box.x + labelW - 30, y + barH / 2 - 6);
+    ctx.font = `19px ${fonts.reg}`;
+    ctx.fillStyle = palette.label;
+    const spoken = (s.chars ?? []).filter((c) => c.ch && !/[，。、；：？！“”‘’（）]/u.test(c.ch)).length;
+    ctx.fillText(`${spoken} 字`, box.x + labelW - 30, y + barH / 2 + 22);
+    ctx.restore();
+
+    ctx.save();
+    ctx.globalAlpha = q * 0.28;
+    ctx.fillStyle = palette.ink;
+    ctx.fillRect(x0, y, Math.max(2, x1 - x0), barH);
+    ctx.globalAlpha = q * 0.92;
+    ctx.fillStyle = palette.accent;
+    ctx.fillRect(x0, y, 3, barH);
+    ctx.restore();
+
+    ctx.save();
+    ctx.globalAlpha = q * 0.8;
+    ctx.font = `21px ${fonts.mono}`;
+    ctx.fillStyle = palette.body;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${fmtClock(s.audioAt)} – ${fmtClock(s.audioAt + s.speech)}`, x1 + 16, y + barH / 2);
+    ctx.restore();
+
+    // 字刻线：念到的转红并拉高。这是全片唯一"图上的时间就是嘴上的时间"的证据。
+    ctx.save();
+    (s.chars ?? []).forEach((c) => {
+      if (c.t === null || c.t === undefined) return;
+      const said = now >= s.start + c.t;
+      ctx.globalAlpha = q * (said ? 1 : 0.5);
+      ctx.fillStyle = said ? palette.accent : palette.ink;
+      ctx.fillRect(mapX(s.start + c.t), y + barH + 9, 2, said ? 24 : 15);
+    });
+    ctx.restore();
+
+    bounds.push({ x: x0, y, width: Math.max(2, x1 - x0), height: barH });
+  });
+
+  ctx.save();
+  ctx.globalAlpha = 0.45;
+  ctx.strokeStyle = palette.rule;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(trackX, top + blockH + 40.5);
+  ctx.lineTo(trackX + trackW, top + blockH + 40.5);
+  ctx.stroke();
+  ctx.restore();
+
+  return { bounds, revealed: segs.length, capacity: segs.length, notes: [] };
+}
+
+/**
+ * 字级时间戳：一句的字横排，每个字下面是它开口的秒数和一条"念了多久"的条。
+ *
+ * 出场不看进度，只看这个字自己的时刻 —— 念到哪个字，哪个字从灰变黑、条长出来。
+ * 全片没有任何时间自由度：图上的时间就是嘴上的时间。
+ */
+export function drawGlyph(ctx, r, p, box, env) {
+  const { palette, fonts } = env;
+  const chars = (r._chars ?? []).filter((c) => c && c.ch);
+  if (!chars.length) throw new CapacityError('DIAGRAM_GLYPH', 'glyph 需要 _chars（render 侧从 timing.json 注入）');
+  if (chars.length > 20) throw new CapacityError('DIAGRAM_CAPACITY', `glyph 最多 20 字，实际 ${chars.length}`);
+
+  const n = chars.length;
+  const now = Number(env.now ?? 0);
+  const size = Math.min(92, Math.floor(((box.width - 24) / n) * 0.86));
+  const cellW = (box.width - 24) / n;
+  const numsH = 34;
+  const barMaxH = 26;
+  const blockH = size + 16 + numsH + barMaxH;
+  const top = box.y + (box.height - blockH) / 2;
+  const maxD = Math.max(0.1, ...chars.map((c) => Number(c.d) || 0.1));
+
+  const bounds = [];
+  chars.forEach((c, i) => {
+    const cx = box.x + 12 + i * cellW + cellW / 2;
+    const at = Number(c.t);
+    const said = Number.isFinite(at) && now >= at + 0.02;
+    const fresh = said ? clamp(1 - (now - at) / 0.5) : 0;
+    const d = Number(c.d) || 0.1;
+
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.font = `${size}px ${fonts.black}`;
+    ctx.globalAlpha = said ? 1 : 0.15;
+    ctx.fillStyle = said && fresh > 0.4 ? palette.accent : palette.ink;
+    ctx.fillText(c.ch, cx, top + size * 0.9);
+    ctx.restore();
+
+    if (said) {
+      ctx.save();
+      ctx.globalAlpha = 0.75;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.font = `20px ${fonts.mono}`;
+      ctx.fillStyle = palette.label;
+      ctx.fillText(at.toFixed(2), cx, top + size + 14);
+      ctx.restore();
+
+      const grow = clamp((now - at) / Math.min(0.22, Math.max(0.06, d)));
+      const h = Math.max(2, (d / maxD) * barMaxH) * easeOutCubic(grow);
+      ctx.save();
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = palette.accent;
+      const w = Math.max(4, cellW * 0.44);
+      ctx.fillRect(cx - w / 2, top + size + 16 + numsH + (barMaxH - h), w, h);
+      ctx.restore();
+    }
+    bounds.push({ x: cx - cellW / 2, y: top, width: cellW, height: blockH });
+  });
+
+  return { bounds, revealed: chars.filter((c) => now >= Number(c.t)).length, capacity: n, notes: [] };
+}
+
+/**
+ * 帧计数器：屏幕上的数是这一帧的真实帧号，下面短尺是全片帧数。
+ *
+ * 说服力全部来自"不能作假"—— 数字由渲染器当前帧算出，不接锚点、不看 p。
+ */
+export function drawFrameCount(ctx, r, p, box, env) {
+  const { palette, fonts } = env;
+  const fr = env.frameInfo ?? {};
+  const idx = Math.round(Number(fr.index) || 0);
+  const total = Math.max(1, Math.round(Number(fr.total) || 1));
+  const fps = Number(fr.fps) || 30;
+  const fx = (x) => clamp(x, 0, 1);
+
+  const f = fitText(ctx, String(idx), box.width * 0.78, fonts.black, {
+    start: Math.min(Math.round(box.height * 0.4), 320),
+    min: 100,
+    maxLines: 1,
+  });
+  const ruleW = box.width * 0.72;
+  const ruleX = box.x + (box.width - ruleW) / 2;
+  const blockH = f.size * 1.02 + 168;
+  const top = box.y + Math.max(0, (box.height - blockH) / 2 + 30);
+
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = `${f.size}px ${fonts.black}`;
+  ctx.fillStyle = palette.ink;
+  ctx.fillText(String(idx), box.x + box.width / 2, top + f.size * 0.88);
+  ctx.restore();
+
+  ctx.save();
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.font = `30px ${fonts.med}`;
+  ctx.fillStyle = palette.label;
+  ctx.fillText(r.unit ?? '帧', box.x + box.width / 2 + f.size * 0.95, top + f.size * 0.62);
+  ctx.restore();
+
+  const ruleY = top + f.size * 1.02 + 54;
+  ctx.save();
+  ctx.strokeStyle = palette.rule;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(ruleX, ruleY + 0.5);
+  ctx.lineTo(ruleX + ruleW, ruleY + 0.5);
+  ctx.stroke();
+
+  // 每秒一根刻度，每 5 秒加长：观众靠它把"帧号"换算成"秒"
+  const sec = Math.max(1, Math.round(total / fps));
+  for (let s = 0; s <= sec; s++) {
+    const x = ruleX + (s / sec) * ruleW;
+    const long = s % 5 === 0;
+    ctx.beginPath();
+    ctx.moveTo(x + 0.5, ruleY);
+    ctx.lineTo(x + 0.5, ruleY + (long ? 16 : 9));
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // 播放头：位置 = 当前帧 / 全片帧，不含任何缓动
+  const px = ruleX + fx(idx / total) * ruleW;
+  ctx.save();
+  ctx.fillStyle = palette.accent;
+  ctx.fillRect(px - 2, ruleY - 12, 4, 34);
+  ctx.restore();
+
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.font = `21px ${fonts.mono}`;
+  ctx.fillStyle = palette.label;
+  ctx.fillText(`${(idx / fps).toFixed(2)}s`, px, ruleY + 26);
+  ctx.textAlign = 'right';
+  // 这行含中文，必须用 reg：JetBrainsMono 没中文字形，渲染出来是方块
+  ctx.font = `21px ${fonts.reg}`;
+  ctx.fillStyle = palette.body;
+  ctx.fillText(`全片 ${total} 帧 / ${(total / fps).toFixed(2)} 秒`, ruleX + ruleW, ruleY + 26);
+  ctx.restore();
+
+  return { bounds: [{ x: ruleX, y: ruleY - 12, width: ruleW, height: 34 }], revealed: 1, capacity: 1, notes: [] };
+}
+
 export const FAMILIES = {
   'data-bar': drawDataBar,
+  bignum: drawBigNum,
+  timeline: drawTimeline,
+  glyph: drawGlyph,
+  framecount: drawFrameCount,
   'data-line': drawDataLine,
   hierarchy: drawHierarchy,
   cycle: drawCycle,

@@ -131,6 +131,10 @@ export function drawDiagram(ctx, recipe, t, box, opts = {}) {
     palette,
     fonts,
     frame,
+    // 元镜头要的两样东西：当前绝对秒（timeline/glyph 判"这个字念到没有"）、
+    // 当前帧号（framecount 直接印在屏幕上）。普通图示不看它们。
+    now: Number.isFinite(opts.now) ? opts.now : null,
+    frameInfo: opts.frame ?? null,
     reveal: (pp, i, n, span = 0.12) => (entries ? anchorStagger(t, i, entries, fade) : stagger(pp, i, n, span)),
     rowReveal: (pp, i, n, span = 0.12) =>
       rowEntries ? anchorStagger(t, i, rowEntries, fade) : entries ? anchorStagger(t, i, entries, fade) : stagger(pp, i, n, span),
@@ -203,7 +207,7 @@ export function drawDiagram(ctx, recipe, t, box, opts = {}) {
   }
 
   // 网格只铺内容区：铺到标题底下时，标题会压着一堆格线，像没对齐
-  drawGrid(
+  if (recipe.grid !== false) drawGrid(
     ctx,
     { x: box.x, y: contentTop, width: box.width, height: box.y + box.height - contentTop },
     palette,

@@ -80,6 +80,20 @@ function main() {
         }
         if (rowEntries) s._rowEntries = rowEntries;
         if (Array.isArray(st.lines) && st.lines.length) s._lines = st.lines;
+        // 元镜头的数据源：时间轴要全片每段的真实范围与字刻线，glyph 要这一句的逐字时刻
+        if (s.family === 'timeline') {
+          s._timeline = timing.segments ?? [];
+          s._total = timing.total;
+        }
+        if (s.family === 'glyph') {
+          const punct = /[，。、；：？！“”‘’（）《》〈〉【】—…·,.!?;:]/;
+          const cs = (st.chars ?? []).filter((c) => c.ch && !punct.test(c.ch));
+          s._chars = cs.map((c, k) => {
+            const next = cs[k + 1];
+            const d = next && next.t != null && c.t != null ? Math.max(0.03, next.t - c.t) : 0.14;
+            return { ch: c.ch, t: c.t == null ? null : Number((st.start + c.t).toFixed(3)), d: Number(d.toFixed(3)) };
+          });
+        }
       } catch (e) {
         anchorErrors.push({ index: i, family: s.family, error: e.message });
       }
@@ -117,6 +131,24 @@ function main() {
   });
   const total = acc;
   const frames = Math.round(total * fps);
+
+  // 元镜头要把真值印在屏幕上（帧数、总长），但这些值要到所有段时长定下来才知道。
+  // 用 {frames} / {total} / {seconds} 占位，出片前一次性替换 —— 手打的数字迟早对不上。
+  const facts = { frames: String(frames), total: total.toFixed(2), seconds: total.toFixed(1) };
+  const subst = (v) => {
+    if (typeof v === 'string') return v.replace(/\{(frames|total|seconds)\}/g, (m, k) => facts[k] ?? m);
+    if (Array.isArray(v)) return v.map(subst);
+    if (v && typeof v === 'object') {
+      const out = {};
+      for (const [k, x] of Object.entries(v)) out[k] = k.startsWith('_') ? x : subst(x);
+      return out;
+    }
+    return v;
+  };
+  segments.forEach((seg) => {
+    for (const k of Object.keys(seg)) if (!k.startsWith('_')) seg[k] = subst(seg[k]);
+  });
+
   if (tcDur > 0) timeline.unshift({ seg: { family: '__title__', ...tc, duration: tcDur }, start: 0, end: tcDur, dur: tcDur });
 
   const canvas = createCanvas(width, height);
@@ -132,7 +164,13 @@ function main() {
         return;
       }
       const idx = timeline.filter((x) => x.seg.family !== '__title__').indexOf(cur) + 1;
-      drawDiagram(ctx, cur.seg, t - cur.start, box, { palette, index: idx, total: segments.length });
+      drawDiagram(ctx, cur.seg, t - cur.start, box, {
+        palette,
+        index: idx,
+        total: segments.length,
+        now: t,
+        frame: { index: Math.floor(t * fps), total: frames, fps },
+      });
       const fadingOut = (params.outroFade ?? 0) > 0 && t > total - (params.outroFade ?? 0);
       if (params.captions !== false && !fadingOut) {
         // 一段多句时字幕只挂"当前这一句"：两句一起挂底部会一直显示 30+ 字，

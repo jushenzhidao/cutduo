@@ -1,0 +1,79 @@
+{
+  "$comment": "元片：讲这条流水线自己。5 句 5 镜，画面上的每个数都是本片的真值（帧号、字数、时间戳由渲染器/时间戳文件给出，不是手打）。",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "palette": "paper",
+  "crf": 18,
+  "preset": "veryfast",
+  "captionY": 946,
+  "captionSize": 42,
+  "frame": {
+    "y": 96,
+    "bottom": 210
+  },
+  "introFade": 0.55,
+  "lead": 0.3,
+  "endPad": 0.45,
+  "lineGap": 0.16,
+  "segments": [
+    {
+      "family": "bignum",
+      "heading": "none",
+      "grid": false,
+      "line": "这条片子，没有一个画面是我摆的。",
+      "duration": 4,
+      "value": "0",
+      "label": "个手动摆放的画面",
+      "sub": "位置、大小、出现时刻，全由时间戳算出来",
+      "items": []
+    },
+    {
+      "family": "timeline",
+      "heading": "left",
+      "grid": false,
+      "line": "配音先切成字，每个字都有时刻。",
+      "duration": 5,
+      "items": [],
+      "title": "全片五句，一句一条"
+    },
+    {
+      "family": "glyph",
+      "heading": "none",
+      "grid": false,
+      "line": "画面跟着字走，一句只动一处。",
+      "duration": 4.5,
+      "items": [],
+      "note": "秒数 = 这个字真正开口的时刻；红条长度 = 它占用了多久"
+    },
+    {
+      "family": "framecount",
+      "heading": "none",
+      "grid": false,
+      "line": "屏幕上的数，全是这一帧的真值。",
+      "duration": 4.5,
+      "unit": "帧",
+      "items": []
+    },
+    {
+      "family": "definition",
+      "heading": "left",
+      "title": "这一支片子的真值",
+      "line": "整条流水线，全在这台机器上跑完。",
+      "duration": 4,
+      "items": [
+        {
+          "id": "dur",
+          "label": "{total} 秒",
+          "text": "从第一帧到最后一帧，含每段首尾的留白"
+        },
+        {
+          "id": "frames",
+          "label": "{frames} 帧",
+          "text": "三十帧一秒，一帧不多一帧不少"
+        }
+      ],
+      "grid": false
+    }
+  ]
+}

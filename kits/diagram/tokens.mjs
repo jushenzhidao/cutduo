@@ -78,4 +78,9 @@ export const CAPACITY = {
   evidence: { min: 1, max: 3, label: 90 },
   formula: { min: 0, max: 6, label: 12 },
   recap: { min: 2, max: 6, label: 16 },
+  // 元镜头：内容是"本片自己"，不接 items
+  bignum: { min: 0, max: 1, label: 0 },
+  timeline: { min: 0, max: 0, label: 0 },
+  glyph: { min: 0, max: 0, label: 20 },
+  framecount: { min: 0, max: 0, label: 0 },
 };

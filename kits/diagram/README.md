@@ -129,6 +129,26 @@ node kits/diagram/render.mjs --params out/x.vo.json --timing out/x.timing.json -
 **底部让位**：`captionY` 取 946 时 `frame.bottom` 必须 ≥ 200。默认 120 让版心底缘落在 960，
 正好压住左下角的 `note`，字幕和注释叠成一坨 —— 样张看不出，只有成片才暴露。
 
+## 五·五、元镜头：讲这条流水线自己
+
+四个不接 `items` 的段型，用来拍"这支片子自己是怎么做出来的"。数据全部由 render 侧注入，
+所以**写不出假数字**：
+
+| family | 数据来源 | 屏幕上是什么 |
+|---|---|---|
+| `bignum` | `recipe.value` | 一个巨大数字 + 横排说明（单项时比条形图强） |
+| `timeline` | `_timeline`（timing.json） | 每句一条真实范围 + 每字的开口刻线（念到转红） |
+| `glyph` | `_chars` + `env.now` | 一句的字逐个点亮，下面印各自秒数 |
+| `framecount` | `env.frameInfo` | 当前帧号 + 全片短尺 + 播放头 |
+
+三条纪律：
+
+- `grid: false`。整屏内容铺网格会把数字压成底纹。
+- **含中文的字符串不能用 `fonts.mono`**。JetBrainsMono 没有中文字形，"全片 604 帧"会渲成
+  `▯▯ 604 ▯`；纯数字才用 mono。这条是成片后才发现的，截图里非常显眼。
+- `{total}` / `{frames}` / `{seconds}` 是占位符，出片前由 `render.mjs` 替换成本片真值 ——
+  手打的数字迟早和实际帧数对不上。
+
 ## 六、容量纪律
 
 超容量一律抛 `DIAGRAM_CAPACITY`，不缩字号硬塞：
