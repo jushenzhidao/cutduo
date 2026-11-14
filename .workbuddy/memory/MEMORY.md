@@ -133,8 +133,25 @@ gate 判 PASS，实际 22s 白屏、后半段卡死（根因 `default: bg('paper
 ### 6.5 args 结构（写新片前必读 `kits/paper/presets/v8t.json`）
 
 按"看着合理"猜会一路崩到渲染函数，错误信息完全不指向病因（`l.replace is not a function`）：
-`quote.lines` 是**字符串数组**；`compare.left/right` 是 `{title, items}`；`hero.lines` 才是 `[[text,at]]`。
-`new-film` 现在会把 v8t 的真实结构（时间归一化成段内相对）直接填进 `screens`。
+
+| 段型 | 字段 | 格式 |
+|---|---|---|
+| quote | `lines` | **字符串数组** `["第一行","第二行"]` |
+| point | `words` / `cards` | **元组数组** `[["文字",0.4]]`（写成字符串数组不报错、**不渲染**） |
+| hero | `lines` | 元组数组 `[["文字",0.5]]` |
+| compare | `left/right` | `{title, items:[…]}` |
+| outro | `lines` | 字符串数组 |
+
+`quote.lines` 与 `point.words` 正好相反，最容易混。`new-film` 现在会把 v8t 的真实结构
+（时间归一化成段内相对）直接填进 `screens`。
+
+**一拍拆多段时每段重放同一份 screens** ⇒ 同一画面重复 2–5 遍（D 母版 5 拍 × 18s 必拆）。
+必须给每拍**多个 screens**（内容递进），实测 2/3/2/4/3 个才够。
+
+**配音缓存只判 mp3 是否存在**：改了 script.json 也不重配（实测文案加到 438 字、成片还是 70s）。
+已改为比较 mtime。改文案后时长没变，先查这个。
+
+**台词字数换算：4.9 字/秒**（336 字→70s、448 字→91s），别用 3.2 估。
 
 ## 七、音频
 
