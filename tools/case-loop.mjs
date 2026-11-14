@@ -32,9 +32,12 @@ if (!slug) { console.error('用法: node tools/case-loop.mjs <slug>'); process.e
 
 const video = path.join(ROOT, `out/${slug}.mp4`);
 const scriptPath = path.join(ROOT, `content/${slug}/script.json`);
-// 优先用链式参数（渲染真正用的那份）；没有就退回 params.json
-const paramsPath = [path.join(ROOT, `content/${slug}/params-chain.json`),
-  path.join(ROOT, `content/${slug}/params.json`)].find((p) => existsSync(p)) || '';
+// 两份参数分工：节奏用链式那份（渲染真正用的），拍映射用绝对那份（有 t0/t1，能对齐段与拍）。
+// 链式参数里是 from:'@prev'，没有 t0，拿它映射段→拍会全部落空（实测 round-window 结构检查因此空转）。
+const chainPath = path.join(ROOT, `content/${slug}/params-chain.json`);
+const absPath = path.join(ROOT, `content/${slug}/params.json`);
+const paramsPath = existsSync(chainPath) ? chainPath : (existsSync(absPath) ? absPath : '');
+const mapPath = existsSync(absPath) ? absPath : paramsPath;
 const factsPath = path.join(ROOT, `content/${slug}/facts.md`);
 if (!existsSync(video)) { console.error(`找不到成片: ${video}`); process.exit(2); }
 if (!existsSync(scriptPath)) { console.error(`找不到 script.json: ${scriptPath}`); process.exit(2); }
@@ -70,29 +73,53 @@ function grayAt(t, file) {
   return r.stdout && r.stdout.length >= 640 * 360 ? r.stdout : null;
 }
 
-// 相邻段「首屏」是否画面雷同 —— 同拍拆两段却共用一份 screens 时，第二段会重放第一段的画面。
-// 这是本产线最容易发生的缺陷，而成片上只表现为"这段好像见过"，人眼很容易放过。
-function duplicateSegments(segs) {
-  const out = [];
-  const frames = segs.map((s) => ({ t0: s.t0, type: s.type, f: grayAt(s.t0 + 0.8, video) }));
-  for (let i = 1; i < frames.length; i++) {
-    const a = frames[i - 1].f, b = frames[i].f;
-    if (!a || !b) continue;
-    let acc = 0;
-    for (let k = 0; k < a.length; k++) acc += Math.abs(a[k] - b[k]);
-    const mean = acc / a.length;
-    // 阈值按实测校准：真雷同（同屏重放）实测 0.14；同一版式但换了文字/大卡实测 0.59。
-    // 取 0.35 落在两者之间——判得出重放，不误杀"换了字"的正常两屏。
-    if (mean < 0.35) out.push({ pair: `${frames[i - 1].t0}s → ${frames[i].t0}s`, mean: +mean.toFixed(2) });
+// 同屏重复：结构优先 + 像素兜底。
+//
+// 结构判据是确定性的：一拍被拆成 N 段，但 script.json 只写了 M 份 screens，N>M 就必然
+// 从第 M+1 段起复用第 1 份。这一条不依赖抽帧，也不受动画相位影响。
+// 像素判据只作兜底（两份 screens 写得几乎一样），且**只比内容区**——把字幕带算进去的话，
+// 同一画面配不同字幕会被判成"不同"（实测 round-window 第1段 vs 第3段 全幅均差 2.21，
+// 其中大半来自字幕与进度条）。
+function duplicateSegments(segs, screensByBeat) {
+  const structural = [];
+  const byBeat = new Map();
+  for (const s of segs) if (s.beat) byBeat.set(s.beat, (byBeat.get(s.beat) || 0) + 1);
+  for (const [beat, n] of byBeat) {
+    const have = screensByBeat.get(beat) || 1;
+    if (n > have) structural.push({ beat, parts: n, screens: have });
   }
-  return out;
+
+  // 像素兜底：每段与**同拍的所有更早段**比（不只是相邻段——3 段拍的复用发生在第 1↔第 3 段）
+  const crop = (f) => { const out = Buffer.alloc(640 * (310 - 36)); for (let y = 36; y < 310; y++) f.copy(out, (y - 36) * 640, y * 640, y * 640 + 640); return out; };
+  // 采样点取段中（0.8–3.5s 之间按段长取），不取段首：
+  // 段首 0.8s 元素还在入场，两段都接近空白 ⇒ 会被判成"雷同"（benford 的 grid 段实测如此）。
+  const frames = segs.map((s) => {
+    const at = s.t0 + Math.min(3.5, Math.max(0.8, (s.dur || 5) * 0.55));
+    const g = grayAt(at, video);
+    return { t0: s.t0, beat: s.beat, f: g ? crop(g) : null };
+  });
+  const pixel = [];
+  for (let i = 1; i < frames.length; i++) {
+    for (let j = 0; j < i; j++) {
+      if (frames[i].beat !== frames[j].beat) continue;
+      const a = frames[j].f, b = frames[i].f;
+      if (!a || !b) continue;
+      let acc = 0;
+      for (let k = 0; k < a.length; k++) acc += Math.abs(a[k] - b[k]);
+      const mean = acc / a.length;
+      if (mean < 0.35) pixel.push({ pair: `${frames[j].t0}s ↔ ${frames[i].t0}s`, mean: +mean.toFixed(2) });
+    }
+  }
+  return { structural, pixel };
 }
 
 // 章节号：卡面写 `NN / MM`，MM 必须是**拍数**而不是子段数
 function chapterNumbers(ocrLines, beatCount) {
   const hits = [];
   for (const l of ocrLines || []) {
-    const m = l.text.match(/(\d{1,2})\s*[/／]\s*(\d{1,2})/);
+    // 负向前瞻必须有：概率「1 / 365」会被读成章节号「1/36」（实测 birthday-v2）。
+    // 章节号的分母后面不可能还跟着数字。
+    const m = l.text.match(/(\d{1,2})\s*[/／]\s*(\d{1,2})(?!\d)/);
     if (m) hits.push({ t: l.t, shown: `${m[1]}/${m[2]}`, denom: Number(m[2]) });
   }
   const bad = hits.filter((h) => h.denom !== beatCount);
@@ -176,7 +203,7 @@ const segs = (() => {
   // 段界从 pacing 的 rows 拿（它已经解析了 chain / dur / t0 三种写法）
   if (!pace || !pace.rows) return [];
   // rows 里没有 beat id，用 t0 去 params 里对齐
-  const p = existsSync(paramsPath) ? JSON.parse(readFileSync(paramsPath, 'utf8')) : null;
+  const p = mapPath ? JSON.parse(readFileSync(mapPath, 'utf8')) : null;
   const list = p && p.scenes ? p.scenes : [];
   return pace.rows.map((r) => {
     const sc = list.find((s) => Math.abs((s.t0 ?? -1) - r.t0) < 0.02) || {};
@@ -184,7 +211,8 @@ const segs = (() => {
   });
 })();
 
-const dup = duplicateSegments(segs);
+const screensByBeat = new Map(beats.map((b) => [b.id, (b.screens || []).length]));
+const dup = duplicateSegments(segs, screensByBeat);
 const chap = chapterNumbers(ocr, beats.length);
 const sub = subtitleCoverage(ocr);
 const tp = textPace();
@@ -194,7 +222,8 @@ if (gate && gate.verdict === 'FAIL') findings.push({ level: '高', what: `门禁
 if (gate && gate.facts && gate.facts.missing) findings.push({ level: '中', what: `台账 ${gate.facts.missing} 条数字未上屏` });
 if (gate && gate.facts && gate.facts.orphans) findings.push({ level: '中', what: `屏幕有 ${gate.facts.orphans} 个台账外数字` });
 if (pace && pace.sum.fail) findings.push({ level: '中', what: `节奏 ${pace.sum.fail}/${pace.sum.segs} 段不达标（最长静止 ${pace.sum.longestStill.max}s）` });
-if (dup.length) findings.push({ level: '高', what: `相邻段画面雷同 ${dup.length} 处：${dup.map((d) => d.pair).join('、')} —— 同拍拆段却共用一份 screens` });
+if (dup.structural.length) findings.push({ level: '高', what: `同拍拆段数多于 screens 数 ${dup.structural.length} 处：${dup.structural.map((d) => `${d.beat} ${d.parts}段/${d.screens}屏`).join('、')} —— 后段必然重放前段画面` });
+if (dup.pixel.length) findings.push({ level: '中', what: `内容区画面雷同 ${dup.pixel.length} 处：${dup.pixel.map((d) => d.pair).join('、')}` });
 if (chap.bad.length) findings.push({ level: '中', what: `章节号分母不是拍数（应为 ${beats.length}）：${[...new Set(chap.bad.map((b) => b.shown))].join('、')}` });
 // 分两档：<0.5 才算"几乎没读到"，0.5–0.7 只是可疑（OCR 认错字、字幕被压缩都会落到这一档，
 // 本例 info-check 的两句实际是字幕做了精简，不是缺陷）。
@@ -239,7 +268,8 @@ ${findings.length
 
 ### 逐项明细
 
-- **同屏重复**：${dup.length ? dup.map((d) => `${d.pair}（均差 ${d.mean}）`).join('；') : '无（相邻段画面均差 ≥ 0.35）'}
+- **同屏重复（结构）**：${dup.structural.length ? dup.structural.map((d) => `${d.beat} ${d.parts}段/${d.screens}屏`).join('；') : '无（每拍段数 ≤ screens 数）'}
+- **同屏重复（像素）**：${dup.pixel.length ? dup.pixel.map((d) => `${d.pair}（均差 ${d.mean}）`).join('；') : '无（同拍各段内容区均差 ≥ 0.35）'}
 - **章节号**：读到 ${chap.total} 处，期望分母 ${chap.beatCount}，异常 ${chap.bad.length} 处
 - **字幕覆盖**：${sub.total - sub.miss.length}/${sub.total} 句
 - **语速**（字/秒，目标 ≈4.1）：${tp.map((r) => `${r.id} ${r.cps}`).join(' · ') || '—'}

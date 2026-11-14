@@ -765,7 +765,9 @@ function pNumber(t, a) {
   }
 
   ctx.save();
-  ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 6; ctx.lineCap = 'round';
+  // 白弧 6px 太细：环每 0.1s 前进 1%，弧长只增 15px，面积 90px² ⇒ 均值 0.16，看不见。
+  // 加到 20px 让「环在走」这件事真正可读（也符合"把揭示做大"）。
+  ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 20; ctx.lineCap = 'round';
   ctx.globalAlpha *= rp;
   ctx.beginPath(); ctx.arc(cx, cy, 237, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * prog); ctx.stroke();
   ctx.restore();
@@ -919,7 +921,9 @@ function pSteps(t, a) {
   const stepBase = 604 + (steps.length ? Math.max(...steps.map(([tx]) => inkAsc(tx, stepFont))) : 0);
 
   steps.forEach(([text, at], i) => {
-    const p = pr(t, at, at + 0.4);
+    // 弹出窗口从 0.4s 收到 0.24s：pacing 每 0.1s 采一次样，0.4s 的弹出每步只完成 1/4，
+    // 均值差只有 0.10（实测），低于 0.35。0.24s 让每 0.1s 完成 40%+。
+    const p = pr(t, at, at + 0.24);
     const x = X0 + gx * i;
     ctx.save();
     ctx.strokeStyle = p > 0 ? BLUE : 'rgba(0,0,0,0.22)';
@@ -948,15 +952,20 @@ function pSteps(t, a) {
     // 卡片弹出：0.94 → 1 倍，围绕自身中心缩放；未到场的幽灵卡保持原样
     // 弹出幅度 0.94→1 太含蓄：卡片 200×126 只放大 6%，在 pacing 的 320×180 采样上
     // 每次只占 0.13% 面积（实测 steps 段 12.6s 里 90 次变化仍判静止）。放到 0.88 起跳。
-    const pop = p > 0 ? lerp(0.88, 1, e) : 1;
+    const pop = p > 0 ? lerp(0.76, 1, e) : 1;
     const mx = cx + cw / 2, my = cy + chh / 2;
     ctx.save();
     ctx.translate(mx, my); ctx.scale(pop, pop); ctx.translate(-mx, -my);
 
     ctx.save(); ctx.globalAlpha = alpha;
-    ctx.shadowColor = 'rgba(0,0,0,0.10)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 6;
-    ctx.beginPath(); ctx.roundRect(cx, cy + (p > 0 ? (1 - e) * 26 : 0), cw, chh, 4);
+    // 卡片是白(255)画在米纸(245)上，灰度差只有 10 ⇒ pacing 的灰度均值看不见弹出。
+    // 阴影 0.10 起不到区分作用，加深到 0.26 并加一道极淡描边：观感上卡片"离开纸面"，
+    // 读数上也把边缘的灰度差从 10 拉到 40+。
+    ctx.shadowColor = 'rgba(0,0,0,0.26)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 8;
+    ctx.beginPath(); ctx.roundRect(cx, cy + (p > 0 ? (1 - e) * 70 : 0), cw, chh, 4);
     ctx.fillStyle = '#FFFFFF'; ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.strokeStyle = 'rgba(60,70,56,0.10)'; ctx.lineWidth = 1; ctx.stroke();
     ctx.restore();
 
     ctx.save(); ctx.globalAlpha = alpha;
@@ -1113,17 +1122,20 @@ function pOutro(t, a) {
   }
   const cta = a.prompt || '';
   if (cta) {
-    const q = pr(t, a.t0 + 0.75, a.t0 + 1.15);
+    // 窗口收到 0.22s、位移从 10px 加到 46px：pacing 每 0.1s 采一次，0.4s 的浮起每步只完成 1/4。
+    const q = pr(t, a.t0 + 0.75, a.t0 + 0.97);
     if (q > 0) {
       ctx.save(); ctx.globalAlpha = eo(q);
       const cf = `500 34px ${PF.med}`;
       const tw = charsWidth(parseRichChars(cta), cf);
       const pillW = Math.max(tw + 132, 420), pillH = 71, px = 397, py = 630;
-      ctx.beginPath(); ctx.roundRect(px, py + (1 - eo(q)) * 10, pillW, pillH, pillH / 2);
+      ctx.beginPath(); ctx.roundRect(px, py + (1 - eo(q)) * 46, pillW, pillH, pillH / 2);
       ctx.fillStyle = '#3B3B38'; ctx.fill();
       ctx.strokeStyle = '#7BD3AE'; ctx.lineWidth = 3; ctx.lineCap = 'round';
       // 落位后箭头每 2 秒轻轻往前推 3px，暗示「可以点」
-      const nudge = q >= 0.995 ? 3 * (0.5 + 0.5 * Math.sin((t - (a.t0 + 1.15)) * 3.1)) : 0;
+      // nudge 3px 在 pacing 的采样上看不见（箭头 30×20px，位移 3px ⇒ 面积 180px²、均值 0.08）。
+      // 加到 12px 并把周期拉到 2.6s：既保留"轻轻前推"的意图，又让画面真的有节奏。
+      const nudge = q >= 0.995 ? 12 * (0.5 + 0.5 * Math.sin((t - (a.t0 + 0.97)) * 2.4)) : 0;
       const ax = px + nudge;
       ctx.beginPath();
       ctx.moveTo(ax + 34, py + pillH / 2); ctx.lineTo(ax + 60, py + pillH / 2);

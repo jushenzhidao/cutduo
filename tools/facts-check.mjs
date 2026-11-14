@@ -92,6 +92,9 @@ export function check(facts, ocrLines) {
     // 01 / 09 纯数字章节号（OCR 会把两段拆成两行，斜杠也常被读成全角）
     /^\s*\d{1,2}\s*[/／]\s*\d{1,2}\s*$/, 
     /^\s*\d{1,2}\s*[.、]\s*\S{0,2}$/, // 1. 2. 编号
+    // 点阵（grid 段）被 OCR 连读成的一串 0：253 个圆点在低分辨率下会读成 "0000000000000"。
+    // 这不是上屏数字，是图形被误识。
+    /^0{4,}$/,
   ];
   for (const l of ocrLines) {
     if (NOISE.some((re) => re.test(l.text))) continue;
