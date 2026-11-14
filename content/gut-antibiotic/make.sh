@@ -16,4 +16,4 @@ node render.mjs --kit science --params content/gut-antibiotic/params-abs.json \
 echo "── 5/5 门禁"
 node src/gate.mjs out/gut-antibiotic.mp4 \
   $([ -s content/gut-antibiotic/facts.md ] && echo "--facts content/gut-antibiotic/facts.md") \
-  --require-loudness --require-bgm --blank 2>&1 | grep -E "PASS|FAIL|LUFS|台账|空镜|BGM"
+  --require-loudness --require-bgm --blank --beats-check gut-antibiotic 2>&1 | grep -E "PASS|FAIL|LUFS|台账|空镜|BGM|重放"

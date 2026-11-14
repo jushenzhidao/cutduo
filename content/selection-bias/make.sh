@@ -18,4 +18,4 @@ node render.mjs --kit paper --params content/selection-bias/params-chain.json \
 echo "── 6/6 门禁"
 node src/gate.mjs out/selection-bias.mp4 \
   $([ -s content/selection-bias/facts.md ] && echo "--facts content/selection-bias/facts.md") \
-  --require-loudness --require-bgm --blank 2>&1 | grep -E "PASS|FAIL|LUFS|台账|空镜"
+  --require-loudness --require-bgm --blank --beats-check selection-bias 2>&1 | grep -E "PASS|FAIL|LUFS|台账|空镜|重放"

@@ -15,6 +15,7 @@ import { Worker, isMainThread, parentPort, workerData } from 'node:worker_thread
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { createDesktopRenderer, registerFonts, validateParams, DEFAULT_TOKENS } from './desktop.mjs';
 import { REPO_ROOT } from '../../src/root.mjs';
+import { checkDeterminism } from '../../src/determinism.mjs';
 
 const ROOT = REPO_ROOT;
 const W = DEFAULT_TOKENS.width, H = DEFAULT_TOKENS.height;
@@ -49,6 +50,13 @@ function parseArgs(argv) {
     preset: get('preset', 'veryfast'),
     presenter: resolveInput(get('presenter', null), false),
     probe: get('probe', null),
+    // --check-determinism [auto|t1,t2,t3]：不带值时 auto
+    determinism: (() => {
+      const i = argv.indexOf('--check-determinism');
+      if (i < 0) return null;
+      const v = argv[i + 1];
+      return v && !v.startsWith('--') ? v : 'auto';
+    })(),
     at: Number(get('at', 2.5)),
   };
 }
@@ -128,8 +136,17 @@ if (!isMainThread) {
   registerFonts(path.join(ROOT, 'assets/fonts'));
   const P = loadParams(A.params, A.fps);
 
-  if (A.probe) {
+  if (A.probe || A.determinism) {
     const { canvas, r } = await makeRenderer(P, await loadPresenter(A.presenter));
+    if (A.determinism) {
+      const code = checkDeterminism({
+        renderer: r, ctx: canvas.getContext('2d'), width: W, height: H,
+        duration: Number(P.durationSeconds || P.frames / P.fps),
+        spec: A.determinism,
+        label: `desk · ${path.basename(A.params)} · ${W}×${H}`,
+      });
+      process.exit(code);
+    }
     r.renderFrame(A.at);
     fs.writeFileSync(path.resolve(A.probe), canvas.toBuffer('image/png'));
     console.log(`probe → ${A.probe}  ${P.frames} 帧计划 / ${W}x${H} @${P.fps}fps`);

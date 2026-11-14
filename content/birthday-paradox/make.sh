@@ -15,4 +15,4 @@ echo "── 5/5 渲染 + 门禁"
 cd "$ROOT"
 node render.mjs --kit paper --params content/birthday-paradox/params-chain.json \
   --audio content/birthday-paradox/audio/mix-final.wav --out out/birthday-paradox.mp4
-node src/gate.mjs out/birthday-paradox.mp4 --facts content/birthday-paradox/facts.md --require-loudness --require-bgm 2>&1 | grep -E "PASS|FAIL|LUFS|台账"
+node src/gate.mjs out/birthday-paradox.mp4 --facts content/birthday-paradox/facts.md --require-loudness --require-bgm --beats-check birthday-paradox 2>&1 | grep -E "PASS|FAIL|LUFS|台账|重放"

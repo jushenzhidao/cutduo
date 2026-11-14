@@ -28,6 +28,7 @@
     "sheet": "node tools/contact-sheet.mjs",
     "bgm": "node tools/synth-bgm.mjs",
     "det": "node render.mjs --kit paper --params kits/paper/presets/v8t.json --check-determinism",
+    "det:all": "node render.mjs --kit paper --params kits/paper/presets/v8t.json --check-determinism && node render.mjs --kit science --params kits/science/template/presets/demo.json --check-determinism && node render.mjs --kit clay --params kits/clay/presets/default.json --check-determinism && node render.mjs --kit collage --params kits/collage/presets/cutduo.json --check-determinism && node kits/desk/render.mjs --params content/demo.json --check-determinism && node kits/editorial/canvas-editorial.mjs --inputs content/inputs-v6.json --check-determinism && node kits/mg/render.mjs --params kits/mg/params.json --check-determinism",
     "web": "node web/server.mjs",
     "harness": "node harness/run.mjs",
     "kit:check": "node tools/check-kit-contract.mjs",

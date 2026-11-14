@@ -17,6 +17,7 @@ import { Worker, isMainThread, parentPort, workerData } from 'node:worker_thread
 import { createCanvas, GlobalFonts, loadImage } from '@napi-rs/canvas';
 import { createPaperRenderer } from '../paper/paper.mjs';
 import { registerFonts } from '../../src/fonts.mjs';
+import { checkDeterminism } from '../../src/determinism.mjs';
 
 const argv = process.argv.slice(2);
 const get = (k, d) => { const i = argv.indexOf('--' + k); return i >= 0 && argv[i + 1] ? argv[i + 1] : d; };
@@ -616,8 +617,23 @@ function renderFrame(t) {
   drawAvatar(t);
 }
 
-if (PROBE) {
+// --check-determinism [auto|t1,t2,t3]：不带值时取片长的 25/50/75%
+const DET = (() => {
+  const i = argv.indexOf('--check-determinism');
+  if (i < 0) return null;
+  const v = argv[i + 1];
+  return v && !v.startsWith('--') ? v : 'auto';
+})();
+
+if (PROBE || DET) {
   initCanvas();
+  if (DET) {
+    const code = checkDeterminism({
+      renderer: { renderFrame }, ctx: canvas.getContext('2d'), width: W, height: H,
+      duration: Number(DURATION || 0), spec: DET, label: `editorial · ${W}×${H}`,
+    });
+    process.exit(code);
+  }
   renderFrame(Number(get('at', 2.5)));
   fs.writeFileSync(PROBE, canvas.toBuffer('image/png'));
   console.log('probe →', PROBE);

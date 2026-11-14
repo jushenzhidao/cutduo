@@ -22,6 +22,7 @@ import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { parseFacts, check as factsCheck } from '../tools/facts-check.mjs';
 import { cameraStats } from './camera.mjs';
+import { beatStats } from '../tools/check-beats.mjs';
 
 const FFMPEG = BINS.FFMPEG;
 const FFPROBE = BINS.FFPROBE;
@@ -499,6 +500,24 @@ function judge(file, opt) {
     }
   }
 
+  // 拍/段/screens 一致性（只报不拦）：一拍拆 N 段却只有 M 份 screens 时，同屏会重放 N−M 次。
+  // 成片照样 PASS（帧数、空帧、响度全对），只有读屏幕才发现。这条规则写在 MEMORY §6.5，
+  // 但一直没有自动检查——实测 2026-11-14 的 7 支片里 4 支违反。
+  let beats = null;
+  if (opt.beatsSlug) {
+    try {
+      beats = beatStats(opt.beatsSlug);
+      if (beats && beats.rows.length) {
+        const extra = beats.rows.reduce((n, r) => n + r.extra, 0);
+        warns.push(`同屏重放 ${extra} 处（${beats.rows.length}/${beats.beats} 拍 screens 不足）：`
+          + beats.rows.map((r) => `${r.beat} ${r.N}段/${r.M ?? '?'}屏`).join('、')
+          + ' —— 补 screens 或合并该拍时长');
+      }
+    } catch (e) {
+      warns.push(`拍/段检查失败：${e.message}`);
+    }
+  }
+
   // 字幕回读：字幕真的显示出来了吗（只报不拦，见 checkCaptions 注释）
   let capCheck = null;
   if (opt.captionParams && oc) {
@@ -648,6 +667,7 @@ function parseArgs(argv) {
     else if (a === '--facts') opt.facts = argv[++i];
     else if (a === '--caption-check') opt.captionParams = argv[++i];
     else if (a === '--camera-check') opt.cameraParams = argv[++i];
+    else if (a === '--beats-check') opt.beatsSlug = argv[++i];
     else if (a === '--blank') opt.blank = true;
     else if (a === '--motion') opt.motion = true;
     else if (a === '--pacing') opt.pacing = true;

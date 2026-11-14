@@ -28,7 +28,7 @@ const arg = (n, d = null) => {
 const ONLY = arg('slug');
 const ASJSON = process.argv.includes('--json');
 
-function stats(slug) {
+export function beatStats(slug) {
   const dir = path.join(REPO_ROOT, 'content', slug);
   const pAbs = path.join(dir, 'params-abs.json');
   const pScript = path.join(dir, 'script.json');
@@ -75,35 +75,43 @@ function stats(slug) {
   return { slug, scenes: scenes.length, beats: groups.size, rows };
 }
 
-const contentDir = path.join(REPO_ROOT, 'content');
-const slugs = fs.readdirSync(contentDir).filter((d) => {
-  if (ONLY && d !== ONLY) return false;
-  return fs.existsSync(path.join(contentDir, d, 'params-abs.json'));
-});
+import { fileURLToPath } from 'node:url';
 
-const out = slugs.map(stats).filter(Boolean);
-const bad = out.filter((r) => r.rows.length);
+/** 只在直接运行时走 CLI；被 gate.mjs import 时只提供函数 */
+const IS_CLI = process.argv[1] === fileURLToPath(import.meta.url);
 
-if (ASJSON) {
-  console.log(JSON.stringify({ films: out.length, bad: bad.length, detail: bad }, null, 2));
-} else {
-  console.log(`\n拍/段/screens 一致性 · ${out.length} 支片`);
-  console.log('─'.repeat(76));
-  for (const r of bad) {
-    console.log(`  ✗ ${r.slug}  ${r.scenes} 段 / ${r.beats} 拍`);
-    for (const b of r.rows) {
-      const screens = b.M === null ? '无 screens 记录' : `${b.M} 份 screens`;
-      console.log(`      ${String(b.beat).padEnd(8)} ${b.N} 段 / ${screens}  重放 ${b.extra} 次  [${b.from.toFixed(1)}–${b.to.toFixed(1)}s]  ${b.types.join('/')}`);
+if (IS_CLI) {
+  const contentDir = path.join(REPO_ROOT, 'content');
+  const slugs = fs.readdirSync(contentDir).filter((d) => {
+    if (ONLY && d !== ONLY) return false;
+    return fs.existsSync(path.join(contentDir, d, 'params-abs.json'));
+  });
+
+  const out = slugs.map(beatStats).filter(Boolean);
+  const bad = out.filter((r) => r.rows.length);
+
+  if (ASJSON) {
+    console.log(JSON.stringify({ films: out.length, bad: bad.length, detail: bad }, null, 2));
+  } else {
+    console.log(`\n拍/段/screens 一致性 · ${out.length} 支片`);
+    console.log('─'.repeat(76));
+    for (const r of bad) {
+      console.log(`  ✗ ${r.slug}  ${r.scenes} 段 / ${r.beats} 拍`);
+      for (const b of r.rows) {
+        const screens = b.M === null ? '无 screens 记录' : `${b.M} 份 screens`;
+        console.log(`      ${String(b.beat).padEnd(8)} ${b.N} 段 / ${screens}  重放 ${b.extra} 次  [${b.from.toFixed(1)}–${b.to.toFixed(1)}s]  ${b.types.join('/')}`);
+      }
+    }
+    const ok = out.filter((r) => !r.rows.length);
+    if (ok.length) console.log(`\n  ✓ 通过：${ok.map((r) => r.slug).join('、')}`);
+    console.log('─'.repeat(76));
+    const totalExtra = bad.reduce((n, r) => n + r.rows.reduce((m, b) => m + b.extra, 0), 0);
+    if (!totalExtra) console.log('没有重放：每一拍都有足够的 screens\n');
+    else {
+      console.log(`RESULT: ${totalExtra} 处重放（${bad.length}/${out.length} 支片）`);
+      console.log('  修法：给该拍补 screens（每份对应一段），或把该拍的时长合并成一段。\n');
     }
   }
-  const ok = out.filter((r) => !r.rows.length);
-  if (ok.length) console.log(`\n  ✓ 通过：${ok.map((r) => r.slug).join('、')}`);
-  console.log('─'.repeat(76));
-  const totalExtra = bad.reduce((n, r) => n + r.rows.reduce((m, b) => m + b.extra, 0), 0);
-  if (!totalExtra) console.log('没有重放：每一拍都有足够的 screens\n');
-  else {
-    console.log(`RESULT: ${totalExtra} 处重放（${bad.length}/${out.length} 支片）`);
-    console.log('  修法：给该拍补 screens（每份对应一段），或把该拍的时长合并成一段。\n');
-  }
+  process.exit(bad.length ? 1 : 0);
+
 }
-process.exit(bad.length ? 1 : 0);

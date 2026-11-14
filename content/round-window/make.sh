@@ -18,4 +18,4 @@ node render.mjs --kit paper --params content/round-window/params-chain.json \
 echo "── 6/6 门禁"
 node src/gate.mjs out/round-window.mp4 \
   $([ -s content/round-window/facts.md ] && echo "--facts content/round-window/facts.md") \
-  --require-loudness --require-bgm --blank 2>&1 | grep -E "PASS|FAIL|LUFS|台账|空镜"
+  --require-loudness --require-bgm --blank --beats-check round-window 2>&1 | grep -E "PASS|FAIL|LUFS|台账|空镜|重放"

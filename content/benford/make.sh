@@ -18,4 +18,4 @@ node render.mjs --kit paper --params content/benford/params-chain.json \
 echo "── 6/6 门禁"
 node src/gate.mjs out/benford.mp4 \
   $([ -s content/benford/facts.md ] && echo "--facts content/benford/facts.md") \
-  --require-loudness --require-bgm --blank 2>&1 | grep -E "PASS|FAIL|LUFS|台账|空镜"
+  --require-loudness --require-bgm --blank --beats-check benford 2>&1 | grep -E "PASS|FAIL|LUFS|台账|空镜|重放"

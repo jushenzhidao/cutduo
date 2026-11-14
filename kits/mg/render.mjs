@@ -17,6 +17,7 @@ import { createCanvas } from '@napi-rs/canvas';
 import { registerFonts } from '../../src/fonts.mjs';
 import { REPO_ROOT } from '../../src/root.mjs';
 import { createMGRenderer } from './scenes.mjs';
+import { checkDeterminism } from '../../src/determinism.mjs';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const ROOT = REPO_ROOT;
@@ -51,6 +52,12 @@ function parseArgs(argv) {
     jpeg: Number(get('jpeg', 94)),
     preset: get('preset', 'veryfast'),
     probe: get('probe', null),
+    determinism: (() => {
+      const i = argv.indexOf('--check-determinism');
+      if (i < 0) return null;
+      const v = argv[i + 1];
+      return v && !v.startsWith('--') ? v : 'auto';
+    })(),
     at: Number(get('at', 2.5)),
   };
 }
@@ -85,7 +92,16 @@ if (!isMainThread) {
   registerFonts(FONTS);
   const { P, canvas, r } = renderer(A.params, A.fps);
 
-  if (A.probe) {
+  if (A.probe || A.determinism) {
+    if (A.determinism) {
+      const code = checkDeterminism({
+        renderer: r, ctx: canvas.getContext('2d'), width: W, height: H,
+        duration: Number(P.durationSeconds || P.frames / P.fps),
+        spec: A.determinism,
+        label: `mg · ${path.basename(A.params)} · ${W}×${H}`,
+      });
+      process.exit(code);
+    }
     r.renderFrame(A.at);
     fs.mkdirSync(path.dirname(path.resolve(A.probe)), { recursive: true });
     fs.writeFileSync(path.resolve(A.probe), canvas.toBuffer('image/png'));
