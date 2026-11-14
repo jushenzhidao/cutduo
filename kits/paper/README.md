@@ -66,18 +66,22 @@ uv run python tools/qa-gate.py --video out/mine.mp4 --expect-frames <帧数>
 }
 ```
 
-| 类型 | args | 说明 |
-|---|---|---|
-| `hero` | `lines:[["文案", 入场秒]]`, `sub` | 眉标 + 两行大标题；`*词*` 走强调色，带遮罩揭示 |
-| `point` | `words:[["文案", 秒]]`, `cards:[["文案", 秒]]` | 大弧 + 关键词（强调词带底纹和下划线）+ 下方正文 |
-| `number` | `label, value, unit, from, dur, sub, at` | 双环 + 数字滚动 + 说明 |
-| `compare` | `left:{title,items[]}`, `right:{...}`, `leftAt, rightAt` | 左栏左对齐、右栏右对齐，中缝 VS |
-| `steps` | `title`, `steps:[["文案", 秒]]` | 时间轴 + 白色卡片（未到场的显示幽灵态） |
-| `quote` | `lines:["行1","行2"]`, `by, at` | 引号 + 逐字打字机 + 落款 |
-| `checklist` | `title`, `items:[["文案", 秒]]` | 仪表盘 + 指针扫动 + 大数字 |
-| `outro` | `title, lines[], prompt` | 纵向拉伸大标题 + CTA 胶囊（`prompt` 为空则不画） |
+| 类型 | args | 说明 | 详情 |
+|---|---|---|---|
+| `hero` | `lines:[["文案", 入场秒]]`, `sub` | 眉标 + 两行大标题；`*词*` 走强调色，带遮罩揭示 | [hero.md](segments/hero.md) |
+| `point` | `words:[["文案", 秒]]`, `cards:[["文案", 秒]]` | 大弧 + 关键词（强调词带底纹和下划线）+ 下方正文 | [point.md](segments/point.md) |
+| `number` | `label, value, unit, from, dur, sub, at` | 双环 + 数字滚动 + 说明 | [segments/number.md](segments/number.md) |
+| `compare` | `left:{title,items[]}`, `right:{...}`, `leftAt, rightAt, strikeAt` | 左栏左对齐、右栏右对齐；横线划掉左栏大标题 | [compare.md](segments/compare.md) |
+| `steps` | `title`, `steps:[["文案", 秒]]` | 时间轴 + 白色卡片（未到场的显示幽灵态） | [steps.md](segments/steps.md) |
+| `quote` | `lines:["行1","行2"]`, `by, at` | 引号 + 逐字打字机 + 落款 | [quote.md](segments/quote.md) |
+| `checklist` | `title`, `items:[["文案", 秒]]` | 仪表盘 + 指针扫动 + 大数字（显示已确认数） | [checklist.md](segments/checklist.md) |
+| `outro` | `title, lines[], prompt` | 纵向拉伸大标题 + CTA 胶囊（`prompt` 为空则不画） | [outro.md](segments/outro.md) |
+| `broll` | — | 不画正文：只有背景 + 字幕 + 头像卡，给空镜/留白用 | [broll.md](segments/broll.md) |
+| `grid` | `rows, cols, gap, size, origin, stagger, highlight, exception, title, note` | 点阵表数量；例外点跳出网格 + 2.2 倍半径 + 虚线牵回 | [segments/grid.md](segments/grid.md) |
+| `chart` | `chart:'line'\|'bar'`, `series`/`items`, `axis, at, stagger, title` | 折线/柱状；轴先长、数据后落、只标一处 | [segments/chart.md](segments/chart.md) |
 
-完整字段校验见 `params.schema.json`。
+完整字段校验见 `params.schema.json`。**每个段型的参数手感与已知坑在 [`segments/`](segments/)**——
+那一层是给写新片的人看的，本表只解决"有哪些字段"。
 
 ## 可调项（tokens.json）
 
