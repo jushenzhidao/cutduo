@@ -20,6 +20,9 @@ import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import * as BINS from '../src/bins.mjs';
+// 结构判据不在这里重写一遍：tools/check-beats.mjs 是唯一来源。
+// 之前两套实现并存，check-beats 补了旧管线盲区、case-loop 没有，两边会给出相反结论。
+import { beatStats } from './check-beats.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const FFMPEG = BINS.FFMPEG;
@@ -27,6 +30,8 @@ const CASE_DIR = path.join(ROOT, 'docs/cases');
 
 const argv = process.argv.slice(2);
 const slug = argv.find((a) => !a.startsWith('-'));
+const gateJsonIdx = argv.indexOf('--gate-json');
+const providedGateJson = gateJsonIdx >= 0 ? argv[gateJsonIdx + 1] : null;
 const quiet = argv.includes('--quiet');
 if (!slug) { console.error('用法: node tools/case-loop.mjs <slug>'); process.exit(2); }
 
@@ -46,7 +51,11 @@ const script = JSON.parse(readFileSync(scriptPath, 'utf8'));
 const beats = script.beats || [];
 
 /* ---------- 1. 门禁（含台账）+ 2. 节奏：都走现成工具，不在这里重实现 ---------- */
-function runGate() {
+function runGate(providedJson) {
+  // 允许复用调用方已经跑过的 gate 结果（qc.mjs 里 gate 只跑一次）
+  if (providedJson) {
+    try { return JSON.parse(readFileSync(providedJson, 'utf8'))[0] || null; } catch { /* 落回自己跑 */ }
+  }
   const j = path.join(os.tmpdir(), `case-gate-${slug}.json`);
   const args = [path.join(ROOT, 'src/gate.mjs'), video, '--json', j,
     '--blank', '--loudness', '--ocr', '2', '--pacing'];
@@ -81,13 +90,9 @@ function grayAt(t, file) {
 // 同一画面配不同字幕会被判成"不同"（实测 round-window 第1段 vs 第3段 全幅均差 2.21，
 // 其中大半来自字幕与进度条）。
 function duplicateSegments(segs, screensByBeat) {
-  const structural = [];
-  const byBeat = new Map();
-  for (const s of segs) if (s.beat) byBeat.set(s.beat, (byBeat.get(s.beat) || 0) + 1);
-  for (const [beat, n] of byBeat) {
-    const have = screensByBeat.get(beat) || 1;
-    if (n > have) structural.push({ beat, parts: n, screens: have });
-  }
+  // 结构判据委托给 check-beats（唯一来源）
+  const bs = beatStats(slug);
+  const structural = bs ? bs.rows.map((r) => ({ beat: r.beat, parts: r.N, screens: r.M })) : [];
 
   // 像素兜底：每段与**同拍的所有更早段**比（不只是相邻段——3 段拍的复用发生在第 1↔第 3 段）
   const crop = (f) => { const out = Buffer.alloc(640 * (310 - 36)); for (let y = 36; y < 310; y++) f.copy(out, (y - 36) * 640, y * 640, y * 640 + 640); return out; };
@@ -196,7 +201,7 @@ function textPace() {
 }
 
 /* ---------- 汇总 ---------- */
-const gate = runGate();
+const gate = runGate(providedGateJson);
 const pace = runPacing();
 const ocr = gate && gate.ocrLines ? gate.ocrLines : [];
 const segs = (() => {

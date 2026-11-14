@@ -38,11 +38,33 @@ export function beatStats(slug) {
   if (!scenes.length) return null;
 
   let screensPerBeat = {};
+  let scriptBeats = [];
   if (fs.existsSync(pScript)) {
     try {
       const S = JSON.parse(fs.readFileSync(pScript, 'utf8'));
-      for (const b of S.beats || []) screensPerBeat[b.id] = (b.screens || []).length;
+      scriptBeats = S.beats || [];
+      for (const b of scriptBeats) screensPerBeat[b.id] = (b.screens || []).length;
     } catch { /* script 坏了就只用段数 */ }
+  }
+
+  // 老管线（birthday-paradox 那支 build.py）不往 params 里写 beat。
+  // 这样每个 scene 都落进独立的 ~auto 组、组内只有 1 段 ⇒ N>M 永不成立 ⇒ **静默通过**。
+  // 实测：9 段 0 屏的片被判「没有重放」。没有 beat 标记时退回按总量比对，宁可粗也不能漏。
+  const hasBeat = scenes.some((s) => s.beat);
+  if (!hasBeat && scriptBeats.length) {
+    const totalScreens = scriptBeats.reduce((n, b) => n + (b.screens || []).length, 0);
+    if (totalScreens < scenes.length) {
+      return {
+        slug, scenes: scenes.length, beats: scriptBeats.length,
+        rows: [{
+          beat: '(无 beat 标记)', N: scenes.length, M: totalScreens,
+          extra: scenes.length - totalScreens,
+          from: scenes[0].t0 ?? 0, to: scenes[scenes.length - 1].t1 ?? 0,
+          types: [...new Set(scenes.map((s) => s.type))],
+        }],
+        note: 'params 缺 beat 字段，按总量比对（该片是旧管线产物）',
+      };
+    }
   }
 
   // 按 beat 分组；无 beat 时退化为"连续同 type + 同 args"
@@ -77,8 +99,19 @@ export function beatStats(slug) {
 
 import { fileURLToPath } from 'node:url';
 
-/** 只在直接运行时走 CLI；被 gate.mjs import 时只提供函数 */
-const IS_CLI = process.argv[1] === fileURLToPath(import.meta.url);
+/**
+ * 只在直接运行时走 CLI；被 gate.mjs import 时只提供函数。
+ *
+ * 必须用 realpath 比较：本仓常通过符号链接访问（/Users/x/Desktop/wb/cutduo → 真实目录），
+ * 直接比字符串时两个路径形式不同 ⇒ IS_CLI 为 false ⇒ **静默什么都不做、退出码 0**。
+ * 实测 2026-11-14：从片目录调 "$ROOT/tools/check-beats.mjs" 时预检形同虚设，片子照渲。
+ */
+const IS_CLI = (() => {
+  const self = fileURLToPath(import.meta.url);
+  const arg = process.argv[1];
+  if (!arg) return false;
+  try { return fs.realpathSync(arg) === fs.realpathSync(self); } catch { return arg === self; }
+})();
 
 if (IS_CLI) {
   const contentDir = path.join(REPO_ROOT, 'content');

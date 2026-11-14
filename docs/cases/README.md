@@ -97,6 +97,35 @@ node tools/case-loop.mjs sample-1000 --quiet  # 只写文件
 原来缺省 `strikeAt = leftAt + 1.4`，等于每个 compare 都划左栏；而多数片把「正确的一侧」放左边，
 划上去等于画面否定自己的论点。**已改为默认不划，要划必须显式给 `strikeAt`。**
 
+## 出片流程已接通（2026-11-14 20:20）
+
+以前所有检查都存在、但**没有一支 make.sh 串过它们**，等于没有。现在每个 `content/<slug>/make.sh` 长这样：
+
+```
+预检   check-beats   ← 秒级，分镜不一致直接停在渲染前（不再白渲一遍）
+…渲染…
+质检   tools/qc.mjs  ← 文案体检（只报）→ 门禁（硬拦）→ 案例留痕
+```
+
+`tools/qc.mjs <slug>` 是统一入口，退出码 0/1/2 可直接挂 CI。
+
+### 接通时挖出的三个静默失效
+
+| # | 问题 | 后果 |
+|---|---|---|
+| 1 | `make.sh` 末行是 `gate … \| grep -E "PASS\|FAIL"` | **管道的退出码是 grep 的**：gate 判 FAIL，grep 匹配到 "FAIL" 返回 0，`set -e` 不中断 ⇒ 出片脚本"成功"退出、坏片照样进 `out/` |
+| 2 | `check-beats` 用 `process.argv[1] === fileURLToPath(...)` 判是否 CLI | 工作区经符号链接访问时两个路径形式不同 ⇒ 判 false ⇒ **静默什么都不做、退出码 0**。实测从片目录调用时预检形同虚设 |
+| 3 | `check-beats` 只在 params 有 `beat` 字段时按拍分组 | 旧管线（`build.py`）不写 beat ⇒ 每个 scene 独立成组、组内 1 段 ⇒ `N>M` 永不成立 ⇒ 9 段 0 屏的片被判「没有重放」 |
+
+三条都改成显式失败/显式兜底，并且 `gate` 新增 `--require-beats`（分镜不一致从告警改为拦截）。
+
+### 一次回滚：改档位拍数把已有片打崩了
+
+我把 `guide.json` 的「速览」拍数从 5–7 改成 7–9，结果 `planBeats` 给模板 A 出 9 拍，而现有脚本只有 7 拍，
+`build.mjs` 取到 `undefined` 直接崩（`s is not iterable`）。
+
+**拍数是内容契约**，改一处会让所有已写好的片失效。已回滚，只保留真正该修的语速（5.5→4.0）与字数区间。
+
 ## 文案层：`tools/narration-lint.mjs`
 
 画面有 gate、节奏有 pacing、事实有台账，而文案此前没有任何机器约束。lint 把 13 条原则里

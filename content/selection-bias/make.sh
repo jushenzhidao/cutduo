@@ -3,8 +3,11 @@
 set -e
 cd "$(dirname "$0")"
 ROOT="$(cd ../.. && pwd)"
+SLUG="$(basename "$PWD")"
 echo "── 1/6 配音定长 + 时间轴（链式）"
 node build.mjs --chain
+echo "── 预检：一拍拆 N 段必须有 N 份 screens"
+node "$ROOT/tools/check-beats.mjs" --slug "$SLUG"
 echo "── 2/6 旁白响度归一（edge-tts 原始约 -23.7 LUFS，必须在配音环节补）"
 ffmpeg -v error -y -i audio/vo.wav -af "loudnorm=I=-16:TP=-1.5:LRA=11" -ar 48000 -ac 1 audio/vo-norm.wav
 echo "── 3/6 分层配乐（通用配乐层：scenes/segments 都认；本片用 hiphop 曲风）"
@@ -15,7 +18,5 @@ echo "── 5/6 渲染"
 cd "$ROOT"
 node render.mjs --kit paper --params content/selection-bias/params-chain.json \
   --audio content/selection-bias/audio/mix-final.wav --out out/selection-bias.mp4
-echo "── 6/6 门禁"
-node src/gate.mjs out/selection-bias.mp4 \
-  $([ -s content/selection-bias/facts.md ] && echo "--facts content/selection-bias/facts.md") \
-  --require-loudness --require-bgm --blank --beats-check selection-bias 2>&1 | grep -E "PASS|FAIL|LUFS|台账|空镜|重放"
+echo "── 质检汇总：文案 / 分镜 / 门禁 / 案例留痕"
+node "$ROOT/tools/qc.mjs" "$SLUG"

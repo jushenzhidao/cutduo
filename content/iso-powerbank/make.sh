@@ -3,6 +3,7 @@
 set -e
 cd "$(dirname "$0")"
 ROOT="$(cd ../.. && pwd)"
+SLUG="$(basename "$PWD")"
 cd "$ROOT"
 
 BGM=assets/audio/bgm/iso-demo.m4a
@@ -29,3 +30,5 @@ echo "── 4/5 节奏（hold 判据：落位后要停 ≥30f@30fps）"
 node tools/pacing.mjs out/iso-powerbank.mp4 --params "$P"
 echo "── 5/5 抽帧拼图"
 ffmpeg -v error -y -i out/iso-powerbank.mp4 -vf "fps=1/2.3,scale=480:-1,tile=4x3" -frames:v 1 out/iso-sheet.png
+echo "── 质检汇总：文案 / 分镜 / 门禁 / 案例留痕"
+node "$ROOT/tools/qc.mjs" "$SLUG"

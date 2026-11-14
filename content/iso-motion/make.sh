@@ -3,6 +3,7 @@
 set -e
 cd "$(dirname "$0")"
 ROOT="$(cd ../.. && pwd)"
+SLUG="$(basename "$PWD")"
 cd "$ROOT"
 BGM=assets/audio/bgm/iso-motion.m4a
 P=content/iso-motion/params.json
@@ -15,3 +16,5 @@ if [ ! -f "$BGM" ]; then
 fi
 node render.mjs --kit iso --params "$P" --out out/iso-motion.mp4
 node src/gate.mjs out/iso-motion.mp4 --blank --require-audio
+echo "── 质检汇总：文案 / 分镜 / 门禁 / 案例留痕"
+node "$ROOT/tools/qc.mjs" "$SLUG"

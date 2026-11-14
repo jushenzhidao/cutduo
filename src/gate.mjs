@@ -509,7 +509,9 @@ function judge(file, opt) {
       beats = beatStats(opt.beatsSlug);
       if (beats && beats.rows.length) {
         const extra = beats.rows.reduce((n, r) => n + r.extra, 0);
-        warns.push(`同屏重放 ${extra} 处（${beats.rows.length}/${beats.beats} 拍 screens 不足）：`
+        // 默认只报（旧片还留着），--require-beats 才拦。同屏重放是**必然可见**的缺陷，
+        // 不是风格判断，所以新片出片流程应该用 --require-beats。
+        (opt.requireBeats ? fails : warns).push(`同屏重放 ${extra} 处（${beats.rows.length}/${beats.beats} 拍 screens 不足）：`
           + beats.rows.map((r) => `${r.beat} ${r.N}段/${r.M ?? '?'}屏`).join('、')
           + ' —— 补 screens 或合并该拍时长');
       }
@@ -668,6 +670,7 @@ function parseArgs(argv) {
     else if (a === '--caption-check') opt.captionParams = argv[++i];
     else if (a === '--camera-check') opt.cameraParams = argv[++i];
     else if (a === '--beats-check') opt.beatsSlug = argv[++i];
+    else if (a === '--require-beats') { opt.beatsSlug = argv[++i]; opt.requireBeats = true; }
     else if (a === '--blank') opt.blank = true;
     else if (a === '--motion') opt.motion = true;
     else if (a === '--pacing') opt.pacing = true;

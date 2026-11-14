@@ -3,6 +3,7 @@
 set -e
 cd "$(dirname "$0")"
 ROOT="$(cd ../.. && pwd)"
+SLUG="$(basename "$PWD")"
 echo "── 1/5 配音 + segments（dur 累积）"
 python3 build.py
 echo "── 2/5 旁白响度归一（edge-tts 原始约 -23 LUFS，必须在配音环节补）"
@@ -13,7 +14,5 @@ node tools/audio-bed.mjs --slug gut-antibiotic --style chillwave
 echo "── 4/5 渲染"
 node render.mjs --kit science --params content/gut-antibiotic/params-abs.json \
   --audio content/gut-antibiotic/audio/mix-final.wav --out out/gut-antibiotic.mp4
-echo "── 5/5 门禁"
-node src/gate.mjs out/gut-antibiotic.mp4 \
-  $([ -s content/gut-antibiotic/facts.md ] && echo "--facts content/gut-antibiotic/facts.md") \
-  --require-loudness --require-bgm --blank --beats-check gut-antibiotic 2>&1 | grep -E "PASS|FAIL|LUFS|台账|空镜|BGM|重放"
+echo "── 质检汇总：文案 / 分镜 / 门禁 / 案例留痕"
+node "$ROOT/tools/qc.mjs" "$SLUG"

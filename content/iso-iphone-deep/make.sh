@@ -3,6 +3,7 @@
 set -e
 cd "$(dirname "$0")"
 ROOT="$(cd ../.. && pwd)"
+SLUG="$(basename "$PWD")"
 cd "$ROOT"
 BGM=assets/audio/bgm/iso-iphone-deep.m4a
 P=content/iso-iphone-deep/params.json
@@ -14,5 +15,5 @@ if [ ! -f "$BGM" ]; then
     -ar 48000 -ac 2 -c:a aac -b:a 160k "$BGM"
 fi
 node render.mjs --kit iso --params "$P" --out out/iso-iphone-deep.mp4
-node src/gate.mjs out/iso-iphone-deep.mp4 --blank --require-audio
-node tools/pacing.mjs out/iso-iphone-deep.mp4 --params "$P"
+echo "── 质检汇总：文案 / 分镜 / 门禁 / 案例留痕"
+node "$ROOT/tools/qc.mjs" "$SLUG"
