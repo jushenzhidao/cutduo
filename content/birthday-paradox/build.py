@@ -115,7 +115,7 @@ def main():
     scenes.append({'type': 'grid', 't0': b['t0'], 't1': b['t1'], 'args': {
         'cast': '253 对', 'title': '二十三个人，两两配对',
         'rows': 11, 'cols': 23, 'gap': 30, 'size': 12, 'origin': [300, 392],
-        'at': A(b, 0.7), 'stagger': round((b['t1'] - b['t0'] - 1.2) / n_pts, 4),
+        'at': A(b, 0.7), 'stagger': 0, 'batch': 16, 'batchEvery': 0.9, 'batchDur': 0.1,
         'highlight': [[0, 0], [4, 8], [10, 22]],
         'exception': [5, 11],
         'note': '23 × 22 ÷ 2 = 253 对', 'noteSize': 44}})
@@ -140,7 +140,10 @@ def main():
     b = beats[5]
     scenes.append({'type': 'number', 't0': b['t0'], 't1': b['t1'], 'args': {
         'cast': '99%', 'label': '57 个人里，至少一对同生日', 'at': A(b, 1.0), 'from': 99, 'value': 99,
-        'unit': '%', 'dur': 2.4, 'sub': '23 人 50.7% · 41 人 90.3% · 57 人 99.0%'}})
+        'unit': '%', 'dur': 2.4,
+        # sub 拆三段按时间揭示：13.1s 的段里原来只有 7 次变化（9.85s 静止）。
+        # 三段间隔 4s，各自一次性出现（面积 ~1568px² ⇒ 均值 0.68，过 0.35 阈值）。
+        'sub': [['23 人 50.7%', A(b, 3.5)], ['41 人 90.3%', A(b, 7.5)], ['57 人 99.0%', A(b, 11.5)]]}})
 
     b = beats[6]
     scenes.append({'type': 'compare', 't0': b['t0'], 't1': b['t1'], 'args': {
@@ -160,7 +163,9 @@ def main():
     scenes.append({'type': 'outro', 't0': b['t0'], 't1': b['t1'], 'args': {
         'cast': '回问', 'title': '回问',
         'lines': ['你上学那个班，有没有两个人同一天生日？', '现在你知道，它比你以为的常见得多'],
-        'prompt': '把这个概率问题讲给一个朋友听'}})
+        'prompt': '把这个概率问题讲给一个朋友听',
+        # 10.5s 的段里三件事都挤在前 1s ⇒ 之后 9.4s 空白。推开到 2.5s / 6.5s。
+        'subAt': A(b, 2.5), 'ctaAt': A(b, 6.5)}})
 
     # 音效事件：拍间 whoosh + 数字段 tick + 开场 impact。
     # 只挂在**拍边界**（不是拆段边界），否则一屏内会连响三次。

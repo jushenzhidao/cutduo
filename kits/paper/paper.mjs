@@ -541,6 +541,12 @@ function pGrid(t, a) {
   const ox = a.origin ? a.origin[0] : 300;
   const oy = a.origin ? a.origin[1] : 392;
   const stagger = a.stagger ?? 0.008;          // 每个点之间错开多久出现
+  // 分批落位：一批同时出现 batch 个点，批间隔 batchEvery，每批的入场窗口 batchDur。
+  // 为什么需要：单点在 320×180 采样上只有 ~50px²，逐个落时每 0.1s 只变 ~90px² ⇒ 均值 0.16。
+  // 分 16 个一批还要配上**短窗口**（0.1s）才有效——0.3s 的窗口会把 800px² 摊成 270px²。
+  const batch = Math.max(1, a.batch || 1);
+  const batchEvery = Number(a.batchEvery || 0);
+  const dotDur = Number(a.batchDur || 0.30);
   const at = a.at ?? t0;
   const hl = new Set((a.highlight || []).map(([i, j]) => i + ':' + j));
   const ex = a.exception ? [a.exception[0], a.exception[1]] : null;
@@ -553,8 +559,10 @@ function pGrid(t, a) {
     for (let j = 0; j < cols; j++) {
       const isEx = ex && ex[0] === i && ex[1] === j;
       // 例外点晚一点出现，且从网格里"脱开"
-      const at2 = at + n * stagger + (isEx ? 0.12 : 0);
-      const p = pr(t, at2, at2 + 0.30);
+      const at2 = (batch > 1
+        ? at + Math.floor(n / batch) * (batchEvery || stagger * batch)
+        : at + n * stagger) + (isEx ? 0.12 : 0);
+      const p = pr(t, at2, at2 + dotDur);
       if (p <= 0) { n++; continue; }
       const e = eo(p);
       const gx = ox + j * gap, gy = oy + i * gap;
@@ -789,10 +797,45 @@ function pNumber(t, a) {
   drawChars({ chars: parseRichChars(val) }, nx, 352 + inkAsc(val, nf), nf, PK.ink, BLUE);
   if (a.unit) drawChars({ chars: parseRichChars(a.unit) }, nx + vw + 10, 424 + inkAsc(a.unit, uf), uf, BLUE, BLUE);
 
-  if (a.sub) {
+  const sf = `500 42px ${PF.med}`;
+  if (Array.isArray(a.sub)) {
+    // 分段揭示：[["23 人 50.7%", 秒], ["41 人 90.3%", 秒], …] 横排各占一段，按各自时刻出现。
+    // 为什么需要：number 段只有 1 个环 + 1 个数，13s 的段里只有 7 次变化（实测 9.85s 静止）。
+    // 把 sub 拆成三段后，每段一次性出现（不是遮罩）面积 ~1568px² ⇒ 均值 0.68，砸穿 0.35。
+    const parts = a.sub.map((it) => (Array.isArray(it) ? String(it[0]) : String(it)));
+    const times = a.sub.map((it, i) => (Array.isArray(it) && Number.isFinite(it[1])
+      ? it[1] : at + dur * 0.85 + i * 2.6));
+    const sepW = charsWidth(parseRichChars(' · '), sf);
+    const widths = parts.map((txt) => charsWidth(parseRichChars(txt), sf));
+    const totalW = widths.reduce((x, y) => x + y, 0) + sepW * (parts.length - 1);
+    let x = cx - totalW / 2;
+    parts.forEach((txt, i) => {
+      const q = pr(t, times[i], times[i] + 0.24);
+      if (q > 0) {
+        ctx.save();
+        ctx.globalAlpha *= Math.min(1, eo(q) * 3);
+        // 加上滑：42px 的一行字在 320×180 采样上只有 ~392px²，纯淡入的均值差实测 0.174（门槛 0.35）。
+        // 40px 位移把「旧位置+新位置」都计入，面积翻倍到 ~770px²。
+        const dy = (1 - eo(q)) * 90;
+        drawChars({ chars: parseRichChars(txt) }, x, 693 + dy + inkAsc(txt, sf), sf, PK.body, BLUE);
+        ctx.restore();
+        // 分隔符跟**后一段**一起出现，不是跟前一段。否则会看到末尾挂一个孤零零的「·」
+        // （实测 61s 的帧：「23 人 50.7% · 41 人 90.3% ·」第三段还没来，点先到了）。
+        if (i < parts.length - 1) {
+          const qNext = pr(t, times[i + 1], times[i + 1] + 0.24);
+          if (qNext > 0) {
+            ctx.save();
+            ctx.globalAlpha *= 0.55 * eo(qNext);
+            drawChars({ chars: parseRichChars(' · ') }, x + widths[i], 693 + inkAsc('·', sf), sf, PK.label, BLUE);
+            ctx.restore();
+          }
+        }
+      }
+      x += widths[i] + sepW;
+    });
+  } else if (a.sub) {
     const q = pr(t, at + dur * 0.85, at + dur * 0.85 + 0.35);
     if (q > 0) enter(q, () => {
-      const sf = `500 42px ${PF.med}`;
       const sw = charsWidth(parseRichChars(a.sub), sf);
       drawChars({ chars: parseRichChars(a.sub) }, cx - sw / 2, 693 + inkAsc(a.sub, sf), sf, PK.body, BLUE);
     }, { dy: 8 });
@@ -1114,16 +1157,20 @@ function pOutro(t, a) {
 
   const sub = (a.lines || [])[0];
   if (sub) {
-    const q = pr(t, a.t0 + 0.45, a.t0 + 0.85);
+    // subAt 可把副文案推后（默认 t0+0.45）。长 outro 段（10s+）里三件事都挤在前 1s，
+    // 之后 9s 空白；推开后每 2–3s 有一次揭示。
+    const subT = Number.isFinite(a.subAt) ? a.subAt : a.t0 + 0.45;
+    const q = pr(t, subT, subT + 0.26);
     if (q > 0) enter(q, () => {
       const sf = `500 34px ${PF.med}`;
       drawChars({ chars: parseRichChars(sub) }, 397, 585 + inkAsc(sub, sf), sf, PK.body, BLUE);
-    }, { dy: 8 });
+    }, { dy: 46 });
   }
   const cta = a.prompt || '';
   if (cta) {
     // 窗口收到 0.22s、位移从 10px 加到 46px：pacing 每 0.1s 采一次，0.4s 的浮起每步只完成 1/4。
-    const q = pr(t, a.t0 + 0.75, a.t0 + 0.97);
+    const ctaT = Number.isFinite(a.ctaAt) ? a.ctaAt : a.t0 + 0.75;
+    const q = pr(t, ctaT, ctaT + 0.22);
     if (q > 0) {
       ctx.save(); ctx.globalAlpha = eo(q);
       const cf = `500 34px ${PF.med}`;
