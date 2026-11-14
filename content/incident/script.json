@@ -8,7 +8,8 @@
       "id": "I01",
       "type": "title",
       "chapter": "01 报警",
-      "text": "凌晨三点十七分，手机在枕边震了一下。我摸黑找到眼镜。",
+      "wall": "blue",
+      "text": "凌晨三点十七分，手机在枕边震了一下。我摸黑找到眼镜，打开电脑。",
       "args": {
         "app": "值班手机",
         "headline": "凌晨 3:17",
@@ -20,6 +21,7 @@
       "id": "I02",
       "type": "notify",
       "chapter": "01 报警",
+      "wall": "blue",
       "text": "P1：下单接口错误率十二个百分点，已经持续三分钟。这个点，没人值班。",
       "args": {
         "title": "P1 · 下单接口",
@@ -29,24 +31,47 @@
     },
     {
       "id": "I03",
-      "type": "terminal",
-      "chapter": "02 止血",
-      "text": "先看日志。过去五分钟，失败的全是同一个超时，三千毫秒，卡得很整齐。",
+      "type": "chart",
+      "chapter": "01 报警",
+      "wall": "blue",
+      "text": "错误率不是慢慢涨上去的。从三点十四分开始，它是一条几乎垂直的线。",
       "args": {
-        "title": "api-orders — logs",
-        "lines": [
-          "$ grep -c timeout app.log",
-          "1 842",
-          "$ grep timeout app.log | tail -2",
-          "  10:17:03 ERROR upstream timeout after 3000ms",
-          "  10:17:04 ERROR upstream timeout after 3000ms"
+        "title": "错误率 · 近 10 分钟",
+        "value": "12%",
+        "points": [
+          0.02,
+          0.03,
+          0.02,
+          0.05,
+          0.12,
+          0.34,
+          0.61,
+          0.83,
+          0.95
         ]
       }
     },
     {
       "id": "I04",
+      "type": "terminal",
+      "chapter": "02 止血",
+      "wall": "light",
+      "text": "先看日志。过去五分钟，失败的全是同一个超时：三千毫秒。",
+      "args": {
+        "title": "api-orders — logs",
+        "lines": [
+          "$ grep -c timeout app.log",
+          "1842",
+          "$ tail -1 app.log",
+          "10:17:04 ERROR upstream timeout 3000ms"
+        ]
+      }
+    },
+    {
+      "id": "I05",
       "type": "chat",
       "chapter": "02 止血",
+      "wall": "light",
       "text": "群里同步一句：我先盯着，谁熟悉这块？三个人的群，两个在睡。",
       "args": {
         "items": [
@@ -69,10 +94,31 @@
       }
     },
     {
-      "id": "I05",
+      "id": "I06",
+      "type": "comments",
+      "chapter": "02 止血",
+      "wall": "light",
+      "text": "告警下面已经有人留言了：先看看是不是下游慢。",
+      "args": {
+        "items": [
+          {
+            "text": "是不是下游某个查询突然变慢了"
+          },
+          {
+            "text": "上次这种情况是连接池被打满"
+          },
+          {
+            "text": "要不要先回滚？"
+          }
+        ]
+      }
+    },
+    {
+      "id": "I07",
       "type": "files",
       "chapter": "03 定位",
-      "text": "看最近的提交。四十分钟前，有人动过连接池配置。四个文件，只有一个是配置。",
+      "wall": "light",
+      "text": "看最近的提交。四十分钟前，有人动过连接池配置。",
       "args": {
         "items": [
           {
@@ -94,10 +140,11 @@
       }
     },
     {
-      "id": "I06",
+      "id": "I08",
       "type": "flipBoard",
       "chapter": "03 定位",
-      "text": "但回滚之后，错误率没有降。那就不是代码的问题。这时候最容易犯的错，是继续看代码。",
+      "wall": "light",
+      "text": "但回滚之后，错误率没有降。那就不是代码的问题。",
       "args": {
         "kicker": "回滚之后",
         "word": "没降",
@@ -105,10 +152,25 @@
       }
     },
     {
-      "id": "I07",
+      "id": "I09",
+      "type": "ranking",
+      "chapter": "04 根因",
+      "wall": "orange",
+      "text": "查下游耗时。一个普通查询，从八十毫秒涨到了三秒。",
+      "args": {
+        "rows": [
+          "下游查询 3.1s",
+          "订单服务 0.4s"
+        ],
+        "sub": "慢查询把连接全占住了"
+      }
+    },
+    {
+      "id": "I10",
       "type": "counter",
       "chapter": "04 根因",
-      "text": "是连接池被下游占满了。池子只有二十个连接，满的时候，新请求只能排队。",
+      "wall": "orange",
+      "text": "连接池就这么被占满。池子只有二十个连接，新请求只能排队。",
       "args": {
         "label": "连接池上限",
         "value": 20,
@@ -116,10 +178,24 @@
       }
     },
     {
-      "id": "I08",
+      "id": "I11",
+      "type": "checklist",
+      "chapter": "05 复盘",
+      "wall": "blue",
+      "text": "处置清单四件事：扩容连接池、限流、加超时熔断、补上慢查询监控。",
+      "args": {
+        "title": "处置清单",
+        "value": "4",
+        "unit": "件事",
+        "count": 4
+      }
+    },
+    {
+      "id": "I12",
       "type": "outro",
       "chapter": "05 复盘",
-      "text": "复盘只有一句：先止血，再定位，最后才改代码。顺序写进复盘，比查出根因更难。",
+      "wall": "blue",
+      "text": "复盘只有一句：先止血，再定位，最后才改代码。",
       "args": {
         "title": "复盘一句话",
         "lines": [

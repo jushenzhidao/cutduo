@@ -71,10 +71,13 @@ def main():
         'chapters': [], 'shots': shots, 'captions': caps,
     }
     # 章节按出现顺序去重
+    # 壁纸随章节变色（原版 demo 是 blue → light → orange 的节奏）。
+    # 之前写死 'light'，整片壁纸一个色，和白纸幻灯片没区别——这是和原版差距最大的一处。
     seen = []
+    wallOf = {s['chapter']: s.get('wall', 'light') for s in d['shots']}
     for s in shots:
         if s['chapter'] not in [x['name'] for x in seen]:
-            seen.append({'name': s['chapter'], 'wall': 'light'})
+            seen.append({'name': s['chapter'], 'wall': wallOf.get(s['chapter'], 'light')})
     params['chapters'] = seen
     out = os.path.join(HERE, 'params-abs.json')
     json.dump(params, open(out, 'w'), ensure_ascii=False, indent=2)
