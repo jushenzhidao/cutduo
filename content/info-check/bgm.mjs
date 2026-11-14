@@ -18,6 +18,18 @@ const LAYERS = {
 };
 const p = JSON.parse(fs.readFileSync(path.join(HERE, 'params-abs.json'), 'utf8'));
 const total = p.durationSeconds;
+// Apple Loops 是本机资源、**不入库**：换一台机器或进 CI，LAYERS 里的路径直接不存在。
+// 这时降级到代码合成（tools/synth-bgm.mjs），而不是抛错——"配乐音色不同"远好过"没有配乐"。
+// 降级会打印一行警告，不会被当成静默成功。
+if (!fs.existsSync(LAYERS.a)) {
+  const style = /hip hop|hiphop/i.test(JSON.stringify(LAYERS)) ? 'hiphop'
+    : /chillwave/i.test(JSON.stringify(LAYERS)) ? 'chillwave' : 'electrohouse';
+  console.warn(`⚠ Apple Loops 不可用，降级到代码合成（${style}）`);
+  execFileSync('node', [path.join(HERE, '..', '..', 'tools', 'synth-bgm.mjs'),
+    '--out', path.join(HERE, 'audio', 'bgm.wav'), '--duration', String(total),
+    '--style', style, '--params', path.join(HERE, 'params-abs.json')], { stdio: 'inherit' });
+  process.exit(0);
+}
 const sc = p.scenes;
 const t1 = sc[Math.min(2, sc.length - 1)].t0;
 const t2 = sc[Math.min(Math.floor(sc.length * 0.45), sc.length - 1)].t0;

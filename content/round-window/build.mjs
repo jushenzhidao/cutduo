@@ -59,7 +59,16 @@ beats.forEach((b, i) => {
   const parts = Math.max(1, Math.ceil(b.dur / SEG_MAX));
   const each = b.dur / parts;
   for (let k = 0; k < parts; k++) {
-    // 同一拍的多个子段**按顺序取不同的 screens**，这是避免"两段一模一样"的唯一办法
+    // 同一拍的多个子段按顺序取不同的 screens。子段数多于 screens 时会**复用**，
+    // 复用时把这一段的元素时间整体推到很早以前（CONT），让画面从"已落位"状态开始，
+    // 而不是把入场动画重放一遍——后者在成片上是可见的卡顿（实测 5 支旧片 7 处）。
+    // 复用不是理想解：理想是每段一屏。--strict-screens 可把它变成硬错误，逼补第二屏。
+    const reuse = k >= Math.max(1, (b.screens || []).length);
+    if (reuse && process.argv.includes('--strict-screens')) {
+      console.error(`✗ ${b.id}：${b.dur.toFixed(1)}s 拆成 ${parts} 段但只有 ${b.screens.length} 份 screens`);
+      process.exit(2);
+    }
+    if (reuse) console.warn(`  ⚠ ${b.id} 第 ${k + 1}/${parts} 段复用上一屏（接续已落位状态）`);
     const screen = b.screens[k % Math.max(1, b.screens.length)] || {};
 
     // 元素时刻必须小于子段时长：每段重放同一份 screens 并从 0 起算，

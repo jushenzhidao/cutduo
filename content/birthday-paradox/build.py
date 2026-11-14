@@ -134,7 +134,7 @@ def main():
 
     b = beats[5]
     scenes.append({'type': 'number', 't0': b['t0'], 't1': b['t1'], 'args': {
-        'cast': '99%', 'label': '57 个人里，至少一对同生日', 'at': A(b, 1.0), 'from': 0, 'value': 99,
+        'cast': '99%', 'label': '57 个人里，至少一对同生日', 'at': A(b, 1.0), 'from': 99, 'value': 99,
         'unit': '%', 'dur': 2.4, 'sub': '23 人 50.7% · 41 人 90.3% · 57 人 99.0%'}})
 
     b = beats[6]
