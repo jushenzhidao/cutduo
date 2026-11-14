@@ -63,3 +63,10 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# content/<片>/ 下的产物：params 是每次出片都会变的派生数据，audio 是几 MB 的配音与混音。
+# 只入库 script.json / facts.md / build.* / bgm.* / mix.* / make.sh / README.md。
+# 按身份特征匹配（不是逐个枚举文件名）——新增一支片不该再改这里。
+content/*/params*.json
+content/*/audio/
+content/*/ocr.txt

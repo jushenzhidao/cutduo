@@ -22,6 +22,7 @@ import { createClayRenderer } from './kits/clay/clay.mjs';
 import { createCollageRenderer } from './kits/collage/collage.mjs';
 import { registerFonts } from './src/fonts.mjs';
 import { buildMix } from './src/audio-mix.mjs';
+import { auditTiming, normalizeTiming } from './src/temporal.mjs';
 import { REPO_ROOT, DIRS, resolveInput } from './src/root.mjs';
 
 
@@ -39,9 +40,15 @@ function kitSpec(kit) {
   ];
   const srcDir = cands.find((d) => fs.existsSync(path.join(d, 'kit.js')));
   if (!srcDir) {
+    // 三支版式有独立入口，走 --kit 一定失败。不写清这一点，用户只会看到"找不到 kit"然后翻文档。
+    const ownEntry = { desk: 'npm run desk', editorial: 'npm run editorial', mg: 'npm run mg' }[kit];
     throw new Error(
-      `找不到 kit：${kit}\n  试过：${cands.join('\n        ')}\n  可用：science / paper / clay / collage / <模板名>` +
-      '\n  模板须在 templates/own/<name>/src（三件套）或直接传目录路径'
+      `找不到 kit：${kit}\n` +
+      (ownEntry ? `  这支版式有自己的入口：${ownEntry}（不走 --kit）\n` : '') +
+      `  试过：${cands.join('\n        ')}\n` +
+      '  可走 --kit：paper / science / clay / collage / night-card / chalkboard / cute-mv / sketchnote\n' +
+      '  独立入口：desk（npm run desk）/ editorial（npm run editorial）/ mg（npm run mg）\n' +
+      '  模板须在 templates/own/<name>/src（三件套）或直接传目录路径'
     );
   }
   const templateDir = path.dirname(srcDir);
@@ -127,7 +134,13 @@ function normalizeSegments(segs) {
 }
 
 function loadParams(file, fpsOverride, kit) {
-  const d = JSON.parse(fs.readFileSync(file, 'utf8'));
+  // 声明式时间先展开：{from,for} / {until,for} / {from,until} → t0/t1。
+  // 渲染器只认绝对秒，声明式的编辑语义在 src/temporal.mjs 里；两步必须用同一套展开，
+  // 否则会"校验按声明算、渲染按绝对算"，错位悄无声息。
+  const d = normalizeTiming(
+    JSON.parse(fs.readFileSync(file, 'utf8')),
+    { fps: Number(fpsOverride || 0) || undefined },
+  );
   let scenes = d.scenes || (Array.isArray(d.segments) ? normalizeSegments(d.segments) : []);
   if (!scenes.length) throw new Error('params 里没有 scenes / segments');
   const fps = Number(fpsOverride || d.fps || 60);
@@ -189,6 +202,22 @@ if (!isMainThread) {
   const t0 = Date.now();
   registerFonts(DIRS.fonts);
   const P = loadParams(A.params, A.fps, A.kit);
+
+  // 时间轴校验（src/temporal.mjs）：空窗口、越界、取整后重叠都会在成片上变成可见错误，
+  // 而 gate 看不出这类问题（它只验成片像素，不读 params —— 实测倒序能骗过全部门禁）。
+  // **默认拦**：未配音骨架（captions 全 0–1s）在校验器内部已降级为告警，不会误伤。
+  // 逃生阀 --allow-time-drift 只告警；--strict-time 保留为显式同义词。
+  {
+    const ta = auditTiming(P);
+    const drift = process.argv.includes('--allow-time-drift');
+    for (const e of ta.errors) console.log(`  ⏱ 时间错  ${e}`);
+    for (const w of ta.warnings) console.log(`  ⏱ 时间告警 ${w}`);
+    if (ta.errors.length && !drift) {
+      console.error(`\n时间轴校验失败（${ta.errors.length} 项）：空窗口 / 越界 / 取整后重叠会让成片出错，\n` +
+        `而交付门禁看不出来。修 params；确认无害可加 --allow-time-drift 放行。`);
+      process.exit(2);
+    }
+  }
 
   if (A.probe) {
     const avatar = await loadAvatar(A.avatar);

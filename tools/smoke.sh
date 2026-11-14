@@ -115,6 +115,15 @@ else
   fail=1
 fi
 
+# 版式契约：渲染器认的段型 vs schema 允许的段型（静默降级会让废片一路 PASS）
+if node tools/check-kit-contract.mjs > /tmp/kit-contract.txt 2>&1; then
+  printf 'PASS  %-10s 段型与 schema 对表\n' contract
+else
+  printf 'FAIL  %-10s 段型与 schema 不一致\n' contract
+  tail -6 /tmp/kit-contract.txt | sed 's/^/      /'
+  fail=1
+fi
+
 echo
 if [ "$fail" -ne 0 ]; then
   echo "有版式未通过 —— 不要提交"

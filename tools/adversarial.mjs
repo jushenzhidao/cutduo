@@ -40,7 +40,18 @@ const add = (level, id, msg) => rows.push({ level, id, msg });
 
 // ───────────────────────── 1. 结构层（只读 params，不碰画面） ─────────────────────────
 let acc = 0;
-const segs = (P.segments || []).map((s) => {
+// science 用 segments（无 t0/t1，按 dur 累加），paper 用 scenes（带 t0/t1，段间有 0.25s gap）。
+// 只认 segments 时 paper 片会被判成"0 段"，进而刷出 seg.sum 的假 BLOCKER。
+// 段边界换算成帧号。两种参数的边界算法**不一样**，混用会得到假的"重复帧"：
+//   · segments（science）：无 t0/t1，渲染器按 t >= t0 逐帧比较 ⇒ 边界在 ceil；
+//     设了 snapToFrames 时渲染器会把 t0 量化 ⇒ 边界在 round。
+//   · scenes（paper/editorial）：窗口在 temporal 层解析成帧区间 ⇒ 边界在 round。
+// 用错一个（对 paper 用 ceil）会把"切后第一帧"和"切后第二帧"拿来比，差异恒为 0。
+const boundaryOf = (sec) => (P.segments
+  ? (P.snapToFrames === true ? Math.round(sec * fps) : Math.ceil(sec * fps - 1e-9))
+  : Math.round(sec * fps));
+
+const segs = (P.segments || P.scenes || []).map((s) => {
   const t0 = s.t0 === undefined ? acc : Number(s.t0);
   const t1 = s.t1 === undefined ? t0 + Number(s.dur || 0) : Number(s.t1);
   acc = t1;
@@ -220,9 +231,9 @@ for (;;) {
 /** 段首帧 vs 段内最大值：判断"切进来那一刻是不是空的"。 */
 const segStats = [];
 for (const [i, s] of segs.entries()) {
-  const q = P.snapToFrames === true ? Math.round : (x) => Math.ceil(x - 1e-9);
-  const a = Math.max(0, q(s.t0 * fps));
-  const b = Math.min(frameStats.length, q(s.t1 * fps));
+  const q = boundaryOf(s.t0);
+  const a = Math.max(0, q);
+  const b = Math.min(frameStats.length, boundaryOf(s.t1));
   const slice = frameStats.slice(a, b);
   if (!slice.length) continue;
   const stds = slice.map((x) => x.std);
@@ -260,7 +271,7 @@ for (const s of segs.slice(1)) {
   //   snapToFrames=true 时渲染器把 t0 量化成 round(t0·fps)/fps，这里必须用同一个取整方式，
   //   否则会拿"量化前的小数"算出偏一帧的边界，把同一个旧段的相邻两帧当成切点（差异≈0 的假警报）。
   //   没开量化时用 ceil：round 会把边界前一帧算成"切后"。
-  const k = P.snapToFrames === true ? Math.round(s.t0 * fps) : Math.ceil(s.t0 * fps - 1e-9);
+  const k = boundaryOf(s.t0);
   if (k - 1 < 0 || k >= frameStats.length) continue;
   cutDists.push({ k, d: sigDist(frameStats[k - 1].sig, frameStats[k].sig) });
 }
