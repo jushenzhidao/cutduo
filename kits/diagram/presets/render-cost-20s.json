@@ -1,0 +1,102 @@
+{
+  "$comment": "20 秒版 · 同题材重做。与 render-cost.json 的差别只有一处：每项绑定一个锚点词（at / rowAt），画面在念到那个词时才动，不再按段内进度线性生长。数据同源（本仓 bench 实测，同片同参只换引擎）。 frame.bottom 210 是给 42px 字幕留的——默认 120 时字幕正好压住左下角的 note。",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "palette": "paper",
+  "crf": 18,
+  "preset": "veryfast",
+  "captionY": 946,
+  "captionSize": 42,
+  "introFade": 0.7,
+  "lead": 0.26,
+  "endPad": 0.4,
+  "lineGap": 0.14,
+  "segments": [
+    {
+      "family": "data-bar",
+      "lines": [
+        "同一段四十六秒的口播，三个引擎差了十六倍。",
+        "六点八秒，五十一秒，一百一十三秒。"
+      ],
+      "duration": 8,
+      "title": "同一段口播，三个引擎",
+      "unit": "秒",
+      "note": "本仓 bench 实测：同片同参数，只换渲染引擎。",
+      "items": [
+        {
+          "id": "skia",
+          "label": "skia-kit",
+          "value": 6.8,
+          "emphasis": true,
+          "rowAt": "同一段四十六秒",
+          "at": "六点八"
+        },
+        {
+          "id": "film",
+          "label": "film-kit",
+          "value": 51,
+          "rowAt": "同一段四十六秒",
+          "at": "五十一"
+        },
+        {
+          "id": "cine",
+          "label": "cinecode",
+          "value": 113,
+          "rowAt": "同一段四十六秒",
+          "at": "一百一十三"
+        }
+      ]
+    },
+    {
+      "family": "compare",
+      "lines": [
+        "慢的那台，每一帧都要在浏览器里画一遍。",
+        "快的那台，根本不开浏览器。"
+      ],
+      "duration": 8,
+      "title": "差别不在算法，在帧画在哪儿",
+      "beforeLabel": "film-kit",
+      "afterLabel": "skia-kit",
+      "items": [
+        {
+          "id": "draw",
+          "label": "每一帧",
+          "before": "过一次浏览器",
+          "after": "直接画进内存",
+          "rowAt": "每一帧",
+          "at": "不开浏览器"
+        },
+        {
+          "id": "sched",
+          "label": "谁来调度",
+          "before": "每帧一次跨进程",
+          "after": "同一个进程内",
+          "rowAt": "每一帧",
+          "at": "不开浏览器"
+        }
+      ]
+    },
+    {
+      "family": "definition",
+      "lines": [
+        "差的是渲染器住在哪，不是显卡。"
+      ],
+      "duration": 6,
+      "heading": "left",
+      "items": [
+        {
+          "id": "where",
+          "label": "渲染器住在哪",
+          "text": "决定每一帧要不要跨进程。跨一次，成本就是十几毫秒。",
+          "rowAt": "渲染器住在哪"
+        }
+      ],
+      "title": "结论"
+    }
+  ],
+  "frame": {
+    "y": 96,
+    "bottom": 210
+  }
+}

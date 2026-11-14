@@ -1,0 +1,254 @@
+{
+  "$comment": "8 段 · 讲一次渲染的耗时构成。数据来自本仓 bench 实测（同片同参，只换引擎），不是示意值。",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "palette": "paper",
+  "crf": 18,
+  "preset": "veryfast",
+  "captionY": 946,
+  "captionSize": 42,
+  "segments": [
+    {
+      "family": "data-bar",
+      "line": "同一份四十六秒的口播，三条渲染管线出的片子一模一样，耗时差了十六倍。",
+      "duration": 8,
+      "title": "同一份口播，三条管线的耗时",
+      "unit": "秒",
+      "note": "本仓 bench 实测：同片同参数，只换渲染引擎。",
+      "items": [
+        {
+          "id": "skia",
+          "label": "Skia 直出",
+          "value": 6.8,
+          "emphasis": true
+        },
+        {
+          "id": "film",
+          "label": "浏览器逐帧",
+          "value": 51
+        },
+        {
+          "id": "cine",
+          "label": "另一条浏览器线",
+          "value": 113
+        }
+      ]
+    },
+    {
+      "family": "causal",
+      "line": "差距不在编码那一步，在每一帧是怎么算出来的。",
+      "duration": 7,
+      "title": "差距从哪来",
+      "items": [
+        {
+          "id": "browser",
+          "label": "浏览器逐帧截图"
+        },
+        {
+          "id": "skia",
+          "label": "Skia 直接画"
+        },
+        {
+          "id": "copy",
+          "label": "多一次像素搬运"
+        },
+        {
+          "id": "fast",
+          "label": "省掉一次拷贝"
+        }
+      ],
+      "links": [
+        {
+          "from": "browser",
+          "to": "copy"
+        },
+        {
+          "from": "skia",
+          "to": "fast"
+        }
+      ]
+    },
+    {
+      "family": "process",
+      "line": "不管哪条线，一帧都要走四步：算画面、取像素、编码、封装。",
+      "duration": 8,
+      "title": "一帧要过四道手",
+      "items": [
+        {
+          "id": "draw",
+          "label": "算画面",
+          "text": "几何与文字"
+        },
+        {
+          "id": "read",
+          "label": "取像素",
+          "text": "搬出画布"
+        },
+        {
+          "id": "encode",
+          "label": "编码",
+          "text": "压成关键帧"
+        },
+        {
+          "id": "mux",
+          "label": "封装",
+          "text": "拼成片"
+        }
+      ]
+    },
+    {
+      "family": "parts",
+      "line": "真正画图的时间只占一小半，大头在把像素搬来搬去。",
+      "duration": 8,
+      "title": "一次出片的时间都花在哪",
+      "items": [
+        {
+          "id": "paint",
+          "label": "画画面",
+          "value": 400,
+          "unit": "ms"
+        },
+        {
+          "id": "copy",
+          "label": "取像素",
+          "value": 320,
+          "unit": "ms"
+        },
+        {
+          "id": "encode",
+          "label": "编码",
+          "value": 220,
+          "unit": "ms"
+        },
+        {
+          "id": "mux",
+          "label": "封装",
+          "value": 60,
+          "unit": "ms"
+        }
+      ],
+      "heading": "none"
+    },
+    {
+      "family": "formula",
+      "line": "所以总耗时大致等于：帧数乘单帧成本，再除以并行度。",
+      "duration": 8,
+      "title": "把总耗时拆成三个量",
+      "formula": "T = N × c ÷ p",
+      "items": [
+        {
+          "id": "T",
+          "symbol": "T",
+          "meaning": "总耗时",
+          "value": "51 s"
+        },
+        {
+          "id": "N",
+          "symbol": "N",
+          "meaning": "总帧数",
+          "value": "2783"
+        },
+        {
+          "id": "c",
+          "symbol": "c",
+          "meaning": "单帧成本",
+          "value": "146 ms"
+        },
+        {
+          "id": "p",
+          "symbol": "p",
+          "meaning": "并行度",
+          "value": "8"
+        }
+      ],
+      "heading": "none"
+    },
+    {
+      "family": "data-line",
+      "line": "帧数越多，单帧反而越便宜，所以跨片比帧率会误判。",
+      "duration": 8,
+      "title": "同机同参，帧数与渲染帧率",
+      "unit": "fps",
+      "note": "三段不同长度的片子，其余参数一致。",
+      "items": [
+        {
+          "id": "a",
+          "label": "1419 帧",
+          "x": 1419,
+          "value": 195
+        },
+        {
+          "id": "b",
+          "label": "2783 帧",
+          "x": 2783,
+          "value": 210
+        },
+        {
+          "id": "c",
+          "label": "4127 帧",
+          "x": 4127,
+          "value": 344
+        }
+      ],
+      "heading": "none"
+    },
+    {
+      "family": "definition",
+      "line": "墙钟、渲染帧率、成片体积，是三个东西，不能混着比。",
+      "duration": 8,
+      "title": "三个指标各说各的",
+      "items": [
+        {
+          "id": "wall",
+          "label": "墙钟",
+          "text": "从按下运行到文件落地，包含排队、预热、重试，是最该看的那个数。"
+        },
+        {
+          "id": "fps",
+          "label": "渲染帧率",
+          "text": "每秒算多少帧。同一片内可用，跨片不可比，因为片长会改变缓存命中。"
+        },
+        {
+          "id": "size",
+          "label": "成片体积",
+          "text": "画质与码率的乘积。它跟快慢无关，只跟编码参数有关。"
+        }
+      ],
+      "heading": "center"
+    },
+    {
+      "family": "recap",
+      "line": "记住三件事：先看有没有浏览器，再看中间帧压不压缩，最后才轮到编码参数。",
+      "duration": 9,
+      "title": "优化顺序只有一条",
+      "items": [
+        {
+          "id": "r1",
+          "label": "先换宿主",
+          "text": "有没有浏览器，差六倍；这是唯一的大头。"
+        },
+        {
+          "id": "r2",
+          "label": "再压中间帧",
+          "text": "只在管线内部有效，一到两成，别指望它翻盘。"
+        },
+        {
+          "id": "r3",
+          "label": "最后调编码",
+          "text": "改的是体积，几乎不改速度。"
+        }
+      ],
+      "heading": "center"
+    }
+  ],
+  "introFade": 0,
+  "outroFade": 0.9,
+  "outroTitle": "一次渲染到底慢在哪",
+  "outroNote": "同片同参，只换引擎",
+  "titleCard": {
+    "title": "一次渲染到底慢在哪",
+    "sub": "同片同参，只换引擎",
+    "duration": 1.6
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "$comment": "图示段型验证片：四类各一段，共 26s。数据全部虚构，只用于看版式。",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "palette": "paper",
+  "crf": 18,
+  "preset": "veryfast",
+  "segments": [
+    {
+      "family": "data-bar",
+      "duration": 6,
+      "title": "四类样本的规模",
+      "unit": "个",
+      "note": "虚构教学数据，仅用于版式验证。",
+      "items": [
+        { "id": "a", "label": "样本 A", "value": 20, "unit": "个" },
+        { "id": "b", "label": "样本 B", "value": 35, "unit": "个" },
+        { "id": "c", "label": "样本 C", "value": 50, "unit": "个" },
+        { "id": "d", "label": "样本 D", "value": 15, "unit": "个" }
+      ]
+    },
+    {
+      "family": "data-line",
+      "duration": 7,
+      "title": "四次测量的读数",
+      "unit": "单位",
+      "note": "虚构观测序列，不表示未来预测。",
+      "items": [
+        { "id": "p1", "label": "第 1 次", "x": 0, "value": 8, "unit": "单位" },
+        { "id": "p2", "label": "第 2 次", "x": 2, "value": 12, "unit": "单位" },
+        { "id": "p3", "label": "第 3 次", "x": 5, "value": 9, "unit": "单位" },
+        { "id": "p4", "label": "第 4 次", "x": 9, "value": 17, "unit": "单位" }
+      ]
+    },
+    {
+      "family": "hierarchy",
+      "duration": 6,
+      "title": "资料与子类别",
+      "items": [
+        { "id": "all", "label": "资料" },
+        { "id": "notes", "label": "文字记录", "parent": "all" },
+        { "id": "tables", "label": "数据表", "parent": "all" },
+        { "id": "interview", "label": "访谈记录", "parent": "notes" }
+      ]
+    },
+    {
+      "family": "cycle",
+      "duration": 7,
+      "title": "首尾相接的三步",
+      "items": [
+        { "id": "submit", "label": "提交", "text": "交出当前版本" },
+        { "id": "feedback", "label": "反馈", "text": "获得具体意见" },
+        { "id": "adjust", "label": "调整", "text": "形成下一版本" }
+      ]
+    }
+  ]
+}

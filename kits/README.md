@@ -1,4 +1,4 @@
-# kits/ · 五套版式
+# kits/ · 八套版式
 
 每支 kit 是一个自治单元：**渲染器 + 参数 schema + presets**。版式之间不互相 import，
 共享的东西一律下沉到 `src/`（依赖方向单向：`kits/* → src/*`）。
@@ -12,10 +12,13 @@
 | `mg` | 通用 | 1920×1080 @30 | `kits/mg/render.mjs` | `kits/mg/params.json` |
 | `clay` | 黏土图示 | 1920×1080 @30 | `render.mjs --kit clay` | `kits/clay/presets/*.json`（7 种机制） |
 | `iso` | 等轴爆炸 | 1920×1080 @60 | `render.mjs --kit iso` | `content/iso-powerbank/params.json`（9 种镜头） |
+| `collage` | 深色科技宣传 | 1920×1080 @60 | `render.mjs --kit collage` | `kits/collage/presets/*.json` |
+| `diagram` | 说明性图示 | 1920×1080 @30 | `kits/diagram/render.mjs` | `kits/diagram/presets/all.json`（13 类图示） |
 
-六者共用 `@napi-rs/canvas`（Skia），**换版式不换速度档**。
+各支共用 `@napi-rs/canvas`（Skia），**换版式不换速度档**。
 
-`clay` 是**换宿主**（原样跑上游 Canvas2D 源码），不是自建；其余五支是自建或全蒸馏。
+`clay` 是**换宿主**（原样跑上游 Canvas2D 源码），不是自建；其余各支是自建或全蒸馏。
+`diagram` 是**段型库**（13 类图示），不自带片头字幕，出片入口只是验证用。
 
 ```bash
 bash tools/smoke.sh     # 五支各出一帧，回归用
