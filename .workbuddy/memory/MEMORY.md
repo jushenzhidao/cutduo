@@ -72,6 +72,9 @@ Canvas2D → 换宿主（几小时）；长期产线 → 半蒸馏（蒸**内容
 3. **关键词锚点**：`wordTimes: {词:[start,end]}` + `{$mark}`（绝对秒，args 内用）/ `{$markRel}`（段内相对，
    screens 用）。词不在表、或落点越出本段 → **出片前抛错**（这正是上面第 3 条的现场）。判定只看值形状
   不看 key 名（`from` 在内容里常是「出处」）。段级 `t0/t1` 写锚点会被 params.schema 拒，仍由 build.py 算。
+3b. **越界现在会拦**：`tools/check-times.mjs` + `auditTiming` 会检查 `args` 内时刻是否落在段内，
+   越界=元素永不出现。**paper 的 args 是绝对秒，science 是段内相对秒**（renderFrame 传 localT）——
+   判错会把正常片全拦死（实测 science diagram.callouts.at=1.40 被报「早于段起点 19.50s」）。
 4. **`screens` 时刻必须 < 子段时长**：build 按 ≤7s 拆段、每段重放 `screens[k]` 从 0 起算，钉在 4.2s 而子段 3.6s
    ⇒ 永不出现。`new-film` 的 `clampTimes` 压到 ≤3.0s（最短子段 3.5s），build 逐段警告。每屏还要给 `cast`
    （2–6 字），缺省退标题 ⇒ 关键词卡重复标题。
@@ -131,6 +134,8 @@ paper 的 params 喂 editorial：跑完 6126 帧、gate PASS，实际 22s 白屏
 `args.camera = {kind, z, dur, anchor}`；kind 只 push/pull/punch/drift（cut=关）。
 **只放大不缩小**（z≤1 会露画布外空白，直接判无效）。只包内容层——时间码/头像卡/字幕/品牌角标在变换外，
 加 push 后这两块 PSNR=inf（逐像素不变）。不写 camera = 现状零回归（同帧 PSNR=inf）。
+`hold` = 整段固定某倍数（一拍拆多段时 push→hold→pull 才连续；没有它会「推-跳-推」）。
+`tools/apply-camera.mjs` 按连续同型段组自动编排，默认拒 chart/grid/steps/number。
 门禁 `--camera-check <params>` 只报不拦：推近 >8 次/分 或 punch >1/3 镜头 报黄（标尺来自那支
 「102s 推近 48 次」被判不 smooth 的片）。画面自己在动的段（chart/grid 逐个长）别加，两个运动会打架。
 
@@ -159,6 +164,10 @@ pacing 0/9 不达标。内容模型 `layers/parts/arrays/hero/mech` 全是 JSON�
 - 两版配色：`ISO_LOOK=dark`（与上游同名），深底外壳要 `look.tone=0.82` 压 18%，否则顶到纯白。
 - 配乐母带**两步**：先 acompressor+alimiter(level=false) 压 crest，再 loudnorm I=-16:TP=-2.2；
   直接归一顶到 -0.2 dBTP（gate 线 -0.5）。`synth-bgm` 的 drop 自动落在最长段 = 爆炸开头。
+- 取景要**两遍实测**（透视非线性，一遍会切边），且**先定落定 yaw 再 fit**（fit 后转 8° 会把长边切出框）。
+- 近摄（part/action/array/stack）把非主体降到 8% 幽灵；阵列保留同层作上下文。
+- 动作幅度不能越过上覆零件（iPhone 镜片升 2mm 顶穿 0.55mm 的屏 ⇒ 屏幕上出现蓝点）。
+- 两支片：powerbank（7 层 40 件）/ iphone（6 层 36 件），均 27.3s，换产品只改 params.json。
 - 已知弱项：array/stack 取景（薄层上方的大件闯进画面）、无穿插检测。
 
 ## 七、音频

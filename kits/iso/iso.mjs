@@ -56,7 +56,7 @@ const looks = {
     sub: [206, 202, 194],
     line: [210, 220, 255, 0.3],
     card: [246, 244, 238],
-    rim: [198, 214, 255, 0.13],
+    rim: [198, 214, 255, 0.22],
     // 深色底上白色外壳会顶到纯白、看着像没过色调映射；整体压 18%，亮边交给 rim
     tone: 0.82,
   },
@@ -235,6 +235,7 @@ export function createIsoRenderer(opts = {}) {
     // 先定零件级顺序（分离轴 + 拓扑），再在零件内部按面深度画。
     // 凸块自身不遮挡自己，背面剔除后剩下的面怎么排都对。
     const order = orderParts(model, S, cam);
+    const subject = state.subject || null;
     const list = [];
     for (const pi of order) {
       const part = model.parts[pi];
@@ -247,12 +248,14 @@ export function createIsoRenderer(opts = {}) {
         local.push({ f, off, depth: cam.depth(c) });
       }
       local.sort((a, b) => a.depth - b.depth);
+      for (const it of local) it.ghost = subject ? !subject.has(part.id) : false;
       list.push(...local);
     }
 
     ctx.lineJoin = 'round';
     for (const item of list) {
       const { f, off } = item;
+      ctx.globalAlpha = item.ghost ? 0.08 : 1;
       const pts = f.pts;
       ctx.beginPath();
       for (let i = 0; i < pts.length; i++) {
@@ -267,12 +270,13 @@ export function createIsoRenderer(opts = {}) {
       ctx.strokeStyle = rgba(col);
       ctx.lineWidth = 0.8;
       ctx.stroke();
-      if (look.rim) {
+      if (look.rim && !item.ghost) {
         ctx.strokeStyle = rgba(look.rim);
         ctx.lineWidth = 0.7;
         ctx.stroke();
       }
     }
+    ctx.globalAlpha = 1;
   }
 
   // ---------------- 层标注 ----------------

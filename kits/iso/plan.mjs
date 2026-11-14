@@ -105,21 +105,35 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
       c[1] += (p.center[1] + offs[i][1]) / parts.length;
       c[2] += (p.center[2] + offs[i][2]) / parts.length;
     });
-    const probe = makeCamera({ yaw, pitch, zoom: 1, panX: 0, panY: 0, focus: c, W, H, radius: R });
-    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-    parts.forEach((p, i) => {
-      const b = p.bbox;
-      for (const x of [b[0][0], b[0][1]]) for (const y of [b[1][0], b[1][1]]) for (const z of [b[2][0], b[2][1]]) {
-        const [sx, sy] = probe.project([x + offs[i][0], y + offs[i][1], z + offs[i][2]]);
-        x0 = Math.min(x0, sx); x1 = Math.max(x1, sx);
-        y0 = Math.min(y0, sy); y1 = Math.max(y1, sy);
-      }
-    });
-    const bw = Math.max(8, x1 - x0), bh = Math.max(8, y1 - y0);
-    const zoom = Math.min((fill * W) / bw, (fill * H) / bh);
-    const at = makeCamera({ yaw, pitch, zoom, panX: 0, panY: 0, focus: c, W, H, radius: R });
-    const [px, py] = at.project(c);
-    return { yaw, pitch, zoom, panX: aim[0] * W - px, panY: aim[1] * H - py, focus: c };
+
+    /** 在给定 zoom 下量主体包围盒（针孔透视不是线性的，必须实测而不是按比例缩放） */
+    const measure = (zoom) => {
+      const cam = makeCamera({ yaw, pitch, zoom, panX: 0, panY: 0, focus: c, W, H, radius: R });
+      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+      parts.forEach((p, i) => {
+        const b = p.bbox;
+        for (const x of [b[0][0], b[0][1]]) for (const y of [b[1][0], b[1][1]]) for (const z of [b[2][0], b[2][1]]) {
+          const [sx, sy] = cam.project([x + offs[i][0], y + offs[i][1], z + offs[i][2]]);
+          x0 = Math.min(x0, sx); x1 = Math.max(x1, sx);
+          y0 = Math.min(y0, sy); y1 = Math.max(y1, sy);
+        }
+      });
+      return { cam, bw: Math.max(8, x1 - x0), bh: Math.max(8, y1 - y0), mx: (x0 + x1) / 2, my: (y0 + y1) / 2 };
+    };
+
+    // 两遍：第一遍定 zoom 量级，第二遍在真实 zoom 下复测（近处零件会被透视放大）
+    let zoom = 1;
+    for (let pass = 0; pass < 2; pass++) {
+      const m = measure(zoom);
+      zoom *= Math.min((fill * W) / m.bw, (fill * H) / m.bh);
+    }
+    const m = measure(zoom);
+    // 主体占满 fill 时，画面中心只能落在 [半宽, W−半宽] 内
+    const halfW = (m.bw) / 2 + 20;
+    const halfH = (m.bh) / 2 + 20;
+    const cx = Math.min(Math.max(aim[0] * W, halfW), Math.max(halfW, W - halfW));
+    const cy = Math.min(Math.max(aim[1] * H, halfH), Math.max(halfH, H - halfH));
+    return { yaw, pitch, zoom, panX: cx - m.mx, panY: cy - m.my, focus: c };
   }
 
   /** 甩镜：起点钉在当前机位，0.26 s 后到目标。 */
@@ -162,6 +176,8 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
 
   let labelsWindow = null;
   const heroWins = [];
+  /** 近摄镜头（特写/阵列/夹层）只让主体保持实色，其余零件降到 13% 幽灵 */
+  const subjectWins = [];
   const exTime = (t0, dur, v) => t0 + 0.25 + (v / NL) * (0.62 * dur);
 
   const YAW = { hero: -27, wide: -20, part: -34, action: -57, array: -46, stack: -60 };
@@ -182,9 +198,10 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
       K('lift', t0 + 0.01, 0);
       K('ex', t0 + 0.01, 0);
       const target = fitCam({ parts: solid, S: poseAt(t1), yaw: YAW.hero, pitch: PITCH.hero, aim: [0.54, 0.5], fill: 0.6 });
+      // 开场要有可见的运动：只推 3% 时 gate 的 hook 判 0.02（几乎静止），观众也读不出镜头在走
       if (t0 > 0.01) whipTo(t0, target);
-      else camK(t0 + 0.02, target, 'io');
-      settle(t1, drift(target, 3, 0.03));
+      else camK(t0 + 0.02, { ...target, zoom: target.zoom * 0.94, yaw: target.yaw - 3 }, 'io');
+      settle(t1, drift(target, 5, 0.08));
       if (args.intro === 'act') {
         const p0 = t0 + 0.45;
         for (let i = 0; i < 2; i++) {
@@ -219,7 +236,7 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
       camK(t0 + 0.72 * d, midA, 'io');
       K('ex', t0 + 0.25 + 0.58 * d, NL, 'io');
       settle(t1, drift(target, 4, 0.025));
-      labelsWindow = { t0: t0 + 0.45 * d, t1: Infinity };
+      labelsWindow = { t0: t0 + 0.45 * d, t1 };
       addCard(t0 + 0.35, t1 - 0.08, args.card, 'mid');
     } else if (type === 'part') {
       for (const id of Object.keys(model.arrays)) {
@@ -240,6 +257,7 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
       settle(t1, { ...target, yaw: target.yaw - 3, zoom: target.zoom * 1.02 });
       addCard(t0 + 0.3, t1 - 0.06, args.card, 'top');
       heroWins.push({ t0, t1, ref: heroLift(poseAt(t1 - 0.02)) });
+      subjectWins.push({ t0, t1, ids: heroParts.map((x) => x.id) });
     } else if (type === 'action') {
       const steps = model.hero?.steps || [];
       K('split', t0 + 0.02, val('split', t0), 'lin');
@@ -254,11 +272,12 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
         if (i < 2) K('act', p0 + i * gap + gap * 0.85, 0, 'io');
       }
       K('act', t1 - 0.55, 1, 'io');
-      const target = fitCam({ parts: heroParts, S: poseAt(t1 - 0.02), yaw: YAW.action, pitch: PITCH.action, aim: [0.54, 0.5], fill: 0.44 });
+      const target = fitCam({ parts: heroParts, S: poseAt(t1 - 0.02), yaw: YAW.action, pitch: PITCH.action, aim: [0.54, 0.52], fill: 0.52 });
       whipTo(t0 + 0.06, target, 0.18);
       settle(t1, { ...target, yaw: target.yaw - 2 });
       addCard(t0 + 0.25, t1 - 0.06, args.card, 'top');
       heroWins.push({ t0, t1, ref: heroLift(poseAt(t1 - 0.02)) });
+      subjectWins.push({ t0, t1, ids: heroParts.map((x) => x.id) });
     } else if (type === 'array') {
       const id = args.array || Object.keys(model.arrays)[0];
       const a = model.arrays[id];
@@ -278,19 +297,29 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
         burstK(id, t0 + 0.34, 0, 'lin');
         burstK(id, t0 + Math.min(d - 0.05, 0.34 + 0.55 * d), 1, 'io');
       }
-      const target = fitCam({ parts: byArray(id), S: poseAt(t1 - 0.02), yaw: YAW.array, pitch: PITCH.array, aim: [0.6, 0.52], fill: 0.9 });
-      whipTo(t0 + 0.05, { ...target, yaw: target.yaw + 24, panX: target.panX - 90 }, 0.2);
-      settle(t1, { ...target, yaw: target.yaw + 32 });
+      // 取景必须按「落定后的 yaw」算：先 fit 再漂移 8°，长边投影会变宽、右边被切（实测两轮）
+      const yawEnd = YAW.array + 8;
+      const target = fitCam({ parts: byLayer(a.layer), S: poseAt(t1 - 0.02), yaw: yawEnd, pitch: PITCH.array, aim: [0.58, 0.52], fill: 0.78 });
+      const early = fitCam({ parts: byLayer(a.layer), S: poseAt(t0 + 0.3), yaw: yawEnd + 16, pitch: PITCH.array, aim: [0.58, 0.52], fill: 0.78 });
+      whipTo(t0 + 0.05, early, 0.2);
+      camK(t0 + Math.min(d - 0.15, 0.34 + 0.55 * d), target, 'io');
+      settle(t1, target);
       addCard(t0 + 0.3, t1 - 0.06, args.card, 'top');
+      // 阵列镜头保留「它所在那一层」作上下文，只把其它层淡出
+      subjectWins.push({ t0, t1, ids: byLayer(a.layer).map((x) => x.id) });
     } else if (type === 'stack') {
       const layerId = args.layer || content.stackLayer || model.layers[Math.min(2, NL - 1)].id;
       const li = model.layers.findIndex((l) => l.id === layerId);
       K('ex', t0 + 0.02, val('ex', t0), 'lin');
       K('ex', t0 + 0.34, clamp(li + 1.6, 1, NL), 'io');
-      const target = fitCam({ parts: byLayer(layerId), S: poseAt(t1 - 0.02), yaw: YAW.stack, pitch: PITCH.stack, aim: [0.58, 0.5], fill: 0.56 });
-      whipTo(t0 + 0.05, target, 0.2);
-      settle(t1, { ...target, yaw: target.yaw + 10, zoom: target.zoom * 1.1 });
+      const yawEnd = YAW.stack + 8;
+      const target = fitCam({ parts: byLayer(layerId), S: poseAt(t1 - 0.02), yaw: yawEnd, pitch: PITCH.stack, aim: [0.58, 0.5], fill: 0.56 });
+      const early = fitCam({ parts: byLayer(layerId), S: poseAt(t0 + 0.25), yaw: YAW.stack, pitch: PITCH.stack, aim: [0.58, 0.5], fill: 0.56 });
+      whipTo(t0 + 0.05, early, 0.2);
+      camK(t0 + 0.5 * d, target, 'io');
+      settle(t1, target);
       addCard(t0 + 0.32, t1 - 0.06, args.card, 'top');
+      subjectWins.push({ t0, t1, ids: byLayer(layerId).map((x) => x.id) });
     } else if (type === 'assemble') {
       const exploded = fitCam({ parts: solid, S: poseAt(t0 + 0.02), yaw: YAW.wide, pitch: PITCH.wide, aim: [0.58, 0.5], fill: 0.66 });
       whipTo(t0, exploded, 0.24);
@@ -307,7 +336,7 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
       camK(t0 + 0.5 * d, mid, 'io');
       const hero = fitCam({ parts: solid, S: poseAt(t1), yaw: YAW.hero, pitch: PITCH.hero, aim: [0.54, 0.5], fill: 0.6 });
       settle(t1, hero);
-      labelsWindow = labelsWindow ? { ...labelsWindow, t1: t0 + 0.28 * d } : labelsWindow;
+      labelsWindow = { t0: t0 + 0.05, t1: t0 + 0.3 * d };
     } else if (type === 'end') {
       K('lift', t0 + 0.01, 0);
       K('ex', t0 + 0.01, 0);
@@ -354,7 +383,8 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
         });
 
       const showLabels = labelsWindow && t >= labelsWindow.t0 && t <= labelsWindow.t1;
-      return { t, cam, S, cards: live, labels: showLabels, heroWindow: !!win, model };
+      const sw = subjectWins.find((w) => t >= w.t0 && t <= w.t1);
+      return { t, cam, S, cards: live, labels: showLabels, heroWindow: !!win, subject: sw ? new Set(sw.ids) : null, model };
     },
     _tracks: tracks,
     _cams: camKeys,
