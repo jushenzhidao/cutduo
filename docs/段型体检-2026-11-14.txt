@@ -1,0 +1,46 @@
+段型体检 · 9 支（按"每种段型平均复用次数"排序）
+
+round-window  4.25 段/种  ⚠ 明显重复（同套版式出现 3 次以上）
+  paper · 17 段 · 4/11 种
+  hero outro point steps
+  缺：number compare quote checklist broll grid chart
+
+reno-order  3.33 段/种  ⚠ 明显重复（同套版式出现 3 次以上）
+  paper · 20 段 · 6/11 种
+  compare hero number outro point quote
+  缺：steps checklist broll grid chart
+
+selection-bias  2.38 段/种  尚可
+  paper · 19 段 · 8/11 种
+  checklist compare grid hero outro point quote steps
+  缺：number broll chart
+
+info-check  2.00 段/种  尚可
+  paper · 10 段 · 5/11 种
+  checklist compare hero number quote
+  缺：point steps outro broll grid chart
+
+benford  1.88 段/种  丰富
+  paper · 15 段 · 8/11 种
+  chart compare grid hero number outro point quote
+  缺：steps checklist broll
+
+gut-antibiotic  1.40 段/种  丰富
+  science · 7 段 · 5 种（schema 无枚举）
+  cover diagram outro talk tip
+
+pipeline-intro  1.13 段/种  丰富
+  desk · 17 段 · 15/18 种
+  chart checklist counter files flipBoard notify outro photo ranking rating station talk terminal tickets title
+  缺：comments chat clip
+
+birthday-paradox  1.13 段/种  丰富
+  paper · 9 段 · 8/11 种
+  compare grid hero number outro point quote steps
+  缺：checklist broll chart
+
+incident  1.00 段/种  丰富
+  desk · 12 段 · 12/18 种
+  chart chat checklist comments counter files flipBoard notify outro ranking terminal title
+  缺：talk rating station tickets photo clip
+
