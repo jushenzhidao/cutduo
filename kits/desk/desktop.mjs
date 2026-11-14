@@ -449,9 +449,16 @@ export function createDesktopRenderer(opts = {}) {
 
   function cursor(t, s) {
     if (!s.args || !s.args.cursor) return;
-    const c = s.args.cursor;
-    const p = pr(t, s.t0 + (c.at || 0), s.t0 + (c.at || 0) + 0.8);
-    if (p <= 0 || p >= 1) return;
+    // cursor 可以是单个对象，也可以是数组：一段里飞多次，才不会出现
+    // "前 1 秒动、后 4 秒定格"（实测段长 5.8s 时，单次 0.8s 只占 14%）。
+    const list = Array.isArray(s.args.cursor) ? s.args.cursor : [s.args.cursor];
+    for (const c of list) {
+      const p = pr(t, s.t0 + (c.at || 0), s.t0 + (c.at || 0) + 0.8);
+      if (p > 0 && p < 1) { drawCursor(c, p); return; }
+    }
+  }
+
+  function drawCursor(c, p) {
     const x = lerp(c.from ? c.from[0] : 300, c.x, eo(p)), y = lerp(c.from ? c.from[1] : 700, c.y, eo(p));
     G.save();
     if (p > 0.78) {
