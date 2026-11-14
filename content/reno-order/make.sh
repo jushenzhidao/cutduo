@@ -6,7 +6,8 @@ ROOT="$(cd ../.. && pwd)"
 SLUG="$(basename "$PWD")"
 echo "── 1/6 配音定长 + 时间轴（链式）"
 node build.mjs --chain
-echo "── 预检：一拍拆 N 段必须有 N 份 screens"
+echo "── 预检：screens 结构 + 分镜一致性"
+node "$ROOT/tools/check-screens.mjs" "$SLUG"
 node "$ROOT/tools/check-beats.mjs" --slug "$SLUG"
 echo "── 2/6 旁白响度归一（edge-tts 原始约 -23.7 LUFS，必须在配音环节补）"
 ffmpeg -v error -y -i audio/vo.wav -af "loudnorm=I=-16:TP=-1.5:LRA=11" -ar 48000 -ac 1 audio/vo-norm.wav

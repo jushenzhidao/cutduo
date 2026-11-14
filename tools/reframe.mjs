@@ -55,8 +55,21 @@ const { w: W, h: H } = spec;
 
 /* 背景：原画面按"填满"缩放 + 裁到目标比例 + 高斯模糊 + 压暗 + 降饱和（否则原画面的色块会抢前景）
    前景：原画面按宽度缩放，垂直居中叠上去 */
+// 背景：**超强模糊 + 压饱和**。
+//
+// 试过三版，都有实拍对照：
+//   1) 原实现：整帧模糊 sigma=48 + 压暗 −0.18 + 降饱和 0.55
+//      ⇒ 纸感画面接近平色，糊出来是一片灰、还带一道字幕条糊成的深色污痕，像出错。
+//   2) 只取内容区再模糊 ⇒ 把绿色关键词卡放大成一团巨大绿斑，更糟。
+//   3) 取角落色做**平色**背景 ⇒ paper 很好看，但 science 的底色带黄色光晕，平色会出现明显接缝。
+// 现方案：整帧强模糊（sigma=160，细节抹平只留色调过渡）+ 压饱和到 0.28（红色标题不再糊成红斑）。
+// 两套版式都干净；要强制平色可用 --bgcolor '#efeee5'。
+const forcedBg = arg('bgcolor');
+const bgChain = forcedBg
+  ? `color=c=${forcedBg}:s=${W}x${H}:d=999[bg]`
+  : `[0:v]scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},gblur=sigma=160,eq=saturation=0.28:brightness=0.05[bg]`;
 const filter = [
-  `[0:v]scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},gblur=sigma=48,eq=brightness=-0.18:saturation=0.55[bg]`,
+  bgChain,
   `[0:v]scale=${W}:-2:flags=lanczos[fg]`,
   `[bg][fg]overlay=(W-w)/2:(H-h)/2:shortest=1[v]`,
 ].join(';');
@@ -73,5 +86,5 @@ const dur = execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=dur
 const mb = (fs.statSync(output).size / 1e6).toFixed(2);
 
 console.log(`✓ ${path.relative(ROOT, output)}`);
-console.log(`   ${W}×${H} (${ratio}) · ${Number(dur).toFixed(1)}s · ${mb}MB · 内容未裁，上下为模糊填充`);
+console.log(`   ${W}×${H} (${ratio}) · ${Number(dur).toFixed(1)}s · ${mb}MB · 内容未裁，上下为柔化背景`);
 console.log(`   字幕落在距底 0.28–0.45；跑 caption-check 记得带 --subtitle-y 0.28,0.45`);

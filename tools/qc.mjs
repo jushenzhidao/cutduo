@@ -8,6 +8,7 @@
 // set -e 不会中断 ⇒ 出片脚本"成功"退出、坏片照样进 out/。
 //
 // 这里按「便宜的先跑、贵的后跑」排序，一次跑完并把结果写进案例库：
+//   0. 结构校验 check-screens（硬拦 —— shape 错了渲染器不炸，只会静默丢内容）
 //   1. 文案体检 narration-lint（只报不拦 —— 文案质量是判断题，不该卡住流水线）
 //   2. 分镜一致性 check-beats（硬拦，秒级，且必须在渲染前跑过一遍；这里再跑是兜底）
 //   3. 门禁 gate（硬拦，--json 落盘）
@@ -35,18 +36,27 @@ const abs = path.join(contentDir, 'params.json');
 
 const run = (args, opts = {}) => spawnSync(process.execPath, args, { cwd: ROOT, encoding: 'utf8', ...opts });
 
+/* ── 0. 结构校验（硬拦）：形状错了但渲染器不炸，只能在这里拦 ── */
+console.log('── QC 0/5 结构校验（script.json 的 screens）');
+const sch = run([path.join(ROOT, 'tools/check-screens.mjs'), slug]);
+process.stdout.write(sch.stdout || '');
+if (sch.status !== 0) {
+  console.error('✗ screens 结构错误：修好再出片（这类错误渲染器不会报错，只会静默丢内容）');
+  process.exit(1);
+}
+
 /* ── 1. 文案体检（只报不拦） ── */
-console.log('── QC 1/4 文案体检（只报不拦）');
+console.log('── QC 1/5 文案体检（只报不拦）');
 const lint = run([path.join(ROOT, 'tools/narration-lint.mjs'), slug]);
 process.stdout.write(lint.stdout || '');
 if (lint.status !== 0) console.log('   （以上为提示，不拦截出片）');
 
 /* ── 2. 分镜一致性：交给 gate 的 --beats-check（同一份实现，别跑两遍）
        渲染前的快速预检在 make.sh 里已经跑过一次，这里只作为最终判定 ── */
-console.log('── QC 2/4 分镜一致性（随门禁一起判）');
+console.log('── QC 2/5 分镜一致性（随门禁一起判）');
 
 /* ── 3. 门禁（硬拦） ── */
-console.log('── QC 3/4 门禁');
+console.log('── QC 3/5 门禁');
 const gateJson = path.join(os.tmpdir(), `qc-gate-${slug}.json`);
 const gateArgs = [path.join(ROOT, 'src/gate.mjs'), video, '--json', gateJson,
   '--blank', '--loudness', '--bgm', '--ocr', '2', '--pacing', '--require-beats', slug];
@@ -59,7 +69,7 @@ if (table.length) console.log(table.join('\n'));
 if (gate.stderr && gate.stderr.trim()) console.error(gate.stderr.trim());
 
 /* ── 4. 案例（复用 gate 的 json） ── */
-console.log('── QC 4/4 案例留痕');
+console.log('── QC 4/5 案例留痕');
 const cs = run([path.join(ROOT, 'tools/case-loop.mjs'), slug, '--gate-json', gateJson, '--quiet']);
 process.stdout.write(cs.stdout || '');
 

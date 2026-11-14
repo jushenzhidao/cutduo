@@ -6,7 +6,8 @@ ROOT="$(cd ../.. && pwd)"
 SLUG="$(basename "$PWD")"
 echo "── 1/5 重算时间轴（链式）"
 python3 build.py --chain
-echo "── 预检：一拍拆 N 段必须有 N 份 screens"
+echo "── 预检：screens 结构 + 分镜一致性"
+node "$ROOT/tools/check-screens.mjs" "$SLUG"
 node "$ROOT/tools/check-beats.mjs" --slug "$SLUG"
 echo "── 2/5 旁白响度归一"
 ffmpeg -v error -y -i audio/vo.wav -af "loudnorm=I=-16:TP=-1.5:LRA=11" -ar 48000 -ac 1 audio/vo-norm.wav

@@ -392,9 +392,18 @@ function pChart(t, a) {
   if (yFrom === undefined || yTo === undefined) {
     const lo = flat.length ? Math.min(...flat) : 0;
     const hi = flat.length ? Math.max(...flat) : 1;
-    const pad = (hi - lo) * 0.08 || Math.abs(hi || 1) * 0.1;
-    yFrom = yFrom ?? lo - pad;
-    yTo = yTo ?? hi + pad;
+    if (kind === 'bar') {
+      // **柱状图的基线必须是 0**。柱长代表数值大小，基线不为零会系统性夸大差异：
+      // 实测一组 8/8/1.5/2/1.5/3 的数据，按数据最小值留余量算出 yFrom≈1.0，
+      // 「吃饭 2.0」的柱子看起来是「通勤 1.5」的两倍多——这是错误的视觉陈述。
+      // 折线图不受此限（趋势比绝对值重要），仍按数据范围留 8% 余量。
+      yFrom = yFrom ?? Math.min(0, lo);
+      yTo = yTo ?? hi + (hi - Math.min(0, lo)) * 0.08;
+    } else {
+      const pad = (hi - lo) * 0.08 || Math.abs(hi || 1) * 0.1;
+      yFrom = yFrom ?? lo - pad;
+      yTo = yTo ?? hi + pad;
+    }
   }
   const xS = (v) => X0 + ((v - xFrom) / ((xTo - xFrom) || 1)) * (X1 - X0);
   const yS = (v) => Y1 - ((v - yFrom) / ((yTo - yFrom) || 1)) * (Y1 - Y0);
