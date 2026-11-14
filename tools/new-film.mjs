@@ -48,6 +48,46 @@ function shiftTimes(node, delta) {
   }
 }
 
+/* 把 args 里所有时刻按比例压进 limit。
+   build 会把一拍按 ≤7s 拆成多段，每段**重放同一份 screens 并从 0 起算**：
+   元素钉在 4.2s 而子段只有 3.6s ⇒ 永不出现，画面只剩标题（实测踩过）。
+   实测子段最短 3.5s，所以上限取 3.0（留 15% 余量）。等比缩放，不改变相对节奏。 */
+function collectTimes(node, out) {
+  if (Array.isArray(node)) {
+    if (node.length >= 2 && typeof node[0] === 'string' && typeof node[1] === 'number') out.push(node[1]);
+    node.forEach((v) => v && typeof v === 'object' && collectTimes(v, out));
+  } else if (node && typeof node === 'object') {
+    for (const [k, v] of Object.entries(node)) {
+      if (/^(at|leftAt|rightAt|strikeAt|itemAt)$/.test(k) && typeof v === 'number') out.push(v);
+      else if (v && typeof v === 'object') collectTimes(v, out);
+    }
+  }
+}
+
+function scaleTimes(node, k) {
+  if (Array.isArray(node)) {
+    if (node.length >= 2 && typeof node[0] === 'string' && typeof node[1] === 'number') node[1] = +(node[1] * k).toFixed(2);
+    node.forEach((v) => v && typeof v === 'object' && scaleTimes(v, k));
+  } else if (node && typeof node === 'object') {
+    for (const [key, v] of Object.entries(node)) {
+      if (/^(at|leftAt|rightAt|strikeAt|itemAt)$/.test(key) && typeof v === 'number') node[key] = +(v * k).toFixed(2);
+      else if (v && typeof v === 'object') scaleTimes(v, k);
+    }
+  }
+}
+
+const SCREEN_LIMIT = 3.0;   // 子段最短实测 3.5s，留 15% 余量
+
+function clampTimes(node, limit = SCREEN_LIMIT) {
+  const t = [];
+  collectTimes(node, t);
+  if (!t.length) return node;
+  const max = Math.max(...t);
+  if (max <= limit) return node;
+  scaleTimes(node, limit / max);
+  return node;
+}
+
 function templateFor(type) {
   const sc = (V8T.scenes || []).find((x) => x.type === type);
   if (!sc) return {};
@@ -95,7 +135,7 @@ const script = {
     type: b.paperType || 'point',
     // 占位文案给个字数提示：太长会让字幕挤（每条至少停 1.8s），太短会让片子不到档位
     text: `【${b.id}】这一拍的旁白，约 ${Math.max(8, Math.round((spec.seconds[0] / beats.length) * 5.5 * 0.9))} 字`,
-    screens: [templateFor(b.paperType || "point")],
+    screens: [clampTimes(templateFor(b.paperType || "point"))],
     _note: `画面参考：${b.screen || '—'}`,
   })),
 };
@@ -182,6 +222,29 @@ beats.forEach((b, i) => {
   for (let k = 0; k < parts; k++) {
     // 同一拍的多个子段**按顺序取不同的 screens**，这是避免"两段一模一样"的唯一办法
     const screen = b.screens[k % Math.max(1, b.screens.length)] || {};
+
+    // 元素时刻必须小于子段时长：每段重放同一份 screens 并从 0 起算，
+    // 钉在 4.2s 而子段只有 3.6s ⇒ 永不出现，画面只剩标题（实测踩过）。
+    {
+      const times = [];
+      const collect = (n) => {
+        if (Array.isArray(n)) {
+          if (n.length >= 2 && typeof n[0] === 'string' && typeof n[1] === 'number') times.push(n[1]);
+          n.forEach((v) => v && typeof v === 'object' && collect(v));
+        } else if (n && typeof n === 'object') {
+          for (const [key, v] of Object.entries(n)) {
+            if (/^(at|leftAt|rightAt|strikeAt|itemAt)$/.test(key) && typeof v === 'number') times.push(v);
+            else if (v && typeof v === 'object') collect(v);
+          }
+        }
+      };
+      collect(screen);
+      const maxT = times.length ? Math.max(...times) : 0;
+      const segDur = k === parts - 1 ? b.dur - each * (parts - 1) : each;
+      if (maxT >= segDur - 0.05) {
+        console.warn('  ⚠ ' + b.id + '[' + k + '] screens 最晚时刻 ' + maxT + 's ≥ 子段时长 ' + segDur.toFixed(2) + 's —— 该元素不会出现');
+      }
+    }
     const walk = (n, delta) => {
       if (Array.isArray(n)) {
         if (n.length >= 2 && typeof n[0] === 'string' && typeof n[1] === 'number') n[1] = +(n[1] + delta).toFixed(2);
