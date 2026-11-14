@@ -86,6 +86,16 @@ drop 自动落在最长/信息最满那一段 = 爆炸开头），转场与落�
 按当前通道状态求世界包围盒 → 试投 → 反算 `zoom = min(fill·W/bw, fill·H/bh)` 与 `pan`。
 核心件被 `pull` 抬走后，`sample()` 只补「当前 − 取景时」的高度差，主体始终在画面里。
 
+## 核对外廓：正交三视图
+
+```bash
+node tools/iso-ortho.mjs --params content/<片>/params.json --out out/ortho.png
+```
+
+统一比例尺（三格同 zoom，一个 mm 占同样像素）、`distance = 600R` 逼近正交、排除 `static` 道具件。
+用途是和素材照片并排量宽高厚——透视图里几层叠一起量不出比例。同时会把 `content.bounds`
+与实测外包对账，偏差 >2% 红字告警（手写常量偏大 6–7% 是常态）。
+
 ## 几十层怎么做
 
 - **等间距层距**：`content.spacing`（mm/层）。默认曲线是按 6–8 层调的，24 层会挤成每层 5 mm；
