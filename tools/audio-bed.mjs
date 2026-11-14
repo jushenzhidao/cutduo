@@ -34,9 +34,19 @@ const STYLES = {
     '02 Electro House/Binary System Synth Layers.caf', '02 Electro House/Apex Synth.caf'],
   chillwave: ['07 Chillwave/Acoustic Layers Beat 01.caf', '07 Chillwave/Beach Run Bass.caf',
     '07 Chillwave/Chill Chords Acoustic Guitar.caf', '07 Chillwave/Beach Run Synth.caf'],
-  hiphop: ['01 Hip Hop/Blue Print Beat 01.caf', '01 Hip Hop/Amber Bass.caf',
-    '01 Hip Hop/Soft Keys.caf', '01 Hip Hop/Cloud Pad.caf'],
+  // 2026-11-14 修：原四条（Blue Print Beat / Amber Bass / Soft Keys / Cloud Pad）在本机不存在，
+  // 选 hiphop 会直接报"缺 loop 文件"。换成同一目录下实际存在的 Afloat 套件——
+  // 鼓 / 贝斯 / 琶音动机 / 长音铺底，情绪比 electrohouse 收敛，适合严肃题材。
+  // 层序必须是「铺底 / 低频 / 动机 / 点缀」：a 层从 0 时刻就在响，是"有没有配乐"的唯一证据。
+  // 若把鼓组放 a 层，Afloat 这种 downtempo 的鼓有密集空档，门禁会判"无铺底音乐"（实测 13 段 3.95s）。
+  hiphop: ['01 Hip Hop/Afloat Pad.caf', '01 Hip Hop/Afloat Sub Bass.caf',
+    '01 Hip Hop/Afloat Synth Arp.caf', '01 Hip Hop/Afloat Beat.caf'],
 };
+
+// 各曲风的自带电平差很多（同一套包络下实测：electrohouse 间隙 −25～−30 dB，
+// Afloat 只有 −34～−38 dB，手机扬声器上等于没有）。这里给每种曲风一个线性补偿，
+// 让"铺底在旁白下可闻但不抢"成为所有曲风共同的听感，而不是靠调 musicGain（那会连人声一起动）。
+const TRIM = { electrohouse: 1, chillwave: 1, hiphop: 2.6 };
 
 const slug = arg('slug');
 if (!slug) {
@@ -83,9 +93,11 @@ const env = (pairs) => {
   for (let i = pairs.length - 2; i >= 0; i--) e = `if(lt(t,${pairs[i][0]}),${e},${pairs[i][1]})`;
   return e;
 };
+const trim = TRIM[style] || 1;
 const lay = (i, name, expr, fadeIn) =>
   `[${i}:a]aresample=48000,aformat=channel_layouts=mono,aloop=loop=-1:size=2147483647,atrim=0:${total},` +
-  `asetpts=N/SR/TB,volume='${expr}':eval=frame${fadeIn ? ',afade=t=in:st=0:d=1.6' : ''}[${name}]`;
+  // 补偿乘在包络上（不是 amix 之后）：这样 alimiter 仍能拦住补偿后的峰值
+  `asetpts=N/SR/TB,volume='${trim === 1 ? expr : `${trim}*(${expr})`}':eval=frame${fadeIn ? ',afade=t=in:st=0:d=1.6' : ''}[${name}]`;
 
 const filters = [
   lay(0, 'a', env([[0, 0.28], [t1, 0.38], [t3, 0.44], [total * 0.9, 0.18]]), true),
