@@ -13,6 +13,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { REPO_ROOT, DIRS } from '../../src/root.mjs';
+import { withCamera } from '../../src/camera.mjs';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 // 模板目录经过一次重组（templates/ → templates/own/），按存在性探测，两个位置都认。
@@ -204,7 +205,9 @@ export function createScienceRenderer(opts = {}) {
     if (cur) {
       const localT = clamp(t - cur.t0, 0, cur.t1 - cur.t0);
       const fn = L[cur.type];
-      if (fn) fn(ctx, W, H, localT, cur.t1 - cur.t0, cur.args || {}, env);
+      // 相机只包段内容：品牌角标 / 字幕 / 收尾淡出都在下面，必须在变换之外。
+      if (fn) withCamera(ctx, cur.args && cur.args.camera, localT, cur.t1 - cur.t0, { w: W, h: H },
+        () => fn(ctx, W, H, localT, cur.t1 - cur.t0, cur.args || {}, env));
       else {
         MK.paper(ctx, W, H, 'cream', localT);
         MK.text(ctx, '未知版式：' + cur.type, W / 2, H / 2, { size: 60, align: 'center', color: MK.T.pop, font: 'sans' });

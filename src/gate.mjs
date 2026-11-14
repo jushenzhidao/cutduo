@@ -16,11 +16,12 @@
 
 import { execFileSync, spawnSync } from 'node:child_process';
 import * as BINS from './bins.mjs';
-import { writeFileSync, readFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, statSync } from 'node:fs';
+import { writeFileSync, readFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, statSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { parseFacts, check as factsCheck } from '../tools/facts-check.mjs';
+import { cameraStats } from './camera.mjs';
 
 const FFMPEG = BINS.FFMPEG;
 const FFPROBE = BINS.FFPROBE;
@@ -49,6 +50,10 @@ const LIMIT = {
   loudTarget: -16,
   loudTol: 2,
   tpMax: -0.5,     // 真峰值超过 -0.5 dBTP 就有削波与平台响度惩罚风险
+  // 节奏口径与 tools/pacing.mjs 保持一致（排版式）；MG 片请直接跑 pacing --strict。
+  // 只报不拦是默认：静止是版式选择，本仓 7 套版式有 6 套天生 78–93% 静止（见 docs/探究-anything2explainer）。
+  // 超过这条线的是真离群（生日悖论 17.77s），所以值得单独标出来。
+  paceStill: 8.0,
 };
 
 function probe(file) {
@@ -367,6 +372,26 @@ function fuzzyHas(hay, needle) {
   return false;
 }
 
+// 节奏体检：复用 tools/pacing.mjs（同一份实现，不在 gate 里重写一遍阈值）。
+// 用子进程而不是 import：pacing 的 CLI 已经处理了 params 解析/单段兜底/退出码，
+// 重写成库要把那套约定再实现一次，两处阈值早晚不一致。
+function pacingOf(file, opt) {
+  const cli = path.join(ROOT, 'tools/pacing.mjs');
+  const tmp = path.join(os.tmpdir(), `pacing-${process.pid}-${Date.now()}.json`);
+  const args = [cli, file, '--json', tmp];
+  if (opt.pacingParams) args.push('--params', opt.pacingParams);
+  const r = spawnSync(process.execPath, args, { encoding: 'utf8' });
+  // 退出码 1 = 有段不达标，结果照样有效；2 = 输入错误
+  if (r.status === 2) return { error: (r.stderr || '').trim().split('\n').pop() };
+  try {
+    const j = JSON.parse(readFileSync(tmp, 'utf8'));
+    unlinkSync(tmp);
+    return j.films[0];
+  } catch (e) {
+    return { error: 'pacing 未产出结果' };
+  }
+}
+
 function judge(file, opt) {
   const p = probe(file);
   p.firstYmax = firstFrameYmax(file);
@@ -452,6 +477,28 @@ function judge(file, opt) {
     }
   }
 
+  // 运镜密度（只报不拦）：判据不是"有没有推"，而是"推得密不密"。
+  // huashu 镜头语言.md 的反面标尺：一支 102s/44 镜的片子推近 48 次（2.1s 一次）、
+  // 几乎不拉远，被判「一点都不 smooth」；门禁量到推近约 12 次/分（还是下限）。
+  // 两条线：推近 ≤8 次/分；重音动作（快推）≤1/3 镜头——全篇加粗等于没有重点。
+  let camStats = null;
+  if (opt.cameraParams) {
+    try {
+      const cp = JSON.parse(readFileSync(opt.cameraParams, 'utf8'));
+      const sc = cp.scenes || cp.segments || cp.shots || [];
+      camStats = cameraStats(sc, Number(cp.durationSeconds || 0));
+      if (camStats.withCam === 0) {
+        camStats = null;                       // 没用运镜，不占一行
+      } else if (camStats.warn) {
+        warns.push(`运镜密度偏高：推近 ${camStats.pushPerMin} 次/分、重音占 ${(camStats.accentRatio * 100).toFixed(0)}%`
+          + `（${camStats.withCam}/${camStats.shots} 段有相机）——参考标尺 ≤8 次/分、重音 ≤1/3；`
+          + '连续往里推会读成节拍器');
+      }
+    } catch (e) {
+      warns.push(`运镜参数读取失败：${e.message}`);
+    }
+  }
+
   // 字幕回读：字幕真的显示出来了吗（只报不拦，见 checkCaptions 注释）
   let capCheck = null;
   if (opt.captionParams && oc) {
@@ -471,6 +518,24 @@ function judge(file, opt) {
       }
     } catch (e) {
       warns.push(`字幕参数读取失败：${e.message}`);
+    }
+  }
+
+  // 节奏：段内最长静止 / 段末落位停留（判据见 tools/pacing.mjs 头注释）
+  let pace = null;
+  if (opt.pacing) {
+    const pc = pacingOf(file, opt);
+    if (pc && pc.error) warns.push(`节奏体检跳过：${pc.error}`);
+    else if (pc) {
+      pace = pc.sum;
+      const worst = pc.sum.longestStill.max;
+      if (worst != null && worst > LIMIT.paceStill) {
+        (opt.requirePacing ? fails : warns).push(
+          `最长静止 ${worst}s > ${LIMIT.paceStill}s——段内画面长期不动（真离群，非版式常态）`);
+      }
+      if (pc.sum.fail) {
+        (opt.requirePacing ? fails : warns).push(`节奏 ${pc.sum.fail}/${pc.sum.segs} 段不达标（详见 node tools/pacing.mjs）`);
+      }
     }
   }
 
@@ -501,7 +566,7 @@ function judge(file, opt) {
     ...p, ...s, hook: hk, freeze: fz, expect, ocr: oc ? { frames: oc.frames, lines: oc.lines.length } : null,
     facts: factCheck ? { total: factCheck.hits.length + factCheck.missing.length + factCheck.noNumbers.length,
       hits: factCheck.hits.length, missing: factCheck.missing.length, orphans: factCheck.orphans.length } : null,
-    ocrLines: oc ? oc.lines : null, bgm: bed, loud, capCheck, blank, motion,
+    ocrLines: oc ? oc.lines : null, bgm: bed, loud, capCheck, blank, motion, pace,
     expectHits, verdict: fails.length ? 'FAIL' : 'PASS', fails, warns,
   };
 }
@@ -510,7 +575,7 @@ function judge(file, opt) {
 const fmtTime = (t) => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, '0')}`;
 
 function table(rows) {
-  const head = ['film', 'spec', 'frames', 'flat%', 'black%', 'hook', 'Y', 'freeze', 'LUFS', 'verdict'];
+  const head = ['film', 'spec', 'frames', 'flat%', 'black%', 'hook', 'Y', 'freeze', 'pace', 'LUFS', 'verdict'];
   const lines = rows.map((r) => [
     path.basename(r.file),
     `${r.w}x${r.h}@${r.fps}`,
@@ -520,6 +585,7 @@ function table(rows) {
     r.hook.toFixed(2),
     String(r.yavg),
     r.freeze.max ? r.freeze.max.toFixed(1) + 's' : '—',
+    r.pace && r.pace.longestStill && r.pace.longestStill.max != null ? r.pace.longestStill.max.toFixed(1) + 's' : '—',
     r.loud ? r.loud.lufs.toFixed(1) : '—',
     r.verdict,
   ]);
@@ -581,8 +647,12 @@ function parseArgs(argv) {
     else if (a === '--require-loudness') { opt.loudness = true; opt.requireLoudness = true; }
     else if (a === '--facts') opt.facts = argv[++i];
     else if (a === '--caption-check') opt.captionParams = argv[++i];
+    else if (a === '--camera-check') opt.cameraParams = argv[++i];
     else if (a === '--blank') opt.blank = true;
     else if (a === '--motion') opt.motion = true;
+    else if (a === '--pacing') opt.pacing = true;
+    else if (a === '--require-pacing') { opt.pacing = true; opt.requirePacing = true; }
+    else if (a === '--pacing-params') { opt.pacing = true; opt.pacingParams = argv[++i]; }
     else if (a === '--subtitle-y') {
       const [lo, hi] = String(argv[++i]).split(',').map(Number);
       opt.subtitleBand = [lo, hi];

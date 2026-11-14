@@ -50,7 +50,8 @@ const TRIM = { electrohouse: 1, chillwave: 1, hiphop: 2.6 };
 
 const slug = arg('slug');
 if (!slug) {
-  console.error('用法: node tools/audio-bed.mjs --slug <片名> [--style electrohouse|chillwave|hiphop] [--dry]');
+  console.error('用法: node tools/audio-bed.mjs --slug <片名> [--style <曲风>] [--synth] [--dry]\n' +
+    '  --synth  不用本机 Apple Loops，改用 tools/synth-bgm.mjs 从零合成（换机/CI 可用）');
   process.exit(2);
 }
 
@@ -77,6 +78,27 @@ const t3 = at(0.75);
 
 /* ---------- 选层 ---------- */
 const style = arg('style', 'electrohouse');
+const SYNTH = process.argv.includes('--synth');
+const bgmPath = path.join(DIR, 'audio', 'bgm.wav');
+
+if (SYNTH) {
+  // 本机 Apple Loops 是**不入库**的资源：换机器或进 CI，Loop 路径直接不存在。
+  // --synth 走代码合成（tools/synth-bgm.mjs），完全确定性，且 drop 对齐 params 的段边界。
+  const synthStyle = ['electrohouse', 'chillwave', 'hiphop', 'ambient'].includes(style) ? style : 'chillwave';
+  execFileSync('node', [path.join(ROOT, 'tools', 'synth-bgm.mjs'),
+    '--out', bgmPath, '--duration', String(total), '--style', synthStyle,
+    '--params', path.join(DIR, 'params-abs.json')], { stdio: 'inherit' });
+  if (process.argv.includes('--dry')) process.exit(0);
+  const vo0 = path.join(DIR, 'audio', 'vo-norm.wav');
+  if (!fs.existsSync(vo0)) { console.error('缺 audio/vo-norm.wav（先跑 make.sh 的响度归一）'); process.exit(2); }
+  const { buildMix: bm } = await import(path.join(ROOT, 'src/audio-mix.mjs'));
+  const cues0 = (p.audio && p.audio.cues) || [];
+  const r0 = bm({ out: path.join(DIR, 'audio', 'mix-final.wav'), duration: total, mode: 'external-music',
+    music: bgmPath, voice: vo0, musicGain: 0.5, cues: cues0 });
+  console.log(`✓ audio/mix-final.wav  ${r0 ? 'ok' : '失败'}  · ${cues0.length} 条音效  · synth`);
+  process.exit(0);
+}
+
 const layers = STYLES[style];
 if (!layers) { console.error(`未知曲风 ${style}；可用：${Object.keys(STYLES).join(' / ')}`); process.exit(2); }
 const files = layers.map((f) => path.join(LOOPS, f));

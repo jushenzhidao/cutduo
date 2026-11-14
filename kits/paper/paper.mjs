@@ -16,6 +16,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { registerFonts } from '../../src/fonts.mjs';
+import { withCamera } from '../../src/camera.mjs';
 
 export { registerFonts };
 
@@ -229,6 +230,16 @@ function paperTimecode(t) {
   ctx.textAlign = 'left';
 }
 
+// 拍 id 的首次出现顺序（同一拍拆成多段时只算一次）。scenes 在渲染前固定，缓存一次即可。
+let _beatOrder = null;
+function paperBeatOrder() {
+  if (_beatOrder) return _beatOrder;
+  const seen = [];
+  for (const s of scenes) if (s && s.beat && !seen.includes(s.beat)) seen.push(s.beat);
+  _beatOrder = seen;
+  return seen;
+}
+
 function paperAvatarCard(sc) {
   const { x, y, w, h, r } = PAPER_AVATAR;
 
@@ -239,7 +250,13 @@ function paperAvatarCard(sc) {
     // 这类实现名当内容画上屏（2026-11-14 在生日悖论片里实际看到 "comp are" 断行）。
     const cast = (sc && sc.args && (sc.args.cast || sc.args.title || sc.args.label)) || '';
     if (!cast) return;
-    const idx = Math.max(0, scenes.indexOf(sc));
+    // 编号按「拍」而不是按「子段」：build 会把超过 7s 的一拍拆成 2–3 段，
+    // 按 scenes 下标算会把 7 拍的片写成「05 / 14」——观众读到的是"这条片有 14 章"。
+    // scenes[].beat 是 build 写入的拍 id，取它的首次出现顺序即真实章序号。
+    const beatOrder = paperBeatOrder();
+    const idx = (sc.beat && beatOrder.length > 1)
+      ? Math.max(0, beatOrder.indexOf(sc.beat))
+      : Math.max(0, scenes.indexOf(sc));
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,0.10)'; ctx.shadowBlur = 26; ctx.shadowOffsetY = 10;
     ctx.beginPath(); ctx.roundRect(x, y, w, h, r);
@@ -251,7 +268,8 @@ function paperAvatarCard(sc) {
     ctx.textAlign = 'left';
     ctx.fillText('CHAPTER', x + 48, y + 64);
     ctx.textAlign = 'right';
-    ctx.fillText(`${String(idx + 1).padStart(2, '0')} / ${String(scenes.length).padStart(2, '0')}`, x + w - 48, y + 64);
+    const total = (sc.beat && beatOrder.length > 1) ? beatOrder.length : scenes.length;
+    ctx.fillText(`${String(idx + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`, x + w - 48, y + 64);
     const chars = Array.from(cast);
     const rows = chars.length > 6 ? 2 : 1;
     const per = Math.ceil(chars.length / rows);
@@ -425,7 +443,10 @@ function pChart(t, a) {
   if (kind === 'bar') {
     const gap = (X1 - X0) / Math.max(1, items.length);
     const bw = Math.min(88, gap * 0.6);
-    const base = yS(0);
+    // 柱底基线必须落在绘图区内：纵轴从 95 起时 yS(0) 早已在画布外，
+    // 柱子会一路画到画面底部、穿过字幕带（2026-11-14《图表在说谎吗》实测）。
+    // 取「0 与下界中较高者」：跨零的图仍然以零线为基线，截断的图以下界为基线。
+    const base = yS(yFrom > 0 ? yFrom : 0);
     items.forEach((it, i) => {
       const p = pr(t, at + i * stagger, at + i * stagger + 0.42);
       if (p <= 0) return;
@@ -752,7 +773,12 @@ function pNumber(t, a) {
   pLabel(a.label || '', cx, 236);
 
   // 数字滚动用 easeOutQuart：前段冲、末段收，比三次方更有「停稳」的手感
-  const val = String(Math.round((a.from || 0) + ((a.value ?? 0) - (a.from || 0)) * eo4(p)));
+  // 默认 from = value（数字不滚，只走圆环）。
+  // 原写法 `a.from || 0` 让"不写 from"等价于"从 0 滚"，而滚动中间值会以 172px 清晰上屏——
+  // 标签是「误差上限」时，观众先看到 0%、0.7%、2% 这些不存在的事实（MEMORY §5.1）。
+  // 要滚动必须显式给 from，且中间值必须是被口播支持的量（如"从 3 涨到 5"）。
+  const fromV = a.from ?? a.value ?? 0;
+  const val = String(Math.round(fromV + ((a.value ?? 0) - fromV) * eo4(p)));
   const nf = `900 172px ${PF.black}`;
   const uf = `900 66px ${PF.black}`;
   const vw = charsWidth(parseRichChars(val), nf);
@@ -828,9 +854,13 @@ function pCompare(t, a) {
     ctx.restore();
   }
 
-  // 旧做法被划掉：一条横线从左往右扫过左栏大标题（strikeAt，缺省 = leftAt + 1.4s）
-  const sAt = a.strikeAt != null ? a.strikeAt : (a.leftAt || 0) + 1.4;
-  const sp = pr(t, sAt, sAt + 0.34);
+  // 「旧做法被划掉」：一条横线扫过**左栏**大标题。
+  //
+  // 2026-11-14 改为**默认不划**：原来的缺省是 leftAt+1.4，等于每个 compare 都划左栏。
+  // 而多数片把"正确的一侧"放左边（人均产出 / 随机抽样），划上去等于画面否定自己的论点
+  // （在《1000 人代表 14 亿》《平均数的陷阱》两片实测到）。要划必须显式给 strikeAt。
+  const sAt = a.strikeAt;
+  const sp = sAt != null ? pr(t, sAt, sAt + 0.34) : 0;
   const lTitle = ((a.left || {}).items || [])[0] || '';
   if (sp > 0 && lTitle) {
     const tf = `900 ${bigSize}px ${PF.black}`;
@@ -1120,8 +1150,16 @@ function renderPaper(t, sc) {
   const idx = scenes.indexOf(sc);
   const prev = transition === 'wipe' && idx > 0 ? scenes[idx - 1] : null;
   const p = prev ? clamp((t - sc.t0) / transitionDur) : 1;
+  // 相机只包内容层：时间码 / 头像卡 / 字幕在下面三个函数里画，必须留在变换之外，
+  // 否则整块 UI 会跟着缩放（字幕字号在成片里就不一致了）。
+  const shoot = (scene, at) => withCamera(
+    ctx, scene.args && scene.args.camera,
+    at - scene.t0, scene.t1 - scene.t0,
+    { w: W, h: H },
+    () => drawContent(scene, at),
+  );
   if (p >= 1) {
-    drawContent(sc, t);
+    shoot(sc, t);
   } else {
     // 竖向擦除（不是溶解）：任一时刻每个像素只属于一个镜头，两行大标题不会叠在一起。
     // 溶解在本模板上试过——两张 126px 标题在同一位置交叠，中段读不出字。
@@ -1130,11 +1168,11 @@ function renderPaper(t, sc) {
     const edge = W * eio(p);
     ctx.save();                                      // 新镜：从左露出
     ctx.beginPath(); ctx.rect(0, 0, edge, H); ctx.clip();
-    drawContent(sc, t);
+    shoot(sc, t);
     ctx.restore();
     ctx.save();                                      // 旧镜：留在右侧
     ctx.beginPath(); ctx.rect(edge, 0, W - edge, H); ctx.clip();
-    drawContent(prev, t);
+    shoot(prev, t);
     ctx.restore();
     skipBg = false;
   }

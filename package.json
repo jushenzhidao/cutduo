@@ -25,10 +25,14 @@
     "api:cap:check": "node tools/gen-capabilities.mjs --check",
     "verify:cal": "node tools/verify-calibration.mjs --params kits/science/template/presets/demo.vo.json",
     "adv": "node tools/adversarial.mjs",
+    "sheet": "node tools/contact-sheet.mjs",
+    "bgm": "node tools/synth-bgm.mjs",
+    "det": "node render.mjs --kit paper --params kits/paper/presets/v8t.json --check-determinism",
     "web": "node web/server.mjs",
     "harness": "node harness/run.mjs",
     "kit:check": "node tools/check-kit-contract.mjs",
-    "report": "node tools/report.mjs"
+    "report": "node tools/report.mjs",
+    "pacing": "node tools/pacing.mjs"
   },
   "dependencies": {
     "@napi-rs/canvas": "^1.1.0"

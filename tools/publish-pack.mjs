@@ -90,17 +90,25 @@ fs.writeFileSync(path.join(outDir, 'post.txt'), post);
 /* ---------- 封面：从成片里取一帧 ---------- */
 // 默认取"信息最满"的时刻。要点是**取段末而不是段中**：
 // chart / grid 的元素是逐个长出来的，取中点会得到"只画了一半"的图（实测封面只有 7 根柱子）。
+// 退让量随段长收缩：长段留 1.2s（元素早就长完），短段只留 0.3s。
+// 原写法是 max(t0+0.5, t1-1.2)：段长 1.6s 时等于只走到 31%——逐字浮现的标题还没写完就当封面。
+// 下界 0.28s 来自 dashi 实测「4.95s 只写出『失』，5.15s 才是『失忆』」的 0.3s 余量。
+// 必须是函数声明不能是 const 箭头：pickCoverTime() 在第 60 行就被调用，
+// 而这一行在第 93 行。函数声明会 hoist，const 会落在 TDZ 里 ——
+// 实测报 `Cannot access 'tail' before initialization`，publish-pack 直接崩。
+function tail(len) { return Math.max(0.28, Math.min(1.2, len * 0.15)); }
+
 function pickCoverTime() {
   const want = ['chart', 'grid', 'number', 'compare', 'diagram', 'talk', 'focus'];
   for (const t of want) {
     const i = SCENES.findIndex((x) => x.type === t);
     if (i < 0) continue;
     const s = SCENES[i];
-    if (Number.isFinite(s.t0)) return +Math.max(s.t0 + 0.5, s.t1 - 1.2).toFixed(2);
+    if (Number.isFinite(s.t0)) return +(s.t1 - tail(s.t1 - s.t0)).toFixed(2);
     // segments 只有 dur：用前缀和算绝对时刻
     let at = 0;
     for (let k = 0; k < i; k++) at += Number(SCENES[k].dur || 0) + 0.25;
-    return +(at + Math.max(0.5, Number(s.dur) - 1.2)).toFixed(2);
+    return +(at + Number(s.dur) - tail(Number(s.dur))).toFixed(2);
   }
   const first = SCENES[0];
   if (!first) return dur * 0.5;
