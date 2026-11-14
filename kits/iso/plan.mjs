@@ -252,7 +252,7 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
         K('split', t0 + 0.6, 0, 'lin');
         K('split', t0 + Math.min(d - 0.03, 0.6 + 0.42 * steps.length), steps.length, 'io');
       }
-      const target = fitCam({ parts: heroParts, S: poseAt(t1 - 0.02), yaw: YAW.part, pitch: PITCH.part, aim: [0.54, 0.5], fill: 0.5 });
+      const target = fitCam({ parts: heroParts, S: poseAt(t1 - 0.02), yaw: YAW.part, pitch: PITCH.part, aim: [0.54, 0.5], fill: 0.62 });
       whipTo(t0 + 0.16, target, 0.2);
       settle(t1, { ...target, yaw: target.yaw - 3, zoom: target.zoom * 1.02 });
       addCard(t0 + 0.3, t1 - 0.06, args.card, 'top');
@@ -272,7 +272,7 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
         if (i < 2) K('act', p0 + i * gap + gap * 0.85, 0, 'io');
       }
       K('act', t1 - 0.55, 1, 'io');
-      const target = fitCam({ parts: heroParts, S: poseAt(t1 - 0.02), yaw: YAW.action, pitch: PITCH.action, aim: [0.54, 0.52], fill: 0.52 });
+      const target = fitCam({ parts: heroParts, S: poseAt(t1 - 0.02), yaw: YAW.action, pitch: PITCH.action, aim: [0.54, 0.52], fill: 0.6 });
       whipTo(t0 + 0.06, target, 0.18);
       settle(t1, { ...target, yaw: target.yaw - 2 });
       addCard(t0 + 0.25, t1 - 0.06, args.card, 'top');
