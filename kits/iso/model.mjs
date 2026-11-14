@@ -97,7 +97,112 @@ function prismFaces(pts2, z0, z1, material) {
   return faces;
 }
 
-/** 一件零件的面集。kind 决定截面：box（圆角矩形）/ cyl / prism（自定义凸多边形）。 */
+/** Newell 法线：对任意（含轻微退化）多边形稳健，比三点叉积少一类退化事故。 */
+export function normalOf(pts) {
+  let nx = 0, ny = 0, nz = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length];
+    nx += (a[1] - b[1]) * (a[2] + b[2]);
+    ny += (a[2] - b[2]) * (a[0] + b[0]);
+    nz += (a[0] - b[0]) * (a[1] + b[1]);
+  }
+  const L = Math.hypot(nx, ny, nz) || 1;
+  return [nx / L, ny / L, nz / L];
+}
+
+/**
+ * 绕 pivot 旋转顶点（ZYX 欧拉，单位度）。
+ * 旋转件会让 AABB 变松（转 45° 的方块 AABB 大 √2 倍），遮挡排序因此偏保守——
+ * 这不致命（多判几次"分离"而已），但零件之间仍必须不互穿。
+ */
+export function rotPts(pts, rot, pivot) {
+  const [rx, ry, rz] = [rot[0] || 0, rot[1] || 0, rot[2] || 0].map((v) => v * RAD);
+  const cxr = Math.cos(rx), sxr = Math.sin(rx);
+  const cyr = Math.cos(ry), syr = Math.sin(ry);
+  const czr = Math.cos(rz), szr = Math.sin(rz);
+  return pts.map(([X, Y, Z]) => {
+    const x = X - pivot[0], y = Y - pivot[1], z = Z - pivot[2];
+    const x1 = x * czr - y * szr, y1 = x * szr + y * czr;
+    const x2 = x1 * cyr + z * syr, z2 = -x1 * syr + z * cyr;
+    const y3 = y1 * cxr - z2 * sxr, z3 = y1 * sxr + z2 * cxr;
+    return [x2 + pivot[0], y3 + pivot[1], z3 + pivot[2]];
+  });
+}
+
+/**
+ * 椭球（球面细分）。凸块引擎里唯一没有平面的体——这只鸭子的头、身、眼睛都要它。
+ * 用经纬网格：四边形片数 segU×segV，两极附近退化成三角（Newell 法线仍有效）。
+ * 法线取归一化位置（椭球真法线是 (x/rx²,…)，这里够用且不会出 NaN）。
+ */
+function ballFaces(spec) {
+  const cx = Number(spec.x) || 0;
+  const cy = Number(spec.y) || 0;
+  const cz = (Number(spec.z) || 0) + (Number(spec.rz ?? spec.r) || 10);
+  const rx = Number(spec.rx ?? spec.r) || 10;
+  const ry = Number(spec.ry ?? spec.r) || 10;
+  const rz = Number(spec.rz ?? spec.r) || 10;
+  const nu = Math.max(6, Number(spec.segU) || 14);
+  const nv = Math.max(4, Number(spec.segV) || 9);
+  const mat = spec.material;
+  const P = (i, j) => {
+    const u = (2 * Math.PI * i) / nu;
+    const v = (Math.PI * j) / nv;
+    const sr = Math.sin(v);
+    return [cx + rx * sr * Math.cos(u), cy + ry * sr * Math.sin(u), cz + rz * Math.cos(v)];
+  };
+  const out = [];
+  for (let j = 0; j < nv; j++) {
+    for (let i = 0; i < nu; i++) {
+      const pts = [P(i, j), P(i + 1, j), P(i + 1, j + 1), P(i, j + 1)];
+      // 绕序归一到"外法线朝外"：用面心 - 球心 与法线同向判
+      const c = [0, 0, 0];
+      for (const q of pts) { c[0] += q[0] / 4; c[1] += q[1] / 4; c[2] += q[2] / 4; }
+      const n = normalOf(pts);
+      const dir = [c[0] - cx, c[1] - cy, c[2] - cz];
+      const dot = n[0] * dir[0] + n[1] * dir[1] + n[2] * dir[2];
+      out.push({ pts: dot >= 0 ? pts : [...pts].reverse(), n: dot >= 0 ? n : [-n[0], -n[1], -n[2]], material: mat, top: false });
+    }
+  }
+  return out;
+}
+
+/**
+ * 环 / 圆筒（annular sector，按 seg 切片）。
+ * 一个零件生成 seg 个弯曲多边形棱柱——杯壁、口唇、圈足都靠它。
+ * 单个"环段"是多边形（外弧 + 内弧），prismFaces 直接可用；内弧面法线朝轴心，
+ * 背面剔除后从杯口上方能看见内壁，从侧面看不见。
+ */
+function ringFaces(spec) {
+  const cx = Number(spec.x) || 0;
+  const cy = Number(spec.y) || 0;
+  const z0 = Number(spec.z) || 0;
+  const z1 = z0 + (Number(spec.h) || 1);
+  const ri = Math.max(0, Number(spec.ri) || 0);
+  const ro = Math.max(ri + 0.2, Number(spec.ro ?? spec.r) || 10);
+  const seg = Math.max(3, Number(spec.seg) || 16);
+  const a0 = (Number(spec.a0) || 0) * RAD;
+  const sweep = (Number(spec.sweep) || 360) * RAD;
+  const sub2 = Math.max(1, Number(spec.arcSegs) || 2);
+  const mat = spec.material;
+  const out = [];
+  for (let i = 0; i < seg; i++) {
+    const s0 = a0 + (sweep * i) / seg;
+    const s1 = a0 + (sweep * (i + 1)) / seg;
+    const pts = [];
+    for (let k = 0; k <= sub2; k++) {
+      const a = s0 + ((s1 - s0) * k) / sub2;
+      pts.push([cx + ro * Math.cos(a), cy + ro * Math.sin(a)]);
+    }
+    for (let k = sub2; k >= 0; k--) {
+      const a = s0 + ((s1 - s0) * k) / sub2;
+      pts.push([cx + ri * Math.cos(a), cy + ri * Math.sin(a)]);
+    }
+    out.push(...prismFaces(pts, z0, z1, mat));
+  }
+  return out;
+}
+
+/** 一件零件的面集。kind：box（圆角矩形）/ cyl / ring（环或筒）/ ball（椭球）/ prism（自定义多边形）。 */
 function buildFaces(spec) {
   const z0 = Number(spec.z) || 0;
   const h = Number(spec.h) || 1;
@@ -106,6 +211,12 @@ function buildFaces(spec) {
   if (kind === 'cyl') {
     const pts = circle(Number(spec.x) || 0, Number(spec.y) || 0, Number(spec.r) || 5, Number(spec.seg) || 26);
     return prismFaces(pts, z0, z1, spec.material);
+  }
+  if (kind === 'ball') {
+    return ballFaces(spec);
+  }
+  if (kind === 'ring') {
+    return ringFaces(spec);
   }
   if (kind === 'prism') {
     const pts = (spec.pts || []).map(([x, y]) => [x, y]);
@@ -175,7 +286,21 @@ export function createModel(content = {}) {
       travel: travelOf(li),
       static: !!spec.static,
     };
-    const pf = buildFaces(spec);
+    let pf = buildFaces(spec);
+    if (Array.isArray(spec.rot) && spec.rot.some((v) => Number(v) !== 0)) {
+      // 绕自身包围盒中心转（写 rot 的人想的是"把这件歪过来"，不是绕世界原点）
+      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity, z0b = Infinity, z1b = -Infinity;
+      for (const f of pf) for (const q of f.pts) {
+        x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]);
+        y0 = Math.min(y0, q[1]); y1 = Math.max(y1, q[1]);
+        z0b = Math.min(z0b, q[2]); z1b = Math.max(z1b, q[2]);
+      }
+      const piv = [(x0 + x1) / 2, (y0 + y1) / 2, (z0b + z1b) / 2];
+      for (const f of pf) {
+        f.pts = rotPts(f.pts, spec.rot, piv);
+        f.n = normalOf(f.pts);
+      }
+    }
     for (const f of pf) {
       f.part = part.index;
       f.color = palette[f.material] || part.color;
@@ -240,7 +365,7 @@ export function createModel(content = {}) {
   const heroIds = new Set(parts.filter((p) => p.hero !== undefined).map((p) => p.id));
   const heroBaseZ = Math.max(...parts.filter((p) => !heroIds.has(p.id)).map((p) => p.bbox[2][1]));
 
-  return { layers, parts, faces, arrays, hero, mechs, bounds, radius, palette, mats, liftH, travelOf, content, heroBaseZ };
+  return { layers, parts, faces, arrays, hero, mechs, bounds, radius, palette, mats, liftH, travelOf, content, heroBaseZ, faceSort: !!content.faceSort };
 }
 
 /**

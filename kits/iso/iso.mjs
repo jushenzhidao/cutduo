@@ -61,6 +61,23 @@ const looks = {
     // 深色底上白色外壳会顶到纯白、看着像没过色调映射；整体压 18%，亮边交给 rim
     tone: 0.82,
   },
+  // 实拍棚拍感：浅米灰墙 + 木桌（配 iso-mug 那种"桌面静物"的产品图）
+  studio: {
+    wall: ['#e7e3da', '#d6d0c3'],
+    ink: [34, 31, 28],
+    sub: [108, 102, 94],
+    line: [40, 38, 40, 0.28],
+    card: [34, 31, 28],
+    rim: null,
+    tone: 1,
+    // 4 档量化在圆柱面上会露出色带（白瓷一圈只剩 3 个色阶，像贴了条带）⇒ 连续光照
+    smooth: true,
+    // 浅底上 8% 幽灵仍带一圈描边，特写时像贴了层玻璃纸
+    ghost: 0.035,
+    // 光从左上前方（照到观察者这一侧）。默认 LIGHT 的 +y 分量让正面变成背光，白瓷会整片发灰
+    light: [-0.36, -0.34, 0.87],
+    floor: { top: 0.615, wood: ['#d7b183', '#c39a66'], edge: 'rgba(92,62,32,0.20)' },
+  },
 };
 
 /** 凸多边形按半平面裁剪（桌面分色用）。keep: a*x + b*y <= c */
@@ -99,7 +116,9 @@ export function createIsoRenderer(opts = {}) {
     // 同一套动画出两版配色：上游也是这么做的（process.env.ISO_LOOK）。
     // 环境变量优先，其次 params.content.look，默认橙色桌面版。
     const envLook = process.env.ISO_LOOK;
-    lookName = envLook === 'dark' || envLook === 'split' ? envLook : (content.look === 'dark' ? 'dark' : 'split');
+    lookName = ['dark', 'split', 'studio'].includes(envLook)
+      ? envLook
+      : (['dark', 'split', 'studio'].includes(content.look) ? content.look : 'split');
     look = looks[lookName];
     title = content.title || content.name || 'PRODUCT';
     return { parts: model.parts.length, layers: model.layers.length };
@@ -113,6 +132,42 @@ export function createIsoRenderer(opts = {}) {
     g.addColorStop(1, look.wall[1]);
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
+
+    if (look.floor) {
+      // 木桌：屏幕空间的水平分界 + 木纹。桌子不进三维投影（同 split 的理由：
+      // 特写时远端会落到相机背后翻面），只当摄影棚背景用。
+      const y0 = H * look.floor.top;
+      const wg = ctx.createLinearGradient(0, y0, 0, H);
+      wg.addColorStop(0, look.floor.wood[0]);
+      wg.addColorStop(1, look.floor.wood[1]);
+      ctx.fillStyle = wg;
+      ctx.fillRect(0, y0, W, H - y0);
+      // 木纹：确定性正弦抖动（不用随机，避免逐帧闪烁）
+      ctx.strokeStyle = look.floor.edge;
+      for (let i = 0; i < 14; i++) {
+        const yy = y0 + ((i + 1) / 15) * (H - y0);
+        ctx.lineWidth = 0.8 + (i % 3) * 0.35;
+        ctx.beginPath();
+        for (let x = 0; x <= W; x += 40) {
+          const wob = Math.sin(x * 0.006 + i * 1.7) * 2.4 + Math.sin(x * 0.017 + i * 0.9) * 1.1;
+          if (x === 0) ctx.moveTo(x, yy + wob); else ctx.lineTo(x, yy + wob);
+        }
+        ctx.stroke();
+      }
+      // 桌面靠墙的接触暗部 + 前缘压暗
+      const tg = ctx.createLinearGradient(0, y0 - 26, 0, y0 + 26);
+      tg.addColorStop(0, 'rgba(92,62,32,0)');
+      tg.addColorStop(0.5, 'rgba(92,62,32,0.16)');
+      tg.addColorStop(1, 'rgba(92,62,32,0)');
+      ctx.fillStyle = tg;
+      ctx.fillRect(0, y0 - 26, W, 52);
+      const bg2 = ctx.createLinearGradient(0, H - 90, 0, H);
+      bg2.addColorStop(0, 'rgba(92,62,32,0)');
+      bg2.addColorStop(1, 'rgba(92,62,32,0.14)');
+      ctx.fillStyle = bg2;
+      ctx.fillRect(0, H - 90, W, 90);
+      return;
+    }
 
     if (lookName === 'dark') {
       const glows = [
@@ -196,7 +251,7 @@ export function createIsoRenderer(opts = {}) {
 
   /** 物体在桌面上的软阴影：屏幕空间椭圆 + 径向渐变（比 3D 投影便宜且稳）。 */
   function drawShadow() {
-    if (lookName !== 'split') return;
+    if (!(lookName === 'split' || lookName === 'studio')) return;
     const cam = currentCam;
     const zb = model.bounds[2][0];
     const [cx, cy] = cam.project([0, 0, zb - 0.6]);
@@ -207,8 +262,8 @@ export function createIsoRenderer(opts = {}) {
     ctx.translate(cx, cy + ry * 0.15);
     ctx.scale(1, ry / rx);
     const rg = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
-    rg.addColorStop(0, 'rgba(74,46,30,0.30)');
-    rg.addColorStop(0.55, 'rgba(74,46,30,0.16)');
+    rg.addColorStop(0, lookName === 'studio' ? 'rgba(88,58,30,0.34)' : 'rgba(74,46,30,0.30)');
+    rg.addColorStop(0.55, lookName === 'studio' ? 'rgba(88,58,30,0.17)' : 'rgba(74,46,30,0.16)');
     rg.addColorStop(1, 'rgba(74,46,30,0)');
     ctx.fillStyle = rg;
     ctx.beginPath();
@@ -223,11 +278,20 @@ export function createIsoRenderer(opts = {}) {
   let blurCanvas = null, blurCtx = null, subCanvas = null, subCtx = null;
 
   function shadeColor(base, n) {
-    const lam = Math.max(0, n[0] * LIGHT[0] + n[1] * LIGHT[1] + n[2] * LIGHT[2]);
-    let idx = Math.min(3, Math.floor(lam * 4));
-    // 侧面比 top 稍暗一档，避免大面积同色读不出转折
-    if (n[2] < 0.5) idx = Math.max(0, idx - 1);
-    const f = SHADE_LEVELS[idx] * (look.tone || 1);
+    const L = look.light || LIGHT;
+    const lam = Math.max(0, n[0] * L[0] + n[1] * L[1] + n[2] * L[2]);
+    let f;
+    if (look.smooth) {
+      // 棚拍口径：环境光占大头，直射只补 0.28。白瓷在原片里受光面 #f7f5f1、暗面 #d5d2cb（差 14%），
+      // 按"标准三档"压下去会变成灰塑料
+      f = 0.80 + 0.25 * lam;
+    } else {
+      let idx = Math.min(3, Math.floor(lam * 4));
+      // 侧面比 top 稍暗一档，避免大面积同色读不出转折
+      if (n[2] < 0.5) idx = Math.max(0, idx - 1);
+      f = SHADE_LEVELS[idx];
+    }
+    f *= look.tone || 1;
     return [base[0] * f, base[1] * f, base[2] * f];
   }
 
@@ -236,9 +300,26 @@ export function createIsoRenderer(opts = {}) {
     const { S } = state;
     // 先定零件级顺序（分离轴 + 拓扑），再在零件内部按面深度画。
     // 凸块自身不遮挡自己，背面剔除后剩下的面怎么排都对。
-    const order = orderParts(model, S, cam);
+    // faceSort：所有面混排（不做零件级拓扑）。给"环绕结构"用——
+    // 杯壁包着鸭子时，任何 AABB 都判断不出遮挡关系（完整包含），
+    // 只有面级深度能排对。代价是同层大板压小件的翻面风险（见 §遮挡），
+    // 所以只在内容本身是有机体/环的时候开。
     const subject = state.subject || null;
     const list = [];
+    if (model.faceSort) {
+      for (const part of model.parts) {
+        const off = partOffset(model, part, S);
+        const isSub = subject ? subject.has(part.id) : false;
+        for (let fi = 0; fi < part.faceCount; fi++) {
+          const f = model.faces[part.faces + fi];
+          if (!facing(f.n, cam)) continue;
+          const c = [f.c[0] + off[0], f.c[1] + off[1], f.c[2] + off[2]];
+          list.push({ f, off, depth: cam.depth(c), isSubject: isSub, ghost: subject ? !isSub : false });
+        }
+      }
+      list.sort((a, b) => a.depth - b.depth);
+    }
+    const order = model.faceSort ? [] : orderParts(model, S, cam);
     for (const pi of order) {
       const part = model.parts[pi];
       const off = partOffset(model, part, S);
@@ -257,7 +338,7 @@ export function createIsoRenderer(opts = {}) {
     target.lineJoin = 'round';
     for (const item of list) {
       const { f, off } = item;
-      target.globalAlpha = (item.ghost ? 0.08 : 1) * alphaMul;
+      target.globalAlpha = (item.ghost ? (look.ghost ?? 0.08) : 1) * alphaMul;
       const pts = f.pts;
       target.beginPath();
       for (let i = 0; i < pts.length; i++) {
@@ -280,7 +361,8 @@ export function createIsoRenderer(opts = {}) {
       // 单层展示：主体描一圈亮边。黑玻璃、电芯这类深色件在深底上只有轮廓可读，
       // 不描边就只剩"更黑的一块"（24 层片的屏幕/电池两镜实测）
       if (item.isSubject) {
-        target.strokeStyle = 'rgba(214,228,255,0.45)';
+        // 浅底上用蓝白边等于没描（白瓷在 #eee 上只剩 10 级差），换成暖灰
+        target.strokeStyle = lookName === 'studio' ? 'rgba(96,84,68,0.42)' : 'rgba(214,228,255,0.45)';
         target.lineWidth = 1.1;
         target.stroke();
       }

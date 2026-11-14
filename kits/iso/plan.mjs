@@ -257,9 +257,11 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
       // 分层是一个持续过程：机位跟着"当下已经张开多少"走，只给末状态取景会让
       // 前三分之一的时间用一个远景拍一堆还挤在一起的层（实测主体只占画面 1/4）。
       const target = fitCam({ parts: solid, S: poseAt(t1 - 0.02), yaw: YAW.wide, pitch: PITCH.wide, aim: [0.58, 0.5], fill: 0.66 });
-      const midA = fitCam({ parts: solid, S: poseAt(t0 + 0.7 * d), yaw: YAW.wide, pitch: PITCH.wide, aim: [0.56, 0.5], fill: 0.66 });
+      // 起手按"还没炸开"取景：原先用 0.7d 的位置算，4.8s 一甩就把画面缩到 1/3（实测）
+      const midA = fitCam({ parts: solid, S: poseAt(t0 + 0.05 * d), yaw: YAW.wide, pitch: PITCH.wide, aim: [0.56, 0.5], fill: 0.66 });
+      const midB = fitCam({ parts: solid, S: poseAt(t0 + 0.45 * d), yaw: YAW.wide, pitch: PITCH.wide, aim: [0.57, 0.5], fill: 0.66 });
       whipTo(t0, midA, 0.3, tr);
-      camK(t0 + 0.72 * d, midA, 'io');
+      camK(t0 + 0.45 * d, midB, 'io');
       K('ex', t0 + 0.25 + 0.58 * d, NL, 'io');
       settle(t1, drift(target, 4, 0.025));
       labelsWindow = { t0: t0 + 0.45 * d, t1 };
@@ -278,9 +280,16 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
         K('split', t0 + 0.6, 0, 'lin');
         K('split', t0 + Math.min(d - 0.03, 0.6 + 0.42 * steps.length), steps.length, 'io');
       }
-      const target = fitCam({ parts: heroParts, S: poseAt(t1 - 0.02), yaw: YAW.part, pitch: PITCH.part, aim: [0.54, 0.5], fill: 0.62 });
+      const pv = args.view || {};
+      // 取景按"落定后的 yaw"算：fit 完再转 3°，特写下主体会横移近 1/6 屏（实测鸭头被顶到右上）
+      const yawEnd = (pv.yaw ?? YAW.part) - 3;
+      const target = fitCam({
+        parts: heroParts, S: poseAt(t1 - 0.02),
+        yaw: yawEnd, pitch: pv.pitch ?? PITCH.part,
+        aim: pv.aim ?? [0.54, 0.5], fill: pv.fill ?? 0.62,
+      });
       whipTo(t0 + 0.16, target, 0.2, tr);
-      settle(t1, { ...target, yaw: target.yaw - 3, zoom: target.zoom * 1.02 });
+      settle(t1, { ...target, zoom: target.zoom * 1.02 });
       addCard(t0 + 0.3, t1 - 0.06, args.card, 'top');
       heroWins.push({ t0, t1, ref: heroLift(poseAt(t1 - 0.02)) });
       subjectWins.push({ t0, t1, ids: heroParts.map((x) => x.id) });
@@ -298,9 +307,9 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
         if (i < 2) K('act', p0 + i * gap + gap * 0.85, 0, 'io');
       }
       K('act', t1 - 0.55, 1, 'io');
-      const target = fitCam({ parts: heroParts, S: poseAt(t1 - 0.02), yaw: YAW.action, pitch: PITCH.action, aim: [0.54, 0.52], fill: 0.6 });
+      const target = fitCam({ parts: heroParts, S: poseAt(t1 - 0.02), yaw: YAW.action - 2, pitch: PITCH.action, aim: [0.54, 0.52], fill: 0.6 });
       whipTo(t0 + 0.06, target, 0.18, tr);
-      settle(t1, { ...target, yaw: target.yaw - 2 });
+      settle(t1, target);
       addCard(t0 + 0.25, t1 - 0.06, args.card, 'top');
       heroWins.push({ t0, t1, ref: heroLift(poseAt(t1 - 0.02)) });
       subjectWins.push({ t0, t1, ids: heroParts.map((x) => x.id) });
@@ -369,6 +378,9 @@ export function buildPlan({ scenes = [], content = {}, model, W = 1920, H = 1080
       if (!model.layers.some((l) => l.id === lid)) throw new Error(`iso: layer 镜头引用了不存在的层 ${lid}`);
       K('lift', t0 + 0.01, 1, 'lin');
       K('ex', t0 + 0.01, NL, 'lin');
+      // 前一个镜头若是 part（把核心件拆开了），这里必须复位，否则散开的子件一路带到后续镜头
+      K('pull', t0 + 0.01, 0, 'lin');
+      K('split', t0 + 0.01, 0, 'lin');
       for (const id of Object.keys(model.arrays)) burstK(id, t0 + 0.01, 0);
       const parts = byLayer(lid);
       const target = fitCam({
