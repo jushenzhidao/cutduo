@@ -828,13 +828,16 @@ function pCompare(t, a) {
       // 用于**长段**：compare 天然 2 秒演完，18s 的段后半程完全静止（实测 longest still 17.77s）。
       const t0r = Array.isArray(revealTimes) && Number.isFinite(revealTimes[i])
         ? revealTimes[i] : base + 0.25 + i * 0.18;
-      const q = pr(t, t0r, t0r + 0.34);
+      // 揭示必须**整行一次性出现 + 大位移**，不能遮罩扫出。
+      // 实测口径（320×180 灰度、0.1s 间隔，复现 pacing 的 diffMean）：
+      //   遮罩扫出 32px 位移 → 均值差 0.163、变化像素 119（门槛 153 / 0.35）⇒ 那一帧仍判「静止」
+      // 原因：遮罩同一时刻只露 1/3，灰度差又被抗锯齿摊薄；短行（8 字）在 320 宽下只有 ~50×6px。
+      // 整行一起落下来时，行宽 × 位移全部计入，才能砸穿阈值。
+      const q = pr(t, t0r, t0r + 0.26);
       if (q <= 0) return;
-      ctx.save(); ctx.globalAlpha = eo(p) * Math.min(1, eo(q) * 3);
-      // 遮罩从左扫出，而不是整体淡入：pacing 实测纯淡入每次只占 0.2% 面积、均值永远够不到
-      // 0.35 阈值，18.6s 的段被判「全程停」（"幅度太小，把揭示做大"）。横扫的面积变化大一个量级。
-      const wLine = trackWidth(parseRichChars(s), bf, 0);
-      place(s, bf, right ? RX : LX, 427 + i * 63, PK.body, 0, wLine * eo(q));
+      ctx.save(); ctx.globalAlpha = eo(p) * Math.min(1, eo(q) * 4);
+      const dy = (1 - eo(q)) * 52;
+      place(s, bf, right ? RX : LX, 427 + i * 63 + dy, PK.body);
       ctx.restore();
     });
     ctx.restore();
@@ -938,16 +941,21 @@ function pSteps(t, a) {
     const cw = CARD_W, chh = 126, cy = 526;
     const cx = x - cw / 2;   // 与节点 x 同轴
     const e = p > 0 ? eo(p) : 0;
-    const alpha = p > 0 ? e : 0.42;
+    // 幽灵态 0.42 太实：卡片本来就画在白纸上（白 on 米），弹出只是 alpha 0.42→1，
+    // 灰度差不到 10，pacing 完全看不见（实测 steps 段 90 次变化、每次 0.13% 面积仍判静止）。
+    // 降到 0.18 让「未到场」和「已到场」拉开对比：观感上未完成的更淡，也更容易被读出是"还没来"。
+    const alpha = p > 0 ? e : 0.18;
     // 卡片弹出：0.94 → 1 倍，围绕自身中心缩放；未到场的幽灵卡保持原样
-    const pop = p > 0 ? lerp(0.94, 1, e) : 1;
+    // 弹出幅度 0.94→1 太含蓄：卡片 200×126 只放大 6%，在 pacing 的 320×180 采样上
+    // 每次只占 0.13% 面积（实测 steps 段 12.6s 里 90 次变化仍判静止）。放到 0.88 起跳。
+    const pop = p > 0 ? lerp(0.88, 1, e) : 1;
     const mx = cx + cw / 2, my = cy + chh / 2;
     ctx.save();
     ctx.translate(mx, my); ctx.scale(pop, pop); ctx.translate(-mx, -my);
 
     ctx.save(); ctx.globalAlpha = alpha;
     ctx.shadowColor = 'rgba(0,0,0,0.10)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 6;
-    ctx.beginPath(); ctx.roundRect(cx, cy + (p > 0 ? (1 - e) * 12 : 0), cw, chh, 4);
+    ctx.beginPath(); ctx.roundRect(cx, cy + (p > 0 ? (1 - e) * 26 : 0), cw, chh, 4);
     ctx.fillStyle = '#FFFFFF'; ctx.fill();
     ctx.restore();
 
