@@ -43,7 +43,7 @@ function casesOf(src) {
       i++;
     }
     const block = src.slice(sw.index, i);
-    const cRe = /case\s+'([a-z][a-z0-9_-]*)'\s*:/gi;
+    const cRe = /case\s+'([a-zA-Z][a-zA-Z0-9_-]*)'\s*:/gi;
     let c;
     while ((c = cRe.exec(block))) out.add(c[1]);
   }
@@ -51,7 +51,26 @@ function casesOf(src) {
   const arrRe = /(?:SHOT_TYPES|SEGMENT_TYPES|SCENE_TYPES|TYPES|KINDS)\s*=\s*\[([^\]]+)\]/g;
   let a;
   while ((a = arrRe.exec(src))) {
-    for (const q of a[1].matchAll(/'([a-z][a-z0-9_-]*)'/g)) out.add(q[1]);
+    for (const q of a[1].matchAll(/'([a-zA-Z][a-zA-Z0-9_-]*)'/g)) out.add(q[1]);
+  }
+  // 3) 对象映射：`const PAINTERS = { hero: S.hero, ... }` + `PAINTERS[cur.type]`
+  //    collage 是这种写法，只认 switch 的话会提取出 0 种，跟 schema 一比就全错。
+  const mapNames = [];
+  for (const m of src.matchAll(/(?:const|let|var)\s+([A-Z][A-Z0-9_]+)\s*=\s*\{/g)) mapNames.push(m[1]);
+  for (const name of mapNames) {
+    // 只有真的被当分发表用过（name[...type...]）才算
+    if (!new RegExp(`${name}\\s*\\[`).test(src)) continue;
+    const start = src.indexOf(`${name} = {`);
+    if (start < 0) continue;
+    let i = src.indexOf('{', start), depth = 0, end = -1;
+    for (; i < src.length; i++) {
+      if (src[i] === '{') depth++;
+      else if (src[i] === '}') { depth--; if (depth === 0) { end = i; break; } }
+    }
+    if (end < 0) continue;
+    const body = src.slice(start, end);
+    // 只取第一层的键（缩进 2 空格）
+    for (const k of body.matchAll(/^\s{2}([a-zA-Z][a-zA-Z0-9_-]*)\s*:/gm)) out.add(k[1]);
   }
   return out;
 }
