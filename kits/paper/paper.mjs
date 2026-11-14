@@ -1018,10 +1018,14 @@ function pChecklist(t, a) {
   pLabel(a.title || '', cx, 218);
 
   const nf = `500 180px ${PF.med}`, uf = `900 60px ${PF.black}`;
-  const vw = charsWidth(parseRichChars(String(total)), nf);
+  // 中间的大数字显示**当前进度**而不是总数：原来固定显示 total，整段只有 25 条细刻度在变，
+  // 像素变化低于 freezedetect 的 0.2% 阈值 ⇒ checklist 段被整段判成"冻结"（实测 12.5s）。
+  // 改成进度后，每确认一条就有 180px 大字的变化。
+  const shownVal = String(done);
+  const vw = charsWidth(parseRichChars(shownVal), nf);
   const uw = charsWidth(parseRichChars('\u6761'), uf);
   const nx = cx - (vw + 12 + uw) / 2 + 18;
-  drawChars({ chars: parseRichChars(String(total)) }, nx, 427 + inkAsc(String(total), nf), nf, PK.ink, BLUE);
+  drawChars({ chars: parseRichChars(shownVal) }, nx, 427 + inkAsc(shownVal, nf), nf, PK.ink, BLUE);
   drawChars({ chars: parseRichChars('\u6761') }, nx + vw + 12, 485 + inkAsc('\u6761', uf), uf, BLUE, BLUE);
 
   const cur = items[Math.min(items.length - 1, Math.max(0, done - 1))];
