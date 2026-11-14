@@ -20,6 +20,14 @@ import path from 'node:path';
 
 const PASS = new Set(['bignum', 'timeline', 'glyph', 'framecount']); // 元镜头：一段只讲一件事，不参与轮换
 
+// 能量档（与 kits/diagram/tokens.mjs 的 ENERGY 同表；此处内联是为了让工具零依赖可跑）
+const ENERGY = {
+  'data-bar': '中', 'data-line': '中', hierarchy: '低', cycle: '中', definition: '低',
+  compare: '中', process: '中', causal: '中', parts: '中', experiment: '中',
+  evidence: '低', formula: '低', recap: '中',
+  bignum: '高', timeline: '高', glyph: '高', framecount: '高',
+};
+
 function arg(name, def) {
   const i = process.argv.indexOf(`--${name}`);
   return i > -1 ? process.argv[i + 1] : def;
@@ -139,9 +147,13 @@ function main() {
   // ── 输出
   const pad = (v, n) => String(v).padEnd(n);
   console.log(`\n${path.basename(presetPath)}  ·  ${segs.length} 段 / ${acc.toFixed(2)}s\n`);
-  console.log(pad('段', 4) + pad('family', 14) + pad('时长', 8) + pad('锚点', 6) + pad('最长空窗', 10) + '位置');
+  console.log(pad('段', 4) + pad('family', 14) + pad('能', 4) + pad('时长', 8) + pad('锚点', 6) + pad('最长空窗', 10) + '位置');
   for (const r of rows) {
-    console.log(pad(r.段, 4) + pad(r.family, 14) + pad(r.时长, 8) + pad(r.锚点, 6) + pad(r.最长空窗, 10) + r.位置);
+    console.log(pad(r.段, 4) + pad(r.family, 14) + pad(ENERGY[r.family] ?? '-', 4) + pad(r.时长, 8) + pad(r.锚点, 6) + pad(r.最长空窗, 10) + r.位置);
+  }
+  const high = rows.filter((r) => ENERGY[r.family] === '高').length;
+  if (rows.length >= 6 && high / rows.length > 0.5) {
+    console.log(`\n提示  高能量段占 ${Math.round((high / rows.length) * 100)}% —— 整片都在换屏时，观众没有"停下来读"的段落`);
   }
   console.log('');
   for (const m of fails) console.log(`FAIL  ${m}`);

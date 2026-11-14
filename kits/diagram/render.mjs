@@ -19,7 +19,7 @@ import { createCanvas, GlobalFonts } from '@napi-rs/canvas';
 import { DIRS, REPO_ROOT, resolveInput } from '../../src/root.mjs';
 import { concatParts, partArgs, pumpFrames, report, spawnPart } from '../../src/pipeline.mjs';
 import { drawCaption, drawDiagram, drawTitleCard, resolveAnchors, validateDiagram } from './diagram.mjs';
-import { clamp, easeOutCubic } from './layout.mjs';
+import { clamp, easeInCubic, easeOutCubic } from './layout.mjs';
 import { FONTS } from './tokens.mjs';
 import { CANVAS, FRAME, PALETTES } from './tokens.mjs';
 
@@ -153,6 +153,11 @@ function main() {
 
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext('2d');
+  // 出场用的离屏画布：段落末 0.2s 要把整段内容淡出，而 family 内部到处直接赋值
+  // globalAlpha，外层设的透明度会被它们覆盖 —— 只能先画到离屏、再带 alpha 贴回。
+  // 每帧新建 canvas 太贵（实测 3–5ms），固定复用一个。
+  const scratch = createCanvas(width, height);
+  const sctx = scratch.getContext('2d');
 
   const renderer = {
     renderFrame(t) {
@@ -164,13 +169,28 @@ function main() {
         return;
       }
       const idx = timeline.filter((x) => x.seg.family !== '__title__').indexOf(cur) + 1;
-      drawDiagram(ctx, cur.seg, t - cur.start, box, {
+      const drawOpts = {
         palette,
         index: idx,
         total: segments.length,
         now: t,
         frame: { index: Math.floor(t * fps), total: frames, fps },
-      });
+      };
+
+      // 出场：三段式的最后一段（入场 0.2–0.8 / hold / 出场 0.15–0.5）。
+      // 只做淡出会像画面突然断电；淡出 + 上移 10px 才是"让位"。
+      const exitFade = Number(params.exitFade ?? 0.2);
+      const exitT = exitFade > 0 && cur.seg.family !== '__title__' ? clamp((t - (cur.end - exitFade)) / exitFade) : 0;
+      if (exitT > 0) {
+        sctx.clearRect(0, 0, width, height);
+        drawDiagram(sctx, cur.seg, t - cur.start, box, drawOpts);
+        ctx.save();
+        ctx.globalAlpha = 1 - easeInCubic(exitT);
+        ctx.drawImage(scratch, 0, -10 * easeInCubic(exitT));
+        ctx.restore();
+      } else {
+        drawDiagram(ctx, cur.seg, t - cur.start, box, drawOpts);
+      }
       const fadingOut = (params.outroFade ?? 0) > 0 && t > total - (params.outroFade ?? 0);
       if (params.captions !== false && !fadingOut) {
         // 一段多句时字幕只挂"当前这一句"：两句一起挂底部会一直显示 30+ 字，

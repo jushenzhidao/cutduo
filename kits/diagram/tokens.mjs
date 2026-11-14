@@ -84,3 +84,34 @@ export const CAPACITY = {
   glyph: { min: 0, max: 0, label: 20 },
   framecount: { min: 0, max: 0, label: 0 },
 };
+
+/**
+ * 段型的能量档（低/中/高）。来源：video-talkcraft 的卡片 frontmatter「能量」字段。
+ *
+ * 判据是**画面变化的幅度**，不是信息量：
+ *   低 —— 一次成型，之后让人读（静态结构、定义、引文）
+ *   中 —— 段内有 2~6 次逐项揭示（大多数图示）
+ *   高 —— 整屏换一个东西（元镜头、大数字、时间轴）
+ *
+ * 用法：同语义下按档位挑，别让全片都在喊。**不是硬闸** —— 5 个镜头各换一个画面的
+ * 元片（`talkcraft`）本来就该全高，硬套"高 ≤1/3"会把它判错。
+ */
+export const ENERGY = {
+  'data-bar': '中',
+  'data-line': '中',
+  hierarchy: '低',
+  cycle: '中',
+  definition: '低',
+  compare: '中',
+  process: '中',
+  causal: '中',
+  parts: '中',
+  experiment: '中',
+  evidence: '低',
+  formula: '低',
+  recap: '中',
+  bignum: '高',
+  timeline: '高',
+  glyph: '高',
+  framecount: '高',
+};

@@ -31,6 +31,9 @@ export function niceStep(span, target = 4) {
 }
 
 export const easeOutCubic = (t) => 1 - Math.pow(1 - clamp(t), 3);
+
+/** 出场用：起步慢、收尾快。入场用 easeOut，出场用 easeIn，才有"离开比进来轻"的手感 */
+export const easeInCubic = (t) => Math.pow(clamp(t), 3);
 export const easeOutQuint = (t) => 1 - Math.pow(1 - clamp(t), 5);
 export const easeInOutSine = (t) => -(Math.cos(Math.PI * clamp(t)) - 1) / 2;
 
