@@ -42,7 +42,8 @@ if (!fs.existsSync(film)) {
 
 const params = JSON.parse(fs.readFileSync(path.join(DIR, 'params-abs.json'), 'utf8'));
 // science 版式用 segments（dur 累积），paper 用 scenes（t0/t1）——封面取帧要两边都认
-const SCENES = params.scenes || params.segments || [];
+// 三种容器都认：paper 的 scenes、science 的 segments、desk 的 shots
+const SCENES = params.scenes || params.segments || params.shots || [];
 const script = JSON.parse(fs.readFileSync(path.join(DIR, 'script.json'), 'utf8'));
 const outDir = path.join(ROOT, 'out', 'publish', slug);
 fs.mkdirSync(outDir, { recursive: true });
@@ -58,7 +59,8 @@ const fps = Math.round(eval(v.r_frame_rate.replace('/', '/')) * 100) / 100;
 /* ---------- 文案 ---------- */
 const at = Number(arg('at', pickCoverTime()));
 
-const beats = script.beats || [];
+// desk 版式的稿子用 shots 不是 beats
+const beats = script.beats || script.shots || [];
 const hook = beats[0] ? String(beats[0].text) : '';
 const last = beats.length ? String(beats[beats.length - 1].text) : '';
 // 标题：优先 script.title；太长就压到 24 字以内（平台标题区普遍只显示这么多）

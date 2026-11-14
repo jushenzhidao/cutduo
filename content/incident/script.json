@@ -1,0 +1,132 @@
+{
+  "_note": "desk 版式专用：用 shots（不是 scenes），有显式 t0/t1 与 chapter。文案按段写，build 时配音定长。",
+  "slug": "incident",
+  "title": "凌晨三点十七分",
+  "brand": "值班笔记 · 一次线上故障",
+  "shots": [
+    {
+      "id": "I01",
+      "type": "title",
+      "chapter": "01 报警",
+      "text": "凌晨三点十七分，手机在枕边震了一下。我摸黑找到眼镜。",
+      "args": {
+        "app": "值班手机",
+        "headline": "凌晨 3:17",
+        "train": "P1 报警",
+        "status": "已响"
+      }
+    },
+    {
+      "id": "I02",
+      "type": "notify",
+      "chapter": "01 报警",
+      "text": "P1：下单接口错误率十二个百分点，已经持续三分钟。这个点，没人值班。",
+      "args": {
+        "title": "P1 · 下单接口",
+        "body": "错误率 12% · 持续 3 分钟",
+        "icon": "!"
+      }
+    },
+    {
+      "id": "I03",
+      "type": "terminal",
+      "chapter": "02 止血",
+      "text": "先看日志。过去五分钟，失败的全是同一个超时，三千毫秒，卡得很整齐。",
+      "args": {
+        "title": "api-orders — logs",
+        "lines": [
+          "$ grep -c timeout app.log",
+          "1 842",
+          "$ grep timeout app.log | tail -2",
+          "  10:17:03 ERROR upstream timeout after 3000ms",
+          "  10:17:04 ERROR upstream timeout after 3000ms"
+        ]
+      }
+    },
+    {
+      "id": "I04",
+      "type": "chat",
+      "chapter": "02 止血",
+      "text": "群里同步一句：我先盯着，谁熟悉这块？三个人的群，两个在睡。",
+      "args": {
+        "items": [
+          {
+            "from": "我",
+            "text": "P1 在手，错误率 12%，先看超时",
+            "me": true
+          },
+          {
+            "from": "小林",
+            "text": "这块我熟，我看下游",
+            "me": false
+          },
+          {
+            "from": "我",
+            "text": "好，我盯监控",
+            "me": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "I05",
+      "type": "files",
+      "chapter": "03 定位",
+      "text": "看最近的提交。四十分钟前，有人动过连接池配置。四个文件，只有一个是配置。",
+      "args": {
+        "items": [
+          {
+            "name": "pool.config",
+            "meta": "40 分钟前",
+            "tag": "改动"
+          },
+          {
+            "name": "orders.service",
+            "meta": "昨天",
+            "tag": ""
+          },
+          {
+            "name": "README",
+            "meta": "上周",
+            "tag": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "I06",
+      "type": "flipBoard",
+      "chapter": "03 定位",
+      "text": "但回滚之后，错误率没有降。那就不是代码的问题。这时候最容易犯的错，是继续看代码。",
+      "args": {
+        "kicker": "回滚之后",
+        "word": "没降",
+        "sub": "不是代码"
+      }
+    },
+    {
+      "id": "I07",
+      "type": "counter",
+      "chapter": "04 根因",
+      "text": "是连接池被下游占满了。池子只有二十个连接，满的时候，新请求只能排队。",
+      "args": {
+        "label": "连接池上限",
+        "value": 20,
+        "sub": "全部被下游慢查询占住"
+      }
+    },
+    {
+      "id": "I08",
+      "type": "outro",
+      "chapter": "05 复盘",
+      "text": "复盘只有一句：先止血，再定位，最后才改代码。顺序写进复盘，比查出根因更难。",
+      "args": {
+        "title": "复盘一句话",
+        "lines": [
+          "先止血 · 再定位 · 最后改代码"
+        ],
+        "sub": "顺序反了，越查越乱"
+      }
+    }
+  ]
+}
