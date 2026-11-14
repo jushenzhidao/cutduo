@@ -154,8 +154,22 @@ fs.writeFileSync(path.join(outDir, 'meta.json'), JSON.stringify(meta, null, 1));
 /* ---------- 成片 ---------- */
 fs.copyFileSync(film, path.join(outDir, slug + '.mp4'));
 
+/* ---------- 竖屏版（可选 --vertical） ---------- */
+let vertical = null;
+if (process.argv.includes('--vertical')) {
+  const vf = path.join(ROOT, 'out', 'vertical', `${slug}-9x16.mp4`);
+  if (!fs.existsSync(vf)) {
+    execFileSync('node', [path.join(ROOT, 'tools', 'reframe.mjs'), '--slug', slug], { stdio: 'inherit' });
+  }
+  if (fs.existsSync(vf)) {
+    fs.copyFileSync(vf, path.join(outDir, slug + '-9x16.mp4'));
+    vertical = `out/vertical/${slug}-9x16.mp4`;
+  }
+}
+
 console.log(`✓ out/publish/${slug}/`);
 console.log(`   ${slug}.mp4   ${dur.toFixed(1)}s · ${v.width}×${v.height} · ${sizeMB}MB`);
 console.log(`   cover.jpg   ${at}s 处的原帧`);
 console.log(`   post.txt    标题「${title}」`);
 console.log(`   meta.json   ${meta.scenes} 段 / ${meta.beats} 拍 / 台账 ${factCount} 条`);
+if (vertical) console.log(`   ${slug}-9x16.mp4   竖屏版（模糊填充，内容未裁）`);

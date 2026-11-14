@@ -84,6 +84,7 @@ for (const slug of fs.readdirSync(path.join(ROOT, 'content'))) {
     ? (fs.readFileSync(path.join(dir, 'facts.md'), 'utf8').match(/^\|\s*\d+\s*\|/gm) || []).length : 0;
   const pub = path.join(ROOT, 'out', 'publish', slug);
   const hasPub = fs.existsSync(path.join(pub, 'post.txt'));
+  const hasVertical = fs.existsSync(path.join(pub, slug + '-9x16.mp4'));
 
   films.push({
     slug,
@@ -95,7 +96,7 @@ for (const slug of fs.readdirSync(path.join(ROOT, 'content'))) {
     types: [...new Set(segs.map((s) => s.type))],
     fps: params.fps,
     duration: spec ? spec.duration : params.durationSeconds,
-    sizeMB, spec, mtime, cover, verdict, warns, factRows, hasPub,
+    sizeMB, spec, mtime, cover, verdict, warns, factRows, hasPub, hasVertical,
     _gateArgs: gateArgs,
   });
 }
@@ -136,7 +137,8 @@ const card = (f) => `
       <p class="types">${f.types.map((t) => `<code>${t}</code>`).join(' ')}</p>
       <p class="flags">
         台账 <b>${f.factRows}</b> 条 ·
-        发布包 <b class="${f.hasPub ? 'ok' : 'na'}">${f.hasPub ? '已生成' : '未生成'}</b>
+        发布包 <b class="${f.hasPub ? 'ok' : 'na'}">${f.hasPub ? '已生成' : '未生成'}</b> ·
+        竖屏 <b class="${f.hasVertical ? 'ok' : 'na'}">${f.hasVertical ? '有' : '无'}</b>
       </p>
       ${f.warns.length ? `<ul class="warns">${f.warns.slice(0, 3).map((w) => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}
       <p class="file">${f.mtime || '—'}</p>
