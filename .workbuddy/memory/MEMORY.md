@@ -1,54 +1,28 @@
-# MEMORY.md — 本项目长期约定（2026-11-13 压缩版）
+# MEMORY.md — 本项目长期约定
 
-> 完整历史版：`MEMORY-archive-2026-11-13.md`（24KB，含被删的过程叙述）。
-> 本文件只留**结论与数字**；过程性踩坑在各日 `YYYY-MM-DD.md`。
+> 只留「下次一定会用到、且不看文档就会踩坑」的结论与数字。
+> 过程性叙述在各日 `YYYY-MM-DD.md`；从代码能读到的细节不在这里重复。
+> 上一版 28KB 已被注入截断，这是 2026-11-14 的重写版（原档 `MEMORY-archive-2026-11-14.md`）。
 
-## 一、发版（2026-11-13 实测，`v0.2.2`）
+## 一、发版
 
-- **运行结论 success ≠ 发布成功**。判发布是否成立要看**步骤级**结论：
-  `v0.2.0`/`v0.2.1` 都出现过 run=success 而 `Build changelog`/`Create Release` 全 skipped
-  —— tag 在、Release 零个、无任何告警。
-- **根因**：两个 tag 的提交**正文**里写了跳过发版标记（CI 提交），而逃生阀判定跑在
-  模式判定**之前**且匹配 `%B` 整条 message ⇒ 人工打 tag 被自动补丁的开关否决。
-- **`release.yml` 已改（`b79468d`，+50/−21）**：① 先定 MODE，跳过标记只在 `MODE=auto` 生效；
-  ② 补发旧 tag 时 `PREV` 锚定 `git tag … --merged "${TAG}^{commit}^"`（否则 range 反向，
-  `git log` 空且不报错）；③ `mode=skip` 写 Summary + `::warning::`。
-- **自身提交不能写标记字面量**，否则那次 push 自己就被跳过。
-- 组织惯例：tag-only、0 资产、标题=tag 名；自动补丁 v0.x.**y+1**，契约变化才人工打 tag。
-- **`image.yml` 已删（`30f7e97`）**：它构建 `context: renderd`，而该目录在 Skia 重构（`da0ea50`）
-  就没了，产物 `ghcr.io/*/cutduo-renderd` 无任何消费方（MCP 是在 x86 服务器上原生构建）。
-  按发版技能 §5「镜像先推、tag 后打」，真要有容器产物就并进 `release.yml` 在打 tag **之前**构建。
-- 纯 CI / 纯文档提交用 `[skip release]`：实测 `30f7e97` job success 7s、零新 tag、Summary 带 warning。
+- **运行结论 success ≠ 发布成功**。判发布成立要看**步骤级**结论（`Build changelog` / `Create Release`）。
+  曾出现 run=success 而两处全 skipped：tag 在、Release 零个、无告警。
+- 根因：tag 提交的**正文**里写了跳过标记，而逃生阀判定跑在模式判定之前且匹配整条 message。
+  `release.yml` 已修：先定 MODE，跳过标记只在 `MODE=auto` 生效。
+- 惯例：tag-only、0 资产、标题=tag 名；自动补丁 `v0.x.y+1`，**契约变化才人工打 tag**。
+- 纯 CI / 纯文档提交用 `[skip release]`。
 
 ## 二、速度口径（比较必须同片）
 
-- **判据三条**：出片墙钟、渲染吞吐 fps、体积（+重复帧）。**同一支片、同一参数，只换引擎**。
-- 同一口播 46.386s / 8 段 / 60fps：film-kit 51s·55fps·24.4MB｜skia-kit **6.8s·409fps·3.26MB**｜
-  cinecode 113.3s·24.6fps·6.13MB。
-- 1920×1080@24 / 892 帧：skia-kit 2.3s·388fps·2.20MB｜cinecode 15.8s·56.5fps·6.15MB
-  ⇒ 慢 6.9×、体积 2.8×。体感"更快"来自省参数与对话式改稿，**不来自渲染**。
+- 判据三条：出片墙钟、渲染吞吐 fps、体积。同一支片、同一参数，**只换引擎**。
+- 同一口播 46.386s / 8 段 / 60fps：film-kit 51s·55fps｜skia-kit **6.8s·409fps**｜cinecode 113s·24.6fps。
 - **fps 随片长上升**（预热摊销）：4127 帧 344fps，1419 帧 195–210fps ⇒ 跨片比 fps 会误判。
-- **速度只有两个开关**：有无浏览器（≈6×）、中间帧压不压缩（10–30%）。壁纸走 GPU、
-  H.265 对速度影响 <5%。
+- 速度只有两个开关：有无浏览器（≈6×）、中间帧压不压缩（10–30%）。
+- 四段式命名 `速度档 / 模板 / 传帧 / 封装`，例 `极速档 / desk / raw / h264`（`docs/AGENTS.md` §0）。
+  五模板共用 `@napi-rs/canvas`（Skia）⇒ **模板不改速度档**；`editorial` 不走浏览器。
 
-## 三、速度档命名（2026-11-13 定稿，用户两次反馈后）
-
-四段式 `速度档 / 模板 / 传帧 / 封装`，例 `极速档 / desk / raw / h264`（写进 `AGENTS.md` §0，
-**只落文档层，不改物理目录**）。栈名 = **Skia 直出**（两个「直」= 直出编码器、直出裸帧）。
-
-| 档 | 代号 | 构成 | 实测（1440×1080@60 / 8w） |
-|---|---|---|---|
-| 极速 | `fast` | Skia + GPU 壁纸 + 裸帧 | 344 fps（68.8s 片 12.0s） |
-| 标准 | `std` | Skia + 静态壁纸 + 压缩帧 | 189–210 fps（20–22s） |
-| 浏览器 | `chrome` | Chromium（film-kit） | 55 fps（75s） |
-| 对照 | `ref` | Chromium（cinecode） | 24.6 fps（168s） |
-
-- 五个模板 `desk/science/paper/editorial/mg` 共用 `@napi-rs/canvas`（Skia）⇒ **模板不改速度档**。
-  `science` 额外支持浏览器宿主，是双跑能力。`film-kit`/`cinecode` = 浏览器档与对照档的实例。
-- 事实纠正：`editorial` **不走浏览器**（`canvas-editorial.mjs` 直接 import `@napi-rs/canvas`）；
-  全仓只有 `motion-render.mjs` 用 playwright（跑第三方 `.motion`）。
-
-## 四、模板接入策略（权威版 `docs/AGENTS.md` §1.1）
+## 三、模板接入策略（`docs/AGENTS.md` §1.1）
 
 **先问用途，再问技术；默认 Chrome，别拿换宿主当性能手段。**
 
@@ -56,135 +30,159 @@
 |---|---|---|
 | 一次性出片 | Chrome | 0 |
 | 短期反复（源码可读 + Canvas2D） | 换宿主 | 几小时 |
-| 长期产线 | 半蒸馏（蒸**内容模型**，非视觉代码） | 2–4 天；无源码反推 3–5 天 |
+| 长期产线 | 半蒸馏（蒸**内容模型**，非视觉代码） | 2–4 天 |
 
-- `protection` 不是门槛：open 可换宿主，protected 只能 Chrome 或照片反推；换宿主还需引擎是 Canvas2D。
-- 已评估：`mac-desktop` 最优（480fps/24w）；`sketchnote` 手绘单核 14fps、要 12 worker
-  （138.9fps）；`camera-mode` 引擎 DOM；`paper-*`/`promo-ink` 源码加密。
+## 四、交付门禁（`src/gate.mjs`）
 
-## 五、交付门禁（`gate.mjs`，19 支旧片 + 3 支新片标定）
+**三项"看起来像门禁"的指标其实是连续分布**：hook（前 2s 运动）0.06–5.29 / p50 0.31（0.5 会误杀 13/19）、
+平均 L\* 0.40–91.3、重复帧 0–36.8% ⇒ **只报不拦**。
 
-三项"看起来像门禁"的指标其实是连续分布：hook(前2s运动) 0.06–5.29/p50 0.31（0.5 会误杀 13/19）、
-平均 L\* 0.40–91.3/p50 64.5、重复帧 0–36.8%。**只报不拦**。
+**能当门禁的是完整性**：空帧 ≤8%、黑帧 ≤3%、帧数差 ≤1、音画差 ≤0.10s。
 
-**能当门禁的只有交付完整性**（阈值 = 实测最大 + 余量）：空帧 ≤8%（实测 5.26）、黑帧 ≤3%（1.75）、
-帧数差 ≤1、音画时长差 ≤0.10s；无音轨只告警，`--require-audio` 才失败。
-负向自检：插 2s 黑场→FAIL；音轨截短 3.17s→FAIL；健康片 PASS。
+| 检查 | 口径 | 状态 |
+|---|---|---|
+| `--blank` 空镜 | 主体区（crop 底部 18%）240×105 灰度 std，连续 ≥2s <12 报警 | 只报 |
+| `--loudness` | −16 LUFS ±2 / 真峰值 ≤−0.5 dBTP | 5 支走 loudnorm 的全部 −15.9 |
+| `--bgm` | **旁白间隙**（有 BGM 0 段静音 / 无 20–22 段）；互相关 ≥0.12 已证伪 | 只报 |
+| `--facts` | 正查「台账数字有没有上屏」+ 反查「屏幕有台账没有」（反向要滤噪声） | 只报 |
+| `--caption-check` | 字幕区 OCR 覆盖率 <60% 报警；含**阅读时间** `max(1.8s, 字数/5.5)` | 只报 |
 
-## 六、film-kit（mac-desktop / camera-mode）可直跑
+- **空镜判据为什么不用动作量**：paper 画面变化量中位 0.29、p10 为 0（天然就静），真出问题的段落 0.11
+  与正常 0.3–4.8 **同一量级** ⇒ freeze 分不开。信息量分得开：纯纸背景 0–1.5 / 引文页 18–20 / 图文 56。
+- `flat%` 只看全片比例（3s 空镜仅占 4.2%，8% 阈值不拦）⇒ `--blank` 补的正是「局部连续空镜」。
+- 负向自检：插 2s 黑场→FAIL；音轨截短 3.17s→FAIL；插 3s 纯背景→报空镜；健康片零误报。
+- **`freezedetect` 两个坑**：冻到片尾只打 `freeze_start` 不打 `duration`（按 片长−起点 补）；
+  `execFileSync` 只取 stdout，它在 stderr 要用 `spawnSync`。
+- **字幕阅读时间不能照抄上游 `speech+0.6s`**：本仓字幕与配音同步，N 字就说 N/5.5 秒，
+  "停留 ≥ 说话+0.6"数学上永不成立（照搬会 22/39 条全报）。
 
-旧结论"渲染不可达"作废，真因是 Chrome sandbox 起不来（`Operation not permitted`）→ GPU 崩溃。
-两条路径：随包 `assistant/motion.mjs` **不认** `MOTION_BROWSER`；模板 `runtime/entry.mjs`
-**认**（`~/.local/bin/mg-chrome` 包 `--no-sandbox`）。实测 2819 帧/51s≈55fps。
-`api music-prepare` 是 **0 积分**，别为此调付费 TTS。cinecode 需 `--flags "--no-sandbox"`，
-PATH 要有 `/opt/homebrew/bin`；`capture.mjs` 写完 video 不退出（墙钟 vs 有效渲染分开记）。
+## 五、时间轴契约（`src/temporal.mjs`，最容易踩的一类）
 
-## 七、科普模板 `science`（2026-11-12/13）
+**两套时间语义必须分开处理**：
 
-- 结构硬规律：讲解位 37% / 图解释意 33% / 标签 10% / 阵列 6% / 对比 4% / 首尾 10%；
-  切点中位 **2.75s**，跟句子不跟动作。
-- 双宿主同源：Chrome 14.37s/154fps（PingFang）vs Skia 11.3s/196fps（Noto Sans SC）。
-  **只快 20–27%**，别照抄 paper 的 6.9× —— 版式栅格化密集，CPU 光栅化吃掉差距；
-  收益在零浏览器、内存 1.3GB、确定性。
-- Skia 记账：单看 `renderFrame` 1ms 是假象，真实 10–16ms（封面 45ms），代价在 `canvas.data()`。
+| 来源 | 语义 | 处理 |
+|---|---|---|
+| 骨架 args（v8t）的 `cards[][1]` / `at` | **绝对秒**（7.868 落在段 5.32–11.44 内） | 按 `t − base.t0` 平移 |
+| 用户在 `script.json` 的 `screens` 里写 | **段内相对秒**（1.2 / 2.8） | 直接 `+ t` |
+| `segments`（science） | 只有 `dur`，前缀和累积 | — |
+
+混在一起会得出 71.72 这种远超段末的时间 ⇒ 卡片永不出现 ⇒ 画面只剩字幕（实测 40–43s 空镜）。
+
+**五条硬规则**：
+
+1. **换段型时不继承骨架 args**（两套段型的字段混在一起，`at` 会变成负数）。
+2. **`number` 的 `from` 是数值起点不是时间**。白名单 `at|leftAt|rightAt|strikeAt|itemAt`，
+   含 `from` 会让数字从 18 滚到 30 而不是从 0 滚。
+2.5. **`screens` 的时刻必须小于子段时长**（2026-11-14）：build 把一拍按 ≤7s 拆段，每段**重放**
+   `screens[k]` 并从 0 起算。元素钉在 4.2s 而子段只有 3.6s ⇒ 永不出现，画面只剩标题；上限取 3.0s。
+   另：每屏要给 `cast`（2–6 字），缺省会退回标题 ⇒ 右侧关键词卡把标题重复一遍。
+3. **`renderFrame` 在场景空隙里不能取 `scenes[末尾]`**：每两场景间 0.25s gap 会让**每个间隙闪一帧片尾卡**。
+   应保持上一个已结束场景的末态。
+4. **`script.json` 的 `type` 优先于骨架的 `paperType`**（否则改了 `type: chart` 也渲成 steps）。
+5. **链式生成按实际间隔**：同一拍拆出的子段之间没有 gap，一律写 `@prev+0.25` 会让 15 段凭空多出 1.76s，
+   配音按真实总长切 ⇒ 音画差 1.77s、gate FAIL。
+
+## 六、版式与段型
+
+### 6.1 十一支版式，两套入口
+
+| 入口 | 版式 |
+|---|---|
+| `render.mjs --kit X` | paper / science / clay / collage / night-card / chalkboard / cute-mv / sketchnote |
+| `npm run editorial` / `desk` / `mg` | 各有独立 render.mjs，传 `--kit` 会报「找不到 kit」 |
+
+内置渲染器只有 4 个 kind（science/paper/clay/collage），其余走 `templates/own/<name>/src` 的 webcanvas。
+
+### 6.2 `paper` 的 11 种段型
+
+`hero / point / number / compare / steps / quote / checklist / outro / broll / grid / chart`
+
+- `grid`：点阵表达数量（`rows/cols/highlight/exception`）。**例外点必须跳出网格 + 2.2 倍半径 + 虚线牵回**
+  ——换颜色或换方形都分不出（三次迭代才成立）。
+- `chart`：`line` / `bar` 真图表。轴先长再落点、跨零画虚线、**bar 必须标数值**、bar 不画 x 数字。
+- **`chart` 段的 freeze 会被严重高估**（标记点只占画面 0.02%，低于 freezedetect 的 0.2% 阈值）。
+- **图表是内容呈现方式，不是视觉语言** ⇒ 做成段型而不是独立版式。
+
+### 6.3 `science` 与 `paper` 结构完全不同
+
+| | paper | science |
+|---|---|---|
+| 容器 | `scenes` | `segments`（**只用 `dur` 累积**） |
+| 段型 | 11 种（上） | cover / talk / diagram / matrix / focus / tip / outro |
+| 顶层 | brand / accent | 还要 `theme` / `subtitle` / `fadeOutSeconds` |
+
+- **不能复用 paper 的 build**。实例：`content/gut-antibiotic/build.py`。
+- 图标只有 7 个（gut / hip-joint / drop / radiation / shield / check / clock）⇒ **选题必须由图标倒推**。
+- `talk.lines` 是**无时间的字符串数组**；`matrix.items` 需要 `{icon,label,disc}`。
+
+### 6.4 跨版式喂参数会静默产废片
+
+8 支版式 params 结构看着一样，**渲染语义不同**。paper 的 params 喂 editorial：能跑完 6126 帧、
+gate 判 PASS，实际 22s 白屏、后半段卡死（根因 `default: bg('paper')` 画白纸）。**已改为抛错**。
+换版式要换参数，同一份 params 只在同一支渲染器内部通用。
+
+### 6.5 args 结构（写新片前必读 `kits/paper/presets/v8t.json`）
+
+按"看着合理"猜会一路崩到渲染函数，错误信息完全不指向病因（`l.replace is not a function`）：
+`quote.lines` 是**字符串数组**；`compare.left/right` 是 `{title, items}`；`hero.lines` 才是 `[[text,at]]`。
+`new-film` 现在会把 v8t 的真实结构（时间归一化成段内相对）直接填进 `screens`。
+
+## 七、音频
+
+- **`vo.py` 产 wav，不能 `-c:a copy` 进 MP4**（PCM 在浏览器整轨静音），非 aac 一律转 `aac 160k`。
+- **concat 会静默丢段**：edge-tts 是 24kHz mp3、静音是 44.1kHz wav，混拼时 7 段 + 6 gap 应得 62.05s
+  实际只拼出 60.55s（少掉全部 gap）。**必须先统一转 wav 再 concat**，没有报错只有时长不对。
+- **配乐统用 `tools/audio-bed.mjs`**：`scenes` / `segments` 都认，三层曲风（electrohouse / chillwave / hiphop），
+  各 4 层 loop 按段落包络进出，缺 loop 报错并列出可用曲风。
+  `content/<片>/bgm.mjs` 是 paper 专用遗留（读 `scenes[i].t0`），别给 science 用。
+- `vo.py` 的 `mouthCurve` 是**死数据**（写在 preset 顶层，版式只拿 `scenes[].args`）⇒ 口型一直走模拟。
+
+## 八、半蒸馏与换宿主
+
+- **`protection` 不是门槛**：open 可换宿主，protected 只能 Chrome 或照片反推；换宿主还需引擎是 Canvas2D。
+- 已评估：`mac-desktop` 最优（480fps/24w）；`sketchnote` 手绘单核 14fps、要 12 worker；`camera-mode` 引擎 DOM。
+- **science 双宿主只快 20–27%**（Chrome 154fps vs Skia 196fps），别照抄 paper 的 6.9×
+  ——版式栅格化密集，CPU 光栅化吃掉差距。
+- Skia 记账：单看 `renderFrame` 1ms 是假象，真实 10–16ms，代价在 `canvas.data()`。
   唯一有效优化是并行度：6/8/12/16/20w → 132/141/172/186/192fps。
-- 三个必踩坑：`env.T` 必须"完整调色板 + theme 覆盖"；`MK.icon` 外层已 translate 到中心时
-  再传 cx/cy 会二次偏移；硬切段首入场从 −0.1s 起、容器缩放下限 0.86。
-- `enter()` 有 0.82 下限 ⇒ **永不返回 0**，`if (k<=0) return` 是假门禁，要用 `if (t < at) return`。
-- `vo.py` 的 `mouthCurve` 是**死数据**：写在 preset 顶层，而版式只拿 `scenes[].args` ⇒
-  `layouts.js` 里 `a.mouthCurve` 恒 undefined，口型一直走 `mouthAt()` 的 11Hz 模拟。
-  接通要同时改宿主（`science.mjs` 的 `renderFrame(t)` 不传帧号）。
-- 圆盘里的插画别用方图直塞：方形裁切边会停在盘中央，读作"骨头断了"。
-  用 `tools/circle-prop.mjs` 做圆形 alpha，配 `organSize: 765`（×0.92≈704=圆盘直径）把断口压到盘缘。
-
-## 七点五、对抗审查自身也会错
-
-- `adversarial.mjs` 曾用 `params.fps`（30）去切 60fps 帧序列 ⇒ 切点索引减半，8/8 切点报"重复帧"。
-  已改为优先 ffprobe `r_frame_rate`。**60fps 出片后必须重跑**，否则会把假警报当缺陷查。
-- 人物层：Skia 侧 `collectFigures()` 见 `document===undefined` 直接 return ⇒ 不补 `__MK_FIGS`
-  会静默退化成矢量；位图姿态图更快（15.2→13.2s）；`figureHeight` 矢量 0.86 / 3D 0.92–0.96。
-- 字幕：62px 单行上限 **26 字**，超了按标点折行 + 降档（50→下限 44）；安全区用**视觉顶端**
-  （中文在基线上方 ~0.78em）；两行必须统一字号。
-- 音轨：vo.py 产 wav，**不能 `-c:a copy`**（PCM 进 MP4 浏览器整轨静音），非 aac 转 `aac 160k`。
-
-## 八、仓库结构（`~/Desktop/wb/cutduo`，旧路径是软链）
-
-依赖方向单向 `kits/* → src/*`：`render.mjs`（主 CLI）· `src/`（引擎）·
-`kits/{paper,science,desk,editorial,mg}` · `content/` · `assets/{fonts,audio,captions,media}` ·
-`templates/`（own/vendor）· `tools/` · `bench/` · `docs/`；`refs/*` 与 `out/` 不入库。
-`motiongit-lab/` 这一层已不存在。
 
 ## 九、API 层（`api/` 是唯一业务实现，CLI 只是宿主）
 
 - 六动词 `capabilities / describe / validate / render / probe / gate`；契约见 `docs/API.md`；
-  `api/capabilities.json` 由代码生成，**不要手改**。
+  `api/capabilities.json` 由 `tools/gen-capabilities.mjs` 生成，**不要手改**。
 - 回执规格**只信 ffprobe 探测**，不解析 kit stdout。错误必带 `code/hint/fix`；`validate` 永不抛。
 - `overrides` 白名单只放渲染超参（`api/contract.mjs` 硬编码），内容必须走 `params`。
-- 新增版式：写 `api/kits/<name>.mjs`（导 `capability`+`adapter`）+ 在 `api/registry.mjs` 加一行。
-- 异步 job（`api/jobs.mjs`）：① 一 job 一独立进程（detached）；② **判终态先读 stdout 不看 pid**
-  （pid 复用曾致 job 永久 running）；③ `elapsedSeconds` 取 stdout mtime。
-- 并发 `MAX_JOBS = clamp(1..4, cpus/8)`，超出排队。⚠️ 并发几乎无收益（每支已吃满 8 worker）：
-  3 个 mg 并行各 12s vs 单独 7s。**`status()` 不是纯查询**（lazy scheduling 会拉队首）。
-- schema 只约束 `scenes[].type/t0/t1` 骨架，**不设 `additionalProperties:false`、不校验 `args` 内部**。
+- **`validate` 支持 `if/then/else`**（2026-11-14 补）：此前不支持导致 paper 的 **9 组段型必填约束全失效**
+  （缺 `value` 的 number 段能过 API、渲染成空白）。仍不支持 `$ref` / `format`。
+- 异步 job：① 一 job 一独立进程；② **判终态先读 stdout 不看 pid**（pid 复用曾致永久 running）；
+  ③ `status()` 不是纯查询（lazy scheduling 会拉队首）。并发几乎无收益（每支已吃满 8 worker）。
+
+## 十、仓库与内容
+
+- 依赖方向单向 `kits/* → src/*`：`render.mjs`（主 CLI）· `src/`（引擎）· `kits/`（版式）· `content/`（片）·
+  `assets/` · `templates/`（own/vendor）· `tools/` · `docs/`。`refs/*`、`out/`、`content/*/audio/` 不入库。
 - 仓库根只能从 `src/root.mjs` 取（向上找 `.git`）；字体注册只有 `src/fonts.mjs`。
-- **API 校验面比渲染器严**：CLI 不校验 schema，API/MCP 校验 ⇒ 渲染器新加的开关不进 schema，
-  就只有云端会挂。已踩：`snapToFrames`（vo.py 每份 .vo.json 必写）、`strikeFill`、`_note`
-  ——前两个导致「任何配音片经 MCP 必被拒」。新增版式参数必须同时改 `guide.json` 并重跑
-  `python3 tools/gen-schema.py --write`；顶层开关要手补进 `params.schema.json`（生成器只换 args）。
-- MCP `cutduo_render` 已透传 `overrides`（crf/preset/pipe/theme）：`{"crf":15,"preset":"slow"}`
-  实测 PSNR 50.70 vs 本地母版 50.85，可复刻质量档。`capabilities().presets` 只是内置样例，
-  定制片走内联 `params` + `POST /assets` 上传音轨（`docs/MCP-DEPLOY.md` §十）。
-- `.gitignore` 按**身份特征**匹配（`**/core.enc`、`**/template.motion`、`/refs/`、`**/*_raw.png`），
-  禁止回退成路径枚举——旧规则 7 条搬家后静默失效，其中一条保护 vendor 的账户 Key。
-- **改路径必须跑 `bash tools/smoke.sh`**（`node --check` 抓不住 404）。探针：
-  `--probe <file.png> --at <秒>`（`--probe --at 5` 会把 `--at` 当文件名）。
+- **`paper.mjs` 的关键词卡**：兜底顺序 `cast > title > label`，**不要退到 `scene.type`**
+  （会把 `hero`/`compare` 印到屏幕上）。内容侧要给每段 `args.cast`（2–6 字）。
+- 四支成品（2026-11-14）：生日悖论 A×paper 102s、本福特定律 C×paper 68.5s、
+  抗生素的另一面 C×science 62.1s、幸存者偏差 97.3s。全部过 6/6 门禁。
+- `tools/report.mjs` 出片库总览（并发跑门禁，4 支约 25s）；`tools/publish-pack.mjs` 出发布包
+  （封面取**段末**不取段中——元素逐个长出来，取中点只有一半；封面必须压**不透明**标题带，
+  半透明会让成片字幕条透出来；字体要用单个 TTF，`.ttc` 集合索引不到中文会渲染成方块）。
 
-## 十、半蒸馏（`templates/own/`，五个实例）
+## 十一、人物与字幕
 
-**判据：先看上游是「版式枚举」还是「机制参数」**。前者价值在 schema 与容量，后者在式子；
-若上游把原片写成手写章节脚本，换宿主只能复现那一支片，换不了"讲新内容"。
+- Skia 侧 `collectFigures()` 见 `document===undefined` 直接 return ⇒ 不补 `__MK_FIGS` 会静默退化成矢量。
+- 位图姿态图更快（15.2→13.2s）；`figureHeight` 矢量 0.86 / 3D 0.92–0.96。
+- 字幕：62px 单行上限 **26 字**，超了按标点折行 + 降档（50→下限 44）；安全区用**视觉顶端**；
+  两行必须统一字号。
+- 圆盘里的插画别用方图直塞（方边停在盘中央，读作"骨头断了"），用 `tools/circle-prop.mjs` 做圆形 alpha。
 
-| 实例 | 上游 | 内容模型 | 实测 |
-|---|---|---|---|
-| sketchnote | sketchnote v2.7.4 | 4 类 mechanism 枚举（版式型） | 720 帧 1.9s |
-| chalkboard | chalkboard v2.7.4 | 8 类 mechanism + **几何式子** | 1020 帧 6.1s / 167fps |
-| cute-mv | cute-character-lyric-mv v1.0.1（Remotion） | `lyrics/keywords/notes` 三字段 | 990 帧 5.2–5.9s / 170–190fps |
-| collage | motiongit-promo-main | 11 段原长 57.0s / 229 文字槽 | 3420 帧 10.2–10.3s / 332fps |
-| science | 自建 | 见 §七 | 2215 帧 11.3s / 196fps |
+## 十二、对抗审查自身也会错
 
-- 不蒸的部分要写明（chalkboard 的 13 类图示与 102 图标不蒸，`science` 已有同类能力）。
-- 路线判据看 `content/release.bin`：有 `protected/core.enc` + 散装 `.enc` ⇒ 换宿主不成立；
-  `guide.json`/`params.schema.json` 明文 ⇒ 半蒸馏成立。**场景表只能读 guide.json**，
-  ffmpeg scene 检测对软转场无效（collage 只报 2 个切点）。
-- schema 形态：`tools/check-template.py` **只认** `segments.items.properties`，不展开 `oneOf`
-  ⇒ 多机制模板写「并集 properties + 判别 oneOf」；`guide.layouts[].args` 键名不能带点。
-- collage 三条静默失效：`createLinearGradient` 不 addColorStop（Skia 不画且不报错）；
-  全息条带必须离屏 + `source-atop`；静态背景必须缓存（4 次全屏渐变占单帧 60%，17.7→10.3s）。
-
-## 十一、字体是构建依赖（2026-11-13 彻底修复）
-
-- `assets/fonts/.gitignore` = `*` + `!.gitignore`，19 文件 ~34MB 不入库，由 `tools/fetch-fonts.sh`
-  保证可复现。中间态最坏：旧规则只忽略 `*.otf`，`.ttf` 成了"没入库也没被忽略"。
-- **19 个文件全部 sha256 硬校验**（教训：Mona Sans 路径 `@v1.0.1/fonts/ttf` 体积只有一半，
-  下到另一个版本字形而 `--verify` 永远 ✓；正确是 `@v2.0.27/fonts/static/ttf`）。
-- `curl --retry` 不重试传到一半断连，要 `--retry-all-errors --retry-connrefused`，
-  配 jsDelivr→raw.githubusercontent→fastly 三源回退。
-- **字节对 ≠ 能用**：另有 `node tools/check-fonts.mjs` 三重判据（`GlobalFonts.has` /
-  `measureText` ≠ 回退基准 / 模板 FACE 族名都在表里）。族名要按逗号拆，整串正则会漏第一个。
-- 注册表分组：`BASE_FONTS` + `TEMPLATE_FONTS.{chalkboard,hand,collage}`，`HAND_FONTS` 指向
-  `TEMPLATE_FONTS.hand` **同一对象**（早先两处各列一遍，漏一处就静默不一致）。
-- 字号分流否则字幕糊：`≥800 或 (≥700 且 ≥64px) → Black`，其余 700 → Medium + 保留 heavy 描边。
-
-## 十二、音频
-
-- 已实现 `src/audio-mix.mjs`：事件轨（adelay/amix/sidechain ducking/apad+atrim）+ 合成音
-  whoosh/tick/impact/rise，`--audio` 优先于 `params.audio`。
-- 上游 33 个音效拿不到（发行时物理删除 + `retained.sfx.wav` 有名无实 + 事件表在 `core.enc`
-  + 官方 `sfx.search/generate` disabled）；素材本身是 CC0 ⇒ 不是版权墙，是发行与通路。
-- 后续增强：① cue 改场景相对时间（加 hold 后绝对秒会错位）② loudnorm 到 −16 LUFS（现 −27）
-  ③ 真实 CC0 配乐 ④ 放开 pipeline 的 `-ac 1` 才有立体声。
-
-- **加 BGM 别二次编码**：`tools/add-bgm.mjs --audio <旁白.wav>` 走独立旁白轨，人声只编码一次
-  （此前是 pipeline 先压 160k、add-bgm 再压 192k）。混音必须 `-t <视频时长>`：
-  vo.py 故意多写 0.12s 音频防截末帧，不裁会让容器时长跟着音轨走，帧数门禁直接报错。
-  循环配乐优先长素材：`Afloat Pad` 19.6s（4 个接缝）优于 `Mellow Drizzle` 8.3s（10 个）。
+- `adversarial.mjs` 曾用 `params.fps`（30）去切 60fps 帧序列 ⇒ 切点索引减半，8/8 切点报"重复帧"。
+  已改为优先 ffprobe `r_frame_rate`。**60fps 出片后必须重跑**。
+- **版式清单必须逐支 probe 再写**：照 README 抄曾把 3 支不可用（desk/editorial/mg）写成可用，
+  又漏掉 3 支真能跑的（chalkboard/cute-mv/sketchnote）。
+- 「适配 1–2 天/个」的估算错了：lemo 的框架只有 189KB / 21 文件 / 2 个 npm 包，
+  代码侧 1–2 小时，成本全在素材（字体 / 100MB 扫描图 / 语音模型）。
