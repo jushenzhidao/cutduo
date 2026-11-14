@@ -205,7 +205,7 @@ if (!isMainThread) {
         ? createIsoRenderer({ canvas, ctx, width: W, height: H, fps: P.fps })
         : createWebCanvasRenderer({ srcDir: spec.srcDir, templateDir: spec.templateDir, canvas, ctx, width: W, height: H });
   r.setContent(spec.kind === 'paper' ? { scenes: P.scenes, captions: P.captions, avatar } : stageContent);
-  if (spec.kind === 'science' || spec.kind === 'webcanvas' || spec.kind === 'collage') await r.ready();
+  if (spec.kind === 'science' || spec.kind === 'webcanvas' || spec.kind === 'collage' || spec.kind === 'iso') await r.ready();
 
   const ff = spawnPart(partArgs({
     pipe, fps: P.fps, width: W, height: H, crf, preset, jpeg, x264Threads, part,
@@ -263,7 +263,7 @@ if (!isMainThread) {
           ? createIsoRenderer({ ctx: r0, width: OUT_W, height: OUT_H, fps: P.fps })
           : createWebCanvasRenderer({ srcDir: spec.srcDir, templateDir: spec.templateDir, canvas, ctx: r0, width: OUT_W, height: OUT_H });
     r.setContent(spec.kind === 'paper' ? { scenes: P.scenes, captions: P.captions, avatar } : probeContent);
-    if (spec.kind === 'science' || spec.kind === 'webcanvas' || spec.kind === 'collage') await r.ready();
+    if (spec.kind === 'science' || spec.kind === 'webcanvas' || spec.kind === 'collage' || spec.kind === 'iso') await r.ready();
     if (A.determinism) {
       const code = checkDeterminism({
         renderer: r, ctx: r0, width: OUT_W, height: OUT_H,

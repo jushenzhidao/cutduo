@@ -86,6 +86,23 @@ drop 自动落在最长/信息最满那一段 = 爆炸开头），转场与落�
 按当前通道状态求世界包围盒 → 试投 → 反算 `zoom = min(fill·W/bw, fill·H/bh)` 与 `pan`。
 核心件被 `pull` 抬走后，`sample()` 只补「当前 − 取景时」的高度差，主体始终在画面里。
 
+## 位图背景（`content.backdrop`）
+
+```json
+{ "content": { "backdrop": "assets/gen/studio-backdrop.jpg" } }
+```
+
+`drawBackdrop` 优先画这张图（cover 铺满），并做两件事：
+
+- **伪视差**：按 `zoom` 放大 `1+(z−1)*0.06`、按 `panX/panY` 反向平移 `0.25`。系数刻意做小——
+  放大过头会露边，纹理也会"飘"得像贴纸。位移必须夹在能铺满的范围内（`panX` 一负就在左侧露黑边，实测 16 px）。
+- **距离雾化**：`zoom < 1.15` 时按 `(1.15−z)/0.35*0.5` 蒙一层浅色。爆炸镜头把主体缩到 1/3 画面，
+  近景木桌会显得"人是小的、桌是近的"，蒙一层就对了。
+
+⚠ 解码只能走 `loadImage`（异步），所以渲染器提供了 `ready()`，`render.mjs` 在 `pumpFrames` 之前
+`await r.ready()`（与 science/collage 同一约定）。`new Image(); img.src = buf` 在 napi-rs 里
+width/complete 都对，但 `drawImage` 画出来是全透明——踩过一次。
+
 ## 核对外廓：正交三视图
 
 ```bash

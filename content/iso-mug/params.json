@@ -1,0 +1,468 @@
+{
+  "fps": 60,
+  "width": 1920,
+  "height": 1080,
+  "content": {
+    "title": "MUG",
+    "name": "一杯 · 瓷 鸭 木",
+    "look": "studio",
+    "faceSort": true,
+    "radius": 128,
+    "bounds": [
+      [
+        -42,
+        60
+      ],
+      [
+        -42,
+        42
+      ],
+      [
+        0,
+        120
+      ]
+    ],
+    "materials": {
+      "porcelain": "#f8f5ef",
+      "porcelainIn": "#efeae1",
+      "duck": "#f9c70b",
+      "duckBeak": "#ea6d10",
+      "duckEye": "#1a1917",
+      "brick": "#d4351f",
+      "prop": "#d9d5cc"
+    },
+    "layers": [
+      {
+        "id": "rim",
+        "zh": "杯口",
+        "en": "RIM",
+        "travel": 195
+      },
+      {
+        "id": "wallUp",
+        "zh": "上壁",
+        "en": "WALL",
+        "travel": 155
+      },
+      {
+        "id": "wallLow",
+        "zh": "下壁",
+        "en": "WALL",
+        "travel": 112
+      },
+      {
+        "id": "handle",
+        "zh": "把手",
+        "en": "HANDLE",
+        "travel": 70
+      },
+      {
+        "id": "base",
+        "zh": "杯底",
+        "en": "BASE",
+        "travel": 0
+      },
+      {
+        "id": "duck",
+        "zh": "鸭子",
+        "en": "DUCK",
+        "travel": 0
+      },
+      {
+        "id": "prop",
+        "zh": "参照",
+        "en": "SCALE",
+        "travel": 0
+      }
+    ],
+    "arrays": [],
+    "hero": {
+      "part": "duckHead",
+      "size": 36,
+      "pull": 16,
+      "hover": 6,
+      "steps": [
+        9,
+        6,
+        4
+      ]
+    },
+    "mech": [],
+    "parts": [
+      {
+        "id": "wallLow",
+        "layer": "wallLow",
+        "kind": "ring",
+        "x": 0,
+        "y": 0,
+        "z": 5,
+        "ri": 37,
+        "ro": 42,
+        "h": 43,
+        "seg": 64,
+        "material": "porcelain",
+        "arcSegs": 1
+      },
+      {
+        "id": "wallUp",
+        "layer": "wallUp",
+        "kind": "ring",
+        "x": 0,
+        "y": 0,
+        "z": 48,
+        "ri": 37,
+        "ro": 42,
+        "h": 43,
+        "seg": 64,
+        "material": "porcelain",
+        "arcSegs": 1
+      },
+      {
+        "id": "rim",
+        "layer": "rim",
+        "kind": "ring",
+        "x": 0,
+        "y": 0,
+        "z": 91,
+        "ri": 36.5,
+        "ro": 43,
+        "h": 5,
+        "seg": 64,
+        "material": "porcelain",
+        "arcSegs": 1
+      },
+      {
+        "id": "foot",
+        "layer": "base",
+        "kind": "ring",
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "ri": 30,
+        "ro": 42,
+        "h": 2,
+        "seg": 64,
+        "material": "porcelain",
+        "arcSegs": 1
+      },
+      {
+        "id": "base",
+        "layer": "base",
+        "kind": "cyl",
+        "x": 0,
+        "y": 0,
+        "z": 2,
+        "r": 41.5,
+        "h": 3,
+        "seg": 28,
+        "material": "porcelainIn"
+      },
+      {
+        "id": "duckBody",
+        "layer": "duck",
+        "kind": "ball",
+        "x": 0,
+        "y": -2,
+        "z": 10,
+        "rx": 24,
+        "ry": 28,
+        "rz": 34,
+        "segU": 18,
+        "segV": 11,
+        "material": "duck"
+      },
+      {
+        "id": "duckHead",
+        "layer": "duck",
+        "kind": "ball",
+        "hero": "out",
+        "x": 0,
+        "y": 2,
+        "z": 78,
+        "r": 18,
+        "segU": 14,
+        "segV": 9,
+        "material": "duck"
+      },
+      {
+        "id": "duckBeak",
+        "layer": "duck",
+        "kind": "prism",
+        "hero": 0,
+        "z": 85,
+        "h": 6,
+        "pts": [
+          [
+            -9,
+            -13
+          ],
+          [
+            10,
+            -13
+          ],
+          [
+            7.5,
+            -26
+          ],
+          [
+            -8,
+            -26
+          ]
+        ],
+        "material": "duckBeak",
+        "rot": [
+          -4,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "duckEyeL",
+        "layer": "duck",
+        "kind": "ball",
+        "hero": 1,
+        "x": -7,
+        "y": -12.86,
+        "z": 102,
+        "r": 2.4,
+        "segU": 10,
+        "segV": 6,
+        "material": "duckEye"
+      },
+      {
+        "id": "duckEyeR",
+        "layer": "duck",
+        "kind": "ball",
+        "hero": 2,
+        "x": 7,
+        "y": -12.86,
+        "z": 102,
+        "r": 2.4,
+        "segU": 10,
+        "segV": 6,
+        "material": "duckEye"
+      },
+      {
+        "id": "duckTail",
+        "layer": "duck",
+        "kind": "ball",
+        "x": 0,
+        "y": 30,
+        "z": 26,
+        "rx": 10,
+        "ry": 9,
+        "rz": 8,
+        "segU": 10,
+        "segV": 7,
+        "material": "duck"
+      },
+      {
+        "id": "brick",
+        "layer": "prop",
+        "x": -78,
+        "y": -24,
+        "z": 0,
+        "w": 26,
+        "d": 26,
+        "h": 26,
+        "r": 2.5,
+        "material": "brick"
+      },
+      {
+        "id": "handle",
+        "layer": "handle",
+        "kind": "ring",
+        "x": 53,
+        "y": 0,
+        "z": 46,
+        "ri": 22,
+        "ro": 34,
+        "h": 12,
+        "seg": 48,
+        "rot": [
+          0,
+          90,
+          0
+        ],
+        "material": "porcelain",
+        "arcSegs": 1
+      },
+      {
+        "id": "lugTop",
+        "layer": "handle",
+        "x": 47.5,
+        "y": 0,
+        "z": 70,
+        "w": 11,
+        "d": 13,
+        "h": 12,
+        "r": 2.5,
+        "material": "porcelain"
+      },
+      {
+        "id": "lugBot",
+        "layer": "handle",
+        "x": 47.5,
+        "y": 0,
+        "z": 17,
+        "w": 11,
+        "d": 13,
+        "h": 12,
+        "r": 2.5,
+        "material": "porcelain"
+      }
+    ],
+    "backdrop": "assets/gen/studio-backdrop.jpg"
+  },
+  "audio": {
+    "mode": "external-music",
+    "music": "assets/audio/bgm/iso-mug.m4a",
+    "musicGain": 0.9,
+    "cues": [
+      {
+        "at": 3.15,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 4.75,
+        "src": "impact",
+        "gain": 0.5
+      },
+      {
+        "at": 6.3,
+        "src": "tick",
+        "gain": 0.5
+      },
+      {
+        "at": 8.0,
+        "src": "tick",
+        "gain": 0.5
+      },
+      {
+        "at": 9.5,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 12.3,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 14.7,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 17.1,
+        "src": "whoosh",
+        "gain": 0.7
+      },
+      {
+        "at": 20.9,
+        "src": "impact",
+        "gain": 0.55
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hero",
+      "t0": 0.0,
+      "t1": 3.2,
+      "args": {
+        "view": {
+          "yaw": -16,
+          "pitch": 11,
+          "fill": 0.56,
+          "aim": [
+            0.57,
+            0.5
+          ]
+        }
+      }
+    },
+    {
+      "type": "rise",
+      "t0": 3.2,
+      "t1": 4.8,
+      "args": {}
+    },
+    {
+      "type": "explode",
+      "t0": 4.8,
+      "t1": 9.6,
+      "args": {
+        "card": {
+          "big": "7 层",
+          "small": "Ø84 × 96 mm · {parts} 件"
+        }
+      }
+    },
+    {
+      "type": "layer",
+      "t0": 9.6,
+      "t1": 12.4,
+      "args": {
+        "layer": "duck",
+        "transition": "orbit",
+        "yaw": -46,
+        "pitch": 16,
+        "fill": 0.46,
+        "card": {
+          "big": "一只鸭",
+          "small": "球体 · 喙 · 两眼"
+        }
+      }
+    },
+    {
+      "type": "layer",
+      "t0": 12.4,
+      "t1": 14.8,
+      "args": {
+        "layer": "wallUp",
+        "transition": "orbit",
+        "yaw": -40,
+        "pitch": 22,
+        "fill": 0.62,
+        "card": {
+          "big": "5 mm",
+          "small": "瓷壁 · 内外双釉"
+        }
+      }
+    },
+    {
+      "type": "orbit",
+      "t0": 14.8,
+      "t1": 17.2,
+      "args": {
+        "sweep": 16,
+        "cycles": 1,
+        "roll": 2,
+        "fill": 0.72,
+        "card": {
+          "big": "96 mm",
+          "small": "口沿到圈足"
+        }
+      }
+    },
+    {
+      "type": "assemble",
+      "t0": 17.2,
+      "t1": 21.2,
+      "args": {}
+    },
+    {
+      "type": "end",
+      "t0": 21.2,
+      "t1": 24.0,
+      "args": {
+        "card": {
+          "big": "一杯",
+          "small": "瓷 · 鸭 · 木"
+        }
+      }
+    }
+  ]
+}

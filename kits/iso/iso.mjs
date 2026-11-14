@@ -16,9 +16,12 @@
  *   r.setContent({ scenes, content });
  *   r.renderFrame(3.2);
  */
-import { createCanvas } from '@napi-rs/canvas';
+import fs from 'node:fs';
+import path from 'node:path';
+import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { createModel, makeCamera, partOffset, facing, orderParts, clamp, rgba } from './model.mjs';
 import { buildPlan } from './plan.mjs';
+import { DIRS } from '../../src/root.mjs';
 
 /**
  * 九种镜头。放在渲染器文件里是有意的：tools/check-kit-contract.mjs 只扫渲染器源码，
@@ -108,6 +111,8 @@ export function createIsoRenderer(opts = {}) {
   let lookName = 'split';
   let look = looks.split;
   let title = 'PRODUCT';
+  let backdropImg = null;
+  let backdropPath = null;
 
   function setContent(c = {}) {
     const content = c.content || {};
@@ -121,12 +126,44 @@ export function createIsoRenderer(opts = {}) {
       : (['dark', 'split', 'studio'].includes(content.look) ? content.look : 'split');
     look = looks[lookName];
     title = content.title || content.name || 'PRODUCT';
+    // 位图背景只能走 loadImage（异步）：`new Image(); img.src = buf` 在 napi-rs 里
+    // width/complete 都对，但 drawImage 画出来是全透明——踩过一次，别再试。
+    backdropImg = null;
+    backdropPath = content.backdrop
+      ? (path.isAbsolute(content.backdrop) ? content.backdrop : path.join(DIRS.root, content.backdrop))
+      : null;
     return { parts: model.parts.length, layers: model.layers.length };
   }
 
   // ---------------- 背景 ----------------
 
-  function drawBackdrop() {
+  function drawBackdrop(camState = {}) {
+    if (backdropImg) {
+      // cover 铺满；镜头推近时轻微放大 + 反向平移，制造伪视差。
+      // 系数刻意做小（0.06 / 0.25）：放大过头会露出边缘，纹理也会"飘"得像贴纸。
+      const z = camState.zoom || 1;
+      const s = Math.max(W / backdropImg.width, H / backdropImg.height) * (1 + (z - 1) * 0.06);
+      const dw = backdropImg.width * s;
+      const dh = backdropImg.height * s;
+      // 视差位移必须夹在"仍能铺满"的范围内：panX 一负就在左侧露黑边（实测 16 px）
+      const ox = Math.min(0, Math.max(W - dw, (W - dw) / 2 + (camState.panX || 0) * 0.25));
+      const oy = Math.min(0, Math.max(H - dh, (H - dh) / 2 + (camState.panY || 0) * 0.25));
+      ctx.drawImage(backdropImg, ox, oy, dw, dh);
+      // 拉远时给背景蒙一层薄雾：爆炸镜头把主体缩到 1/3 画面，近景木桌会显得"人是小的、桌是近的"
+      const haze = Math.min(0.5, Math.max(0, (1.15 - z) / 0.35 * 0.5));
+      if (haze > 0.01) {
+        ctx.fillStyle = `rgba(236,232,224,${haze})`;
+        ctx.fillRect(0, 0, W, H);
+      }
+      // 底部压暗一档：几何物件贴在桌前缘时才有落地感
+      const bg2 = ctx.createLinearGradient(0, H * 0.72, 0, H);
+      bg2.addColorStop(0, 'rgba(70,46,24,0)');
+      bg2.addColorStop(1, 'rgba(70,46,24,0.16)');
+      ctx.fillStyle = bg2;
+      ctx.fillRect(0, H * 0.72, W, H * 0.28);
+      return;
+    }
+
     const g = ctx.createLinearGradient(0, 0, W * 0.75, H);
     g.addColorStop(0, look.wall[0]);
     g.addColorStop(1, look.wall[1]);
@@ -256,20 +293,28 @@ export function createIsoRenderer(opts = {}) {
     const zb = model.bounds[2][0];
     const [cx, cy] = cam.project([0, 0, zb - 0.6]);
     const k = cam.k;
-    const rx = 1.15 * model.radius * k;
-    const ry = rx * Math.max(0.12, Math.sin((cam.pitchAngle || 30) * Math.PI / 180) * 0.5);
-    ctx.save();
-    ctx.translate(cx, cy + ry * 0.15);
-    ctx.scale(1, ry / rx);
-    const rg = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
-    rg.addColorStop(0, lookName === 'studio' ? 'rgba(88,58,30,0.34)' : 'rgba(74,46,30,0.30)');
-    rg.addColorStop(0.55, lookName === 'studio' ? 'rgba(88,58,30,0.17)' : 'rgba(74,46,30,0.16)');
-    rg.addColorStop(1, 'rgba(74,46,30,0)');
-    ctx.fillStyle = rg;
-    ctx.beginPath();
-    ctx.arc(0, 0, rx, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    // 两层：紧的接触阴影 + 松的环境阴影。
+    // 早先只有一个 1.15R 的大椭圆，半径比物体还大一倍 ⇒ 整块桌面被均匀压暗，读不出"落在哪"（实测）
+    const squash = Math.max(0.10, Math.sin((cam.pitchAngle || 30) * Math.PI / 180) * 0.42);
+    const layers = lookName === 'studio'
+      ? [[0.46, 0.40], [0.86, 0.17]]
+      : [[0.62, 0.26], [1.05, 0.12]];
+    for (const [rr, aa] of layers) {
+      const rx = rr * model.radius * k;
+      const ry = rx * squash;
+      ctx.save();
+      ctx.translate(cx, cy + ry * 0.1);
+      ctx.scale(1, ry / rx);
+      const rg = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
+      rg.addColorStop(0, `rgba(78,50,26,${aa})`);
+      rg.addColorStop(0.55, `rgba(78,50,26,${aa * 0.45})`);
+      rg.addColorStop(1, 'rgba(78,50,26,0)');
+      ctx.fillStyle = rg;
+      ctx.beginPath();
+      ctx.arc(0, 0, rx, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
   }
 
   // ---------------- 物体 ----------------
@@ -362,8 +407,8 @@ export function createIsoRenderer(opts = {}) {
       // 不描边就只剩"更黑的一块"（24 层片的屏幕/电池两镜实测）
       if (item.isSubject) {
         // 浅底上用蓝白边等于没描（白瓷在 #eee 上只剩 10 级差），换成暖灰
-        target.strokeStyle = lookName === 'studio' ? 'rgba(96,84,68,0.42)' : 'rgba(214,228,255,0.45)';
-        target.lineWidth = 1.1;
+        target.strokeStyle = lookName === 'studio' ? 'rgba(88,74,56,0.62)' : 'rgba(214,228,255,0.45)';
+        target.lineWidth = 1.6;
         target.stroke();
       }
     }
@@ -525,7 +570,7 @@ export function createIsoRenderer(opts = {}) {
     currentCam = cam;
 
     ctx.save();
-    drawBackdrop();
+    drawBackdrop(camState);
     drawShadow();
     drawHeroShadow(state);
     // 运动模糊：转场期间往回采 4 个样本，越旧越淡，最后再画当前帧。
@@ -574,7 +619,23 @@ export function createIsoRenderer(opts = {}) {
     ctx.restore();
   }
 
-  return { setContent, renderFrame, get model() { return model; }, get plan() { return plan; } };
+  /** 与 science/collage 同一个约定：位图要在渲染前解码完，否则前几帧是空的 */
+  async function ready() {
+    if (!backdropPath) return false;
+    try {
+      if (!fs.existsSync(backdropPath)) {
+        console.warn(`[iso] backdrop 不存在：${backdropPath}`);
+        return false;
+      }
+      backdropImg = await loadImage(fs.readFileSync(backdropPath));
+      return true;
+    } catch (e) {
+      console.warn(`[iso] backdrop 解码失败：${e.message}`);
+      return false;
+    }
+  }
+
+  return { setContent, renderFrame, ready, get model() { return model; }, get plan() { return plan; } };
 }
 
 export { createModel } from './model.mjs';

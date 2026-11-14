@@ -73,5 +73,6 @@ content/*/params*.json
 !content/iso-iphone/params.json
 !content/iso-motion/params.json
 !content/iso-iphone-deep/params.json
+!content/iso-mug/params.json
 content/*/audio/
 content/*/ocr.txt

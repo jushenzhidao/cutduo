@@ -57,6 +57,9 @@ Canvas2D → 换宿主（几小时）；长期产线 → 半蒸馏（蒸**内容
 - `iso`（`kits/iso/`）：`layers/parts/arrays/hero/mech` 全 JSON，11 种镜头；遮挡 = 零件对分离轴投票 + 拓扑
   （两轴相反或互穿都不建边）；几何 `box/cyl/ring/ball` + `rot`；`content.faceSort` 给环包内嵌体；
   `look: split|dark|studio`；每镜末段 `settle` 留 0.8–1.0 s 静止。
+- **位图背景** `content.backdrop`：只走 `loadImage`（异步）+ 渲染器 `ready()`（`new Image(); src=buf` 在 napi-rs
+  里 width/complete 都对，但 drawImage 出来全透明）；伪视差位移要 clamp 在铺满范围内（否则露黑边）；
+  `zoom<1.15` 蒙雾化，否则爆炸镜头"人小桌近"；阴影必须**双层**（单层 1.15R 比物体还大，整块桌面被均匀压暗）。
 - 细则（每型参数手感、五套母版、iso 全部实测）见 `MEMORY-DETAIL.md` §六。
 
 ## 七、音频
