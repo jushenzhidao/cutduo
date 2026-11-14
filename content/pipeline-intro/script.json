@@ -1,0 +1,254 @@
+{
+  "slug": "pipeline-intro",
+  "title": "一条片子十一秒",
+  "brand": "出片台 · 一条片子的成本",
+  "shots": [
+    {
+      "id": "P01",
+      "type": "title",
+      "chapter": "01 发车",
+      "wall": "blue",
+      "text": "这条六十二秒的片子，从配音到出片，刚才用了十一秒半。",
+      "args": {
+        "app": "出片台",
+        "headline": "11.5 秒",
+        "train": "1862 帧",
+        "status": "已出片"
+      }
+    },
+    {
+      "id": "P02",
+      "type": "notify",
+      "chapter": "01 发车",
+      "wall": "blue",
+      "text": "没有打开浏览器。整条片子是在进程里画出来的。",
+      "args": {
+        "title": "渲染完成",
+        "body": "1862 帧 · 1440×1080 · 无浏览器",
+        "icon": "✓"
+      }
+    },
+    {
+      "id": "P03",
+      "type": "terminal",
+      "chapter": "01 发车",
+      "wall": "blue",
+      "text": "一条命令，从参数到成片。中间不需要人看着。",
+      "args": {
+        "title": "cutduo — render",
+        "lines": [
+          "$ node render.mjs --kit paper --params p.json",
+          "1862 frames  62.0s  15 workers",
+          "OK  av + 字幕已合成",
+          "done in 11.5s"
+        ]
+      }
+    },
+    {
+      "id": "P04",
+      "type": "photo",
+      "chapter": "01 发车",
+      "wall": "blue",
+      "text": "而它的起点，是一叠这样的草稿。",
+      "args": {
+        "key": "storyboard",
+        "fx": 0.5,
+        "fy": 0.5
+      }
+    },
+    {
+      "id": "P05",
+      "type": "chart",
+      "chapter": "02 提速",
+      "wall": "light",
+      "text": "帧率不是固定的。并行度从六提到二十，吞吐一路涨到接近两倍。",
+      "args": {
+        "title": "并行度 → 吞吐",
+        "value": "132 → 192 fps",
+        "points": [
+          0.69,
+          0.73,
+          0.9,
+          0.97,
+          1.0
+        ]
+      }
+    },
+    {
+      "id": "P06",
+      "type": "ranking",
+      "chapter": "02 提速",
+      "wall": "light",
+      "text": "同样一支四十六秒的口播，三种做法的渲染吞吐差了一个数量级。",
+      "args": {
+        "rows": [
+          "本管线 409 fps",
+          "浏览器 55 fps"
+        ],
+        "sub": "三十秒的片，十一秒出完"
+      }
+    },
+    {
+      "id": "P07",
+      "type": "counter",
+      "chapter": "02 提速",
+      "wall": "light",
+      "text": "这个数字的意思是：一秒能画四百多帧。",
+      "args": {
+        "label": "渲染吞吐",
+        "value": 409,
+        "sub": "1920×1080 · 60fps 序列"
+      }
+    },
+    {
+      "id": "P08",
+      "type": "flipBoard",
+      "chapter": "02 提速",
+      "wall": "light",
+      "text": "快不是靠优化。是不用浏览器。",
+      "args": {
+        "kicker": "为什么这么快",
+        "word": "不用浏览器",
+        "sub": "进程内直接画"
+      }
+    },
+    {
+      "id": "P09",
+      "type": "talk",
+      "chapter": "03 能力",
+      "wall": "orange",
+      "text": "一整张 Mac 桌面，窗口、Dock、菜单栏，全是画出来的，不是录屏。",
+      "args": {
+        "label": "一整台 Mac 桌面，都是画的",
+        "notify": {
+          "title": "背景音乐",
+          "body": "已暂停",
+          "icon": "♪",
+          "iconBg": "#FA2B56"
+        }
+      }
+    },
+    {
+      "id": "P10",
+      "type": "photo",
+      "chapter": "03 能力",
+      "wall": "orange",
+      "text": "但真实的工作台长这样：暗的、有点乱，只有屏幕亮着。",
+      "args": {
+        "key": "night",
+        "fx": 0.5,
+        "fy": 0.5
+      }
+    },
+    {
+      "id": "P11",
+      "type": "files",
+      "chapter": "03 能力",
+      "wall": "orange",
+      "text": "片子、版式、引擎分开放。换版式不动引擎，换引擎不动内容。",
+      "args": {
+        "items": [
+          {
+            "name": "kits/paper",
+            "meta": "版式",
+            "tag": "11 种段型"
+          },
+          {
+            "name": "src/render",
+            "meta": "引擎",
+            "tag": ""
+          },
+          {
+            "name": "content/*",
+            "meta": "片子",
+            "tag": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "P12",
+      "type": "checklist",
+      "chapter": "03 能力",
+      "wall": "orange",
+      "text": "每条片出片前自动查六项：帧数、空帧、黑帧、音画差、响度、空镜。",
+      "args": {
+        "title": "出片前自动查",
+        "value": "6",
+        "unit": "项",
+        "count": 6
+      }
+    },
+    {
+      "id": "P13",
+      "type": "photo",
+      "chapter": "04 验收",
+      "wall": "light",
+      "text": "以前最贵的是改稿。红笔划掉一句，整条重来。",
+      "args": {
+        "key": "rewrite",
+        "fx": 0.5,
+        "fy": 0.5
+      }
+    },
+    {
+      "id": "P14",
+      "type": "rating",
+      "chapter": "04 验收",
+      "wall": "light",
+      "text": "能不能直接发？字幕位置、响度、音画同步都过了，剩下的是内容判断。",
+      "args": {
+        "title": "出片检查 — 六项",
+        "phoneTitle": "凌晨三点十七分",
+        "verdict": "可发",
+        "barLabel": "完成度",
+        "filled": 4,
+        "foot": "六项过六项"
+      }
+    },
+    {
+      "id": "P15",
+      "type": "station",
+      "chapter": "04 验收",
+      "wall": "light",
+      "text": "下一站不是模板，是你的内容。",
+      "args": {
+        "name": "下一站",
+        "sub": "把文案换成你的，重跑一次"
+      }
+    },
+    {
+      "id": "P16",
+      "type": "tickets",
+      "chapter": "04 验收",
+      "wall": "light",
+      "text": "一条片子的成本，从三天变成一次重跑。",
+      "args": {
+        "kicker": "TICKET · 单程",
+        "title": "换你的内容",
+        "sub": "改文案 · 重跑 · 出片",
+        "price": "11 秒",
+        "stamp": "已检票"
+      }
+    },
+    {
+      "id": "P17",
+      "type": "outro",
+      "chapter": "04 验收",
+      "wall": "light",
+      "text": "所以真正省下的不是渲染时间，是「改一版试试」的成本。",
+      "args": {
+        "title": "省下的不是时间",
+        "lines": [
+          "是改一版的成本"
+        ],
+        "sub": "想改就改，才敢改"
+      }
+    }
+  ],
+  "photos": {
+    "night": "assets/desk-night.png",
+    "storyboard": "assets/storyboard.png",
+    "rewrite": "assets/rewrite.png"
+  }
+}
