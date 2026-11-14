@@ -142,7 +142,9 @@ def main():
         'subtitle': {'size': 62, 'color': '#FFFFFF', 'stroke': 6, 'strokeColor': '#1B2B30', 'y': 1002},
         'fadeOutSeconds': 0.32,
         'fps': FPS,
-        'durationSeconds': total,
+        # durationSeconds 只按音频长度写会让末段越界 1–2 帧（captions 末尾停不满 → 时间轴校验拦下）。
+        # 取「音频总长与末段末端中较大者 +0.02」，与 paper 的 build.mjs 同一口径。
+        'durationSeconds': round(max(total, sum(s['dur'] for s in segments)) + 0.02, 4),
         'segments': segments,
         'captions': captions,
     }

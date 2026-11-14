@@ -1,0 +1,158 @@
+{
+  "_how": "text 是旁白原文（会逐段配音）；screens 是这一拍的画面，可以有多个——一拍拆成几段时按顺序取，给不同 screens 才能避免同拍子段画面完全一样（骨架默认 freeze 偏高就是因为它俩共用一份 args）。",
+  "template": "C",
+  "tier": "速览",
+  "title": "久坐为什么伤腰",
+  "subtitle": "不是姿势问题，是频率问题",
+  "voice": "zh-CN-YunjianNeural",
+  "rate": "+8%",
+  "beats": [
+    {
+      "id": "C01",
+      "role": "cover",
+      "type": "cover",
+      "text": "坐久了腰疼，你大概以为是自己姿势不对。但真正的原因，可能不在这。",
+      "screens": [
+        {
+          "prefix": "久坐的",
+          "title": "代价",
+          "sub": "为什么坐久了腰会疼",
+          "sticker": "clock",
+          "hint": "医学科普 · 一分钟看懂"
+        }
+      ]
+    },
+    {
+      "id": "C02",
+      "role": "talk",
+      "type": "talk",
+      "text": "先说清楚：不舒服不是因为哪一下坐坏了，而是同一个姿势持续太久。",
+      "screens": [
+        {
+          "paper": "cream",
+          "figure": "right",
+          "eyebrow": "你一定经历过",
+          "lines": [
+            "不是哪一下坐坏了",
+            "是同一个姿势持续太久"
+          ],
+          "accentLine": 1,
+          "sticker": "question",
+          "gesture": "open"
+        }
+      ]
+    },
+    {
+      "id": "C03",
+      "role": "talk",
+      "type": "talk",
+      "text": "关节最怕的不是压力大，是压力一直不变。它靠周围的组织挤进挤出，换来养分。",
+      "screens": [
+        {
+          "paper": "mint",
+          "figure": "left",
+          "eyebrow": "椎间盘最怕什么",
+          "lines": [
+            "不是压力大",
+            "是压力一直不变"
+          ],
+          "accentLine": 1,
+          "sticker": "drop",
+          "gesture": "point"
+        }
+      ]
+    },
+    {
+      "id": "C04",
+      "role": "diagram",
+      "type": "diagram",
+      "text": "坐着的时候，髋关节一直弯着。周围那圈肌肉，也一直绷着不敢松。",
+      "screens": [
+        {
+          "paper": "cream",
+          "title": "久坐时的髋关节",
+          "eyes": false,
+          "mark": [
+            0.3,
+            0.7
+          ],
+          "pulse": true,
+          "probe": "left",
+          "callouts": [
+            {
+              "text": "关节一直弯着",
+              "at": 1.2,
+              "x": 0.72,
+              "y": 0.32,
+              "size": 58
+            },
+            {
+              "text": "肌肉一直绷着",
+              "at": 3.4,
+              "x": 0.72,
+              "y": 0.62,
+              "size": 58
+            }
+          ],
+          "organImage": "hip-joint"
+        }
+      ]
+    },
+    {
+      "id": "C05",
+      "role": "talk",
+      "type": "talk",
+      "text": "所以关键不是找一个完美姿势，而是别让任何一个姿势维持太久。",
+      "screens": [
+        {
+          "paper": "mint",
+          "figure": "right",
+          "eyebrow": "所以答案是",
+          "lines": [
+            "不是完美姿势",
+            "是别坐太久"
+          ],
+          "accentLine": 1,
+          "sticker": "shield",
+          "gesture": "open"
+        }
+      ]
+    },
+    {
+      "id": "C06",
+      "role": "tip",
+      "type": "tip",
+      "text": "三件事：每四十分钟起来一次。站起来别马上坐回去。坐的时候把两只脚放平，别跷二郎腿。",
+      "screens": [
+        {
+          "paper": "cream",
+          "head": "怎么办",
+          "title": "三件事",
+          "items": [
+            "每 40 分钟起来一次",
+            "站起来，别马上坐回去",
+            "两只脚放平，别跷二郎腿"
+          ],
+          "itemAt": [
+            1.0,
+            4.2,
+            7.4
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C07",
+      "role": "outro",
+      "type": "outro",
+      "text": "姿势没有完美解，但频率有。这一点你自己就能控制。",
+      "screens": [
+        {
+          "line1": "姿势没有完美解",
+          "line2": "但频率有",
+          "note": "科普内容仅供参考 · 身体不适请就医"
+        }
+      ]
+    }
+  ]
+}
