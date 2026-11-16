@@ -13,13 +13,20 @@
 
 FROM node:22-bookworm-slim
 
-RUN apt-get update \
+# 国内源：实测 core-4 容器内到 mirrors.aliyun.com 是 38ms，到 deb.debian.org 是 776–1716ms。
+# 构建曾经「跑 25 分钟不出结果」，一度被误判成卡死——实际是 apt 等远程索引太慢，
+# 而 apt 等网络时 CPU 占用接近 0，看起来像挂了。换源后同样步骤在一分钟内完成。
+# 若将来要在 GitHub Actions 上构建，把这两处换回官方源（或改成 ARG）。
+RUN sed -i 's|deb.debian.org|mirrors.aliyun.com|g; s|security.debian.org|mirrors.aliyun.com|g' \
+      /etc/apt/sources.list.d/debian.sources \
+ && apt-get update \
  && apt-get install -y --no-install-recommends \
       ffmpeg ca-certificates python3 python3-pip \
  && rm -rf /var/lib/apt/lists/*
 
 # bookworm 的 pip 受 PEP 668 保护，装到系统目录必须显式声明
-RUN pip3 install --no-cache-dir --break-system-packages edge-tts
+RUN pip3 install --no-cache-dir --break-system-packages \
+      -i https://mirrors.aliyun.com/pypi/simple/ edge-tts
 
 WORKDIR /app
 
