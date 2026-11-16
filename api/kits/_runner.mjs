@@ -25,8 +25,19 @@ function runNode(scriptPath, args, { cwd = REPO_ROOT, timeoutMs = 0 } = {}) {
     const child = spawn(NODE, [scriptPath, ...args], { cwd, stdio: ['ignore', 'pipe', 'pipe'] });
     let out = '';
     let err = '';
+    let tailBuf = '';
     child.stdout.on('data', (d) => { out += d; });
-    child.stderr.on('data', (d) => { err += d; });
+    child.stderr.on('data', (d) => {
+      err += d;
+      // 只把进度行透传给上层，其余 stderr 留在 err 里按需进回执。
+      // 为什么必须透传：这一层原本把子进程 stderr 全吞进变量，于是渲染器的
+      // `@@progress` 永远到不了 job 的 stderr 文件 —— 上层只能看到 0 字节，
+      // 却看不出是「没进度」还是「进度被吞了」（2026-11-16 实测踩到）。
+      tailBuf += d.toString();
+      const lines = tailBuf.split('\n');
+      tailBuf = lines.pop() || '';
+      for (const l of lines) if (l.startsWith('@@progress ')) process.stderr.write(l + '\n');
+    });
 
     let timer = null;
     if (timeoutMs > 0) {

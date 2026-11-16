@@ -98,6 +98,47 @@ function readStdout(id) {
 }
 
 /**
+ * 从 stderr 里读出渲染进度。
+ *
+ * 渲染器每 10% 打一行 `@@progress {"part":<分片标识>,"done":N,"total":M}`。
+ * 为什么不用 stdout：stdout 被整体当作 JSON 回执，塞一行进度会让终态判定直接失败。
+ * 为什么按 part 取最新：多 worker 并发写同一个 stderr，同一分片会有多行，只有最后一行代表它当前进度。
+ *
+ * 只读尾部 512KB：ffmpeg 的 error 输出理论上很少，但真出问题时能刷满文件，
+ * 每次轮询把几 MB 读进内存不值得。
+ */
+const TAIL_BYTES = 512 * 1024;
+function readProgress(id) {
+  const p = stderrPath(id);
+  if (!fs.existsSync(p)) return null;
+  let text;
+  try {
+    const fd = fs.openSync(p, 'r');
+    const size = fs.fstatSync(fd).size;
+    const start = Math.max(0, size - TAIL_BYTES);
+    const buf = Buffer.alloc(size - start);
+    fs.readSync(fd, buf, 0, buf.length, start);
+    fs.closeSync(fd);
+    text = buf.toString('utf8');
+  } catch {
+    return null;
+  }
+  const byPart = new Map();
+  for (const line of text.split('\n')) {
+    if (!line.startsWith('@@progress ')) continue;
+    try {
+      const o = JSON.parse(line.slice('@@progress '.length));
+      if (typeof o.part === 'number' && typeof o.done === 'number') byPart.set(o.part, o);
+    } catch { /* 半行（正在写）忽略 */ }
+  }
+  if (!byPart.size) return null;
+  let done = 0;
+  let total = 0;
+  for (const o of byPart.values()) { done += o.done; total += o.total || 0; }
+  return { done, total, pct: total > 0 ? Math.round((done / total) * 100) : null };
+}
+
+/**
  * 把单个 job 推进到它能到达的最新状态。幂等。
  * 只处理 running；queued 与终态原样返回。
  */
@@ -109,7 +150,24 @@ function reconcile(job) {
   const hasVerdict = !!(parsed && (parsed.ok || parsed.error));
 
   if (!hasVerdict) {
-    if (alive(job.pid)) return job; // 确实还在跑
+    if (alive(job.pid)) {
+      // 还在跑：顺手带上进度。只在百分比变化时落盘，避免轮询把 job 文件写烂。
+      const progress = readProgress(job.id);
+      if (progress) {
+        // 分母只增不减：worker 是陆续启动的，先报到的分片会让 sum(total) 偏小，
+        // 若直接采信，进度会先显示 10% 再跳回 6%。取历史最大值即可单调。
+        const prevTotal = job.progress?.total || 0;
+        if (progress.total < prevTotal) {
+          progress.total = prevTotal;
+          progress.pct = prevTotal > 0 ? Math.round((progress.done / prevTotal) * 100) : null;
+        }
+        if (progress.pct !== job.progress?.pct) {
+          job.progress = progress;
+          writeJob(job);
+        }
+      }
+      return job;
+    }
     job.status = 'failed';
     job.error = {
       code: CODE.RENDER_FAILED,
@@ -271,6 +329,9 @@ function shape(job) {
     elapsedSeconds,
     ...(job.status === 'queued' ? { queuePosition: queuePosition(job.id) } : {}),
     ...(job.status === 'running' ? { pid: job.pid } : {}),
+    // 渲染进度（帧数），从 stderr 的 @@progress 行聚合而来。
+    // 有这个字段，客户端就不必为了「在动吗」而反复轮询。
+    ...(job.status === 'running' && job.progress ? { progress: job.progress } : {}),
     ...(job.receipt ? { receipt: job.receipt } : {}),
     ...(job.error ? { error: job.error } : {}),
   };

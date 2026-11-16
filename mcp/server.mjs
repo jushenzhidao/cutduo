@@ -486,6 +486,22 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'POST' && url.pathname === '/mcp') {
+      // 内容协商：本服务只产出 application/json（Streamable HTTP 允许服务端在客户端
+      // 同时接受 json 与 event-stream 时只回 JSON）。但如果客户端**明确只接受** SSE，
+      // 硬塞一个 JSON 就是违反协商 —— 客户端会拿到它声明不接受的内容，比明确拒绝更难查。
+      const accept = String(req.headers.accept || '');
+      if (accept && !accept.includes('*/*') && !accept.includes('application/json')) {
+        return json(res, 406, {
+          jsonrpc: '2.0',
+          id: null,
+          error: {
+            code: -32600,
+            message: `本服务只产出 application/json，收到的 Accept 是「${accept}」`,
+            data: { hint: '客户端应同时声明 application/json 与 text/event-stream；本服务不支持纯 SSE 响应' },
+          },
+        });
+      }
+
       let msg;
       try {
         msg = await readJson(req);

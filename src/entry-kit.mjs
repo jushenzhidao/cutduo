@@ -16,7 +16,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { Worker } from 'node:worker_threads';
+import { Worker, isMainThread, parentPort } from 'node:worker_threads';
 import { planShards, partArgs, pumpFrames, spawnPart, concatParts, report } from './pipeline.mjs';
 import { checkDeterminism } from './determinism.mjs';
 import { resolveInput } from './root.mjs';
@@ -93,9 +93,25 @@ export async function handleProbeOrDeterminism({ A, P, makeRenderer, width, heig
 /** worker 内的单分片渲染：起 ffmpeg → 把帧灌进去。所有入口共用同一份。
  *  `x264Threads` 必须透传：漏了它 x264 会按默认线程数跑，同等 CRF 下码率控制不同，
  *  实测 paper 一支体积 0.91→0.93MB —— 只差 2%，但说明参数没走同一条路。 */
-export async function renderPart({ renderer, canvas, P, pipe = 'jpeg', crf, preset, jpeg, x264Threads, start, end, part, width, height }) {
+export async function renderPart({ renderer, canvas, P, pipe = 'jpeg', crf, preset, jpeg, x264Threads, start, end, part, width, height, partIndex }) {
   const ff = spawnPart(partArgs({ pipe, fps: P.fps, width, height, crf, preset, jpeg, x264Threads, part }));
-  await pumpFrames({ renderer, canvas, fps: P.fps, start, end, ff, pipe, jpeg });
+  // 进度写 stderr，带分片号：多个 worker 并发写同一个 stderr 文件，
+  // 但一行 JSON 远小于 4KB，POSIX 下是原子写，不会互相截断。
+  // upper 层（api/jobs.mjs）按 part 号取每个分片的最新一条再求和。
+  // 分片标识优先用显式索引，否则用起点帧号 —— 各分片的 start 天然互不相同，
+  // 这样 9 个调用点一个都不用改，也不会漏掉新增的入口。
+  // **默认值不能写 0**：`0 ?? start` 是 0（?? 只对 null/undefined 生效），
+  // 曾因此让 15 个分片全标成 part 0，进度互相覆盖、出现倒退。
+  const partKey = partIndex !== undefined ? partIndex : start;
+  // worker 线程里绝不能直接写 process.stderr：实测（2026-11-16）它的输出到不了
+  // 父进程被重定向到文件的 fd（同步跑能看到、走 job 时 stderr 文件 0 字节）。
+  // 所以 worker 走 postMessage 交给主线程，由主线程统一写 —— 顺带能在这里按分片合并。
+  const onProgress = (done, total) => {
+    const msg = { part: partKey, done, total };
+    if (isMainThread) process.stderr.write(`@@progress ${JSON.stringify(msg)}\n`);
+    else parentPort.postMessage({ progress: msg });
+  };
+  await pumpFrames({ renderer, canvas, fps: P.fps, start, end, ff, pipe, jpeg, onProgress });
 }
 
 /**
@@ -126,7 +142,16 @@ export async function runShards({
       },
       resourceLimits: { maxOldGenerationSizeMb: 512 },
     });
-    w.once('message', (m) => (m && m.ok ? resolve(m) : reject(new Error(m && m.error))));
+    // 用 on 而不是 once：worker 会先发若干条 progress，最后才发 {ok:true}。
+    // once 只能吃到第一条（progress），任务就永远 resolve 不了。
+    w.on('message', (m) => {
+      if (m && m.progress) {
+        process.stderr.write(`@@progress ${JSON.stringify(m.progress)}\n`);
+        return;
+      }
+      if (m && m.ok) resolve(m);
+      else reject(new Error((m && m.error) || 'worker 未返回可识别的结果'));
+    });
     w.once('error', reject);
   })));
   concatParts({

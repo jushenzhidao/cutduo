@@ -51,12 +51,22 @@ export function partArgs({ pipe, fps, width, height, crf, preset, jpeg, x264Thre
  *          start:number, end:number, ff:import('node:child_process').ChildProcess,
  *          pipe?:string, jpeg?:number}} o
  */
-export async function pumpFrames({ renderer, canvas, fps, start, end, ff, pipe, jpeg }) {
+/**
+ * @param {object} o
+ * @param {(done:number,total:number)=>void} [o.onProgress] 每 10% 回调一次。
+ *   为什么走 stderr 而不是 stdout：job 的 stdout 被整体当作 JSON 回执解析
+ *   （api/jobs.mjs 靠「stdout 是完整 JSON」判定终态），塞一行进度就解析失败。
+ */
+export async function pumpFrames({ renderer, canvas, fps, start, end, ff, pipe, jpeg, onProgress }) {
   const done = once(ff, 'close');
+  const total = end - start;
+  const step = Math.max(1, Math.floor(total / 10));
   for (let f = start; f < end; f++) {
     renderer.renderFrame(f / fps);
     const buf = pipe === 'raw' ? canvas.data() : canvas.toBuffer('image/jpeg', jpeg);
     if (!ff.stdin.write(buf)) await once(ff.stdin, 'drain');
+    const n = f - start + 1;
+    if (onProgress && (n % step === 0 || n === total)) onProgress(n, total);
   }
   ff.stdin.end();
   const [code] = await done;

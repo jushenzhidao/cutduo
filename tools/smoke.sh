@@ -89,7 +89,9 @@ $FFMPEG_BIN -hide_banner -loglevel error -y -f lavfi -i "sine=frequency=440:dura
   -c:a pcm_s16le /tmp/smoke-tone.wav 2>/dev/null
 if node api/cli.mjs render --kit paper --params kits/paper/presets/v8t.json \
      --audio /tmp/smoke-tone.wav \
-     --out "$OUT/api-render.mp4" --workers 6 --json >/tmp/smoke-apirender.json 2>&1; then
+     --out "$OUT/api-render.mp4" --workers 6 --json >/tmp/smoke-apirender.json 2>/tmp/smoke-apirender.err; then
+  # stderr 必须分开：渲染器会往 stderr 写 `@@progress` 行（给 job 进度用），
+  # 合并进 JSON 文件会让下面的解析直接失败，症状是"回执帧数 0"。2026-11-16 踩过。
   CLAIMED=$(node -e 'try{process.stdout.write(String(JSON.parse(require("fs").readFileSync("/tmp/smoke-apirender.json","utf8")).output.frames))}catch{process.stdout.write("0")}')
   ACTUAL=$($FFPROBE_BIN -v error -select_streams v:0 -count_frames \
     -show_entries stream=nb_read_frames -of csv=p=0 "$OUT/api-render.mp4" 2>/dev/null | head -1)
