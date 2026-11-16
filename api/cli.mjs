@@ -64,6 +64,9 @@ async function readStdin() {
 /** 从 flags 构造请求。--params-json 接受内联 JSON 字符串。 */
 function reqFromFlags() {
   const req = {};
+  // 配音默认开（有 captions 就配）。关掉用 --no-auto-tts，只写这个开关不放值，
+  // 因为 "false" 字符串在 JSON 里是 truthy —— 用值传布尔迟早会踩。
+  if (flags['no-auto-tts']) req.autoTts = false;
   if (flags.kit) req.kit = String(flags.kit);
   if (flags.preset) req.preset = String(flags.preset);
   if (flags.params) req.paramsPath = String(flags.params);

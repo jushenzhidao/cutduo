@@ -96,6 +96,10 @@ const TOOLS = [
           description: '渲染超参（只放与内容无关的）：crf / preset(x264) / pipe / theme / transition。质量优先档传 {"crf":15,"preset":"slow"}',
         },
         out: { type: 'string', description: '产物文件名（不含目录），默认 <kit>.mp4' },
+        autoTts: {
+          type: 'boolean',
+          description: '参数里有 captions 时是否自动配音（默认 true）。配音失败会降级为无声片，不会让请求失败',
+        },
       },
       required: ['kit'],
       additionalProperties: false,
@@ -181,6 +185,7 @@ async function doRender(args) {
   if (args.workers != null) overrides.workers = args.workers;
   if (Object.keys(overrides).length) req.overrides = overrides;
   if (args.out) req.out = path.join(DIRS.out, path.basename(args.out));
+  if (args.autoTts === false) req.autoTts = false;
 
   const sub = api.submitJob(req);
   const deadline = Date.now() + MAX_WAIT_SECONDS * 1000;

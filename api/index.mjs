@@ -23,6 +23,7 @@ import { normalizeRequest, probeOutput, buildReceipt } from './contract.mjs';
 import { validate as validateSchema, formatErrors } from './validate.mjs';
 import * as registry from './registry.mjs';
 import { MAX_JOBS } from './jobs.mjs';
+import { autoTts, summarizeTts, ensureCloudDirs } from '../src/cloud/index.mjs';
 
 export { ApiError, CODE } from './errors.mjs';
 export { MAX_JOBS } from './jobs.mjs';
@@ -177,6 +178,19 @@ export async function render(req) {
     }
   }
 
+  // ── 侧车阶段 ───────────────────────────────────────────────────────
+  // 参数里有 captions、请求又没给音轨时，先合成配音再渲染。
+  // 放在 validate 之后：参数不合法的请求不该先花 20 秒调 TTS。
+  // failMode = soft：配音失败出无声片并告警，不让整个请求失败 ——
+  // 「因为这片区没网所以出不了片」比「出了无声片」更糟。
+  let ttsStats = null;
+  if (normalized.autoTts && !normalized.audio) {
+    ensureCloudDirs();
+    const tts = await autoTts({ paramsPath: normalized.paramsPath });
+    if (tts.audio) normalized.audio = tts.audio;
+    ttsStats = tts.stats;
+  }
+
   const t0 = Date.now();
   await adapter.render(normalized);
   const wallSeconds = (Date.now() - t0) / 1000;
@@ -190,6 +204,13 @@ export async function render(req) {
     extra: {
       unvalidated: capability.schemaStatus === 'missing',
       ...(capability.schemaStatus === 'missing' ? { schemaNote: capability.schemaNote } : {}),
+      // 配音是侧车增强：把「做了没 / 命中缓存没 / 有没有溢出」显式交出去，
+      // 否则调用方看到 hasAudio:true 也无从判断声音是怎么来的。
+      // 只有「真配了」或「配失败了」才写这个字段。没有 captions 的片（图形类）
+      // 逐条回一行「未配音：no-captions」只是噪音，不是信息。
+      ...(ttsStats && (ttsStats.sentences || ttsStats.error)
+        ? { tts: ttsStats, ttsNote: summarizeTts(ttsStats) }
+        : {}),
     },
   });
 }

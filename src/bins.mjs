@@ -9,6 +9,8 @@
  * 最后一步是关键：PATH 里的 `ffmpeg` 在两种环境都能命中。
  */
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
 function resolveBin(envKey, name, macPath) {
   const fromEnv = process.env[envKey];
@@ -23,3 +25,6 @@ function resolveBin(envKey, name, macPath) {
 
 export const FFMPEG = resolveBin('FFMPEG', 'ffmpeg', '/opt/homebrew/bin/ffmpeg');
 export const FFPROBE = resolveBin('FFPROBE', 'ffprobe', '/opt/homebrew/bin/ffprobe');
+// edge-tts 由 uv tool 装在 ~/.local/bin（不在 Homebrew 前缀下），容器里由 pip 装到 /usr/local/bin。
+// 两边都靠 PATH 兜底，所以第三个参数只是 macOS 的加速路径，不存在也不影响。
+export const EDGE_TTS = resolveBin('EDGE_TTS', 'edge-tts', path.join(os.homedir(), '.local/bin/edge-tts'));

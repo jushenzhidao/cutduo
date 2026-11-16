@@ -131,7 +131,14 @@ export function normalizeRequest(raw, capability) {
     });
   }
 
-  return { kit, paramsPath, audio, out, overrides, probe: raw.probe ?? null, async: !!raw.async };
+  // autoTts 默认开：参数里有 captions、请求没给音轨时，出片前自动配音（失败降级为无声）。
+  // 显式传 false 才跳过 —— 给「我就要无声版」留出口。
+  return {
+    kit, paramsPath, audio, out, overrides,
+    probe: raw.probe ?? null,
+    async: !!raw.async,
+    autoTts: raw.autoTts !== false,
+  };
 }
 
 /** 用 ffprobe 读产物真实规格；读不出来就判产物无效，而不是回一个猜测值。 */

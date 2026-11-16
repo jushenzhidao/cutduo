@@ -6,12 +6,20 @@
 #
 # 镜像里只装渲染必需的东西：ffmpeg + canvas。playwright 在 devDependencies，
 # --omit=dev 会跳过它（云端不出 .motion 模板，那是本地对照工具）。
+#
+# python3 + edge-tts 是侧车能力层（src/cloud/）的第一项：参数里有 captions 时
+# 自动配音。edge-tts 只有 Python 实现，没有可靠的 node 等价物（协议要自己维护
+# WebSocket + token 刷新），所以宁可让镜像多 100MB 也不用一份会过期的自研客户端。
 
 FROM node:22-bookworm-slim
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends ffmpeg ca-certificates \
+ && apt-get install -y --no-install-recommends \
+      ffmpeg ca-certificates python3 python3-pip \
  && rm -rf /var/lib/apt/lists/*
+
+# bookworm 的 pip 受 PEP 668 保护，装到系统目录必须显式声明
+RUN pip3 install --no-cache-dir --break-system-packages edge-tts
 
 WORKDIR /app
 
