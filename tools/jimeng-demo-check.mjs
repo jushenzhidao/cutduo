@@ -149,6 +149,30 @@ for (const [label, payload, why] of bad) {
   });
 }
 
+/* D1：版式容量 —— 超宽文案必须被拒绝，且要报出字数上限。
+   这条判据来自实测：长文案会让卡片标题穿出卡片、大字压到玻璃卡，
+   而渲染器不会报错，只是画出来难看。 */
+check('D1', '超宽文案被拒绝且给出字数上限', () => {
+  const base = JSON.parse(fs.readFileSync(path.join(ROOT, 'content/jimeng-showreel/params.json'), 'utf8'));
+  const bad = JSON.parse(JSON.stringify(base));
+  const g = bad.scenes.find((x) => x.id === 'gather');
+  g.title[0] = '往里掉，就出不来。';   // 9 字 > 800px / 104px ≈ 7 字
+  const f = path.join(ALT_OUT, 'too-long.json');
+  fs.writeFileSync(f, JSON.stringify(bad, null, 2));
+  const r = render('3.9', path.join(ALT_OUT, 'too-long.png'), ['--params', f]);
+  const mentionsCap = /建议 ≤\d+ 字/.test(r.out);
+  return {
+    ok: r.code !== 0 && mentionsCap,
+    detail: `exit=${r.code} 字数上限提示=${mentionsCap ? '有' : '无'}`,
+  };
+});
+
+/* D2：容量校验不能误杀合法文案 */
+check('D2', '合法文案不被容量校验误杀', () => {
+  const r = render('3.9', path.join(ALT_OUT, 'd2.png'), ['--params', FIXTURE]);
+  return { ok: r.code === 0, detail: `alt 夹具 exit=${r.code}` };
+});
+
 /* ────────────────────────────── 留痕 */
 
 const failed = results.filter((r) => !r.ok);

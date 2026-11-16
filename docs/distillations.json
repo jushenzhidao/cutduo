@@ -145,7 +145,8 @@
       "artifacts": [
         "tools/hud-overlay.mjs",
         "tools/jimeng-demo.mjs",
-        "docs/jimeng/README.md"
+        "docs/jimeng/README.md",
+        "tools/jimeng-demo-check.mjs"
       ]
     },
     {
@@ -160,7 +161,8 @@
       "artifacts": [
         "tools/sfx-probe.py",
         "tools/sfx-synth.mjs",
-        "content/jimeng-showreel/sfx.json"
+        "content/jimeng-showreel/sfx.json",
+        "tools/sfx-check.mjs"
       ]
     }
   ]

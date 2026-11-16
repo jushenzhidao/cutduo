@@ -46,10 +46,10 @@
     },
     {
       "t": 11.0,
-      "kind": "tick",
-      "dur": 0.07,
-      "gain": -15,
-      "note": "白闪 stinger（原片 11.065，偏移 −2ms）"
+      "kind": "impact",
+      "dur": 0.18,
+      "gain": -14,
+      "note": "白闪 stinger —— 原片 11.065 实测是 impact（全频 Δ14.5dB），不是 tick。\n                  tick 只有 8ms，撑不住一个全屏白闪。"
     },
     {
       "t": 12.08,

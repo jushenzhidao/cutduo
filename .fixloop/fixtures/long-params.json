@@ -1,0 +1,188 @@
+{
+  "meta": {
+    "title": "cutduo · 一句话一条片",
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "duration": 15
+  },
+  "brand": {
+    "name": "cutduo",
+    "reel": "MOTION SHOWREEL"
+  },
+  "scenes": [
+    {
+      "id": "scatter",
+      "t0": 0,
+      "t1": 2.5,
+      "dark": true,
+      "words": [
+        "分镜",
+        "参数",
+        "回执",
+        "门禁"
+      ],
+      "verdict": "拼不起来。"
+    },
+    {
+      "id": "gather",
+      "t0": 2.5,
+      "t1": 5.0,
+      "dark": false,
+      "eyebrow": [
+        "01",
+        "WRITE"
+      ],
+      "title": [
+        "往里掉，就出不来。",
+        "连光也跑不掉。"
+      ],
+      "sub": [
+        "引力、视界、奇点、时间，四件事一次讲完。",
+        "不用打开第二个窗口也不用查第二本书。"
+      ],
+      "cta": "写一句",
+      "cards": [
+        {
+          "kind": "story",
+          "pill": "STORY",
+          "title": "一条片子做三天其实只要一天",
+          "items": [
+            "不是吸尘器",
+            "不是时空门",
+            "是引力塌缩",
+            "是事件视界"
+          ],
+          "done": 2
+        },
+        {
+          "kind": "params",
+          "pill": "PARAMS",
+          "lines": [
+            "{",
+            "  \"kit\": \"paper\",",
+            "  \"preset\": \"v8t\",",
+            "  \"fps\": 60,",
+            "  \"crf\": 18",
+            "}"
+          ]
+        },
+        {
+          "kind": "render",
+          "pill": "RENDER",
+          "label": "throughput",
+          "value": "344",
+          "unit": "fps",
+          "bar": 0.82
+        },
+        {
+          "kind": "gate",
+          "pill": "GATE",
+          "lines": [
+            "帧数 450 / 450",
+            "音画差 0.004s",
+            "空帧 0.0%",
+            "黑帧 0.0%"
+          ]
+        },
+        {
+          "kind": "stat",
+          "text": "省下 6 个窗口",
+          "sub": "同一条时间轴"
+        }
+      ]
+    },
+    {
+      "id": "recall",
+      "t0": 5.0,
+      "t1": 7.5,
+      "dark": false,
+      "eyebrow": [
+        "02",
+        "RENDER"
+      ],
+      "title": [
+        "一个公式。",
+        "就给出所有尺度。"
+      ],
+      "cmd": "node api/cli.mjs render --stdin",
+      "runLabel": "Run",
+      "count": "回执 · 450 帧 · 15.000s · 1920x1080 · 30fps · 立体声",
+      "rows": [
+        [
+          "太阳的视界半径是 3 公里",
+          "R_s = 2.95 km · 球对称",
+          "PASS"
+        ],
+        [
+          "地球的视界半径是 9 毫米",
+          "R_s = 8.87 mm · 无自转",
+          "PASS"
+        ],
+        [
+          "一个成年人的视界半径极小",
+          "R_s = 1.03e-25 m",
+          "PASS"
+        ]
+      ]
+    },
+    {
+      "id": "arrange",
+      "t0": 7.5,
+      "t1": 10.0,
+      "dark": false,
+      "note": [
+        "正在编排：4 段 → 1 条时间轴",
+        "段型 · 参数 · 配乐 · 门禁"
+      ],
+      "tags": [
+        "分镜",
+        "参数",
+        "配乐",
+        "门禁"
+      ],
+      "card": {
+        "pill": "FILM",
+        "title": "一句话 · 15.0s",
+        "sub": "450 帧 · 1920x1080 · 30fps",
+        "stats": [
+          "4 段",
+          "1 条时间轴"
+        ]
+      }
+    },
+    {
+      "id": "route",
+      "t0": 10.0,
+      "t1": 12.5,
+      "dark": true,
+      "eyebrow": [
+        "04",
+        "SHIP"
+      ],
+      "lines": [
+        "然后，",
+        "它就已经全部做好了。"
+      ]
+    },
+    {
+      "id": "lockup",
+      "t0": 12.5,
+      "t1": 15.0,
+      "dark": false,
+      "name": "cutduo",
+      "slogan": [
+        "一句话写下去，",
+        "剩下的一条片自己会长出来。"
+      ],
+      "cta": "试着出一支",
+      "platforms": [
+        "CLI",
+        "API",
+        "MCP",
+        "WEB",
+        "微信"
+      ]
+    }
+  ]
+}

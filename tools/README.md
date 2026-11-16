@@ -65,6 +65,7 @@
 | `jimeng-demo-check.mjs` | 上者的判据（fix-loop）：帧 md5 对齐基线 / `--params` 生效 / 非法参数必报错 |
 | `sfx-probe.py` | 从成片反推音效结构：全频 + 3kHz 两条包络、突增/聚类、与硬切点对齐 |
 | `sfx-synth.mjs` | 按 cue 表合成 impact/riser/whoosh/tick 并混入成片（确定性，无外部素材） |
+| `sfx-check.mjs` | 音效判据：切点必有 impact（±50ms）/ 时长一致 / 门禁 / 回读反证，带 `--self-test` |
 
 ## 模板与格式
 

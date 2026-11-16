@@ -107,6 +107,88 @@ function validate(p) {
 }
 validate(raw);
 
+/**
+ * 每个文本槽位的**可用宽度**（像素，1920×1080 基准）。
+ * 这些数字不是拍的，是从下面的绘制坐标反推的：
+ *   标题 x=170 起，右侧卡片墙起于 1010 ⇒ 可用 840，再留 40 安全边 = 800
+ *   STORY 卡宽 336、内边距 24 ⇒ 288；列表再缩进 26 ⇒ 262
+ * 换版式时这里要跟着改，**它就是版式的文字容量声明**。
+ */
+const TEXT_SLOTS = [
+  { sc: 'gather', path: ['title', 0], size: 104, fam: 'serif', maxW: 800, what: '标题第一行' },
+  { sc: 'gather', path: ['title', 1], size: 104, fam: 'serif', maxW: 800, what: '标题第二行' },
+  { sc: 'gather', path: ['sub', 0], size: 30, fam: 'ui', maxW: 800, what: '副文案' },
+  { sc: 'gather', path: ['sub', 1], size: 30, fam: 'ui', maxW: 800, what: '副文案第二行', optional: true },
+  { sc: 'gather', path: ['cta'], size: 30, fam: 'ui', maxW: 128, what: '按钮文字' },
+  { sc: 'gather', path: ['cards', 0, 'title'], size: 34, fam: 'ui', maxW: 288, what: '第一张卡标题' },
+  { sc: 'gather', path: ['cards', 0, 'items'], size: 22, fam: 'ui', maxW: 262, each: true, what: '卡内清单项' },
+  { sc: 'gather', path: ['cards', 1, 'lines'], size: 19, fam: 'mono', maxW: 274, each: true, what: 'JSON 行' },
+  { sc: 'gather', path: ['cards', 2, 'label'], size: 20, fam: 'mono', maxW: 252, what: '数据标签' },
+  { sc: 'gather', path: ['cards', 2, 'value'], size: 58, fam: 'mono', maxW: 200, what: '主数值' },
+  { sc: 'gather', path: ['cards', 3, 'lines'], size: 21, fam: 'mono', maxW: 226, each: true, what: '门禁行' },
+  { sc: 'gather', path: ['cards', 4, 'text'], size: 26, fam: 'ui', maxW: 282, what: '统计条正文' },
+  { sc: 'gather', path: ['cards', 4, 'sub'], size: 19, fam: 'ui', maxW: 282, what: '统计条副文' },
+  { sc: 'recall', path: ['title'], size: 96, fam: 'serif', maxW: 1580, join: true, what: '整行标题（两段合计）' },
+  { sc: 'recall', path: ['cmd'], size: 31, fam: 'mono', maxW: 918, what: '命令行' },
+  { sc: 'recall', path: ['count'], size: 21, fam: 'mono', maxW: 900, what: '计数行' },
+  { sc: 'recall', path: ['rows'], size: 30, fam: 'ui', maxW: 874, eachRow: 0, what: '结果行标题' },
+  { sc: 'recall', path: ['rows'], size: 20, fam: 'mono', maxW: 874, eachRow: 1, what: '结果行副文' },
+  { sc: 'arrange', path: ['note', 0], size: 28, fam: 'ui', maxW: 1400, what: '浮层正文' },
+  { sc: 'arrange', path: ['note', 1], size: 20, fam: 'ui', maxW: 1400, what: '浮层次行', optional: true },
+  { sc: 'arrange', path: ['card', 'title'], size: 34, fam: 'ui', maxW: 368, what: '中心卡标题' },
+  { sc: 'arrange', path: ['card', 'sub'], size: 21, fam: 'mono', maxW: 368, what: '中心卡副文' },
+  { sc: 'route', path: ['lines', 0], size: 112, fam: 'serif', maxW: 990, what: '大字第一行' },
+  { sc: 'route', path: ['lines', 1], size: 112, fam: 'serif', maxW: 990, what: '大字第二行', optional: true },
+  { sc: 'lockup', path: ['name'], size: 86, fam: 'serif', maxW: 1200, what: '品牌名' },
+  { sc: 'lockup', path: ['slogan'], size: 40, fam: 'serif', maxW: 1520, join: true, what: 'slogan（两段合计）' },
+  { sc: 'lockup', path: ['cta'], size: 28, fam: 'ui', maxW: 200, what: '按钮文字' },
+];
+
+const pick = (obj, keyPath) => keyPath.reduce((o, k) => (o == null ? undefined : o[k]), obj);
+
+/**
+ * 版式容量校验：用**真实字体**量每一段文案，装不下就拒绝。
+ *
+ * 为什么不自动缩字号：字号是这套片子的设计决策（原片 104/96/112/86 各有出处），
+ * 按文案长度自动缩会悄悄破坏层级——`写一句。` 和 `往里掉，就出不来。` 应该是同一个字号。
+ * 也不能换行：双色标题的第二行有语义，断行会拆散「主句 / 结论」。
+ * 所以选择**报错并给出字数上限**，让人改文案，而不是让机器改版式。
+ */
+function validateLayout(p, ctx) {
+  const fonts = { serif: '"SerifCN", "NotoSC Regular"', ui: '"NotoSC Regular"', mono: '"JBMono", "NotoSC Regular"' };
+  const fails = [];
+  for (const slot of TEXT_SLOTS) {
+    const sc = p.scenes.find((x) => x.id === slot.sc);
+    if (!sc) continue;
+    let vals = pick(sc, slot.path);
+    if (vals == null) continue;
+    if (slot.join) vals = [vals.join('')];
+    else if (slot.each) vals = Array.isArray(vals) ? vals : [];
+    else if (slot.eachRow != null) vals = (vals || []).map((r) => r[slot.eachRow]).filter((v) => v != null);
+    else vals = [vals];
+
+    for (const v of vals) {
+      if (v === '') continue;
+      ctx.font = `${slot.size}px ${fonts[slot.fam]}`;
+      const w = ctx.measureText(String(v)).width;
+      if (w > slot.maxW) {
+        /* 中文近等宽，用 1 个字宽反推上限，比"超了 36px"更好用 */
+        const per = slot.size;
+        const cap = Math.max(1, Math.floor(slot.maxW / per));
+        const pstr = slot.path.map((k, i) => (typeof k === 'number' ? `[${k}]` : i ? `.${k}` : k)).join('');
+        fails.push(`${slot.sc}.${pstr}（${slot.what}）`
+          + `「${v}」需要 ${Math.round(w)}px，可用 ${slot.maxW}px —— 建议 ≤${cap} 字`);
+      }
+    }
+  }
+  if (fails.length) {
+    console.error(`FAIL  ${PARAMS_PATH}\n      有 ${fails.length} 段文案超出所在版位的容量：`);
+    for (const f of fails) console.error(`        · ${f}`);
+    console.error('      字号与版位是设计决策，不会按文案长度自动缩；请缩短文案或改 TEXT_SLOTS 的 maxW。');
+    process.exit(2);
+  }
+}
+
 const P = raw;
 const S = Object.fromEntries(P.scenes.map((sc) => [sc.id, sc]));
 const W = Number(P.meta.width) || 1920;
@@ -1204,6 +1286,9 @@ GlobalFonts.registerFromPath(SERIF, 'SerifCN');
 
 const canvas = createCanvas(W, H);
 const ctx = canvas.getContext('2d');
+
+/* 必须在字体注册之后跑：否则量到的是回退字体的宽度，校验等于没做 */
+validateLayout(P, ctx);
 
 function renderFrame(t) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
