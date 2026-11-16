@@ -14,29 +14,15 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { createCanvas, GlobalFonts } from '@napi-rs/canvas';
+import { createCanvas } from '@napi-rs/canvas';
 
-import { DIRS, REPO_ROOT, resolveInput } from '../../src/root.mjs';
+import { REPO_ROOT, resolveInput } from '../../src/root.mjs';
+import { registerFonts } from '../../src/fonts.mjs';
 import { concatParts, partArgs, pumpFrames, report, spawnPart } from '../../src/pipeline.mjs';
 import { drawCaption, drawDiagram, drawTitleCard, resolveAnchors, validateDiagram } from './diagram.mjs';
 import { clamp, easeInCubic, easeOutCubic } from './layout.mjs';
 import { FONTS } from './tokens.mjs';
 import { CANVAS, FRAME, PALETTES } from './tokens.mjs';
-
-const FONT_FILES = [
-  ['NotoSansSC-Black.otf', 'NotoSC Black'],
-  ['NotoSansSC-Medium.otf', 'NotoSC Medium'],
-  ['NotoSansSC-Regular.otf', 'NotoSC Regular'],
-  ['JetBrainsMono-Regular.ttf', 'JetBrainsMono-Regular'],
-];
-
-function registerFonts() {
-  const dir = path.join(DIRS.assets, 'fonts');
-  for (const [file, alias] of FONT_FILES) {
-    const p = path.join(dir, file);
-    if (fs.existsSync(p)) GlobalFonts.registerFromPath(p, alias);
-  }
-}
 
 function arg(name, def) {
   const i = process.argv.indexOf(`--${name}`);

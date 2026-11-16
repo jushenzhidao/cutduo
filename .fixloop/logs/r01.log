@@ -1,0 +1,10 @@
+R1 TEST (2026-11-16)
+C3 node .fixloop/scripts/enc-fingerprint.mjs out/arch/after/enc-30.ts
+  {"frames":30,"bytes":120132,"md5":"29d1b26f6cd28d60a55c2436a20c63f8"}
+  基线                       bytes=120132 md5=29d1b26f6cd28d60a55c2436a20c63f8  → PASS 逐字节相同
+C2 probe 4 帧
+  at=2  88ec1f9e... PASS
+  at=12 acae2784... PASS
+  at=24 a078ea4c... PASS
+  at=36 1ec61ed5... PASS
+C1 摘豁免后 node tools/check-arch.mjs --strict → exit 0, PASS I1 5/5

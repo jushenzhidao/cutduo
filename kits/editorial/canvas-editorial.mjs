@@ -11,12 +11,12 @@ import fs from 'node:fs';
 import * as BINS from '../../src/bins.mjs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { spawn, execFileSync } from 'node:child_process';
-import { once } from 'node:events';
+import { execFileSync } from 'node:child_process';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { createCanvas, GlobalFonts, loadImage } from '@napi-rs/canvas';
 import { createPaperRenderer } from '../paper/paper.mjs';
 import { registerFonts } from '../../src/fonts.mjs';
+import { partArgs, pumpFrames, spawnPart } from '../../src/pipeline.mjs';
 import { checkDeterminism } from '../../src/determinism.mjs';
 
 const argv = process.argv.slice(2);
@@ -657,19 +657,14 @@ const TMP = fs.mkdtempSync(path.join('/tmp', 'mg-skia-'));
 
 async function encodeRange(start, end, target, q = JPEG_Q, p = PRESET, c = CRF) {
   initCanvas();
-  const ff = spawn(FFMPEG, ['-hide_banner', '-loglevel', 'error', '-y',
-    '-f', 'image2pipe', '-framerate', String(FPS), '-i', 'pipe:0',
-    '-c:v', 'libx264', '-preset', p, '-crf', c, '-pix_fmt', 'yuv420p',
-    '-f', 'mpegts', target], { stdio: ['pipe', 'ignore', 'inherit'] });
-  const done = once(ff, 'close');
-  for (let f = start; f < end; f++) {
-    renderFrame(f / FPS);
-    const buf = canvas.toBuffer('image/jpeg', q);
-    if (!ff.stdin.write(buf)) await once(ff.stdin, 'drain');
-  }
-  ff.stdin.end();
-  const [code] = await done;
-  if (code !== 0) throw new Error('ffmpeg exit ' + code);
+  // 编码实现统一走 src/pipeline.mjs：原先这里手写了一遍 image2pipe + libx264 + mpegts，
+  // 与另外四支用的 partArgs/pumpFrames 是同一段逻辑的两份拷贝（I1 一直挂着"已知欠账"）。
+  // 唯一参数差异：partArgs 显式给 `-vcodec mjpeg`（输入解码器），原先靠 ffmpeg 自动探测。
+  // 输出是否逐字节相同由 C3 判据验证（30 帧 mpegts 的 md5），不靠"看起来一样"。
+  const ff = spawnPart(partArgs({
+    pipe: 'jpeg', fps: FPS, width: W, height: H, crf: c, preset: p, jpeg: q, part: target,
+  }));
+  await pumpFrames({ renderer: { renderFrame }, canvas, fps: FPS, start, end, ff, pipe: 'jpeg', jpeg: q });
 }
 
 const SEG_INFLIGHT = new Map(); // 跨请求的同 key 渲染去重

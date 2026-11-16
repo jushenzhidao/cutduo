@@ -10,26 +10,18 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { createCanvas, GlobalFonts, loadImage } from '@napi-rs/canvas';
+import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { DIRS, REPO_ROOT } from '../../src/root.mjs';
+import { registerFonts } from '../../src/fonts.mjs';
 import { drawDiagram, validateDiagram } from './diagram.mjs';
 import { CANVAS, FRAME, PALETTES } from './tokens.mjs';
 
-const FONT_FILES = [
-  ['NotoSansSC-Black.otf', 'NotoSC Black'],
-  ['NotoSansSC-Medium.otf', 'NotoSC Medium'],
-  ['NotoSansSC-Regular.otf', 'NotoSC Regular'],
-  ['JetBrainsMono-Regular.ttf', 'JetBrainsMono-Regular'],
-];
-
-function registerFonts() {
-  const dir = path.join(DIRS.assets, 'fonts');
-  for (const [file, alias] of FONT_FILES) {
-    const p = path.join(dir, file);
-    if (!fs.existsSync(p)) throw new Error(`缺字体：${p}（先跑 bash tools/fetch-fonts.sh）`);
-    GlobalFonts.registerFromPath(p, alias);
-  }
+// 字体清单只维护在 src/fonts.mjs（唯一注册入口）。但样张工具要**硬失败**：
+// 缺字体时宁可不出图，也不要出一张字形退化却看起来"正常"的样张。
+if (!fs.existsSync(path.join(DIRS.fonts, 'NotoSansSC-Black.otf'))) {
+  throw new Error(`缺字体：${DIRS.fonts}（先跑 bash tools/fetch-fonts.sh）`);
 }
+registerFonts();
 
 const RECIPES = [
   {

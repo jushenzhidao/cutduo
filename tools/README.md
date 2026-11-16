@@ -9,8 +9,6 @@
 |---|---|
 | `new-film.mjs` | 建一支新片：`content/<slug>/` 的 script / facts / build / bgm / make.sh |
 | `render-all.mjs` | 批量出片：列出状态（skeleton/stale/ready/done），只重渲 ready |
-| `render-daemon.mjs` | 常驻 daemon，复用 Skia / 字体 / worker |
-| `render-parallel.mjs` | 分片并行渲染原型 |
 | `motion-render.mjs` | `.motion` 通用宿主：doctor / check-params / preview / render |
 | `new-template.py` | 从 `templates/_scaffold/` 生成三件套模板并自检 |
 | `build-template.py` | 把 `templates/own/<name>/` 打成 `.motion` |
@@ -28,6 +26,7 @@
 | `case-loop.mjs` | 一条片的对抗审查驱动器：每次出片自动跑并留痕 |
 | `check-kit-contract.mjs` | 渲染器认的段型 vs schema 允许的段型 |
 | `check-docs.mjs` | 文档漂移：数量 / 覆盖 / 失效路径 / npm script |
+| `check-arch.mjs` | 架构不变量：单实现 / 单门 / 契约单向（带 `--self-test` 负向自检） |
 | `check-beats.mjs` | 「一拍拆多段但 screens 不够」的静态检查 |
 | `check-screens.mjs` | `script.json` 的 screens 结构校验（时刻 / cast / 元组形态） |
 | `check-shotbook.mjs` | 渲染前空窗体检（版式轮换闸 + 字级锚点） |
@@ -52,7 +51,6 @@
 | 文件 | 用途 |
 |---|---|
 | `build-sync.py` | 旁白逐句合成 + 时间轴重排（`--tts edge`） |
-| `build-voices.sh` / `build-voices-more.sh` | 批量换音色 / 方言 |
 | `audio-bed.mjs` | 三层曲风配乐（electrohouse / chillwave / hiphop） |
 | `synth-bgm.mjs` | 纯 Node 代码合成 BGM（确定性，零素材） |
 | `add-bgm.mjs` | 把 BGM 混进成片（sidechain 下潜） |
@@ -77,7 +75,6 @@
 | `gen-tpl-params.py` | 模板参数生成 |
 | `make-tpl.sh` | 模板打包 |
 | `shard-tpl.py` | 模板按时间切片 |
-| `test-theme.sh` | 主题测试 |
 | `render-batch.py` | 多条片各跑一条完整流水线 |
 | `render-parallel-tpl.py` | **实验失败，默认禁用**（文件头有实测结论） |
 | `mcp-e2e.mjs` | MCP 端到端冒烟（起服务 → 调工具 → 校验回执） |
@@ -112,9 +109,16 @@
 | 文件 | 说明 |
 |---|---|
 | `legacy/mouth-demo.mjs` | 口型演示，历史脚本；保留用于对照 |
+| `legacy/render-daemon.mjs` / `legacy/render-parallel.mjs` | **断链归档**：2026-11-13 平铺重构后 import 路径未跟（`./canvas-editorial.mjs` 实际在 `kits/editorial/`），起不来。并行能力已由 `render.mjs` 的 worker 分片取代 |
+| `legacy/build-voices.sh` / `legacy/build-voices-more.sh` | **断链归档**：依赖 `packages/editorial-sync.motion`，该包从未入库也不会再生成 |
+| `legacy/test-theme.sh` | **断链归档**：依赖上面两个 |
 | `timing/ledger.jsonl` / `timing/open.json` | 计时账本与未闭环项（数据，不是脚本） |
 | `bin/` | 预留目录，当前为空 |
 | `__pycache__/` | Python 缓存，已忽略 |
 
+> 归档区的口径：**能跑但过时** 与 **完全跑不起来** 是两件事，这里只收后者。
+> 断链文件的判据是可复现的：直接 `node` 一次，报 `ERR_MODULE_NOT_FOUND` 或依赖产物不存在即成立。
+> 它们不参与 `tools/check-arch.mjs` 的 I2 判定（`tools/legacy/` 整体跳过），也不该被当成活路径引用。
+>
 > `bench/` 下的 19 个基准与探针不在这里登记，见 `bench/README.md`；
 > 它们必须在仓库根运行（脚本用 `process.cwd()` 解析 `assets/fonts`）。

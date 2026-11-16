@@ -1,18 +1,20 @@
 #!/usr/bin/env node
 /**
- * skia-kit · 一条命令出片（无浏览器）
+ * render.mjs · 内置版式统一出片入口（Skia，无浏览器）
  *
- *   node skia-kit/render.mjs --params kits/paper/presets/v8t.json \
+ *   node render.mjs --kit paper --params kits/paper/presets/v8t.json \
  *     --audio edits/audio-v8t.m4a --out out/kit.mp4
  *
- * 只依赖 @napi-rs/canvas + ffmpeg：把 params 里的 8 个分镜逐帧画成 JPEG，
- * 管道喂给 libx264，最后与音轨合成。默认 8 个 worker 分片并行。
+ * 走 `--kit` 的有：paper / science / clay / collage / iso，以及 templates/own/ 下的三件套模板。
+ * 独立入口的三支（desk / editorial / mg）不走这里，走 --kit 会给出明确提示而不是「找不到 kit」。
+ *
+ * 外壳（参数解析 / probe / 分片 / concat / 回执）在 src/entry-kit.mjs；
+ * 本文件只留「按 --kit 选 renderer」这件事，以及带声明式时间与关键词锚点的 params 载入。
  */
 import fs from 'node:fs';
-import path from 'node:path';
 import os from 'node:os';
-import { planShards, partArgs, pumpFrames, spawnPart, concatParts, report } from './src/pipeline.mjs';
-import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
+import path from 'node:path';
+import { isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { createPaperRenderer, loadTokens } from './kits/paper/paper.mjs';
 import { createScienceRenderer } from './kits/science/science.mjs';
@@ -24,12 +26,11 @@ import { createIsoRenderer } from './kits/iso/iso.mjs';
 import { registerFonts } from './src/fonts.mjs';
 import { buildMix } from './src/audio-mix.mjs';
 import { auditTiming, normalizeTiming } from './src/temporal.mjs';
-import { checkDeterminism } from './src/determinism.mjs';
 import { REPO_ROOT, DIRS, resolveInput } from './src/root.mjs';
-
+import { parseStdArgs, handleProbeOrDeterminism, renderPart, runShards } from './src/entry-kit.mjs';
 
 /**
- * --kit 解析：science / paper 是内置专用适配器；其余视为模板名（templates/own/<name>）
+ * --kit 解析：内置五支走专用适配器；其余视为模板名（templates/own/<name>）
  * 或直接的 src 目录。通用路径要求三件套 kit.js / layouts.js / stage.js。
  */
 function kitSpec(kit) {
@@ -74,49 +75,20 @@ function kitSpec(kit) {
   return spec;
 }
 
-/** 默认 worker 数：每 worker 约吃 2 核（node 进程 + ffmpeg 子进程），上限 32 下限 4。
- *  实测：30 核 M5 用 16 最快（5.6s vs 8 worker 6.7s）；64 核 Xeon 用 32 最快（19.4s vs 22.0s）。
- *  代价是分片变多、体积略增约 5%（mpegts 分片边界更多）。 */
-function defaultWorkers() {
-  return Math.min(32, Math.max(4, Math.floor(os.cpus().length / 2)));
-}
-
-function parseArgs(argv) {
-  const get = (k, d) => { const i = argv.indexOf('--' + k); return i >= 0 && argv[i + 1] ? argv[i + 1] : d; };
-  return {
-    kit: get('kit', 'paper'),
-    params: resolveInput(get('params', 'kits/paper/presets/v8t.json')),
-    audio: resolveInput(get('audio', null), false),
-    out: path.resolve(get('out', 'out/kit.mp4')),
-    workers: Math.max(1, Number(get('workers', defaultWorkers()))),
-    fps: get('fps', null),
-    crf: String(get('crf', 20)),
-    jpeg: Number(get('jpeg', 94)),
-    preset: get('preset', 'veryfast'),
-    avatar: resolveInput(get('avatar', 'edits/assets/avatar.png'), false),
-    theme: get('theme', null),
-    transition: get('transition', 'cut'),
-    transitionDur: Number(get('transition-dur', 0.26)),
-    // 默认 raw：中间不再出 JPEG（少一次有损编码，同等 CRF 下体积小 6%），实测也略快。
-    // --pipe jpeg 保留给需要"中间帧可回放/体积小"的场合。
-    pipe: get('pipe', 'raw'),
-    x264Threads: get('x264-threads', '1'),   // 每个 worker 一个编码线程：8 路时避免线程超订
-    probe: get('probe', null),
-    at: Number(get('at', 2.5)),
-    // --check-determinism [auto|t1,t2,t3]：不带值时 auto（片长的 25/50/75%）。
-    // 不能复用 get()：它会把后面的 --kit 当成取值，于是「--check-determinism --kit paper」静默变成 spec='--kit'。
-    determinism: (() => {
-      const i = argv.indexOf('--check-determinism');
-      if (i < 0) return null;
-      const v = argv[i + 1];
-      return v && !v.startsWith('--') ? v : 'auto';
-    })(),
-  };
-}
-
-const A = parseArgs(process.argv.slice(2));
-
-
+const A = parseStdArgs(process.argv.slice(2), {
+  params: 'kits/paper/presets/v8t.json',
+  out: 'out/kit.mp4',
+});
+// 本支独有的开关（不放进 parseStdArgs：其它入口没有这些概念）
+A.kit = A.get('kit', 'paper');
+A.avatar = resolveInput(A.get('avatar', 'edits/assets/avatar.png'), false);
+A.theme = A.get('theme', null);
+A.transition = A.get('transition', 'cut');
+A.transitionDur = Number(A.get('transition-dur', 0.26));
+// 默认 raw：中间不再出 JPEG（少一次有损编码，同等 CRF 下体积小 6%），实测也略快。
+// --pipe jpeg 保留给需要"中间帧可回放/体积小"的场合。
+A.pipe = A.get('pipe', 'raw');
+A.x264Threads = A.get('x264-threads', '1'); // 每个 worker 一个编码线程：8 路时避免线程超订
 
 /**
  * 主题：只换 palette（色），不动任何几何——几何是 paper-perspective 的测量值，改了就不是复刻了。
@@ -178,21 +150,22 @@ async function loadAvatar(p) {
   try { return await loadImage(abs); } catch { return null; }
 }
 
-if (!isMainThread) {
-  const { start, end, part, params, crf, jpeg, preset, tokensPath, fps, transition, transitionDur, palette, pipe, x264Threads, kit, brand, subtitle, theme, fadeOutSeconds, width, height } = workerData;
-  const W = Number(width) || 1920;
-  const H = Number(height) || 1080;
-  registerFonts(DIRS.fonts);
-  // fps 必须由主线程显式传入：params 里常是 24，CLI 的 --fps 60 只改主线程会导致
-  // worker 按 24fps 计时（帧号/时间轴错位、成片被截短）。
-  const P = loadParams(params, fps, kit);
-  const avatar = await loadAvatar(workerData.avatar);
+/**
+ * 唯一的一处 renderer 构造。
+ * 原先 worker 与 probe 各写了一份，参数还不一样（probe 少了 transition/tokens），
+ * 导致「probe 出来的单帧」不代表成片。合成一处后两者天然一致。
+ */
+async function buildRenderer({ P, kit, W, H, palette, transition, transitionDur, tokensPath, avatar, brand, subtitle, theme, fadeOutSeconds }) {
+  const spec = kitSpec(kit);
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext('2d');
-  const spec = kitSpec(kit);
   // content 是「与时间轴无关的内容块」（歌词/关键词/纸条这类）。
   // 不显式透传的话，通用宿主只拿到 scenes，模板会静默变成"有画面没文字"。
-  const stageContent = { scenes: P.scenes, captions: P.captions, media: P.media, content: P.content || null, lyricStyle: P.lyricStyle || null, brand, subtitle, theme, fadeInSeconds: P.fadeInSeconds, fadeOutSeconds };
+  const stageContent = {
+    scenes: P.scenes, captions: P.captions, media: P.media,
+    content: P.content || null, lyricStyle: P.lyricStyle || null,
+    brand, subtitle, theme, fadeInSeconds: P.fadeInSeconds, fadeOutSeconds,
+  };
   const r = spec.kind === 'science'
     ? createScienceRenderer({ canvas, ctx, width: W, height: H, fps: P.fps, brand, subtitle, theme, fadeOutSeconds })
     : spec.kind === 'paper'
@@ -200,20 +173,36 @@ if (!isMainThread) {
       : spec.kind === 'clay'
         ? createClayRenderer({ canvas, ctx, width: W, height: H, subtitle, brand })
         : spec.kind === 'collage'
-        ? createCollageRenderer({ canvas, ctx, width: W, height: H, fps: P.fps })
-        : spec.kind === 'iso'
-        ? createIsoRenderer({ canvas, ctx, width: W, height: H, fps: P.fps })
-        : createWebCanvasRenderer({ srcDir: spec.srcDir, templateDir: spec.templateDir, canvas, ctx, width: W, height: H });
+          ? createCollageRenderer({ canvas, ctx, width: W, height: H, fps: P.fps })
+          : spec.kind === 'iso'
+            ? createIsoRenderer({ canvas, ctx, width: W, height: H, fps: P.fps })
+            : createWebCanvasRenderer({ srcDir: spec.srcDir, templateDir: spec.templateDir, canvas, ctx, width: W, height: H });
   r.setContent(spec.kind === 'paper' ? { scenes: P.scenes, captions: P.captions, avatar } : stageContent);
   if (spec.kind === 'science' || spec.kind === 'webcanvas' || spec.kind === 'collage' || spec.kind === 'iso') await r.ready();
+  return { canvas, r, spec };
+}
 
-  const ff = spawnPart(partArgs({
-    pipe, fps: P.fps, width: W, height: H, crf, preset, jpeg, x264Threads, part,
-  }));
-  await pumpFrames({ renderer: r, canvas, fps: P.fps, start, end, ff, pipe, jpeg });
-  parentPort.postMessage({ ok: true, frames: end - start });
+if (!isMainThread) {
+  const w = workerData;
+  const W = Number(w.width) || 1920;
+  const H = Number(w.height) || 1080;
+  registerFonts(DIRS.fonts);
+  // fps 必须由主线程显式传入：params 里常是 24，CLI 的 --fps 60 只改主线程会导致
+  // worker 按 24fps 计时（帧号/时间轴错位、成片被截短）。
+  const P = loadParams(w.params, w.fps, w.kit);
+  const { canvas, r } = await buildRenderer({
+    P, kit: w.kit, W, H, palette: w.palette,
+    transition: w.transition, transitionDur: w.transitionDur, tokensPath: w.tokensPath,
+    avatar: await loadAvatar(w.avatar),
+    brand: w.brand, subtitle: w.subtitle, theme: w.theme, fadeOutSeconds: w.fadeOutSeconds,
+  });
+  await renderPart({
+    renderer: r, canvas, P, pipe: w.pipe || 'raw',
+    crf: w.crf, preset: w.preset, jpeg: w.jpeg, x264Threads: w.x264Threads,
+    start: w.start, end: w.end, part: w.part, width: W, height: H,
+  });
+  parentPort.postMessage({ ok: true, frames: w.end - w.start });
 } else {
-  const t0 = Date.now();
   registerFonts(DIRS.fonts);
   // loadParams 会展开声明式时间与关键词锚点。锚点引用的词不在表里、或落点越出本段，
   // 都会在这里抛——必须给人话 + 退出码 2，而不是让 Node 把堆栈甩出来（退出码 1 会被
@@ -242,51 +231,25 @@ if (!isMainThread) {
     }
   }
 
-  if (A.probe || A.determinism) {
-    const avatar = await loadAvatar(A.avatar);
-    const SPEC = kitSpec(A.kit);
-    const OUT_W = Number(P.width || SPEC.width || 1920);
-    const OUT_H = Number(P.height || SPEC.height || 1080);
-    const canvas = createCanvas(OUT_W, OUT_H);
-    const r0 = canvas.getContext('2d');
-    const spec = SPEC;
-    const probeContent = { scenes: P.scenes, captions: P.captions, media: P.media, content: P.content || null, lyricStyle: P.lyricStyle || null, brand: P.brand, subtitle: P.subtitle, theme: P.theme, fadeInSeconds: P.fadeInSeconds, fadeOutSeconds: P.fadeOutSeconds };
-    const r = spec.kind === 'science'
-      ? createScienceRenderer({ canvas, ctx: r0, width: OUT_W, height: OUT_H, brand: P.brand, subtitle: P.subtitle, theme: P.theme, fadeOutSeconds: P.fadeOutSeconds })
-      : spec.kind === 'paper'
-        ? createPaperRenderer({ ctx: r0, palette: PALETTE })
-        : spec.kind === 'clay'
-          ? createClayRenderer({ canvas, ctx: r0, width: OUT_W, height: OUT_H, subtitle: P.subtitle, brand: P.brand })
-          : spec.kind === 'collage'
-          ? createCollageRenderer({ canvas, ctx: r0, width: OUT_W, height: OUT_H, fps: P.fps })
-          : spec.kind === 'iso'
-          ? createIsoRenderer({ ctx: r0, width: OUT_W, height: OUT_H, fps: P.fps })
-          : createWebCanvasRenderer({ srcDir: spec.srcDir, templateDir: spec.templateDir, canvas, ctx: r0, width: OUT_W, height: OUT_H });
-    r.setContent(spec.kind === 'paper' ? { scenes: P.scenes, captions: P.captions, avatar } : probeContent);
-    if (spec.kind === 'science' || spec.kind === 'webcanvas' || spec.kind === 'collage' || spec.kind === 'iso') await r.ready();
-    if (A.determinism) {
-      const code = checkDeterminism({
-        renderer: r, ctx: r0, width: OUT_W, height: OUT_H,
-        duration: Number(P.durationSeconds || P.frames / P.fps || 0),
-        spec: A.determinism,
-        label: `${A.kit} · ${path.basename(A.params)} · ${OUT_W}×${OUT_H}`,
-      });
-      process.exit(code);
-    }
-    r.renderFrame(A.at);
-    fs.writeFileSync(A.probe, canvas.toBuffer('image/png'));
-    console.log('probe →', A.probe, `${P.frames} 帧计划`);
-    process.exit(0);
-  }
-
   const SPEC = kitSpec(A.kit);
   // params 显式声明 > 模板 manifest > 1920×1080
-  const OUT_W = Number(P.width || SPEC.width || 1920);
-  const OUT_H = Number(P.height || SPEC.height || 1080);
+  const W = Number(P.width || SPEC.width || 1920);
+  const H = Number(P.height || SPEC.height || 1080);
+
+  await handleProbeOrDeterminism({
+    A, P,
+    makeRenderer: async () => buildRenderer({
+      P, kit: A.kit, W, H, palette: PALETTE,
+      transition: A.transition, transitionDur: A.transitionDur,
+      avatar: await loadAvatar(A.avatar),
+      brand: P.brand, subtitle: P.subtitle, theme: P.theme, fadeOutSeconds: P.fadeOutSeconds,
+    }),
+    width: W, height: H,
+    label: `${A.kit} · ${path.basename(A.params)} · ${W}×${H}`,
+  });
 
   // 音频：params.audio 有事件轨/配乐时先混一条，再交给 concatParts。
   // 优先级：--audio（命令行显式指定）> params.audio > 无音轨。
-  let audioPath = A.audio;
   if (!A.audio && P.audio) {
     const mixDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mixout-'));
     const mixed = buildMix({
@@ -299,32 +262,21 @@ if (!isMainThread) {
       musicGain: P.audio.musicGain,
     });
     if (mixed) {
-      audioPath = mixed;
+      A.audio = mixed;
       console.log(`  音效事件 ${(P.audio.cues || []).length} 条 · 混音 → ${path.basename(mixed)}`);
     }
   }
 
-  const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'skia-kit-'));
-  const segs = planShards(P.frames, A.workers, TMP);
-  await Promise.all(segs.map((seg) => new Promise((resolve, reject) => {
-    const w = new Worker(new URL(import.meta.url), {
-      workerData: { start: seg.s, end: seg.e, part: seg.part, params: A.params, fps: P.fps,
-        width: OUT_W, height: OUT_H,
-        transition: A.transition, transitionDur: A.transitionDur,
-        avatar: A.avatar, crf: A.crf, jpeg: A.jpeg, preset: A.preset, palette: PALETTE,
-        pipe: A.pipe, x264Threads: A.x264Threads, kit: A.kit,
-        brand: P.brand || null, subtitle: P.subtitle || null, theme: P.theme || null,
-        fadeOutSeconds: P.fadeOutSeconds },
-      resourceLimits: { maxOldGenerationSizeMb: 512 },
-    });
-    w.once('message', (m) => (m && m.ok ? resolve(m) : reject(new Error(m && m.error))));
-    w.once('error', reject);
-  })));
-
-  concatParts({
-    parts: segs.map((s) => s.part), tmpDir: TMP, out: A.out,
-    audio: audioPath, fps: P.fps, frames: P.frames,
+  await runShards({
+    entryUrl: new URL(import.meta.url), P, A, width: W, height: H,
+    pipe: A.pipe,
+    workerData: {
+      transition: A.transition, transitionDur: A.transitionDur,
+      avatar: A.avatar, palette: PALETTE,
+      x264Threads: A.x264Threads, kit: A.kit,
+      brand: P.brand || null, subtitle: P.subtitle || null,
+      theme: P.theme || null, fadeOutSeconds: P.fadeOutSeconds,
+    },
+    tmpPrefix: 'skia-kit',
   });
-  fs.rmSync(TMP, { recursive: true, force: true });
-  report({ out: A.out, frames: P.frames, fps: P.fps, startedAt: t0, workers: A.workers });
 }

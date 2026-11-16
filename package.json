@@ -46,7 +46,9 @@
     "intake:selftest": "node tools/intake-selftest.mjs",
     "intake:apply": "node tools/intake-apply.mjs",
     "intake:apply:selftest": "node tools/intake-apply-selftest.mjs",
-    "intake:copy": "node tools/intake-copy.mjs"
+    "intake:copy": "node tools/intake-copy.mjs",
+    "arch": "node tools/check-arch.mjs",
+    "arch:selftest": "node tools/check-arch.mjs --self-test"
   },
   "dependencies": {
     "@napi-rs/canvas": "^1.1.0"

@@ -201,7 +201,7 @@ console.log(r.output.frames, r.timings.framesPerSecond);
 ## 与 CLI 的关系
 
 ```
-api/index.mjs        ← 唯一的业务实现
+api/index.mjs        ← 唯一对外契约入口（实现见 src/pipeline.mjs + kits/*）
   ├─ api/cli.mjs     ← 宿主 1：命令行（本仓默认）
   ├─ api/kits/*.mjs  ← 每支一个 adapter：把各自 CLI 包成契约（目录自动发现）
   ├─ mcp/server.mjs  ← 宿主 2：Streamable HTTP MCP
@@ -224,6 +224,9 @@ api/index.mjs        ← 唯一的业务实现
    字段拼错仍可能静默忽略。
 3. **各支走子进程**。为的是隔离与不动实现；实测进程启动约 70ms（`render` 6.37s vs 端到端 6.5s）。
    若将来要省，把 `_runner.mjs` 的 spawn 换成 import 即可，契约不变。
+   注意这里的含义：**api/ 是契约层，不是实现所在地** —— 它 spawn 的 `render.mjs` / `kits/*/render.mjs`
+   才是出片实现。所以「新增一支版式」既要写 `api/kits/<id>.mjs`（契约），也要写实现入口；
+   两个都写对才算接完，`node tools/check-arch.mjs` 会同时校验这两半。
 4. **overrides 白名单是硬编码**。新增可覆盖的超参要同时改 `contract.mjs` 的 `ALLOWED_OVERRIDES`，
    否则会被拒——这是刻意的，防止内容与超参混在同一个字段里。
 5. **job 文件不会自动清理**。`out/jobs/` 会一直累积；`out/` 整体可删，删了之后旧 jobId 查询会报

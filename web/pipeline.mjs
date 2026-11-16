@@ -110,10 +110,12 @@ if (params.figureGender) {
 // ── 3. 出片 ────────────────────────────────────────────────────────
 stage('render', 55, '渲染画面', 82);
 const rawMp4 = path.join(DIR, 'raw.mp4');
-const rd = spawnSync('node', ['render.mjs', '--kit', 'science', '--params', voPreset,
+// 走契约层（api/cli.mjs）而不是内部入口 render.mjs：宿主只认 API，
+// 将来换实现或换宿主时这里一行都不用改。多一层进程约 70ms，换的是可替换性。
+const rd = spawnSync('node', ['api/cli.mjs', 'render', '--kit', 'science', '--params', voPreset,
   '--audio', wav, '--out', rawMp4, '--fps', '30', '--workers', '8'], { cwd: REPO_ROOT, encoding: 'utf8' });
 log('render rc=' + rd.status + '\n' + (rd.stdout || '') + (rd.stderr || ''));
-if (rd.status !== 0 || !fs.existsSync(rawMp4)) fail('render', rd.stderr || rd.stdout || 'render.mjs 失败');
+if (rd.status !== 0 || !fs.existsSync(rawMp4)) fail('render', rd.stderr || rd.stdout || '出片失败（契约层 api/cli.mjs，详见 render 日志）');
 
 // ── 4. 配乐（失败不阻断，客户至少拿到无 BGM 版） ──────────────────────
 let final = rawMp4;

@@ -110,7 +110,8 @@ for (const r of todo) {
       execFileSync('bash', [r.make], { cwd: r.dir, stdio: 'pipe' });
     } else {
       // 走已生成的 params + 混音，只重渲
-      execFileSync('node', [path.join(ROOT, 'render.mjs'), '--kit', 'paper',
+      // 走契约层（api/cli.mjs）：批量出片是用户路径，不该绕过 API
+      execFileSync('node', [path.join(ROOT, 'api', 'cli.mjs'), 'render', '--kit', 'paper',
         '--params', r.chain, '--audio', r.mix, '--out', r.out], { cwd: ROOT, stdio: 'pipe' });
     }
     const s = ((Date.now() - t0) / 1000).toFixed(1);

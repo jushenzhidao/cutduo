@@ -1,0 +1,11 @@
+P3 baseline (2026-11-16, head 4b38cbf)
+C1 node tools/check-arch.mjs --strict
+  摘豁免后 exit=1: FAIL I1 单实现 1 个出片入口没复用 src/pipeline.mjs: kits/editorial/canvas-editorial.mjs
+  恢复豁免后 exit=0（说明豁免条目是它唯一的挡箭牌）
+C2 probe md5
+  at=2  88ec1f9ee35176b4ce8d0b759ee6361a
+  at=12 acae278431ed0658484960021655f5a3
+  at=24 a078ea4cd431f1976d600f4fd7beafbd
+  at=36 1ec61ed5625c32d8ecc090f7745fc88e
+C3 encodeRange(0,30) -> out/arch/base/enc-30.ts
+  bytes=120132 md5=29d1b26f6cd28d60a55c2436a20c63f8

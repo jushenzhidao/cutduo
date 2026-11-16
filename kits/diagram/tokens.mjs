@@ -60,7 +60,7 @@ export const FONTS = {
   black: '"NotoSC Black", "PingFang SC", "Hiragino Sans GB", sans-serif',
   med: '"NotoSC Medium", "PingFang SC", "Hiragino Sans GB", sans-serif',
   reg: '"NotoSC Regular", "PingFang SC", "Hiragino Sans GB", sans-serif',
-  mono: '"JetBrainsMono-Regular", Menlo, monospace',
+  mono: '"JBMono", Menlo, monospace',
 };
 
 /** 每个 family 的容量上限：超过就换组或拆镜头，不偷偷缩字（跟 paper 的容量门槛同一条纪律） */

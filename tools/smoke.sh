@@ -14,9 +14,12 @@ OUT=out/smoke
 mkdir -p "$OUT"
 fail=0
 
+# 一律走契约层（api/cli.mjs probe），不再直连 render.mjs / kits/*/render.mjs。
+# 理由：这一段的失败必须等于「用户走 API 会失败」。验内部入口等于验了一条用户不走的路，
+# 2026-11-16 之前就是这样——api 挂了这一段也不会红。
 probe() {
   local name=$1; shift
-  if node "$@" >"/tmp/smoke-$name.log" 2>&1; then
+  if node api/cli.mjs probe "$@" --out "$OUT/$name.png" --json >"/tmp/smoke-$name.log" 2>&1; then
     local size
     size=$(stat -f%z "$OUT/$name.png" 2>/dev/null || echo 0)
     if [ "$size" -gt 5000 ]; then
@@ -32,16 +35,16 @@ probe() {
   fi
 }
 
-probe paper     render.mjs --kit paper --params kits/paper/presets/v8t.json --probe "$OUT/paper.png" --at 3
-probe science   render.mjs --kit science --params kits/science/template/presets/demo.json --probe "$OUT/science.png" --at 3
-probe desk      kits/desk/render.mjs --params content/demo.json --probe "$OUT/desk.png"
-probe clay      render.mjs --kit clay --params kits/clay/presets/default.json --probe "$OUT/clay.png" --at 3
-probe collage   render.mjs --kit collage --params kits/collage/presets/demo.json --probe "$OUT/collage.png" --at 30
-probe editorial kits/editorial/canvas-editorial.mjs --inputs content/inputs-v6.json --probe "$OUT/editorial.png"
-probe mg        kits/mg/render.mjs --params kits/mg/params.json --probe "$OUT/mg.png" --at 3
-probe night-card render.mjs --kit night-card --params templates/own/night-card/presets/default.json --probe "$OUT/night-card.png" --at 4
-probe iso       render.mjs --kit iso --params content/iso-powerbank/params.json --probe "$OUT/iso.png" --at 8
-probe diagram   kits/diagram/render.mjs --params kits/diagram/presets/default.json --probe "$OUT/diagram.png" --at 3
+probe paper      --kit paper      --params kits/paper/presets/v8t.json --at 3
+probe science    --kit science    --params kits/science/template/presets/demo.json --at 3
+probe desk       --kit desk       --params content/demo.json --at 2.5
+probe clay       --kit clay       --params kits/clay/presets/default.json --at 3
+probe collage    --kit collage    --params kits/collage/presets/demo.json --at 30
+probe editorial  --kit editorial  --params content/inputs-v6.json --at 2.5
+probe mg         --kit mg         --params kits/mg/params.json --at 3
+probe night-card --kit night-card --params templates/own/night-card/presets/default.json --at 4
+probe iso        --kit iso        --params content/iso-powerbank/params.json --at 8
+probe diagram    --kit diagram    --params kits/diagram/presets/default.json --at 3
 
 # API 契约层：每支 kit 都要能被 api.probe 调度（子进程 + 契约校验）
 # 断言写成「能力清单 == kits/ 目录集合」，而不是写死数量 ——
@@ -135,6 +138,18 @@ if node tools/check-docs.mjs >/tmp/smoke-docs.log 2>&1; then
 else
   printf 'FAIL  %-10s 文档已漂移\n' docs
   tail -8 /tmp/smoke-docs.log | sed 's/^/        /'
+  fail=1
+fi
+
+# 架构不变量：单实现 / 单门 / 契约单向。
+# 用 --strict：这三条一旦破了就不是"风格问题"——绕门与第二份管道会让 API 回执撒谎。
+echo
+echo "── 架构 ──"
+if node tools/check-arch.mjs --strict >/tmp/smoke-arch.log 2>&1; then
+  sed -n '2,4p' /tmp/smoke-arch.log | sed 's/^  //'
+else
+  printf 'FAIL  %-10s 架构不变量被破坏\n' arch
+  sed -n '2,6p' /tmp/smoke-arch.log | sed 's/^/        /'
   fail=1
 fi
 

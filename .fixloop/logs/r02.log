@@ -1,0 +1,8 @@
+R2 TEST (2026-11-16, ALLOW_I1 已清空)
+C1 node tools/check-arch.mjs --strict → exit 0
+   PASS I1 单实现 5 个出片入口全部复用 src/pipeline.mjs
+   观察项 3 处 → 2 处（editorial 不再自己编码）
+   豁免 I1 0 条
+   node tools/check-arch.mjs --self-test → 6/6 PASS
+C4-a npm run check → exit 0（10 支 probe + API 契约 + 文档 + 架构 全绿）
+C4-b node kits/editorial/canvas-editorial.mjs --check-determinism → 全部一致（3 个时刻）

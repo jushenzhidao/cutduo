@@ -185,7 +185,7 @@ uv run python tools/check-template.py --src templates/own/my-template      # 随
 | 新模板先做接入评估 | `node tools/intake.mjs plan --source <目录或 .motion 文件>`（只读；protected / 凭据 / DOM 引擎会报阻塞） |
 | 评估后落机械动作 | `node tools/intake-apply.mjs --plan out/intake/<id>/plan.json`（dry-run 默认；`--yes` 写 adapter 或骨架） |
 | vendor 源码抽到参考目录 | `node tools/intake-copy.mjs --plan out/intake/<id>/plan.json --yes`（保留 LICENSE；排除凭据；仍要人接 adapter） |
-| 改一支片的文案/分镜 | `content/<name>.json` → `tools/build-voices.sh` → 出片 |
+| 改一支片的文案/分镜 | `content/<name>.json` → `tools/build-sync.py --tts edge` → 出片 |
 | 加一种镜头/改版式 | `kits/desk/desktop.mjs` 的 `SHOTS` → 探针帧 → `kits/desk/verify.mjs` |
 | 换壁纸/氛围层 | `kits/desk/tools/bg-providers.mjs` |
 | 调出片管线/性能 | `kits/desk/tools/render-bench.mjs`、`docs/MOTIONGIT-PLAYBOOK.md` §42–§46 |
@@ -208,8 +208,8 @@ uv run python tools/check-template.py --src templates/own/my-template      # 随
 | 入口 | `tools/setup.sh` / `tools/fetch-fonts.sh` | 首次环境：Playwright/Chromium/FFmpeg、Noto 字体 |
 | 入口 | `tools/build-template.py` / `tools/safe-unpack.py` | 打包 `.motion` / 只读安全解包 |
 | 建片 | `tools/new-film.mjs` / `tools/new-template.py` | 新片骨架 / 新模板骨架 |
-| 出片 | `tools/render-all.mjs` / `tools/render-daemon.mjs` | 批量出片 / 常驻 daemon |
-| 配音 | `tools/build-sync.py` / `tools/build-voices.sh` | 逐句 TTS + 时间轴重排 / 批量换音色 |
+| 出片 | `tools/render-all.mjs` | 批量出片（走 `api/cli.mjs`）；常驻 daemon 已归档，见 `tools/README.md` 归档区 |
+| 配音 | `tools/build-sync.py` | 逐句 TTS + 时间轴重排（批量换音色脚本已归档：依赖不存在的 `.motion` 包） |
 | 校验 | `tools/smoke.sh` / `tools/check-docs.mjs` / `tools/inventory.mjs` | 出帧冒烟 / 文档漂移 / 版式清单 |
 | 门禁 | `src/gate.mjs`（主）/ `tools/qa-gate.py`（legacy，skill 写死路径） | 交付完整性 |
 | 音频 | `tools/audio-bed.mjs` / `tools/synth-bgm.mjs` / `tools/add-bgm.mjs` | 配乐 / 代码合成 / 混入 |

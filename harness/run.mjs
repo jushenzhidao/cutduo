@@ -104,9 +104,10 @@ if (reuseVo) {
 
 // ── 3. 出片 ────────────────────────────────────────────────────────
 const mp4 = path.join(R, 'film.mp4');
-let r = run('node', ['render.mjs', '--kit', task.kit || 'science', '--params', voPath,
+// 走契约层：harness 是被评测的"用户"，它必须走用户走的那条路
+let r = run('node', ['api/cli.mjs', 'render', '--kit', task.kit || 'science', '--params', voPath,
   '--audio', wavPath, '--out', mp4, '--fps', String(task.fps || 30), '--workers', '8']);
-need(r.code === 0 && fs.existsSync(mp4), 'render.mjs 失败：' + r.err.slice(-300));
+need(r.code === 0 && fs.existsSync(mp4), '出片失败（契约层 api/cli.mjs）：' + r.err.slice(-300));
 
 if (task.bgm) {
   const bgmOut = path.join(R, 'film-bgm.mp4');

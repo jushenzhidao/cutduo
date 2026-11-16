@@ -2,69 +2,34 @@
 /**
  * desktop-kit · 一条命令出片（Skia，无浏览器）
  *
- *   node desktop-kit/render.mjs --params content/demo.json \
+ *   node kits/desk/render.mjs --params content/demo.json \
  *     --audio edits/audio-desktop.m4a --out out/desktop.mp4
  *
- * 只依赖 @napi-rs/canvas + ffmpeg。分片并行 + mpegts concat + 音轨封装。
+ * 外壳在 src/entry-kit.mjs；这里只留本支独有的：params 校验、片段的预抽帧与照片注入、
+ * presenter 贴片。字体注册统一走 src/fonts.mjs（原先从 desktop.mjs 另抽了一份，
+ * 与 mg/paper 的注册逻辑重复，且换字体要改两处）。
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import os from 'node:os';
-import { planShards, partArgs, pumpFrames, spawnPart, concatParts } from '../../src/pipeline.mjs';
-import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
+import { isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
-import { createDesktopRenderer, registerFonts, validateParams, DEFAULT_TOKENS } from './desktop.mjs';
-import { REPO_ROOT } from '../../src/root.mjs';
-import { checkDeterminism } from '../../src/determinism.mjs';
+import { createDesktopRenderer, validateParams, DEFAULT_TOKENS } from './desktop.mjs';
+import { registerFonts } from '../../src/fonts.mjs';
+import { DIRS, resolveInput } from '../../src/root.mjs';
+import { parseStdArgs, handleProbeOrDeterminism, renderPart, runShards } from '../../src/entry-kit.mjs';
 
-const ROOT = REPO_ROOT;
-const W = DEFAULT_TOKENS.width, H = DEFAULT_TOKENS.height;
+const W = DEFAULT_TOKENS.width;
+const H = DEFAULT_TOKENS.height;
 
-function resolveInput(p, mustExist = true) {
-  if (!p) return p;
-  if (path.isAbsolute(p)) return p;
-  const byCwd = path.resolve(p);
-  if (fs.existsSync(byCwd)) return byCwd;
-  const byRoot = path.join(ROOT, p);
-  if (fs.existsSync(byRoot) || !mustExist) return byRoot;
-  return byCwd;
-}
-
-/** 默认 worker 数：每 worker 约吃 2 核（node 进程 + ffmpeg 子进程），上限 32 下限 4。
- *  实测：30 核 M5 用 16 最快（5.6s vs 8 worker 6.7s）；64 核 Xeon 用 32 最快（19.4s vs 22.0s）。
- *  代价是分片变多、体积略增约 5%（mpegts 分片边界更多）。 */
-function defaultWorkers() {
-  return Math.min(32, Math.max(4, Math.floor(os.cpus().length / 2)));
-}
-
-function parseArgs(argv) {
-  const get = (k, d) => { const i = argv.indexOf('--' + k); return i >= 0 && argv[i + 1] ? argv[i + 1] : d; };
-  return {
-    params: resolveInput(get('params', 'content/demo.json')),
-    audio: resolveInput(get('audio', null), false),
-    out: path.resolve(get('out', 'out/desktop.mp4')),
-    workers: Math.max(1, Number(get('workers', defaultWorkers()))),
-    fps: get('fps', null),
-    crf: String(get('crf', 20)),
-    jpeg: Number(get('jpeg', 94)),
-    preset: get('preset', 'veryfast'),
-    presenter: resolveInput(get('presenter', null), false),
-    probe: get('probe', null),
-    // --check-determinism [auto|t1,t2,t3]：不带值时 auto
-    determinism: (() => {
-      const i = argv.indexOf('--check-determinism');
-      if (i < 0) return null;
-      const v = argv[i + 1];
-      return v && !v.startsWith('--') ? v : 'auto';
-    })(),
-    at: Number(get('at', 2.5)),
-  };
-}
-const A = parseArgs(process.argv.slice(2));
+const A = parseStdArgs(process.argv.slice(2), {
+  params: 'content/demo.json',
+  out: 'out/desktop.mp4',
+});
+const PRESENTER = resolveInput(A.get('presenter', null), false);
 
 function loadParams(file, fpsOverride) {
   const d = JSON.parse(fs.readFileSync(file, 'utf8'));
-  validateParams(d);   // 主线程与 worker 共用同一份判据，非法时间轴在出片前就失败
+  validateParams(d); // 主线程与 worker 共用同一份判据，非法时间轴在出片前就失败
   const fps = Number(fpsOverride || d.fps || 60);
   const duration = d.durationSeconds || d.shots[d.shots.length - 1].t1;
   return { ...d, fps, durationSeconds: duration, frames: Math.round(duration * fps) };
@@ -116,62 +81,35 @@ async function loadPresenter(p) {
 async function makeRenderer(P, presenter, start = 0, end = P.frames) {
   const canvas = createCanvas(W, H);
   const r = createDesktopRenderer({ ctx: canvas.getContext('2d') });
-  r.setContent({ shots: P.shots, captions: P.captions, chapters: P.chapters, brand: P.brand, presenter,
-    photos: await loadPhotos(P), clips: await loadClips(P, start / P.fps, end / P.fps) });
+  r.setContent({
+    shots: P.shots, captions: P.captions, chapters: P.chapters, brand: P.brand, presenter,
+    photos: await loadPhotos(P),
+    clips: await loadClips(P, start / P.fps, end / P.fps),
+  });
   return { canvas, r };
 }
 
 if (!isMainThread) {
   const { start, end, part, params, crf, jpeg, preset, fps, presenter } = workerData;
-  registerFonts(path.join(ROOT, 'assets/fonts'));
+  registerFonts(DIRS.fonts);
   const P = loadParams(params, fps);
   const { canvas, r } = await makeRenderer(P, await loadPresenter(presenter), start, end);
-  const ff = spawnPart(partArgs({
-    pipe: 'jpeg', fps: P.fps, width: W, height: H, crf, preset, jpeg, part,
-  }));
-  await pumpFrames({ renderer: r, canvas, fps: P.fps, start, end, ff, pipe: 'jpeg', jpeg });
+  await renderPart({ renderer: r, canvas, P, pipe: 'jpeg', crf, preset, jpeg, start, end, part, width: W, height: H });
   parentPort.postMessage({ ok: true, frames: end - start });
 } else {
-  const t0 = Date.now();
-  registerFonts(path.join(ROOT, 'assets/fonts'));
+  registerFonts(DIRS.fonts);
   const P = loadParams(A.params, A.fps);
 
-  if (A.probe || A.determinism) {
-    const { canvas, r } = await makeRenderer(P, await loadPresenter(A.presenter));
-    if (A.determinism) {
-      const code = checkDeterminism({
-        renderer: r, ctx: canvas.getContext('2d'), width: W, height: H,
-        duration: Number(P.durationSeconds || P.frames / P.fps),
-        spec: A.determinism,
-        label: `desk · ${path.basename(A.params)} · ${W}×${H}`,
-      });
-      process.exit(code);
-    }
-    r.renderFrame(A.at);
-    fs.writeFileSync(path.resolve(A.probe), canvas.toBuffer('image/png'));
-    console.log(`probe → ${A.probe}  ${P.frames} 帧计划 / ${W}x${H} @${P.fps}fps`);
-    process.exit(0);
-  }
-
-  const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'desktop-kit-'));
-  const segs = planShards(P.frames, A.workers, TMP);
-  await Promise.all(segs.map((seg) => new Promise((resolve, reject) => {
-    const w = new Worker(new URL(import.meta.url), {
-      workerData: { start: seg.s, end: seg.e, part: seg.part, params: A.params, fps: P.fps,
-        presenter: A.presenter, crf: A.crf, jpeg: A.jpeg, preset: A.preset },
-      resourceLimits: { maxOldGenerationSizeMb: 512 },
-    });
-    w.once('message', (m) => (m && m.ok ? resolve(m) : reject(new Error(m && m.error))));
-    w.once('error', reject);
-  })));
-
-  concatParts({
-    parts: segs.map((s) => s.part), tmpDir: TMP, out: A.out,
-    audio: A.audio, fps: P.fps, frames: P.frames,
+  await handleProbeOrDeterminism({
+    A, P,
+    makeRenderer: async () => makeRenderer(P, await loadPresenter(PRESENTER)),
+    width: W, height: H,
+    label: `desk · ${path.basename(A.params)} · ${W}×${H}`,
   });
-  const dur = (P.frames / P.fps).toFixed(3);
-  fs.rmSync(TMP, { recursive: true, force: true });
-  const size = (fs.statSync(A.out).size / 1048576).toFixed(2);
-  console.log(`✓ ${A.out}`);
-  console.log(`  ${P.frames} 帧 / ${dur}s / ${P.fps}fps / ${W}x${H} / ${size}MB / ${((Date.now() - t0) / 1000).toFixed(1)}s / ${A.workers} workers`);
+
+  await runShards({
+    entryUrl: new URL(import.meta.url), P, A, width: W, height: H,
+    workerData: { presenter: PRESENTER },
+    tmpPrefix: 'desktop-kit',
+  });
 }

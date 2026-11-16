@@ -60,7 +60,10 @@ echo '{"kit":"paper","preset":"v8t"}' | node api/cli.mjs render --stdin --json
 
 ## 3. 硬规则
 
-1. **`api/` 是唯一业务实现**。CLI、MCP、web、harness 都只是宿主；不要在各宿主里复制业务逻辑。
+1. **`api/` 是唯一对外契约层**。CLI、MCP、web、harness 都只是宿主；不要在各宿主里复制业务逻辑。
+   渲染实现分布在 `src/pipeline.mjs`（帧循环 / 编码 / 封装）与 `kits/*/`（各版式）；各支走子进程是
+   为了隔离，**不代表 api 是实现所在地**。别把「有 api 目录」当成 API-first——判据是
+   `node tools/check-arch.mjs`：有没有第二条绕过 api 的路、有没有第二个自己编码的入口。
 2. **注册表自动发现**：`api/kits/*.mjs` 文件名必须等于 `capability.id`；写坏会在 API 启动时直接抛错。
 3. **新增 kit 后必须跑 `npm run inv`**：`docs/inventory.json` / `.md` 是生成的，不生成就过期。
 4. **`refs/` 不入库、不外传**（vendor 模板含账户 Key）；`out/` 可整体删除。
