@@ -1,0 +1,6 @@
+# round 7 · 任务 B（音效）· 手动判据，非脚本
+B1 PASS  sfx-probe.py 输出事件表，切点 4/4 命中（−9/+45/−2/+22ms）
+B2 PASS  docs/jimeng/02-音效-2026-11-16.md 8 节，含实测表与三条不可平移
+B3 PASS  sfx-synth --mix → 15.000s / 有音频流 / 1920x1080
+B4 PASS  越界 cue t=20 → exit=2（"这个音效永远听不到"）
+B5 PASS  gate → LUFS −15.9 / 450 帧 / PASS（修掉 −0.3dBTP 削波风险后）
