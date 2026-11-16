@@ -133,11 +133,24 @@ export function cliAdapter(capability, spec) {
       });
 
       if (r.code !== 0) {
-        throw new ApiError(CODE.RENDER_FAILED, `kit ${capability.id} 渲染失败（退出码 ${r.code}${r.signal ? ` / ${r.signal}` : ''}）`, {
-          hint: 'stderr 尾部见 details；常见原因是参数结构与 schema 不符、素材缺失、ffmpeg 不在 PATH',
-          fix: `先跑 api.validate({ kit: "${capability.id}", paramsPath }) 看参数问题；参数没问题再跑 bash tools/smoke.sh`,
-          details: { stderr: tail(r.stderr), args },
-        });
+        // 各入口的既有约定：参数错一律 exit 2（render.mjs 注释写过「退出码 1 会被上层当成崩溃」）。
+        // 尊重这个约定 —— 2 映射成 PARAMS_INVALID 并带上子进程的原始错误体，
+        // 否则「参数不成立」和「渲染崩了」在回执里长得一样，调用方无从下手。
+        const isParamErr = r.code === 2;
+        const stderrTail = tail(r.stderr);
+        throw new ApiError(
+          isParamErr ? CODE.PARAMS_INVALID : CODE.RENDER_FAILED,
+          isParamErr
+            ? `kit ${capability.id} 的参数不成立（入口以退出码 2 拒绝）`
+            : `kit ${capability.id} 渲染失败（退出码 ${r.code}${r.signal ? ` / ${r.signal}` : ''}）`,
+          {
+            hint: isParamErr
+              ? '入口在出片前做了 schema 之外的校验（例如某段型需要外部数据文件），详情见 details.stderr'
+              : 'stderr 尾部见 details；常见原因是素材缺失、ffmpeg 不在 PATH、内存不足',
+            fix: `先跑 api.validate({ kit: "${capability.id}", paramsPath }) 看参数问题；参数没问题再跑 bash tools/smoke.sh`,
+            details: { stderr: stderrTail, args },
+          },
+        );
       }
       return { args };
     },

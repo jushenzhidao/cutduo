@@ -53,6 +53,32 @@ function main() {
   // 字级时间戳既可由 CLI --timing 指定，也可写进 params.timing ——
   // 后者是 API 调用方唯一能走的路（请求形状里没有 timing 字段）。
   const timingPath = arg('timing', params.timing || '');
+
+  // timeline / glyph 这两类段型的画面**完全由字级时刻驱动**（timeline 的自证图要求
+  // 「图上亮到哪儿」等于「嘴里说到哪儿」）。没有 timing 时它们无法成立。
+  // 在这里拦，而不是让 drawTimeline 渲到一半抛 CapacityError —— 那时前面的帧已经编码，
+  // 而且 CLI 退出码会变成 1，被上层当成"崩溃"而不是"参数错"。
+  //
+  // 有意不做的事：**不拿假数据兜底**。造一个均分时间轴能让片子出得来，但那张自证图
+  // 就变成了伪证 —— 它正是用来说"每个数的来源可查"的。
+  if (!timingPath) {
+    const needTiming = segments
+      .map((s, i) => ({ i, family: s.family }))
+      .filter((x) => x.family === 'timeline' || x.family === 'glyph');
+    if (needTiming.length) {
+      const fams = [...new Set(needTiming.map((x) => x.family))];
+      console.error(JSON.stringify({
+        ok: false,
+        error: 'NEEDS_TIMING',
+        message: `段型 ${fams.join(' / ')} 需要字级时间戳，当前没有 timing`,
+        segments: needTiming,
+        fix: '给 --timing <file>，或写进 params.timing（API 调用方只能走后者，请求形状里没有 timing 字段）；'
+          + '生成方法见 docs/字级时间戳-2026-11-15.md',
+      }, null, 2));
+      process.exit(2);
+    }
+  }
+
   if (timingPath) {
     const timing = JSON.parse(fs.readFileSync(resolveInput(timingPath), 'utf8'));
     const byIndex = new Map((timing.segments ?? []).map((s) => [s.index, s]));
