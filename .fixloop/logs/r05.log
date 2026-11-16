@@ -1,0 +1,8 @@
+# round 5 · 2026-11-16T09:06:11.402Z
+FAIL	A2	默认参数 6 帧与基线逐帧一致	1.9s 渲染失败
+FAIL	A4	不带 --params 用内置默认	exit=1
+FAIL	A5	单帧模式 --at --out 输出 PNG	exit=1 magic=PNG
+FAIL	A1	--params <alt> 生效且产物不同于默认	exit=1
+PASS	A3	非法参数(空对象) 必须非零退出	exit=1（期望≠0，理由：缺 scenes）
+PASS	A3	非法参数(未知 scene id) 必须非零退出	exit=1（期望≠0，理由：未知 id）
+PASS	A3	非法参数(时刻越界) 必须非零退出	exit=1（期望≠0，理由：越界）

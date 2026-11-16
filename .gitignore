@@ -74,9 +74,15 @@ content/*/params*.json
 !content/iso-motion/params.json
 !content/iso-iphone-deep/params.json
 !content/iso-mug/params.json
+# jimeng-showreel 的 params 是**手写源参数**（渲染器的输入），不是 build-sync 派生的，
+# 必须入库；否则「换题材只改 JSON」这条约定对拿不到文件的人不成立。
+!content/jimeng-showreel/params.json
 content/*/audio/
 content/*/ocr.txt
 
 # vendor/lemo：内容母本在 content/，页面目录里的副本不留
 vendor/lemo/styles/*/demo/content-zh.json
 vendor/lemo/styles/*/demo/durs-zh.json
+
+# fix-loop 的临时渲染产物（基线与留痕要入库，图片不要）
+/.fixloop/out/

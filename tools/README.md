@@ -60,6 +60,9 @@
 | `circle-prop.mjs` | 方图裁成圆形视窗道具（带 alpha） |
 | `reframe.mjs` | 横屏 → 竖屏（模糊填充，不裁内容） |
 | `apply-camera.mjs` | 按「拍」批量编排段级运镜 |
+| `hud-overlay.mjs` | 制片监视器 HUD 叠层（四角信息 + 进度轨 + 时间码），来源见 `docs/jimeng/` |
+| `jimeng-demo.mjs` | 即梦语法的验证片（六镜各换信息轴）：`out/jimeng-showreel.mp4` 由它出帧 |
+| `jimeng-demo-check.mjs` | 上者的判据（fix-loop）：帧 md5 对齐基线 / `--params` 生效 / 非法参数必报错 |
 
 ## 模板与格式
 
