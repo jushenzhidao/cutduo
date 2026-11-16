@@ -1,5 +1,24 @@
 [
   {
+    "sc": "scatter",
+    "path": [
+      "words"
+    ],
+    "size": 54,
+    "maxW": 240,
+    "what": "漂浮词"
+  },
+  {
+    "sc": "gather",
+    "path": [
+      "eyebrow",
+      1
+    ],
+    "size": 23,
+    "maxW": 790,
+    "what": "eyebrow 短语"
+  },
+  {
     "sc": "gather",
     "path": [
       "title",
@@ -139,6 +158,16 @@
   {
     "sc": "recall",
     "path": [
+      "eyebrow",
+      1
+    ],
+    "size": 23,
+    "maxW": 790,
+    "what": "eyebrow 短语"
+  },
+  {
+    "sc": "recall",
+    "path": [
       "title"
     ],
     "size": 96,
@@ -184,6 +213,15 @@
   {
     "sc": "arrange",
     "path": [
+      "tags"
+    ],
+    "size": 27,
+    "maxW": 264,
+    "what": "标签"
+  },
+  {
+    "sc": "arrange",
+    "path": [
       "note",
       0
     ],
@@ -220,6 +258,16 @@
     "size": 21,
     "maxW": 368,
     "what": "中心卡副文"
+  },
+  {
+    "sc": "route",
+    "path": [
+      "eyebrow",
+      1
+    ],
+    "size": 23,
+    "maxW": 790,
+    "what": "eyebrow 短语"
   },
   {
     "sc": "route",
@@ -267,5 +315,14 @@
     "size": 28,
     "maxW": 200,
     "what": "按钮文字"
+  },
+  {
+    "sc": "lockup",
+    "path": [
+      "platforms"
+    ],
+    "size": 21,
+    "maxW": 1580,
+    "what": "平台清单"
   }
 ]

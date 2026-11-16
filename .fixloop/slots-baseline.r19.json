@@ -1,0 +1,271 @@
+[
+  {
+    "sc": "gather",
+    "path": [
+      "title",
+      0
+    ],
+    "size": 104,
+    "maxW": 800,
+    "what": "标题第一行"
+  },
+  {
+    "sc": "gather",
+    "path": [
+      "title",
+      1
+    ],
+    "size": 104,
+    "maxW": 800,
+    "what": "标题第二行"
+  },
+  {
+    "sc": "gather",
+    "path": [
+      "sub",
+      0
+    ],
+    "size": 30,
+    "maxW": 800,
+    "what": "副文案"
+  },
+  {
+    "sc": "gather",
+    "path": [
+      "sub",
+      1
+    ],
+    "size": 30,
+    "maxW": 800,
+    "what": "副文案第二行"
+  },
+  {
+    "sc": "gather",
+    "path": [
+      "cta"
+    ],
+    "size": 30,
+    "maxW": 128,
+    "what": "按钮文字"
+  },
+  {
+    "sc": "gather",
+    "path": [
+      "cards",
+      0,
+      "title"
+    ],
+    "size": 34,
+    "maxW": 288,
+    "what": "第一张卡标题"
+  },
+  {
+    "sc": "gather",
+    "path": [
+      "cards",
+      0,
+      "items"
+    ],
+    "size": 22,
+    "maxW": 262,
+    "what": "卡内清单项"
+  },
+  {
+    "sc": "gather",
+    "path": [
+      "cards",
+      1,
+      "lines"
+    ],
+    "size": 19,
+    "maxW": 274,
+    "what": "JSON 行"
+  },
+  {
+    "sc": "gather",
+    "path": [
+      "cards",
+      2,
+      "label"
+    ],
+    "size": 20,
+    "maxW": 252,
+    "what": "数据标签"
+  },
+  {
+    "sc": "gather",
+    "path": [
+      "cards",
+      2,
+      "value"
+    ],
+    "size": 58,
+    "maxW": 200,
+    "what": "主数值"
+  },
+  {
+    "sc": "gather",
+    "path": [
+      "cards",
+      3,
+      "lines"
+    ],
+    "size": 21,
+    "maxW": 226,
+    "what": "门禁行"
+  },
+  {
+    "sc": "gather",
+    "path": [
+      "cards",
+      4,
+      "text"
+    ],
+    "size": 26,
+    "maxW": 282,
+    "what": "统计条正文"
+  },
+  {
+    "sc": "gather",
+    "path": [
+      "cards",
+      4,
+      "sub"
+    ],
+    "size": 19,
+    "maxW": 282,
+    "what": "统计条副文"
+  },
+  {
+    "sc": "recall",
+    "path": [
+      "title"
+    ],
+    "size": 96,
+    "maxW": 1580,
+    "what": "整行标题（两段合计）"
+  },
+  {
+    "sc": "recall",
+    "path": [
+      "cmd"
+    ],
+    "size": 31,
+    "maxW": 918,
+    "what": "命令行"
+  },
+  {
+    "sc": "recall",
+    "path": [
+      "count"
+    ],
+    "size": 21,
+    "maxW": 900,
+    "what": "计数行"
+  },
+  {
+    "sc": "recall",
+    "path": [
+      "rows"
+    ],
+    "size": 30,
+    "maxW": 874,
+    "what": "结果行标题"
+  },
+  {
+    "sc": "recall",
+    "path": [
+      "rows"
+    ],
+    "size": 20,
+    "maxW": 874,
+    "what": "结果行副文"
+  },
+  {
+    "sc": "arrange",
+    "path": [
+      "note",
+      0
+    ],
+    "size": 28,
+    "maxW": 1400,
+    "what": "浮层正文"
+  },
+  {
+    "sc": "arrange",
+    "path": [
+      "note",
+      1
+    ],
+    "size": 20,
+    "maxW": 1400,
+    "what": "浮层次行"
+  },
+  {
+    "sc": "arrange",
+    "path": [
+      "card",
+      "title"
+    ],
+    "size": 34,
+    "maxW": 368,
+    "what": "中心卡标题"
+  },
+  {
+    "sc": "arrange",
+    "path": [
+      "card",
+      "sub"
+    ],
+    "size": 21,
+    "maxW": 368,
+    "what": "中心卡副文"
+  },
+  {
+    "sc": "route",
+    "path": [
+      "lines",
+      0
+    ],
+    "size": 112,
+    "maxW": 990,
+    "what": "大字第一行"
+  },
+  {
+    "sc": "route",
+    "path": [
+      "lines",
+      1
+    ],
+    "size": 112,
+    "maxW": 990,
+    "what": "大字第二行"
+  },
+  {
+    "sc": "lockup",
+    "path": [
+      "name"
+    ],
+    "size": 86,
+    "maxW": 1200,
+    "what": "品牌名"
+  },
+  {
+    "sc": "lockup",
+    "path": [
+      "slogan"
+    ],
+    "size": 40,
+    "maxW": 1520,
+    "what": "slogan（两段合计）"
+  },
+  {
+    "sc": "lockup",
+    "path": [
+      "cta"
+    ],
+    "size": 28,
+    "maxW": 200,
+    "what": "按钮文字"
+  }
+]

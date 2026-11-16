@@ -206,9 +206,59 @@ check('E3', '容量值与改写前快照逐个相同', () => {
   const cur = JSON.parse(r.stdout);
   const key = (x) => `${x.sc}|${JSON.stringify(x.path)}`;
   const bm = new Map(base.map((x) => [key(x), x.maxW]));
-  const diff = cur.filter((x) => bm.get(key(x)) !== x.maxW).map((x) => `${x.sc}=${bm.get(key(x))}→${x.maxW}`);
-  return { ok: diff.length === 0, detail: diff.length ? diff.join(' ') : `${cur.length}/${base.length} 相同` };
+  /* 只比对快照里**已有**的槽位：新增槽位没有"改写前"的值可比，
+     把它算成"不同"会让每次扩覆盖面都误报回归。 */
+  const diff = cur
+    .filter((x) => bm.has(key(x)) && bm.get(key(x)) !== x.maxW)
+    .map((x) => `${x.sc}=${bm.get(key(x))}→${x.maxW}`);
+  const added = cur.filter((x) => !bm.has(key(x))).length;
+  return {
+    ok: diff.length === 0,
+    detail: diff.length ? diff.join(' ') : `${cur.length - added}/${base.length} 原有相同${added ? ` · 新增 ${added}` : ''}`,
+  };
 });
+
+/* F1/F3：容量覆盖面。上一轮只覆盖 27 个槽位，四类"可长文本"漏在外面——
+   eyebrow 的短语、scatter 的漂浮词、落版的平台清单、arrange 的标签。
+   漏掉的后果与已覆盖的一样：写长了穿出画面，渲完才发现。 */
+
+const REQUIRED_SLOTS = [
+  ['scatter', ['words']],
+  ['gather', ['eyebrow', 1]],
+  ['recall', ['eyebrow', 1]],
+  ['arrange', ['tags']],
+  ['route', ['eyebrow', 1]],
+  ['lockup', ['platforms']],
+];
+
+check('F1', '四类可长文本已纳入容量表', () => {
+  const r = spawnSync('node', ['tools/jimeng-demo.mjs', '--print-slots'], { cwd: ROOT, encoding: 'utf8' });
+  if (r.status !== 0) return { ok: false, detail: `--print-slots exit=${r.status}` };
+  const keys = new Set(JSON.parse(r.stdout).map((x) => `${x.sc}|${JSON.stringify(x.path)}`));
+  const miss = REQUIRED_SLOTS.filter(([sc, path]) => !keys.has(`${sc}|${JSON.stringify(path)}`));
+  return {
+    ok: miss.length === 0,
+    detail: miss.length ? `缺 ${miss.map(([sc, p]) => sc + '.' + p.join('.')).join(', ')}` : `${keys.size} 条全覆盖`,
+  };
+});
+
+const LONG_CASES = [
+  ['eyebrow 短语过长', (t) => { t.scenes.find((x) => x.id === 'gather').eyebrow[1] = 'WRITE.THE.WHOLE.FILM.AND.EVERY.SINGLE.SHOT.AND.CAPTION.IN.ONE.SENTENCE.WITH.NO.BREAKS.AT.ALL'; }, 'gather.eyebrow'],
+  ['scatter 漂浮词过长', (t) => { t.scenes.find((x) => x.id === 'scatter').words[0] = '一整个完整的分镜脚本'; }, 'scatter.words'],
+  ['落版平台清单过长', (t) => { t.scenes.find((x) => x.id === 'lockup').platforms = ['CLI', 'API', 'MCP', 'WEB', '微信', '小程序', '飞书', '企业微信', '钉钉', 'QQ', '支付宝', '抖音', 'B站', '小红书', '知乎', '微博', '快手', '淘宝', '京东', '拼多多']; }, 'lockup.platforms'],
+];
+
+for (const [i, [label, mutate]] of LONG_CASES.entries()) {
+  check('F3', `${label}必须被拒绝`, () => {
+    const base = JSON.parse(fs.readFileSync(path.join(ROOT, 'content/jimeng-showreel/params.json'), 'utf8'));
+    const bad = JSON.parse(JSON.stringify(base));
+    mutate(bad);
+    const f = path.join(ALT_OUT, `f3-${i}.json`);
+    fs.writeFileSync(f, JSON.stringify(bad, null, 2));
+    const r = render('3.9', path.join(ALT_OUT, `f3-${i}.png`), ['--params', f]);
+    return { ok: r.code !== 0, detail: `exit=${r.code}（期望≠0）` };
+  });
+}
 
 /* ────────────────────────────── 留痕 */
 

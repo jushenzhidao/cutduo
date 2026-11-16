@@ -119,6 +119,11 @@ validate(raw);
  * 看得见依据。判据 E2 强制这一点（裸数字直接 FAIL），E3 保证改写前后取值不变。
  */
 const TEXT_SLOTS = [
+  /* 漂浮词按最紧的槽位定宽：word[1] 在 x=1180，下一个词在 1420，只有 240 可用。
+     四个词等宽本来也更整齐，所以不按各自位置分别放宽。 */
+  { sc: 'scatter', path: ['words'], size: 54, fam: 'serif', maxW: 1420 - 1180, each: true, what: '漂浮词' },
+  /* eyebrow 短语：起于 170，超过画面中线（960）就不再像"小标"了 */
+  { sc: 'gather', path: ['eyebrow', 1], size: 23, fam: 'mono', maxW: 960 - 170, what: 'eyebrow 短语' },
   { sc: 'gather', path: ['title', 0], size: 104, fam: 'serif', maxW: 1010 - 170 - 40, what: '标题第一行' },
   { sc: 'gather', path: ['title', 1], size: 104, fam: 'serif', maxW: 1010 - 170 - 40, what: '标题第二行' },
   { sc: 'gather', path: ['sub', 0], size: 30, fam: 'ui', maxW: 1010 - 170 - 40, what: '副文案' },
@@ -132,20 +137,26 @@ const TEXT_SLOTS = [
   { sc: 'gather', path: ['cards', 3, 'lines'], size: 21, fam: 'mono', maxW: 300 - 24 * 2 - 26, each: true, what: '门禁行' },
   { sc: 'gather', path: ['cards', 4, 'text'], size: 26, fam: 'ui', maxW: 430 - 24 * 2 - 100, what: '统计条正文' },
   { sc: 'gather', path: ['cards', 4, 'sub'], size: 19, fam: 'ui', maxW: 430 - 24 * 2 - 100, what: '统计条副文' },
+  { sc: 'recall', path: ['eyebrow', 1], size: 23, fam: 'mono', maxW: 960 - 170, what: 'eyebrow 短语' },
   { sc: 'recall', path: ['title'], size: 96, fam: 'serif', maxW: 1920 - 170 * 2, join: true, what: '整行标题（两段合计）' },
   { sc: 'recall', path: ['cmd'], size: 31, fam: 'mono', maxW: 1120 - 62 - 140, what: '命令行' },
   { sc: 'recall', path: ['count'], size: 21, fam: 'mono', maxW: 1330 - 400 - 30, what: '计数行' },
   { sc: 'recall', path: ['rows'], size: 30, fam: 'ui', maxW: 1380 - 486 - 20, eachRow: 0, what: '结果行标题' },
   { sc: 'recall', path: ['rows'], size: 20, fam: 'mono', maxW: 1380 - 486 - 20, eachRow: 1, what: '结果行副文' },
+  /* 标签是药丸（两边各 28 内边距）。中心 1330、卡片右边 1170 ⇒ 药丸最宽 320、文字 264 */
+  { sc: 'arrange', path: ['tags'], size: 27, fam: 'ui', maxW: (1330 - 1170) * 2 - 56, each: true, what: '标签' },
   { sc: 'arrange', path: ['note', 0], size: 28, fam: 'ui', maxW: 1920 - 202 - 318, what: '浮层正文' },
   { sc: 'arrange', path: ['note', 1], size: 20, fam: 'ui', maxW: 1920 - 202 - 318, what: '浮层次行', optional: true },
   { sc: 'arrange', path: ['card', 'title'], size: 34, fam: 'ui', maxW: 420 - 26 * 2, what: '中心卡标题' },
   { sc: 'arrange', path: ['card', 'sub'], size: 21, fam: 'mono', maxW: 420 - 26 * 2, what: '中心卡副文' },
+  { sc: 'route', path: ['eyebrow', 1], size: 23, fam: 'mono', maxW: 960 - 170, what: 'eyebrow 短语' },
   { sc: 'route', path: ['lines', 0], size: 112, fam: 'serif', maxW: 1210 - 180 - 40, what: '大字第一行' },
   { sc: 'route', path: ['lines', 1], size: 112, fam: 'serif', maxW: 1210 - 180 - 40, what: '大字第二行', optional: true },
   { sc: 'lockup', path: ['name'], size: 86, fam: 'serif', maxW: 1920 - 360 * 2, what: '品牌名' },
   { sc: 'lockup', path: ['slogan'], size: 40, fam: 'serif', maxW: 1920 - 200 * 2, join: true, what: 'slogan（两段合计）' },
   { sc: 'lockup', path: ['cta'], size: 28, fam: 'ui', maxW: 300 - 24 * 2 - 52, what: '按钮文字' },
+  /* 渲染时用 '   ·   ' 拼接，校验必须用同一个分隔符，否则量出来比实际窄 */
+  { sc: 'lockup', path: ['platforms'], size: 21, fam: 'mono', maxW: 1920 - 170 * 2, join: true, sep: '   ·   ', what: '平台清单' },
 ];
 
 const pick = (obj, keyPath) => keyPath.reduce((o, k) => (o == null ? undefined : o[k]), obj);
@@ -174,7 +185,7 @@ function validateLayout(p, ctx) {
     if (!sc) continue;
     let vals = pick(sc, slot.path);
     if (vals == null) continue;
-    if (slot.join) vals = [vals.join('')];
+    if (slot.join) vals = [vals.join(slot.sep || '')];
     else if (slot.each) vals = Array.isArray(vals) ? vals : [];
     else if (slot.eachRow != null) vals = (vals || []).map((r) => r[slot.eachRow]).filter((v) => v != null);
     else vals = [vals];
