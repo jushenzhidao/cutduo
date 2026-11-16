@@ -11,6 +11,10 @@ tools
 # templates/own 是 API 能力（night-card）的运行时依赖，不能整目录排除；
 # 只排测试包 fixtures（.motion 样本，生产不出这种片）。
 templates/fixtures
+# macOS 打包会生成 `._<name>` 伴随文件（AppleDouble，存 xattr）。它们不是代码，
+# 却可能被目录扫描当成代码加载：registry 的 `.mjs` 过滤曾因此中招。
+**/._*
+**/.DS_Store
 **/*.mp4
 **/*.mov
 *.log

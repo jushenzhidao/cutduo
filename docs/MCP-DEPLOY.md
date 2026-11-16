@@ -25,11 +25,16 @@ df -h /opt | tail -1        # 镜像约 600MB，数据卷按需
 
 只需要这些目录（其余在 `.dockerignore` 里排除）：
 
+**必须两个环境变量**（2026-11-16 实测踩过，见下方「三个已知故障」）：
+
 ```bash
 # 本地
-tar czf /tmp/cutduo-mcp.tgz \
+COPYFILE_DISABLE=1 tar czf /tmp/cutduo-mcp.tgz \
   --exclude='node_modules' --exclude='refs' --exclude='out' --exclude='data' \
-  api mcp src kits content assets package.json package-lock.json .dockerignore
+  --exclude='*.wav' --exclude='*.mp4' --exclude='*.mov' --exclude='*/audio' \
+  --exclude='.git' --exclude='deliverables' --exclude='bench' --exclude='docs' --exclude='tools' \
+  api mcp src kits content assets templates deploy render.mjs \
+  package.json package-lock.json .dockerignore
 scp /tmp/cutduo-mcp.tgz root@210.121.44.245:/opt/cutduo/src.tgz
 
 # 服务器
@@ -78,6 +83,39 @@ acme.sh --install-cert -d cut-mcp.1task.cn \
 ```
 
 DNS 要先有 A 记录指向 `210.121.44.245`，否则签发会失败。
+
+## 三个已知故障（都是 2026-11-16 这次部署踩到的）
+
+### 一、`._*.mjs` 让容器启动即崩
+
+macOS 的 tar 会为每个带 xattr 的文件生成 `._<name>` 伴随文件（AppleDouble）。它们也以
+`.mjs` 结尾，而 `api/registry.mjs` 原来只排除了 `_` 开头的文件：
+
+```js
+.filter((f) => f.endsWith('.mjs') && !f.startsWith('_'))   // `._clay.mjs` 通过了
+```
+
+于是 `._clay.mjs` 被当作 kit `import`，容器 `SyntaxError` 进重启循环——**报错只有堆栈，没有文件名**。
+
+三层修复都在仓库里了：`COPYFILE_DISABLE=1`（打包不生成）+ `.dockerignore` 的 `**/._*`
+（构建上下文排除）+ registry 增加 `!f.startsWith('.')`（运行时防御）。
+部署后自检：`find /opt/cutduo/src -name '._*' | wc -l` 必须为 0。
+
+### 二、`templates/` 漏传导致 night-card 静默不可用
+
+2026-11-13 那次部署的 tar 清单里没有 `templates/`，容器内 `/app/templates` 不存在。
+`capabilities` 仍列着 night-card（它读的是 `api/capabilities.json`），但一调就失败。
+**清单以本文档上面那条命令为准**，别凭记忆敲。验证：
+
+```bash
+docker exec cutduo-mcp node /app/render.mjs --kit night-card \
+  --params /app/templates/own/night-card/presets/default.json --probe /tmp/nc.png --at 4
+# 应输出 753456 字节（与本地 assets 一致的基线）
+```
+
+### 三、`content/*/audio/` 的 wav 占 571M
+
+TTS 中间产物，容器不需要（音频走 API 上传或 `assets/audio`）。不排除的话包会从 129M 涨到 700M。
 
 ## 五、验证清单
 

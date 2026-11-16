@@ -21,7 +21,11 @@ import { ApiError, CODE } from './errors.mjs';
 const KITS_DIR = path.join(REPO_ROOT, 'api', 'kits');
 
 const files = fs.readdirSync(KITS_DIR)
-  .filter((f) => f.endsWith('.mjs') && !f.startsWith('_'))
+  // 排除 `_` 开头（约定为私有脚本，如 _runner.mjs）与 `.` 开头（隐藏文件）。
+  // 后者不是洁癖：macOS 打包会为每个带 xattr 的文件生成 `._<name>` 的 AppleDouble 伴随文件，
+  // 它同样以 `.mjs` 结尾。2026-11-16 部署时 `._clay.mjs` 就这样通过了过滤并被 import，
+  // 容器启动直接 SyntaxError 重启循环 —— 报错里只有堆栈，没有文件名。
+  .filter((f) => f.endsWith('.mjs') && !f.startsWith('_') && !f.startsWith('.'))
   .sort();
 
 const MODULES = [];
