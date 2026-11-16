@@ -214,7 +214,12 @@
         {
           "id": "talkcraft-15s",
           "path": "kits/diagram/presets/talkcraft-15s.json",
-          "note": "5 段 · 22s"
+          "note": "5 段 · 22s · 无声版，含 timeline/glyph 需 --timing"
+        },
+        {
+          "id": "talkcraft-15s.vo",
+          "path": "kits/diagram/presets/talkcraft-15s.vo.json",
+          "note": "配音版元片 · 20.1s · 自带音轨与字级时间戳"
         }
       ],
       "defaultPreset": "kits/diagram/presets/default.json",

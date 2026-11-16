@@ -84,7 +84,7 @@
       "entryType": "kit-cli",
       "defaultPreset": "kits/diagram/presets/default.json",
       "schemaStatus": "complete",
-      "presets": 5,
+      "presets": 6,
       "output": {
         "width": 1920,
         "height": 1080,

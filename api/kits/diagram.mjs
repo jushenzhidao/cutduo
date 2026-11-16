@@ -26,7 +26,8 @@ export const capability = {
     { id: 'all', path: 'kits/diagram/presets/all.json', note: '13 类全量 · 84s' },
     { id: 'render-cost', path: 'kits/diagram/presets/render-cost.json', note: '8 段 · 64s' },
     { id: 'render-cost-20s', path: 'kits/diagram/presets/render-cost-20s.json', note: '3 段 · 22s' },
-    { id: 'talkcraft-15s', path: 'kits/diagram/presets/talkcraft-15s.json', note: '5 段 · 22s' },
+    { id: 'talkcraft-15s', path: 'kits/diagram/presets/talkcraft-15s.json', note: '5 段 · 22s · 无声版，含 timeline/glyph 需 --timing' },
+    { id: 'talkcraft-15s.vo', path: 'kits/diagram/presets/talkcraft-15s.vo.json', note: '配音版元片 · 20.1s · 自带音轨与字级时间戳' },
   ],
   defaultPreset: 'kits/diagram/presets/default.json',
   audio: {

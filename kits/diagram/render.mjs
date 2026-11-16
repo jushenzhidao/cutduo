@@ -136,7 +136,19 @@ function main() {
   const height = params.height ?? CANVAS.h;
   // CLI 覆盖 > params > 默认。API 的 overrides 只能改渲染超参，不走这里就没有一致性。
   const fps = Number(arg('fps', params.fps ?? CANVAS.fps));
-  const audio = arg('audio', params.audio || '');
+  // audio 有两种来源：CLI --audio，或 params.audio（vo 流程产出的 *.vo.json 就靠后者，
+  // 这是 API/MCP 唯一能走的路——请求形状里没有 audio 路径字段，只有 assetId/内置名）。
+  // 两者都要过 resolveInput：params.audio 写的是相对仓库根的路径，容器里 cwd=/app。
+  const audioRaw = String(arg('audio', params.audio || '') || '');
+  const audio = audioRaw ? resolveInput(audioRaw, false) : '';
+  if (audioRaw && (!audio || !fs.existsSync(audio))) {
+    console.error(JSON.stringify({
+      ok: false, error: 'AUDIO_MISSING',
+      message: `音轨不存在：${audioRaw}`,
+      fix: '检查 params.audio 或 --audio 的路径；API 调用方传内置音频名（assets/audio/<name>）或 assetId',
+    }, null, 2));
+    process.exit(2);
+  }
   const crf = Number(arg('crf', params.crf ?? 18));
   const x264Preset = arg('preset', params.preset ?? 'veryfast');
   const palette = PALETTES[params.palette ?? 'paper'] ?? PALETTES.paper;

@@ -1,0 +1,81 @@
+{
+  "$comment": "配音版 talkcraft：5 句 edge-tts（Xiaoxiao，+8%）+ FireRedASR2-CTC 逐句切窗对齐。时长与 audio 均为实测，不是手打。timeline/glyph 两段的锚点来自 talkcraft-15s.vo.timing.json。重做：node kits/diagram/tools/vo.mjs --params kits/diagram/presets/talkcraft-15s.vo.json --out-params <tmp>.vo.json --out-audio <tmp>.vo.wav → uv run --python 3.13 --with sherpa-onnx python kits/diagram/tools/timestamps.py --wav <tmp>.vo.wav --manifest <tmp>.vo.json --out <timing>",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "palette": "paper",
+  "crf": 18,
+  "preset": "veryfast",
+  "captionY": 946,
+  "captionSize": 42,
+  "frame": {
+    "y": 96,
+    "bottom": 210
+  },
+  "introFade": 0.55,
+  "lead": 0.3,
+  "endPad": 0.45,
+  "lineGap": 0.16,
+  "segments": [
+    {
+      "family": "bignum",
+      "heading": "none",
+      "grid": false,
+      "line": "这条片子，没有一个画面是我摆的。",
+      "duration": 4.158,
+      "value": "0",
+      "label": "个手动摆放的画面",
+      "sub": "位置、大小、出现时刻，全由时间戳算出来",
+      "items": []
+    },
+    {
+      "family": "timeline",
+      "heading": "left",
+      "grid": false,
+      "line": "配音先切成字，每个字都有时刻。",
+      "duration": 3.99,
+      "items": [],
+      "title": "全片五句，一句一条"
+    },
+    {
+      "family": "glyph",
+      "heading": "none",
+      "grid": false,
+      "line": "画面跟着字走，一句只动一处。",
+      "duration": 3.726,
+      "items": [],
+      "note": "秒数 = 这个字真正开口的时刻；红条长度 = 它占用了多久"
+    },
+    {
+      "family": "framecount",
+      "heading": "none",
+      "grid": false,
+      "line": "屏幕上的数，全是这一帧的真值。",
+      "duration": 3.894,
+      "unit": "帧",
+      "items": []
+    },
+    {
+      "family": "definition",
+      "heading": "left",
+      "title": "这一支片子的真值",
+      "line": "整条流水线，全在这台机器上跑完。",
+      "duration": 4.374,
+      "items": [
+        {
+          "id": "dur",
+          "label": "{total} 秒",
+          "text": "从第一帧到最后一帧，含每段首尾的留白"
+        },
+        {
+          "id": "frames",
+          "label": "{frames} 帧",
+          "text": "三十帧一秒，一帧不多一帧不少"
+        }
+      ],
+      "grid": false
+    }
+  ],
+  "audio": "assets/audio/talkcraft-15s.vo.m4a",
+  "timing": "kits/diagram/presets/talkcraft-15s.vo.timing.json"
+}
