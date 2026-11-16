@@ -11,12 +11,25 @@ services:
     image: cutduo-mcp:2.0.0
     container_name: cutduo-mcp
     restart: unless-stopped
+    # 资源上限不是性能参数，是安全边界。2026-11-16 一次 crf15+slow 的长片
+    # 在没有上限的容器里把 64 核机器打到 swap thrashing，SSH 登不进、整机失联十几分钟。
+    # 16G 对应 8 worker × 512MB 堆 + canvas/native 的余量；24 核留给渲染，
+    # 其余核给机器上另外 30 多个服务。
+    mem_limit: 20g
+    cpus: "28"
+    # 透传核显给 h264_qsv 用。宿主有 card1 + renderD128（i9-14900KS 的 UHD 770）。
+    devices:
+      - /dev/dri:/dev/dri
+    # 宿主 render 组（GID 992）拥有 /dev/dri/renderD128；不加这条
+    # 容器里的 node 用户打不开设备，QSV 会报 unsupported(-3)。
+    group_add:
+      - "992"
     ports:
       - "127.0.0.1:8787:8787"
     environment:
       # 必填：否则任何人都能往服务器传文件、烧 CPU
       CUTDUO_TOKEN: ${CUTDUO_TOKEN:?CUTDUO_TOKEN 未设置，先 export}
-      CUTDUO_PUBLIC_URL: https://cut-mcp.1task.cn
+      CUTDUO_PUBLIC_URL: https://mcp.chatfire.cn
       # 实测这台机器（Xeon E5-2682 v4，单核弱、核多）并发是负收益：
       # 3 个任务并发 76s，串行 3×(worker=32) 约 58s。每个渲染已吃满 cpus/2，
       # 再并发只是互相抢核。设 1 让第二个请求排队，比两个都变慢好。

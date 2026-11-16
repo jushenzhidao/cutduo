@@ -22,12 +22,66 @@ import { checkDeterminism } from './determinism.mjs';
 import { resolveInput } from './root.mjs';
 
 /**
- * 默认 worker 数：每 worker 约吃 2 核（node 进程 + ffmpeg 子进程），上限 32 下限 4。
- * 实测：30 核 M5 用 16 最快（5.6s vs 8 worker 6.7s）；64 核 Xeon 用 32 最快（19.4s vs 22.0s）。
- * 代价是分片变多、体积略增约 5%（mpegts 分片边界更多）。
+ * 容器实际可用的 CPU 数。
+ *
+ * **不能用 os.cpus().length**：容器里它返回的是宿主核数（ai-prod 是 64），
+ * 而不是容器被限到多少。2026-11-16 因此算出 32 worker —— 每个 worker 的 V8 堆上限
+ * 是 512MB，32 个就是 16GB，叠加机器上另外 30 多个服务直接把 ai-prod 打成 swap thrashing，
+ * SSH 登不进、8787 无响应、公网 504，整机失联十几分钟。
+ *
+ * 优先读 cgroup：v2 的 cpu.max（"配额 周期"），v1 的 cfs_quota/cfs_period。
+ */
+function availableCpus() {
+  try {
+    const raw = fs.readFileSync('/sys/fs/cgroup/cpu.max', 'utf8').trim().split(/\s+/);
+    if (raw[0] && raw[0] !== 'max') return Number(raw[0]) / Number(raw[1] || 100000);
+  } catch { /* 非 v2 或没有 cgroup */ }
+  try {
+    const q = Number(fs.readFileSync('/sys/fs/cgroup/cpu/cpu.cfs_quota_us', 'utf8').trim());
+    const per = Number(fs.readFileSync('/sys/fs/cgroup/cpu/cpu.cfs_period_us', 'utf8').trim());
+    if (q > 0 && per > 0) return q / per;
+  } catch { /* v1 也没有 */ }
+  return os.cpus().length;
+}
+
+/**
+ * 容器内存上限（MB）。cgroup v2 的 memory.max / v1 的 limit_in_bytes，读不到就用宿主总量。
+ */
+function availableMemoryMB() {
+  try {
+    const raw = fs.readFileSync('/sys/fs/cgroup/memory.max', 'utf8').trim();
+    if (raw && raw !== 'max') return Number(raw) / 1048576;
+  } catch { /* 非 v2 */ }
+  try {
+    const raw = fs.readFileSync('/sys/fs/cgroup/memory/memory.limit_in_bytes', 'utf8').trim();
+    const n = Number(raw);
+    if (n > 0 && n < 1e15) return n / 1048576;   // v1 无限额时是个天文数字
+  } catch { /* v1 也没有 */ }
+  return os.totalmem() / 1048576;
+}
+
+/**
+ * 默认 worker 数：并行度优先，但**必须被内存卡住**。
+ *
+ * 实测（core-4 / i9-14900KS 25 逻辑核配额 / desk 1440×1080 / 16GB 限额）：
+ *   8 → 17.42s (196 fps)
+ *  12 → 14.13s (242 fps)
+ *  16 → 12.18s (281 fps)   ← 甜点
+ *  20/24/32 → OOM SIGKILL
+ * 每 worker 峰值约 800MB（V8 堆上限 512MB + canvas/照片/ffmpeg），
+ * 所以 16GB 只能装 20 个，留余量取 16。
+ *
+ * 上一版上限写死 8 是「被打挂一次之后的过度保守」：那次是 ai-prod 上 32 worker
+ * 且容器无内存限制，打挂的是整台机器。现在有 mem_limit 兜底，OOM 只会杀掉
+ * 容器内的渲染进程并返回 RENDER_FAILED —— 失败可控，就该把并行度用满。
+ *
+ * 共享机器想更保守，用 CUTDUO_MAX_WORKERS 覆盖（ai-prod 建议 8）。
  */
 export function defaultWorkers() {
-  return Math.min(32, Math.max(4, Math.floor(os.cpus().length / 2)));
+  const hardCap = Number(process.env.CUTDUO_MAX_WORKERS || 0) || 16;
+  const byCpu = Math.max(2, Math.floor(availableCpus()));      // 一 worker 一核
+  const byMem = Math.max(2, Math.floor(availableMemoryMB() / 800));  // 实测每 worker ~800MB
+  return Math.min(hardCap, byCpu, byMem);
 }
 
 /**

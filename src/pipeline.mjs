@@ -39,8 +39,19 @@ export function partArgs({ pipe, fps, width, height, crf, preset, jpeg, x264Thre
       : ['-f', 'image2pipe', '-framerate', String(fps), '-vcodec', 'mjpeg', '-i', 'pipe:0'];
   return [
     '-hide_banner', '-loglevel', 'error', '-y', ...input,
-    '-c:v', 'libx264', '-preset', preset, '-crf', crf, '-pix_fmt', 'yuv420p',
-    ...(x264Threads ? ['-threads', String(x264Threads)] : []),
+    // 编码器可切换：CUTDUO_ENCODER=qsv 走核显（需要 /dev/dri + Media 驱动），
+    // 默认仍是 libx264 —— 不设环境变量时逐字节行为不变。
+    // QSV 的 global_quality 与 x264 的 crf 语义接近（1–51，越小越好），直接沿用同一个数。
+    ...(process.env.CUTDUO_ENCODER === 'qsv'
+      ? ['-c:v', 'h264_qsv', '-global_quality', String(crf), '-look_ahead', '0', '-async_depth', '1']
+      : ['-c:v', 'libx264', '-preset', preset, '-crf', crf, '-pix_fmt', 'yuv420p']),
+    // 线程数必须有个总闸：16 个 worker 各自让 x264 自动决定线程（默认最多 16），
+    // 就是 256 个线程抢 24 个核，上下文切换吃掉大量时间。
+    // CUTDUO_X264_THREADS 给每个分片限定；不设时保持原行为（x264 自动）。
+    ...(() => {
+      const t = x264Threads || Number(process.env.CUTDUO_X264_THREADS || 0);
+      return t ? ['-threads', String(t)] : [];
+    })(),
     '-f', 'mpegts', part,
   ];
 }
