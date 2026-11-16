@@ -34,7 +34,7 @@ services:
       # 3 个任务并发 76s，串行 3×(worker=32) 约 58s。每个渲染已吃满 cpus/2，
       # 再并发只是互相抢核。设 1 让第二个请求排队，比两个都变慢好。
       CUTDUO_MAX_JOBS: "1"
-      CUTDUO_WAIT_SECONDS: "90"
+      CUTDUO_WAIT_SECONDS: "60"
       CUTDUO_MAX_UPLOAD_MB: "64"
       CUTDUO_ASSET_TTL_DAYS: "7"
       # 容器里没有 .git，仓库根只能显式给
