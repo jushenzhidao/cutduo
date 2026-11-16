@@ -1,0 +1,76 @@
+{
+  "note": "音效 cue 表。规则来自 docs/jimeng/02-音效-2026-11-16.md：每个硬切点必须有瞬态（容差 ±50ms），切点前后各铺一段 riser。",
+  "duration": 15,
+  "cues": [
+    {
+      "t": 1.3,
+      "kind": "riser",
+      "dur": 0.55,
+      "gain": -21,
+      "note": "「拼不起来。」出现（对应原片 1.257–1.497 的 riser）"
+    },
+    {
+      "t": 2.49,
+      "kind": "impact",
+      "dur": 0.4,
+      "gain": -7,
+      "note": "黑→白硬切（原片切点 impact 偏移 −9ms）"
+    },
+    {
+      "t": 4.94,
+      "kind": "whoosh",
+      "dur": 0.22,
+      "gain": -19,
+      "note": "卡片群收拢成命令行（软过渡，原片用软 whoosh 不用 impact）"
+    },
+    {
+      "t": 7.44,
+      "kind": "whoosh",
+      "dur": 0.22,
+      "gain": -19,
+      "note": "结果列表 → 单卡聚焦"
+    },
+    {
+      "t": 9.64,
+      "kind": "riser",
+      "dur": 0.7,
+      "gain": -20,
+      "note": "白→黑前的 riser，跨越切点（原片 12.0–12.64 同构）"
+    },
+    {
+      "t": 10.0,
+      "kind": "impact",
+      "dur": 0.45,
+      "gain": -6,
+      "note": "白→黑硬切（全片最重的一下）"
+    },
+    {
+      "t": 11.0,
+      "kind": "tick",
+      "dur": 0.07,
+      "gain": -15,
+      "note": "白闪 stinger（原片 11.065，偏移 −2ms）"
+    },
+    {
+      "t": 12.08,
+      "kind": "riser",
+      "dur": 0.7,
+      "gain": -19,
+      "note": "黑→白前的 riser，跨越切点"
+    },
+    {
+      "t": 12.5,
+      "kind": "impact",
+      "dur": 0.42,
+      "gain": -8,
+      "note": "黑→白硬切，进入落版"
+    },
+    {
+      "t": 13.62,
+      "kind": "tick",
+      "dur": 0.06,
+      "gain": -20,
+      "note": "CTA 入场落位"
+    }
+  ]
+}

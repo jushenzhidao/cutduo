@@ -87,7 +87,8 @@
       "artifacts": [
         "vendor/lemo",
         "content/lemo-vacuum",
-        "content/lemo-recharge"
+        "content/lemo-recharge",
+        "assets/lemo/plates"
       ]
     },
     {
@@ -130,6 +131,36 @@
       "doc": "docs/motiongit-templates.md",
       "artifacts": [
         "templates/own/cute-mv"
+      ]
+    },
+    {
+      "id": "jimeng-motion-showreel",
+      "date": "2026-11-16",
+      "upstream": "Dreamina（即梦）Motion Showreel · v6-artist.vlabvod.com 投放链",
+      "kind": "method",
+      "depth": "rules",
+      "status": "landed",
+      "verdict": "吸收制片监视器 HUD、六镜换构图、单叙事道具与类型药丸；已用同语法做出 15 秒验证片，Didone 字体与真 UI 截图两条硬伤不建 kit。",
+      "doc": "docs/jimeng/01-motion-showreel-2026-11-16.md",
+      "artifacts": [
+        "tools/hud-overlay.mjs",
+        "tools/jimeng-demo.mjs",
+        "docs/jimeng/README.md"
+      ]
+    },
+    {
+      "id": "jimeng-motion-showreel-sfx",
+      "date": "2026-11-16",
+      "upstream": "Dreamina Motion Showreel · 音效设计（同 01 片源）",
+      "kind": "method",
+      "depth": "rules",
+      "status": "landed",
+      "verdict": "切点必然有瞬态（4/4，偏移 −9/+45/−2/+22ms）这一条直接落地；音色为合成近似，全频阈值不可平移（满配乐下 impact 只有 7.x dB）。",
+      "doc": "docs/jimeng/02-音效-2026-11-16.md",
+      "artifacts": [
+        "tools/sfx-probe.py",
+        "tools/sfx-synth.mjs",
+        "content/jimeng-showreel/sfx.json"
       ]
     }
   ]
