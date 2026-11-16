@@ -23,8 +23,7 @@
 先问用途再问技术，别把换宿主当性能手段：一次性出片→Chrome；短期反复且源码可读+Canvas2D→换宿主；
 长期产线→半蒸馏（蒸**内容模型**，不蒸视觉代码）。
 
-换宿主的真实成本**不在能不能跑，在角色/道具是否也被写死**：先渲 4–6 张关键帧再写文案，
-否则会像 lemo 那样文案写完后被开箱镜头、充电座、电线全部否决。
+换宿主的真实成本**不在能不能跑，在角色/道具是否写死**：先渲 4–6 张关键帧再写文案（lemo 的教训）。
 吸收外来项目（hypit / vibe-knowledge / anything2explainer / iso-explode-film）：**先定性它是什么（引擎？方法包？
 素材包？），再分"能平移的规则"与"不可平移的假设"**，产出一份 `docs/<名>-蒸馏-<日期>.md` + 至少一个能跑的检查工具，
 不整仓拷贝。anything2explainer 三条不可平移：帧率基线、底色极性（`lum>120` 取前景，遇 paper 浅底把整张纸当主体）、
@@ -59,8 +58,8 @@
   几何 `box/cyl/ring/ball`；每镜末段 `settle` 留 0.8–1.0s 静止。参数细节见 DETAIL。
 - **位图背景** `content.backdrop`：必须走 `loadImage`（`new Image(); src=buf` 在 napi-rs 里属性都对但画出来全透明）；
   位移 clamp 在铺满范围（否则露黑边）；`zoom<1.15` 蒙雾化；阴影必须双层（单层比物体还大）。
-- **贴片** `kind:'sprite'`：宽度按两端投影实测；无面集但要有 bbox；`showIn` 按镜头切图；
-  **必须补接地阴影**否则浮空；特写机位要收到接近正面（yaw 一转就露馅）。
+- **贴片** `kind:'sprite'`：宽度按两端投影实测；`showIn` 按镜头切图；**必须补接地阴影**否则浮空；
+  特写机位要收到接近正面（yaw 一转就露馅）。
 - **绘景接引擎（2026-11-15）**：Flux（`flux-3-image`，$0.20/张）只做背景板，前景仍引擎画。三条：主持人
   不能压自己的强调色（珊瑚毛衣→墙必须蓝灰/青）｜地板线比例逐块给，缩放 max(铺满,对位) **裁底不裁顶**｜
   有板时放大镜内填纸色否则像贴纸。没配板时逐像素不变。
@@ -90,8 +89,7 @@
 - 竖屏用 `tools/reframe.mjs`（模糊填充不裁内容），别重排版式：paper 全绝对坐标，改宽高=重写；直裁又切字幕。
   背景 sigma 48 / 压暗 0.18 / 降饱和 0.55。
 - `protection` 不是门槛：open 可换宿主，protected 只能 Chrome；换宿主还需引擎是 Canvas2D。已评估 mac-desktop 最优（480fps/24w）。**science 双宿主只快 20–27%**，别照抄 paper 的 6.9×。
-- Skia：`renderFrame` 1ms 是假象，真实 10–16ms，代价在 `canvas.data()`；唯一有效优化是并行度
-  （6/8/12/16/20w → 132/141/172/186/192fps）。
+- Skia：`renderFrame` 1ms 是假象（真实 10–16ms，在 `canvas.data()`）；唯一优化是并行度（6→20w: 132→192fps）。
 
 ## 九、API 层（`api/` 是唯一对外**契约层**，不是实现层）
 
@@ -104,6 +102,8 @@
   不动 `renderIncremental`/`mixAudio`（非重复）。重构判据按「路径覆盖」设计，不按端到端。细则见 DETAIL。
 - **`npm run check` 的 api 段含一条真端到端**（paper + 现场合成 PCM wav）：一次验主流程 /
   回执==ffprobe / 音轨转 aac。**probe 在下游是 `process.exit(0)` 早退**，测不到这三样。
+- **豁免表也要被审计**：I2 曾有 11 条豁免、真实命中只 5 条，收紧判据后没清表。现由 `staleI2Allow()`
+  强制「每条豁免必须真命中」，无效条目即 FAIL。无效豁免比漏豁免更危险——它给未来的违规留了批准洞。
 - 六动词 capabilities/describe/validate/render/probe/gate；`api/capabilities.json` 由工具生成，不要手改。回执规格
   只信 ffprobe；错误必带 `code/hint/fix`；validate 永不抛。`overrides` 只放渲染超参，内容走 `params`。
 - **validate 支持 `if/then/else`**（补之前 paper 9 组必填约束全失效）；仍不支持 `$ref`/`format`。

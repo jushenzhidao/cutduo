@@ -40,17 +40,18 @@ const CODE_EXT = /\.(mjs|js|ts|py|sh)$/;
 // 这个对象保留着：豁免机制本身要用，清空不等于废除——但任何新增条目都必须写清「为什么这条是合法的」。
 const ALLOW_I1 = {};
 
+/**
+ * 2026-11-16 审计：这张表原有 11 条，清空后实测只命中 5 条 —— **6 条是无效豁免**。
+ * 成因：I2 判据收紧过两次（先剥注释、再要求真 spawn），收紧后没有回头清豁免表。
+ * 无效豁免比漏豁免更危险：它让将来真发生的绕门落进一个"已批准"的洞里。
+ * 所以下面加了 staleI2Allow()，把「豁免表里的条目必须真的会命中」也变成一条门禁。
+ */
 const ALLOW_I2 = {
-  'tools/check-arch.mjs': '检查器自身要引用入口路径才能判定',
-  'tools/check-docs.mjs': '校验文档里的入口路径是否可解析',
-  'tools/check-kit-contract.mjs': '读渲染器源码提取段型枚举，不是去渲染',
-  'tools/inventory.mjs': '生成版式清单需要枚举各支入口，属元数据而非渲染',
-  'tools/intake.mjs': '只读评估外来模板，需要识别入口形态',
-  'tools/intake-apply.mjs': '落机械动作时生成 adapter/骨架，写的是路径字符串',
-  'tools/intake-copy.mjs': '抽取 vendor 源码，写的是路径字符串',
-  'tools/motion-render.mjs': '`.motion` 通用宿主，按封装内的入口分派',
-  'tools/new-film.mjs': '新建片时生成 make.sh 里的命令行，是模板字符串',
-  'tools/verify-calibration.mjs': '标定校验：需要拿真实入口跑一遍再比指标',
+  // 以下 5 条：确实出现 `spawn(...render.mjs...)`，但不是"绕门出片"
+  'tools/intake-apply.mjs': '落机械动作时生成 adapter/骨架，spawn 的是脚手架而非出片',
+  'tools/intake-copy.mjs': '抽取 vendor 源码，spawn 的是拷贝而非出片',
+  'tools/new-film.mjs': '新建片时生成 make.sh，spawn 用于落地文件而非出片',
+  'tools/verify-calibration.mjs': '标定校验：要拿真实入口跑一遍再比指标，属验证而非出片',
   'tools/template-smoke.py': '冒烟对象是任意模板目录（没有 kit id、未接入 API），只能走 render.mjs 的目录形态',
 };
 
@@ -161,7 +162,7 @@ function checkI1() {
 const ENTRY_REF = /render\.mjs|canvas-editorial\.mjs/;
 const HOST_DIRS = ['tools', 'web', 'harness', 'mcp'];
 
-function checkI2() {
+function scanI2(allow) {
   const hits = [];
   for (const d of HOST_DIRS) {
     for (const f of walk(path.join(REPO_ROOT, d))) {
@@ -170,7 +171,7 @@ function checkI2() {
       // （引用不存在的 packages/*.motion 与错位的 canvas-editorial.mjs）。
       // 保留它们只为追溯，不参与任何门禁，也不该被当成"活着的绕门路径"。
       if (r.startsWith('tools/legacy/')) continue;
-      if (ALLOW_I2[r]) continue;
+      if (allow[r]) continue;
       // 剥注释再匹配：`tools/contact-sheet.mjs` 只在头注释里写了「同源做法见 render.mjs」，
       // 那是出处说明，不是调用。不剥注释会把它误报成绕门（2026-11-16 首次跑就撞上）。
       const code = stripComments(fs.readFileSync(f, 'utf8'));
@@ -181,13 +182,32 @@ function checkI2() {
       if (isScript || SPAWNS.test(code)) hits.push(r);
     }
   }
+  return hits;
+}
+
+/**
+ * 元门禁：豁免表里的每一条都必须真的会命中。
+ * 不命中的条目不是"暂时用不上"，而是"判据已经不需要它了却还留着"——那会掩盖将来的真违规。
+ */
+function staleI2Allow() {
+  const real = new Set(scanI2({}));
+  return Object.keys(ALLOW_I2).filter((k) => !real.has(k));
+}
+
+function checkI2() {
+  const hits = scanI2(ALLOW_I2);
+  const stale = staleI2Allow();
+  const pass = hits.length === 0 && stale.length === 0;
   return {
     id: 'I2', name: '单门',
-    pass: hits.length === 0,
+    pass,
     detail: hits.length
       ? `${hits.length} 个文件绕过 api/ 直连渲染入口：${hits.join(', ')}`
-      : '所有宿主只经 api/ 调用',
-    hits,
+      : stale.length
+        ? `豁免表有 ${stale.length} 条无效条目（实际不命中）：${stale.join(', ')}`
+        : '所有宿主只经 api/ 调用，豁免表无冗余条目',
+    hits: [...hits, ...stale],
+    observe: stale.length ? `无效豁免会掩盖将来的真实违规，删掉它们：${stale.join(', ')}` : null,
   };
 }
 
@@ -248,6 +268,14 @@ function selfTest() {
   const fpI2 = checkI2().hits.includes('tools/arch-selftest-tmp.mjs');
   lines.push(`  ${!fpI2 ? 'PASS' : 'FAIL'}  I2 不会把提示字符串里的 render.mjs 误报成绕门`);
   ok = ok && !fpI2;
+
+  // 元门禁：塞一条永不命中的豁免，必须被 staleI2Allow 抓出来
+  ALLOW_I2['tools/__selftest_never__.mjs'] = '自检用：这个文件不存在，也不该被豁免';
+  const stale = staleI2Allow();
+  const caughtStale = stale.includes('tools/__selftest_never__.mjs');
+  delete ALLOW_I2['tools/__selftest_never__.mjs'];
+  lines.push(`  ${caughtStale ? 'PASS' : 'FAIL'}  I2 元门禁能识别无效豁免条目`);
+  ok = ok && caughtStale;
 
   // 反向确认不会误报：只写注释提到 libx264，不该被数成编码点
   fs.writeFileSync(tmp, `// 这条管道最终喂给 libx264\nconst x = 1;\n`);
