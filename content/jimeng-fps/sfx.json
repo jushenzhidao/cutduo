@@ -1,0 +1,76 @@
+{
+  "note": "沿用 docs/jimeng/02-音效-2026-11-16.md 的规则：每个硬切点必有 impact（±50ms），切点前后各铺 riser，软过渡用 whoosh。",
+  "duration": 15,
+  "cues": [
+    {
+      "t": 1.3,
+      "kind": "riser",
+      "dur": 0.55,
+      "gain": -21,
+      "note": "「数字大不代表顺。」出现"
+    },
+    {
+      "t": 2.49,
+      "kind": "impact",
+      "dur": 0.4,
+      "gain": -7,
+      "note": "黑→白硬切"
+    },
+    {
+      "t": 4.94,
+      "kind": "whoosh",
+      "dur": 0.22,
+      "gain": -19,
+      "note": "卡片收拢成命令行"
+    },
+    {
+      "t": 7.44,
+      "kind": "whoosh",
+      "dur": 0.22,
+      "gain": -19,
+      "note": "列表 → 单卡"
+    },
+    {
+      "t": 9.64,
+      "kind": "riser",
+      "dur": 0.7,
+      "gain": -20,
+      "note": "白→黑前的 riser"
+    },
+    {
+      "t": 10.0,
+      "kind": "impact",
+      "dur": 0.45,
+      "gain": -6,
+      "note": "白→黑硬切"
+    },
+    {
+      "t": 11.0,
+      "kind": "impact",
+      "dur": 0.18,
+      "gain": -14,
+      "note": "白闪 stinger"
+    },
+    {
+      "t": 12.08,
+      "kind": "riser",
+      "dur": 0.7,
+      "gain": -19,
+      "note": "黑→白前的 riser"
+    },
+    {
+      "t": 12.5,
+      "kind": "impact",
+      "dur": 0.42,
+      "gain": -8,
+      "note": "黑→白硬切"
+    },
+    {
+      "t": 13.62,
+      "kind": "tick",
+      "dur": 0.06,
+      "gain": -20,
+      "note": "CTA 落位"
+    }
+  ]
+}

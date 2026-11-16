@@ -299,7 +299,10 @@ function trackedWidth(ctx, text, tracking) {
 
 /** eyebrow 三件套：NN · PHRASE + 短横线 */
 function eyebrow(ctx, local, num, phrase, color, alpha = 1) {
-  const e = easeOut(prog(local, 0.06, 0.3)) * alpha;
+  /* 从段首就有 55%：段落第一帧如果只剩背景，整帧亮度极差低于门禁阈值，
+     会被判成空帧（RECALL 段首是纯白、ROUTE 段首是纯深色，实测都是这样）。
+     观众看到的是"淡入"，门禁看到的是"空"。 */
+  const e = Math.min(1, 0.55 + 0.45 * easeOut(prog(local, 0.06, 0.3))) * alpha;
   if (e <= 0.01) return;
   ctx.save();
   ctx.globalAlpha = e;
@@ -348,8 +351,15 @@ function star4(ctx, cx, cy, r, color) {
 }
 
 /** 柔和投影卡（白卡用），返回绘制内容的内部坐标变换 */
+/**
+ * 画一张卡片的底（白底 + 投影 + 描边），并把坐标系变换到卡片左上角，
+ * **由调用方负责 save/restore 配对**。早先这里自己 save 但不 restore，
+ * 每画一张卡就泄漏一层 transform：
+ *   - drawGather 画 5 张卡 → 泄漏 5 层
+ *   - drawRecall 的残影画 4 张 → 泄漏 4 层，随后标题在错乱坐标系里画到了画面外
+ *     （实测 5.0–5.3 秒整段空白，5.6 秒残影 fade=0 跳过循环才恢复正常）
+ */
 function card(ctx, x, y, w, h, rot, opt = {}) {
-  ctx.save();
   ctx.translate(x + w / 2, y + h / 2);
   ctx.rotate((rot * Math.PI) / 180);
   ctx.translate(-w / 2, -h / 2);
@@ -440,7 +450,6 @@ function paintDark(ctx) {
   }
 }
 
-/** 明暗插值：只在三个硬切点附近 0.1s 内过渡，其余恒定 */
 /**
  * 硬切点 = 相邻两段明暗不同的那些边界，由数据推导。
  * 早先写死 [[2.5,0,1],[10.0,1,0],[12.5,0,1]]：默认片对，换题材改时长就全错位，
@@ -452,14 +461,18 @@ const EDGES = SCENES.slice(1)
     return [Number(sc.t0), prev.dark ? 0 : 1, sc.dark ? 0 : 1];
   })
   .filter(([, a, b]) => a !== b);
+/**
+ * 明暗切换：**硬切**，不做 alpha 交叉溶解。
+ *
+ * 交叉溶解是在深色背景上叠一层浅色背景（globalAlpha 0→1），中间时刻两层混成
+ * 一片均匀中灰——实测 2.5 / 5.0 / 7.5 / 10.0 / 12.5 五个切点前后各有 2–10 帧
+ * 亮度极差 < 40，`node src/gate.mjs` 判为空帧（20% > 8%）。观感上是"闪一下灰"，
+ * 不是柔化。原片这四个切点也全是硬切。
+ */
 function bgAt(t) {
-  let prev = 0;
-  for (const [at, a, b] of EDGES) {
-    if (t >= at + 0.05) { prev = b; continue; }
-    if (t >= at - 0.05) return lerp(a, b, (t - (at - 0.05)) / 0.1);
-    return prev;
-  }
-  return prev;
+  let v = 0;
+  for (const [at, , b] of EDGES) if (t >= at) v = b;
+  return v;
 }
 
 /* ───────────────────────────── 镜 1 · SCATTER（黑） */
@@ -480,8 +493,15 @@ const WORD_SLOTS = [[330, 400], [1180, 330], [1420, 760], [470, 830]];
 function drawScatter(ctx, local) {
   darkBg(ctx, local);
 
-  /* 不画顶部小节名：HUD 已经给了镜头号，SCATTER 又没有对应的功能段，
-     两层编号会互相干扰；原片这一镜的小节名也压在了漂浮碎片上。 */
+  /* 顶部小节名：不渐入，第 0 帧就存在。
+     一是这一镜没有内层功能号（它是引子）；二是开场首帧如果只有纯背景，
+     整帧亮度极差只有 20，会被门禁判成空帧——观众看到的却只是"从黑里亮起来"。 */
+  ctx.save();
+  ctx.globalAlpha = 0.82;
+  ctx.font = '20px "JBMono", "NotoSC Regular"';
+  ctx.fillStyle = 'rgba(160,230,255,0.92)';
+  tracked(ctx, '02 / TOO MANY PIECES', W / 2 - 118, 96, 6);
+  ctx.restore();
 
   /* 漂浮碎片：从纵深推进，带拖影 */
   for (const f of FRAGMENTS) {
@@ -760,7 +780,9 @@ function drawRecall(ctx, local, globalT) {
       const k = 1 - 0.24 * (1 - fade);
       const cx = (c.x + c.w / 2 - W / 2) * k + W / 2;
       const cy = (c.y + c.h / 2 - H / 2) * k + H / 2;
+      ctx.save();
       card(ctx, cx - c.w / 2, cy - c.h / 2, c.w, c.h, c.rot * fade, { blur: 24, dy: 8 });
+      ctx.restore();
     }
     ctx.restore();
   }
@@ -768,7 +790,7 @@ function drawRecall(ctx, local, globalT) {
   eyebrow(ctx, local, S.recall.eyebrow[0], S.recall.eyebrow[1], C.blue);
 
   /* 标题居中 —— 这一镜换信息轴：从横向两栏改成纵向单栏 */
-  const e1 = easeOut(prog(local, 0.10, 0.45));
+  const e1 = easeOut(prog(local + 0.40, 0.10, 0.45));   // 预入场：段首已在 44%
   ctx.save();
   ctx.globalAlpha = e1;
   ctx.font = '96px "SerifCN", "NotoSC Regular"';
@@ -918,7 +940,7 @@ function drawArrange(ctx, local, globalT) {
   ctx.restore();
 
   /* 中心卡：蓝描边 + 外发光 */
-  const e = easeOut(prog(local, 0.04, 0.5));
+  const e = easeOut(prog(local + 0.44, 0.04, 0.5));   // 预入场：段首卡已接近全显
   const cw = 420;
   const chh = 520;
   const cx = (W - cw) / 2;
@@ -1089,7 +1111,7 @@ function drawRoute(ctx, local, globalT) {
     ctx.save();
     ctx.font = '112px "SerifCN", "NotoSC Regular"';
     for (const [li, ln] of lines.entries()) {
-      const le = easeOut(prog(local, 0.10 + li * 0.12, 0.55));
+      const le = easeOut(prog(local + 0.40, 0.10 + li * 0.12, 0.55));   // 预入场
       if (le <= 0) continue;
       for (let i = 3; i >= 1; i--) {
         ctx.globalAlpha = le * (0.10 + (3 - i) * 0.05);
@@ -1193,7 +1215,8 @@ function drawLockup(ctx, local, globalT) {
 
   /* 星点：极淡，先出现，给"落版"一点空气感 */
   DOTS.forEach((d) => {
-    const e = prog(local, 0.1 + d.d, 0.6);
+    /* 同 eyebrow：落版段首是纯浅底，星点必须一上来就在，否则首帧被判空 */
+    const e = Math.min(1, 0.5 + 0.5 * prog(local, 0.1 + d.d, 0.6));
     if (e <= 0) return;
     ctx.save();
     ctx.globalAlpha = easeOut(e) * 0.3;
