@@ -94,7 +94,17 @@ function mixToBed({ clips, totalSeconds, outPath }) {
     return `[${i + 1}:a]aresample=44100${trim},adelay=${delay}|${delay}[a${i}]`;
   });
   const mixIn = ['[0:a]', ...clips.map((_, i) => `[a${i}]`)].join('');
-  const fc = `${chains.join(';')};${mixIn}amix=inputs=${clips.length + 1}:normalize=0:dropout_transition=0[out]`;
+  // 电平：edge-tts 单句实测 mean −21.1 dB / peak −5.2 dB，混完是 −20 LUFS，
+  // 比交付口径 −16±2 轻 4 dB。+4.5 dB 后峰值约 −0.7 dBFS，仍不削波；
+  // alimiter 兜住偶发的高能量句（不同文本电平不完全一致）。
+  // 这里不做 loudnorm：单遍动态模式会压掉口播的自然起伏，两遍法要再跑一次 ffmpeg。
+  const fc = `${chains.join(';')};${mixIn}amix=inputs=${clips.length + 1}:normalize=0:dropout_transition=0`
+    // 不用 alimiter：它的 `level` 参数默认开启「自动把输出电平拉到 limit」，
+    // 实测反而把 LUFS 从 −15.1 抬到 −14.6、TP 从 −0.4 变到 −0.2 —— 限幅器在放大信号。
+    // 改成纯增益，量按实测反推：源峰值 −5.2 dBFS，aac 编码实测抬峰 **1.3 dB**
+    // （3.5 dB 增益后 TP 仍是 −0.4），所以取 2.8 dB：
+    // 峰值 −2.4 → 编码后约 −1.1（≤ −0.5 ✓），LUFS 约 −17.2（在 −16±2 内 ✓）。
+    + `,volume=2.8dB[out]`;
 
   args.push('-filter_complex', fc, '-map', '[out]', '-c:a', 'aac', '-b:a', '160k',
     '-ar', '44100', '-ac', '1', outPath);
@@ -141,7 +151,9 @@ export async function synthesizeCaptions({
   }
 
   // 成品音轨也缓存：同一份 captions 重复出片不该重混
-  const bedKey = sha1(`${v}|${r}|${total}|${caps.map((c) => `${c.start}:${plain(c.zh)}`).join('|')}`);
+  // key 里带 v2：改了混音链（加增益）就必须让旧音轨失效，
+  // 否则缓存会把 −20 LUFS 的版本一直喂回来，而且看不出来。
+  const bedKey = sha1(`v5|${v}|${r}|${total}|${caps.map((c) => `${c.start}:${plain(c.zh)}`).join('|')}`);
   const audioDir = path.join(path.dirname(cacheDir), 'cloud');
   fs.mkdirSync(audioDir, { recursive: true });
   const audioPath = path.join(audioDir, `tts-${bedKey}.m4a`);
@@ -189,4 +201,10 @@ export function ttsInfo() {
   };
 }
 
-export const CACHE_ROOT = path.join(os.tmpdir(), 'cutduo-tts-cache');
+/**
+ * 缓存根目录。**必须落在数据卷里**，不能放 /tmp ——
+ * 容器重启后 /tmp 清空，13 句要重新合成 17.7s，而重启是部署的常态动作。
+ * 优先 CUTDUO_TTS_CACHE（可单独挂卷），其次数据目录，最后才是系统临时目录。
+ */
+export const CACHE_ROOT = process.env.CUTDUO_TTS_CACHE
+  || path.join(process.env.CUTDUO_DATA || os.tmpdir(), 'tts-cache');
