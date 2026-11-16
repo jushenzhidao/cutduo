@@ -231,3 +231,11 @@ api/index.mjs        ← 唯一对外契约入口（实现见 src/pipeline.mjs +
    否则会被拒——这是刻意的，防止内容与超参混在同一个字段里。
 5. **job 文件不会自动清理**。`out/jobs/` 会一直累积；`out/` 整体可删，删了之后旧 jobId 查询会报
    `JOB_NOT_FOUND`，这是预期行为。
+6. **入口退出码 2 = 参数错**。各支 render 的既有约定是「参数错 exit 2、崩溃 exit 1」
+   （见 `render.mjs` 里 loadParams/auditTiming 的处理）。adapter 据此把 2 映射成 `PARAMS_INVALID`，
+   其余非零映射成 `RENDER_FAILED`，并把子进程 stderr 尾部放进 `details`。
+   这条约定让「schema 之外」的校验也能给出正确语义——例如 `diagram` 的 `timeline`/`glyph`
+   段型需要字级时间戳（不给 timing 就是参数不成立，不是渲染失败）。
+7. **schema 表达不了的条件约束，写在入口里**。`api/validate.mjs` 只实现了 `anyOf`/`oneOf`，
+   不支持 `if`/`then`/`contains`，所以「用了某段型就必须同时给某个顶层字段」这类规则无法进 schema。
+   它们落在入口的出片前校验里，以退出码 2 暴露，`validate` 本身看不出。
