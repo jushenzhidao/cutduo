@@ -76,7 +76,9 @@ echo '{"kit":"paper","preset":"v8t"}' | node api/cli.mjs render --stdin --json
 ## 4. 改完怎么验
 
 ```bash
-npm run check          # 全部版式各出一帧 + API 契约 + capabilities 一致性 + 文档漂移
+npm run check          # 全部版式各出一帧 + api.render 端到端 + API 契约 + 文档漂移 + 架构
+npm run arch           # 只查架构不变量：I1 单实现 / I2 单门 / I3 契约单向
+npm run arch:selftest  # 负向自检：检查器自己能不能报错（抓不到人造违规 = 没装）
 npm run inv:check      # 只查版式清单是否过期
 npm run docs:check     # 只查文档（路径 / 数量 / 覆盖）
 node tools/check-kit-contract.mjs   # 渲染器认的段型 vs schema 允许的段型
@@ -84,3 +86,8 @@ node src/gate.mjs out/film.mp4      # 单支成片门禁
 ```
 
 语法检查抓不住路径错误（`import` 合法、运行时才 404）。**只有真渲染一帧才知道。**
+
+反过来也成立：**一帧知道不了主流程**。probe 在各入口里是 `process.exit(0)` 早退——
+worker 分片、`concatParts` 合流、音轨混流三段都不执行。`npm run check` 里那条 `api:render`
+是唯一真跑完整片的地方（paper + 3 秒 PCM 音轨，顺带验回执不撒谎与 pcm→aac）。
+所以「10 支 probe 全绿」不等于「10 条路都通」。
