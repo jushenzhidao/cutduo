@@ -113,38 +113,50 @@ validate(raw);
  *   标题 x=170 起，右侧卡片墙起于 1010 ⇒ 可用 840，再留 40 安全边 = 800
  *   STORY 卡宽 336、内边距 24 ⇒ 288；列表再缩进 26 ⇒ 262
  * 换版式时这里要跟着改，**它就是版式的文字容量声明**。
+ *
+ * 为什么 maxW 一律写成算式而不是数字：改了上面这些坐标却忘了改容量，验证会静默放行
+ * 一段装不下的文案，渲出来才发现穿出卡片。写成 `1010 - 170 - 40`，改坐标的人至少
+ * 看得见依据。判据 E2 强制这一点（裸数字直接 FAIL），E3 保证改写前后取值不变。
  */
 const TEXT_SLOTS = [
-  { sc: 'gather', path: ['title', 0], size: 104, fam: 'serif', maxW: 800, what: '标题第一行' },
-  { sc: 'gather', path: ['title', 1], size: 104, fam: 'serif', maxW: 800, what: '标题第二行' },
-  { sc: 'gather', path: ['sub', 0], size: 30, fam: 'ui', maxW: 800, what: '副文案' },
-  { sc: 'gather', path: ['sub', 1], size: 30, fam: 'ui', maxW: 800, what: '副文案第二行', optional: true },
-  { sc: 'gather', path: ['cta'], size: 30, fam: 'ui', maxW: 128, what: '按钮文字' },
-  { sc: 'gather', path: ['cards', 0, 'title'], size: 34, fam: 'ui', maxW: 288, what: '第一张卡标题' },
-  { sc: 'gather', path: ['cards', 0, 'items'], size: 22, fam: 'ui', maxW: 262, each: true, what: '卡内清单项' },
-  { sc: 'gather', path: ['cards', 1, 'lines'], size: 19, fam: 'mono', maxW: 274, each: true, what: 'JSON 行' },
-  { sc: 'gather', path: ['cards', 2, 'label'], size: 20, fam: 'mono', maxW: 252, what: '数据标签' },
-  { sc: 'gather', path: ['cards', 2, 'value'], size: 58, fam: 'mono', maxW: 200, what: '主数值' },
-  { sc: 'gather', path: ['cards', 3, 'lines'], size: 21, fam: 'mono', maxW: 226, each: true, what: '门禁行' },
-  { sc: 'gather', path: ['cards', 4, 'text'], size: 26, fam: 'ui', maxW: 282, what: '统计条正文' },
-  { sc: 'gather', path: ['cards', 4, 'sub'], size: 19, fam: 'ui', maxW: 282, what: '统计条副文' },
-  { sc: 'recall', path: ['title'], size: 96, fam: 'serif', maxW: 1580, join: true, what: '整行标题（两段合计）' },
-  { sc: 'recall', path: ['cmd'], size: 31, fam: 'mono', maxW: 918, what: '命令行' },
-  { sc: 'recall', path: ['count'], size: 21, fam: 'mono', maxW: 900, what: '计数行' },
-  { sc: 'recall', path: ['rows'], size: 30, fam: 'ui', maxW: 874, eachRow: 0, what: '结果行标题' },
-  { sc: 'recall', path: ['rows'], size: 20, fam: 'mono', maxW: 874, eachRow: 1, what: '结果行副文' },
-  { sc: 'arrange', path: ['note', 0], size: 28, fam: 'ui', maxW: 1400, what: '浮层正文' },
-  { sc: 'arrange', path: ['note', 1], size: 20, fam: 'ui', maxW: 1400, what: '浮层次行', optional: true },
-  { sc: 'arrange', path: ['card', 'title'], size: 34, fam: 'ui', maxW: 368, what: '中心卡标题' },
-  { sc: 'arrange', path: ['card', 'sub'], size: 21, fam: 'mono', maxW: 368, what: '中心卡副文' },
-  { sc: 'route', path: ['lines', 0], size: 112, fam: 'serif', maxW: 990, what: '大字第一行' },
-  { sc: 'route', path: ['lines', 1], size: 112, fam: 'serif', maxW: 990, what: '大字第二行', optional: true },
-  { sc: 'lockup', path: ['name'], size: 86, fam: 'serif', maxW: 1200, what: '品牌名' },
-  { sc: 'lockup', path: ['slogan'], size: 40, fam: 'serif', maxW: 1520, join: true, what: 'slogan（两段合计）' },
-  { sc: 'lockup', path: ['cta'], size: 28, fam: 'ui', maxW: 200, what: '按钮文字' },
+  { sc: 'gather', path: ['title', 0], size: 104, fam: 'serif', maxW: 1010 - 170 - 40, what: '标题第一行' },
+  { sc: 'gather', path: ['title', 1], size: 104, fam: 'serif', maxW: 1010 - 170 - 40, what: '标题第二行' },
+  { sc: 'gather', path: ['sub', 0], size: 30, fam: 'ui', maxW: 1010 - 170 - 40, what: '副文案' },
+  { sc: 'gather', path: ['sub', 1], size: 30, fam: 'ui', maxW: 1010 - 170 - 40, what: '副文案第二行', optional: true },
+  { sc: 'gather', path: ['cta'], size: 30, fam: 'ui', maxW: 232 - 46 - 58, what: '按钮文字' },
+  { sc: 'gather', path: ['cards', 0, 'title'], size: 34, fam: 'ui', maxW: 336 - 24 * 2, what: '第一张卡标题' },
+  { sc: 'gather', path: ['cards', 0, 'items'], size: 22, fam: 'ui', maxW: 336 - 24 * 2 - 26, each: true, what: '卡内清单项' },
+  { sc: 'gather', path: ['cards', 1, 'lines'], size: 19, fam: 'mono', maxW: 322 - 24 * 2, each: true, what: 'JSON 行' },
+  { sc: 'gather', path: ['cards', 2, 'label'], size: 20, fam: 'mono', maxW: 300 - 24 * 2, what: '数据标签' },
+  { sc: 'gather', path: ['cards', 2, 'value'], size: 58, fam: 'mono', maxW: 300 - 24 * 2 - 52, what: '主数值' },
+  { sc: 'gather', path: ['cards', 3, 'lines'], size: 21, fam: 'mono', maxW: 300 - 24 * 2 - 26, each: true, what: '门禁行' },
+  { sc: 'gather', path: ['cards', 4, 'text'], size: 26, fam: 'ui', maxW: 430 - 24 * 2 - 100, what: '统计条正文' },
+  { sc: 'gather', path: ['cards', 4, 'sub'], size: 19, fam: 'ui', maxW: 430 - 24 * 2 - 100, what: '统计条副文' },
+  { sc: 'recall', path: ['title'], size: 96, fam: 'serif', maxW: 1920 - 170 * 2, join: true, what: '整行标题（两段合计）' },
+  { sc: 'recall', path: ['cmd'], size: 31, fam: 'mono', maxW: 1120 - 62 - 140, what: '命令行' },
+  { sc: 'recall', path: ['count'], size: 21, fam: 'mono', maxW: 1330 - 400 - 30, what: '计数行' },
+  { sc: 'recall', path: ['rows'], size: 30, fam: 'ui', maxW: 1380 - 486 - 20, eachRow: 0, what: '结果行标题' },
+  { sc: 'recall', path: ['rows'], size: 20, fam: 'mono', maxW: 1380 - 486 - 20, eachRow: 1, what: '结果行副文' },
+  { sc: 'arrange', path: ['note', 0], size: 28, fam: 'ui', maxW: 1920 - 202 - 318, what: '浮层正文' },
+  { sc: 'arrange', path: ['note', 1], size: 20, fam: 'ui', maxW: 1920 - 202 - 318, what: '浮层次行', optional: true },
+  { sc: 'arrange', path: ['card', 'title'], size: 34, fam: 'ui', maxW: 420 - 26 * 2, what: '中心卡标题' },
+  { sc: 'arrange', path: ['card', 'sub'], size: 21, fam: 'mono', maxW: 420 - 26 * 2, what: '中心卡副文' },
+  { sc: 'route', path: ['lines', 0], size: 112, fam: 'serif', maxW: 1210 - 180 - 40, what: '大字第一行' },
+  { sc: 'route', path: ['lines', 1], size: 112, fam: 'serif', maxW: 1210 - 180 - 40, what: '大字第二行', optional: true },
+  { sc: 'lockup', path: ['name'], size: 86, fam: 'serif', maxW: 1920 - 360 * 2, what: '品牌名' },
+  { sc: 'lockup', path: ['slogan'], size: 40, fam: 'serif', maxW: 1920 - 200 * 2, join: true, what: 'slogan（两段合计）' },
+  { sc: 'lockup', path: ['cta'], size: 28, fam: 'ui', maxW: 300 - 24 * 2 - 52, what: '按钮文字' },
 ];
 
 const pick = (obj, keyPath) => keyPath.reduce((o, k) => (o == null ? undefined : o[k]), obj);
+
+/* 导出容量表：调版式时先看这张表，比翻代码快；判据 E3 也用它做重构等价比对 */
+if (argv.includes('--print-slots')) {
+  console.log(JSON.stringify(TEXT_SLOTS.map((s) => ({
+    sc: s.sc, path: s.path, size: s.size, maxW: s.maxW, what: s.what,
+  })), null, 2));
+  process.exit(0);
+}
 
 /**
  * 版式容量校验：用**真实字体**量每一段文案，装不下就拒绝。

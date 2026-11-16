@@ -173,6 +173,43 @@ check('D2', '合法文案不被容量校验误杀', () => {
   return { ok: r.code === 0, detail: `alt 夹具 exit=${r.code}` };
 });
 
+/* E1–E3：容量表的可维护性。
+   问题不是"能不能校验"，是"改了版式坐标会不会忘了改容量"——
+   现在 27 条 maxW 是手工从坐标反推的数，改坐标时不会有任何提示。
+   彻底解法是把绘制坐标抽成常量、两边共用；但那是 15+ 处坐标改动，成本和风险都高过收益
+   （每改一处都可能打错，A2 会一轮轮打回）。所以退一步：**强制把依据写成算式**，
+   让人改坐标时看得见 `1010 - 170 - 40`，从而知道要同步。 */
+
+check('E1', '--print-slots 可导出容量表', () => {
+  const r = spawnSync('node', ['tools/jimeng-demo.mjs', '--print-slots'], { cwd: ROOT, encoding: 'utf8' });
+  if (r.status !== 0) return { ok: false, detail: `exit=${r.status} ${(r.stderr || '').slice(0, 120)}` };
+  const rows = JSON.parse(r.stdout);
+  const bad = rows.filter((x) => !Number.isFinite(x.maxW));
+  return { ok: rows.length > 0 && !bad.length, detail: `${rows.length} 条` };
+});
+
+check('E2', 'maxW 全部写成算式（不允许裸数字）', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'tools/jimeng-demo.mjs'), 'utf8');
+  const bare = [...src.matchAll(/maxW:\s*(\d+)\s*[,}]/g)];
+  return {
+    ok: bare.length === 0,
+    detail: bare.length ? `${bare.length} 处裸数字（前三个：${bare.slice(0, 3).map((m) => m[1]).join(', ')}）` : '全部为算式',
+  };
+});
+
+check('E3', '容量值与改写前快照逐个相同', () => {
+  const snap = path.join(FIX, 'slots-baseline.json');
+  if (!fs.existsSync(snap)) return { ok: false, detail: `缺快照 ${path.relative(ROOT, snap)}` };
+  const base = JSON.parse(fs.readFileSync(snap, 'utf8'));
+  const r = spawnSync('node', ['tools/jimeng-demo.mjs', '--print-slots'], { cwd: ROOT, encoding: 'utf8' });
+  if (r.status !== 0) return { ok: false, detail: `--print-slots exit=${r.status}` };
+  const cur = JSON.parse(r.stdout);
+  const key = (x) => `${x.sc}|${JSON.stringify(x.path)}`;
+  const bm = new Map(base.map((x) => [key(x), x.maxW]));
+  const diff = cur.filter((x) => bm.get(key(x)) !== x.maxW).map((x) => `${x.sc}=${bm.get(key(x))}→${x.maxW}`);
+  return { ok: diff.length === 0, detail: diff.length ? diff.join(' ') : `${cur.length}/${base.length} 相同` };
+});
+
 /* ────────────────────────────── 留痕 */
 
 const failed = results.filter((r) => !r.ok);

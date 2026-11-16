@@ -1,0 +1,13 @@
+# round 12 · 2026-11-16T09:19:37.163Z
+PASS	A2	默认参数 6 帧与基线逐帧一致	6/6 相同
+PASS	A4	不带 --params 用内置默认	exit=0
+PASS	A5	单帧模式 --at --out 输出 PNG	exit=0 magic=PNG
+PASS	A1	--params <alt> 生效且产物不同于默认	帧已改变
+PASS	A3	非法参数(空对象) 必须非零退出	exit=2（期望≠0，理由：缺 scenes）
+PASS	A3	非法参数(未知 scene id) 必须非零退出	exit=2（期望≠0，理由：未知 id）
+PASS	A3	非法参数(时刻越界) 必须非零退出	exit=2（期望≠0，理由：越界）
+PASS	D1	超宽文案被拒绝且给出字数上限	exit=2 字数上限提示=有
+PASS	D2	合法文案不被容量校验误杀	alt 夹具 exit=0
+PASS	E1	--print-slots 可导出容量表	27 条
+FAIL	E2	maxW 全部写成算式（不允许裸数字）	27 处裸数字（前三个：800, 800, 800）
+PASS	E3	容量值与改写前快照逐个相同	27/27 相同
