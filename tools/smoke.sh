@@ -77,6 +77,39 @@ for k in $(echo "$CAPS" | tr ',' ' '); do
   fi
 done
 
+# 端到端：真的走 api.render 出一支完整片 + 一条**PCM wav** 音轨，三件事一起验：
+#   ① 主流程：probe 在 render.mjs 里是 process.exit(0) 早退，worker 分片 / concat / 混流都不执行
+#   ② 回执不撒谎：「回执规格只信 ffprobe」是 docs/API.md 的硬承诺，但承诺本身从没被自动验证
+#   ③ 音轨红线：mp4 里塞 pcm_s16le 会让浏览器整轨静音，concatParts 必须转 aac
+# 音轨现场合成，不依赖仓库素材：`sine` 3 秒 PCM，正好落在「非 aac ⇒ 转码」那条分支上。
+# 选 paper：2573 帧里最快的一支（约 6s），换成 desk 要 20s。
+FFMPEG_BIN=/opt/homebrew/bin/ffmpeg
+FFPROBE_BIN=/opt/homebrew/bin/ffprobe
+$FFMPEG_BIN -hide_banner -loglevel error -y -f lavfi -i "sine=frequency=440:duration=3" \
+  -c:a pcm_s16le /tmp/smoke-tone.wav 2>/dev/null
+if node api/cli.mjs render --kit paper --params kits/paper/presets/v8t.json \
+     --audio /tmp/smoke-tone.wav \
+     --out "$OUT/api-render.mp4" --workers 6 --json >/tmp/smoke-apirender.json 2>&1; then
+  CLAIMED=$(node -e 'try{process.stdout.write(String(JSON.parse(require("fs").readFileSync("/tmp/smoke-apirender.json","utf8")).output.frames))}catch{process.stdout.write("0")}')
+  ACTUAL=$($FFPROBE_BIN -v error -select_streams v:0 -count_frames \
+    -show_entries stream=nb_read_frames -of csv=p=0 "$OUT/api-render.mp4" 2>/dev/null | head -1)
+  ACODEC=$($FFPROBE_BIN -v error -select_streams a:0 \
+    -show_entries stream=codec_name -of csv=p=0 "$OUT/api-render.mp4" 2>/dev/null | head -1)
+  if [ -z "$CLAIMED" ] || [ "$CLAIMED" != "$ACTUAL" ] || [ "${ACTUAL:-0}" -le 0 ] 2>/dev/null; then
+    printf 'FAIL  %-10s 回执帧数 %s 与 ffprobe %s 不符（回执在自述而非探测）\n' "api:render" "${CLAIMED:-空}" "${ACTUAL:-空}"
+    fail=1
+  elif [ "$ACODEC" != "aac" ]; then
+    printf 'FAIL  %-10s 音轨是 %s 而非 aac（PCM 进 mp4 会让浏览器整轨静音）\n' "api:render" "${ACODEC:-无}"
+    fail=1
+  else
+    printf 'PASS  %-10s 端到端 回执 %s 帧 == ffprobe %s 帧 · 音轨 pcm→%s\n' "api:render" "$CLAIMED" "$ACTUAL" "$ACODEC"
+  fi
+else
+  printf 'FAIL  %-10s api.render 出不了整片（probe 能过而 render 不能，说明主流程有分支问题）\n' "api:render"
+  tail -6 /tmp/smoke-apirender.json | sed 's/^/        /'
+  fail=1
+fi
+
 # 能力清单与代码一致：这份文件是给 agent 读的，漂移过（入库只到 5 支，缺 clay/collage/night-card）
 if node tools/gen-capabilities.mjs --check >/dev/null 2>&1; then
   printf 'PASS  %-10s capabilities.json 与代码一致\n' "api"

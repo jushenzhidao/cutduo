@@ -35,7 +35,7 @@
 - 三项"像门禁"的其实是连续分布，**只报不拦**：hook 0.06–5.29（阈值 0.5 会误杀 13/19）、平均 L\* 0.40–91.3、
   重复帧 0–36.8%。**能拦的只有完整性**：空帧 ≤8%、黑帧 ≤3%、帧数差 ≤1、音画差 ≤0.10s。
 - 竖屏必须传 `--subtitle-y 0.28,0.45`（默认 `y<0.3`，竖屏全报 0%）。
-- `--blank` 看主体区 240×105 灰度 std（连续 ≥2s <12）；`--loudness` −16 LUFS ±2 / TP ≤−0.5；
+- `--blank` 看主体区 240×105 灰度 std（≥2s <12）；`--loudness` −16 LUFS ±2 / TP ≤−0.5；
   `--bgm` 看旁白间隙；`--facts` 双向查；`--caption-check` 覆盖 <60% 报警。
 - 细则（每条的实测数字、误报率、负向自检）见 `MEMORY-DETAIL.md` §四。
 
@@ -79,7 +79,7 @@
   长片 drop 会一路到底（90s 片 11.4→87.1s），须让 outro 落在 78% + drop 内每 8 小节回落。
 - 配乐统一 `tools/audio-bed.mjs`：三曲风 × 各 4 层 loop。**a 层必须是铺底**（鼓组有空档 ⇒ 判"无铺底"FAIL）；
   曲风电平差 8–9 dB，TRIM 乘在**包络上**（hiphop ×2.6）不能在 amix 后。`content/<片>/bgm.mjs` 是 paper 遗留。
-- `vo.py` 的 `mouthCurve` 是死数据 ⇒ 口型一直走模拟。
+- `vo.py` 的 `mouthCurve` 是死数据 ⇒ 口型走模拟。
 - **macOS 原生 `aac` 编码器会把真峰值抬起约 10 dB**（源 −2.2 dBFS → 解码 +7.7；同段 `aac_at` 为 −1.8）。
   一律 `-c:a aac_at`，且**编码后复测峰值**；`loudnorm` 单遍动态模式压不住。
 
@@ -102,6 +102,8 @@
   （5 活宿主走 `api/cli.mjs`，5 断链文件入 `tools/legacy/`）。**自检样例不能用 `.` 开头**。
   **I1 豁免已清零（P3）**：editorial 的 `encodeRange` 并入 pipeline，30 帧 mpegts md5 逐字节相同；
   不动 `renderIncremental`/`mixAudio`（非重复）。重构判据按「路径覆盖」设计，不按端到端。细则见 DETAIL。
+- **`npm run check` 的 api 段含一条真端到端**（paper + 现场合成 PCM wav）：一次验主流程 /
+  回执==ffprobe / 音轨转 aac。**probe 在下游是 `process.exit(0)` 早退**，测不到这三样。
 - 六动词 capabilities/describe/validate/render/probe/gate；`api/capabilities.json` 由工具生成，不要手改。回执规格
   只信 ffprobe；错误必带 `code/hint/fix`；validate 永不抛。`overrides` 只放渲染超参，内容走 `params`。
 - **validate 支持 `if/then/else`**（补之前 paper 9 组必填约束全失效）；仍不支持 `$ref`/`format`。
