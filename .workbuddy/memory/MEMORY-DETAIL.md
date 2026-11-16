@@ -214,3 +214,59 @@ pacing 0/9 不达标。内容模型 `layers/parts/arrays/hero/mech` 全是 JSON�
   `PAPER_BY_SCIENCE` 兜底。七支都能出 9–11 段。
 - API 回执的 `details.stderr` 用 `tail()`（末 8 行），**必须补回首个 `Error:` 行**——Node 的 stack
   trace 有 6–10 行，只取尾部会只剩一串 `at`，根因全丢。
+
+
+---
+
+## 附：2026-11-16 架构收口（API-first 落地细节）
+
+### 实现分层
+
+11 个 `api/kits/*.mjs` 全是 `cliAdapter` → `spawn(node <script>)`，**api 是契约层不是实现层**。
+真实实现在三层：
+- `src/pipeline.mjs`（127 行）：帧循环 / 编码 / 封装，五支共用的唯一管道
+- `src/entry-kit.mjs`（142 行）：入口外壳 `parseStdArgs` / `handleProbeOrDeterminism` /
+  `renderPart` / `runShards`。**有意不抽** `new Worker(new URL(import.meta.url))`——worker 必须指回入口自身
+- `kits/*/`：各版式的画布、内容模型、ready() 语义
+
+四入口行数：`render.mjs` 330→282、`desk` 177→115、`mg` 131→63、`diagram` 306→292（只换了字体注册）。
+合计 944→752。**没做到规划的 ≤200**：剩下的是 kitSpec 75 行、loadParams 60 行、
+diagram timeline 100+ 行等各支独有逻辑，搬走只会加间接层。价值在默认值从四份收敛到一份。
+
+### 三条不变量（`tools/check-arch.mjs`，`npm run arch`）
+
+| 编号 | 判据 | 实现方式 |
+|---|---|---|
+| I1 | 出片入口必须复用管道 | 从 `api/capabilities.json` 取 `entry.script`，要求 import `src/(pipeline\|entry-kit).mjs` |
+| I2 | 宿主外不得直连渲染入口 | 剥注释后匹配 `render.mjs\|canvas-editorial.mjs`；`.mjs` 还要求真的 spawn |
+| I3 | 契约登记的入口必须存在 | 逐条检查 `entry.script` 文件是否存在 |
+
+判据迭代史（教训：第一版必然误报）：
+- I1 v1 全仓扫 `libx264|mpegts` → 报 19 个（注释、`api/errors.mjs` 正则、`-c:v copy` 全误报）
+- I1 v2 spawn + libx264 同时在场 → 报 8 个（仍含 `reframe` 后处理、desk 探针）
+- I1 v3 数据驱动取 entry.script → 5 支全过
+- I2 v1 → contact-sheet 误报（只在头注释写出处）；v2 剥注释 → knowledge 误报（提示字符串）；v3 要求真 spawn
+
+`--self-test` 抓到的自身缺陷：自检样例原命名 `.arch-selftest.mjs`，而 `walk()` 跳过 `.` 开头文件，
+样例永远扫不到 ⇒ 自检假 PASS。改名 `arch-selftest-tmp.mjs` 才真。
+
+### 豁免表（每条都要写理由，不接受"先放行"）
+
+- I1：`kits/editorial/canvas-editorial.mjs` —— 唯一真正的第二实现（893 行自带 worker/encodeRange/mixAudio），P3 待办
+- I2：`template-smoke.py` —— 测任意模板目录，没有 kit id，进不了 capabilities，只能走 `render.mjs --kit <dir>`
+- I2：`tools/legacy/` 整体跳过 —— 断链归档区（5 个文件引用不存在的 `packages/*.motion` 与错位的 `canvas-editorial.mjs`）
+
+### 绕门清零的路径
+
+| 原文件 | 处理 |
+|---|---|
+| `web/pipeline.mjs` / `harness/run.mjs` / `tools/render-all.mjs` | 改 `api/cli.mjs render`（保留进程隔离） |
+| `tools/smoke.sh` 10 支 probe | 改 `api/cli.mjs probe`，字节数逐支与改前一致 |
+| `tools/render-daemon.mjs` / `render-parallel.mjs` / `build-voices*.sh` / `test-theme.sh` | 移 `tools/legacy/`（断链，起不来） |
+| `tools/contact-sheet.mjs` / `knowledge/*` | 误报，剥注释后自动消失 |
+
+### 重构纪律
+
+**改出片入口前必须先冻结成片指纹**（帧数 / 时长 / 分辨率 / 抽帧 md5）。
+2026-11-16 靠它抓到 `renderPart` 漏传 `x264Threads`：paper 体积 0.91→0.93MB，
+视觉与门禁都看不出。基线写 `out/arch/baseline.json`，改完逐支重渲对比。
